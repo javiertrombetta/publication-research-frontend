@@ -1,0 +1,154 @@
+C:\D\My publication project\5.5Web with @RenderBody\bin\Debug\net10.0\mywebapp.staticwebassets.runtime.json
+C:\D\My publication project\5.5Web with @RenderBody\bin\Debug\net10.0\mywebapp.staticwebassets.endpoints.json
+C:\D\My publication project\5.5Web with @RenderBody\bin\Debug\net10.0\mywebapp.exe
+C:\D\My publication project\5.5Web with @RenderBody\bin\Debug\net10.0\mywebapp.deps.json
+C:\D\My publication project\5.5Web with @RenderBody\bin\Debug\net10.0\mywebapp.runtimeconfig.json
+C:\D\My publication project\5.5Web with @RenderBody\bin\Debug\net10.0\mywebapp.dll
+C:\D\My publication project\5.5Web with @RenderBody\bin\Debug\net10.0\mywebapp.pdb
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\rpswa.dswa.cache.json
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\mywebapp.GeneratedMSBuildEditorConfig.editorconfig
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\mywebapp.AssemblyInfoInputs.cache
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\mywebapp.AssemblyInfo.cs
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\mywebapp.csproj.CoreCompileInputs.cache
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\mywebapp.MvcApplicationPartsAssemblyInfo.cache
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\mywebapp.RazorAssemblyInfo.cache
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\mywebapp.RazorAssemblyInfo.cs
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\rjimswa.dswa.cache.json
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\rjsmrazor.dswa.cache.json
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\scopedcss\bundle\mywebapp.styles.css
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\compressed\65qi1sg9i3-{0}-zkyp8l2jeq-zkyp8l2jeq.gz
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\staticwebassets.build.json
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\staticwebassets.build.json.cache
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\staticwebassets.development.json
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\staticwebassets.build.endpoints.json
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\swae.build.ex.cache
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\mywebapp.dll
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\refint\mywebapp.dll
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\mywebapp.pdb
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\mywebapp.genruntimeconfig.cache
+C:\D\My publication project\5.5Web with @RenderBody\obj\Debug\net10.0\ref\mywebapp.dll
+C:\D\My publication project\testing TablerUI\bin\Debug\net10.0\mywebapp.staticwebassets.runtime.json
+C:\D\My publication project\testing TablerUI\bin\Debug\net10.0\mywebapp.staticwebassets.endpoints.json
+C:\D\My publication project\testing TablerUI\bin\Debug\net10.0\mywebapp.exe
+C:\D\My publication project\testing TablerUI\bin\Debug\net10.0\mywebapp.deps.json
+C:\D\My publication project\testing TablerUI\bin\Debug\net10.0\mywebapp.runtimeconfig.json
+C:\D\My publication project\testing TablerUI\bin\Debug\net10.0\mywebapp.dll
+C:\D\My publication project\testing TablerUI\bin\Debug\net10.0\mywebapp.pdb
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\rpswa.dswa.cache.json
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\mywebapp.GeneratedMSBuildEditorConfig.editorconfig
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\mywebapp.AssemblyInfoInputs.cache
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\mywebapp.AssemblyInfo.cs
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\mywebapp.csproj.CoreCompileInputs.cache
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\mywebapp.MvcApplicationPartsAssemblyInfo.cache
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\mywebapp.RazorAssemblyInfo.cache
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\mywebapp.RazorAssemblyInfo.cs
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\rjimswa.dswa.cache.json
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\rjsmrazor.dswa.cache.json
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\scopedcss\bundle\mywebapp.styles.css
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\compressed\fwmzso74t5-{0}-dcanxg2dne-dcanxg2dne.gz
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\compressed\rmhm8cwa4c-{0}-c7kwflqf1e-c7kwflqf1e.gz
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\staticwebassets.build.json
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\staticwebassets.build.json.cache
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\staticwebassets.development.json
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\staticwebassets.build.endpoints.json
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\swae.build.ex.cache
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\mywebapp.dll
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\refint\mywebapp.dll
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\mywebapp.pdb
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\mywebapp.genruntimeconfig.cache
+C:\D\My publication project\testing TablerUI\obj\Debug\net10.0\ref\mywebapp.dll
+C:\D\My publication project\My Publication Web\bin\Debug\net10.0\mywebapp.staticwebassets.endpoints.json
+C:\D\My publication project\My Publication Web\bin\Debug\net10.0\mywebapp.staticwebassets.runtime.json
+C:\D\My publication project\My Publication Web\bin\Debug\net10.0\mywebapp.exe
+C:\D\My publication project\My Publication Web\bin\Debug\net10.0\mywebapp.deps.json
+C:\D\My publication project\My Publication Web\bin\Debug\net10.0\mywebapp.runtimeconfig.json
+C:\D\My publication project\My Publication Web\bin\Debug\net10.0\mywebapp.dll
+C:\D\My publication project\My Publication Web\bin\Debug\net10.0\mywebapp.pdb
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\rpswa.dswa.cache.json
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\mywebapp.GeneratedMSBuildEditorConfig.editorconfig
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\mywebapp.AssemblyInfoInputs.cache
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\mywebapp.AssemblyInfo.cs
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\mywebapp.csproj.CoreCompileInputs.cache
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\mywebapp.MvcApplicationPartsAssemblyInfo.cache
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\mywebapp.RazorAssemblyInfo.cache
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\mywebapp.RazorAssemblyInfo.cs
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\rjimswa.dswa.cache.json
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\rjsmrazor.dswa.cache.json
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\scopedcss\bundle\mywebapp.styles.css
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\compressed\fwmzso74t5-{0}-dcanxg2dne-dcanxg2dne.gz
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\compressed\rmhm8cwa4c-{0}-c7kwflqf1e-c7kwflqf1e.gz
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\staticwebassets.build.json
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\staticwebassets.build.json.cache
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\staticwebassets.development.json
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\staticwebassets.build.endpoints.json
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\swae.build.ex.cache
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\mywebapp.dll
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\refint\mywebapp.dll
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\mywebapp.pdb
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\mywebapp.genruntimeconfig.cache
+C:\D\My publication project\My Publication Web\obj\Debug\net10.0\ref\mywebapp.dll
+C:\D\My Testing Zone\Frontend\bin\Debug\net10.0\mywebapp.staticwebassets.endpoints.json
+C:\D\My Testing Zone\Frontend\bin\Debug\net10.0\mywebapp.staticwebassets.runtime.json
+C:\D\My Testing Zone\Frontend\bin\Debug\net10.0\mywebapp.exe
+C:\D\My Testing Zone\Frontend\bin\Debug\net10.0\mywebapp.deps.json
+C:\D\My Testing Zone\Frontend\bin\Debug\net10.0\mywebapp.runtimeconfig.json
+C:\D\My Testing Zone\Frontend\bin\Debug\net10.0\mywebapp.dll
+C:\D\My Testing Zone\Frontend\bin\Debug\net10.0\mywebapp.pdb
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\rpswa.dswa.cache.json
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\mywebapp.GeneratedMSBuildEditorConfig.editorconfig
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\mywebapp.AssemblyInfoInputs.cache
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\mywebapp.AssemblyInfo.cs
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\mywebapp.csproj.CoreCompileInputs.cache
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\mywebapp.MvcApplicationPartsAssemblyInfo.cache
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\mywebapp.RazorAssemblyInfo.cache
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\mywebapp.RazorAssemblyInfo.cs
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\rjimswa.dswa.cache.json
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\rjsmrazor.dswa.cache.json
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\scopedcss\bundle\mywebapp.styles.css
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\compressed\fwmzso74t5-{0}-dcanxg2dne-dcanxg2dne.gz
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\compressed\rmhm8cwa4c-{0}-c7kwflqf1e-c7kwflqf1e.gz
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\staticwebassets.build.json
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\staticwebassets.build.json.cache
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\staticwebassets.development.json
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\staticwebassets.build.endpoints.json
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\swae.build.ex.cache
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\mywebapp.dll
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\refint\mywebapp.dll
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\mywebapp.pdb
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\mywebapp.genruntimeconfig.cache
+C:\D\My Testing Zone\Frontend\obj\Debug\net10.0\ref\mywebapp.dll
+C:\D\My Testing Zone\Kasama Frontend\Frontend\bin\Debug\net10.0\mywebapp.staticwebassets.endpoints.json
+C:\D\My Testing Zone\Kasama Frontend\Frontend\bin\Debug\net10.0\mywebapp.staticwebassets.runtime.json
+C:\D\My Testing Zone\Kasama Frontend\Frontend\bin\Debug\net10.0\mywebapp.exe
+C:\D\My Testing Zone\Kasama Frontend\Frontend\bin\Debug\net10.0\mywebapp.deps.json
+C:\D\My Testing Zone\Kasama Frontend\Frontend\bin\Debug\net10.0\mywebapp.runtimeconfig.json
+C:\D\My Testing Zone\Kasama Frontend\Frontend\bin\Debug\net10.0\mywebapp.dll
+C:\D\My Testing Zone\Kasama Frontend\Frontend\bin\Debug\net10.0\mywebapp.pdb
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\rpswa.dswa.cache.json
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\mywebapp.GeneratedMSBuildEditorConfig.editorconfig
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\mywebapp.AssemblyInfoInputs.cache
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\mywebapp.AssemblyInfo.cs
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\mywebapp.csproj.CoreCompileInputs.cache
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\mywebapp.MvcApplicationPartsAssemblyInfo.cache
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\mywebapp.RazorAssemblyInfo.cache
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\mywebapp.RazorAssemblyInfo.cs
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\rjimswa.dswa.cache.json
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\rjsmrazor.dswa.cache.json
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\rjsmcshtml.dswa.cache.json
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\scopedcss\bundle\mywebapp.styles.css
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\compressed\fwmzso74t5-{0}-dcanxg2dne-dcanxg2dne.gz
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\compressed\rmhm8cwa4c-{0}-c7kwflqf1e-c7kwflqf1e.gz
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\staticwebassets.build.json
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\staticwebassets.build.json.cache
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\staticwebassets.development.json
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\staticwebassets.build.endpoints.json
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\swae.build.ex.cache
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\mywebapp.dll
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\refint\mywebapp.dll
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\mywebapp.pdb
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\mywebapp.genruntimeconfig.cache
+C:\D\My Testing Zone\Kasama Frontend\Frontend\obj\Debug\net10.0\ref\mywebapp.dll

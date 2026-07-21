@@ -1,0 +1,134 @@
+
+
+    <div class="page flex-grow-1 d-flex flex-column" style="min-height: 0;">
+        <div id="page-wrapper" class="page-wrapper w-100 d-flex flex-column" style="min-height: 0; overflow-y: auto;">
+            <main class="page-body m-0 py-4">
+                <div class="container-xl">
+                    
+                    <!-- Centered responsive layout wrapper -->
+                    <div class="row justify-content-center">
+                        <div class="col-12 col-md-10 col-lg-8 col-xl-7">
+                            
+                            <!-- Header Area -->
+                            <div class="mb-4 px-2">
+                                <h1 class="h1 m-0 fw-bold text-dark">Ethics Documentation</h1>
+                                <p class="text-secondary small m-0 mt-1">Download the mandatory institutional templates, complete them, and upload the signed copies below.</p>
+                            </div>
+
+                            <!-- 1. DOWNLOAD TEMPLATES SECTION -->
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header bg-light">
+                                    <h3 class="card-title fs-3 fw-bold text-primary">Ethics files</h3>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="row g-3">
+                                        <!-- Template 1: Consent Form -->
+                                        <div class="col-12 col-sm-4">
+                                            <div class="card card-sm border d-flex flex-column h-100 justify-content-between p-3 text-center bg-surface">
+                                                <div>
+                                                    <div class="mb-2 text-primary">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-text" width="32" height="32" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" /><path d="M9 9l1 0" /><path d="M9 13l6 0" /><path d="M9 17l6 0" /></svg>
+                                                    </div>
+                                                    <div class="fw-bold text-dark mb-1">Research Consent Form and Guidance</div>
+                                                    
+                                                </div>
+                                                <a href="/templates/consent_form_template.docx" class="btn btn-outline-primary btn-sm w-100" download>
+                                                    Download
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <!-- Template 2: Participant Information -->
+                                        <div class="col-12 col-sm-4">
+                                            <div class="card card-sm border d-flex flex-column h-100 justify-content-between p-3 text-center bg-surface">
+                                                <div>
+                                                    <div class="mb-2 text-primary">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-info-circle" width="32" height="32" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 9h.01" /><path d="M11 12h1v4h1" /></svg>
+                                                    </div>
+                                                    <div class="fw-bold text-dark mb-1">Research-Participant Information Sheet and Guidance</div>
+                                                    
+                                                </div>
+                                                <a href="/templates/participant_info_template.docx" class="btn btn-outline-primary btn-sm w-100" download>
+                                                    Download
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <!-- Template 3: Proposal Form -->
+                                        <div class="col-12 col-sm-4">
+                                            <div class="card card-sm border d-flex flex-column h-100 justify-content-between p-3 text-center bg-surface">
+                                                <div>
+                                                    <div class="mb-2 text-primary">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-briefcase" width="32" height="32" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" /><path d="M8 5v-2a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1v2" /><path d="M12 12v.01" /><path d="M3 13a20 20 0 0 0 18 0" /></svg>
+                                                    </div>
+                                                    <div class="fw-bold text-dark mb-1">Proposal Form</div>
+                                                    
+                                                </div>
+                                                <a href="/templates/proposal_form_template.docx" class="btn btn-outline-primary btn-sm w-100" download>
+                                                    Download
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. DOCUMENT UPLOAD AREA -->
+                            <form id="ethicsUploadForm" action="#" method="POST" enctype="multipart/form-data" class="card shadow-sm mb-4">
+                                <div class="card-header bg-light">
+                                    <h3 class="card-title fs-3 fw-bold text-primary">Upload Completed Files</h3>
+                                </div>
+                                <div class="card-body p-4">
+                                    
+                                    <!-- File field 1 -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold mb-1">Completed Consent Form <span class="text-danger">*</span></label>
+                                    
+                                        <input type="file" name="consentFormFile" class="form-control" required accept=".pdf,.doc,.docx" />
+                                    </div>
+
+                                    <!-- File field 2 -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold mb-1">Completed Participant Information Sheet<span class="text-danger">*</span></label>
+                                        
+                                        <input type="file" name="participantInfoFile" class="form-control" required accept=".pdf,.doc,.docx" />
+                                    </div>
+
+                                    <!-- File field 3 -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold mb-1">Completed Proposal Form <span class="text-danger">*</span></label>
+                                        
+                                        <input type="file" name="proposalFormFile" class="form-control" required accept=".pdf,.doc,.docx" />
+                                    </div>
+
+                                </div>
+
+                                <!-- Action Buttons Footer Container -->
+                                <div class="card-footer bg-light border-top d-flex justify-content-end align-items-center gap-3 py-3 px-4">
+                                    <a href="./dashboard.html" class="btn btn-link text-secondary text-decoration-none m-0 p-2">
+                                        Cancel
+                                    </a>
+                                    
+                                    <button type="submit" class="btn btn-primary px-4">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-upload me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 9l5 -5l5 5" /><path d="M12 4l0 12" /></svg>
+                                        Upload Documents
+                                    </button>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+
+    <script>
+        // Safely resets input choices for upload forms
+        function clearUploads() {
+            const fileInputs = document.querySelectorAll('#ethicsUploadForm input[type="file"]');
+            fileInputs.forEach(input => input.value = '');
+        }
+    </script>
