@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <link rel="stylesheet"
+          href="/lib/tabler/css/tabler.min.css" />
+
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            padding-top: 56px;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        #sidebar {
+            position: fixed;
+            top: 56px;             /* Height of navbar */
+            left: 0;
+            width: 260px;
+            height: calc(100vh - 56px);
+            transition: all .3s ease;
+            z-index: 1000;
+        }
+
+        /* Main content */
+        #page-wrapper {
+            margin-left: 260px;
+            transition: all .3s ease;
+            min-height: calc(100vh - 56px);
+        }
+
+        /* Hide sidebar */
+        body.sidebar-hidden #sidebar {
+            transform: translateX(-260px);
+        }
+
+        body.sidebar-hidden #page-wrapper {
+            margin-left: 0;
+        }
+
+        footer {
+            margin-left: 260px;
+            transition: all .3s ease;
+        }
+
+        body.sidebar-hidden footer {
+            margin-left: 0;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<!-- Navbar -->
+<header class="navbar navbar-expand-md d-print-none fixed-top bg-white">
+    <div class="container-fluid px-4">
+
+        <div class="d-flex align-items-center">
+
+            <button
+                class="btn btn-icon btn-ghost-secondary me-3"
+                type="button"
+                id="menu-toggle-btn">
+
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="icon icon-tabler icon-tabler-menu-2"
+                     width="24"
+                     height="24"
+                     viewBox="0 0 24 24"
+                     stroke-width="2"
+                     stroke="currentColor"
+                     fill="none"
+                     stroke-linecap="round"
+                     stroke-linejoin="round">
+
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M4 6l16 0"/>
+                    <path d="M4 12l16 0"/>
+                    <path d="M4 18l16 0"/>
+
+                </svg>
+
+            </button>
+
+            <a href="/" class="navbar-brand navbar-brand-autodark">
+                <img src="/pic/AIS logo.png"
+                     height="32"
+                     class="navbar-brand-image">
+            </a>
+
+        </div>
+
+        <div class="navbar-nav flex-row order-md-last ms-auto">
+
+            <div class="nav-item dropdown">
+
+                <a href="#"
+                   class="nav-link d-flex lh-1 text-reset"
+                   data-bs-toggle="dropdown">
+
+                    <span class="avatar avatar-sm bg-light text-muted">
+
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             class="icon icon-tabler icon-tabler-user"
+                             width="24"
+                             height="24"
+                             viewBox="0 0 24 24"
+                             stroke-width="2"
+                             stroke="currentColor"
+                             fill="none">
+
+                            <path stroke="none" d="M0 0h24v24H0z"/>
+                            <path d="M8 7a4 4 0 1 0 8 0"/>
+                            <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/>
+
+                        </svg>
+
+                    </span>
+
+                </a>
+
+                <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+
+                    <a href="#" class="dropdown-item">Status</a>
+                    <a href="#" class="dropdown-item">Profile</a>
+                    <a href="#" class="dropdown-item">Feedback</a>
+
+                    <div class="dropdown-divider"></div>
+
+                    <a href="#" class="dropdown-item">Settings</a>
+                    <a href="#" class="dropdown-item">Logout</a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</header>
+
+
+<div class="page">
+
+    <!-- Sidebar -->
+    <aside id="sidebar"
+           class="navbar navbar-vertical navbar-expand-sm"
+           data-bs-theme="dark">
+
+        <div class="container-fluid">
+
+            <h1 class="navbar-brand navbar-brand-autodark">
+                Sidebar
+            </h1>
+
+            <div class="navbar-collapse">
+
+                <ul class="navbar-nav pt-lg-3">
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <span class="nav-link-title">
+                                Dashboard
+                            </span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <span class="nav-link-title">
+                                Public Catalogue
+                            </span>
+                        </a>
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <div id="page-wrapper" class="page-wrapper">
+
+        <main class="page-body">
+
+            <div class="container-fluid">
+
+                @RenderBody()
+
+            </div>
+
+        </main>
+
+    </div>
+
+</div>
+
+
+<!-- Footer -->
+<footer class="border-top footer text-muted bg-light">
+
+    <div class="container-fluid d-flex justify-content-between align-items-center py-3 px-4">
+
+        <div>
+
+            <a asp-area=""
+               asp-controller="Home"
+               asp-action="Privacy"
+               class="me-3">
+
+                Privacy Policy
+
+            </a>
+
+            <a asp-area=""
+               asp-controller="Home"
+               asp-action="Privacy"
+               class="me-3">
+
+                Contact IT
+
+            </a>
+
+        </div>
+
+        <span>&copy; 2026 Auckland Institute of Studies</span>
+
+    </div>
+
+</footer>
+
+
+<script src="/lib/tabler/js/tabler.min.js"></script>
+
+<script>
+
+document.getElementById("menu-toggle-btn").addEventListener("click", function () {
+
+    document.body.classList.toggle("sidebar-hidden");
+
+});
+
+</script>
+
+</body>
+</html>
+
+
