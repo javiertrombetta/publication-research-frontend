@@ -1,0 +1,99 @@
+﻿@model ResearchPublicationManagementSystem.Models.CategoryViewModel
+@using ResearchPublicationManagementSystem.Models
+
+@{
+    ViewData["Title"] = "Edit Category";
+}
+
+<partial name="_PageHeader"
+         model='new PageHeaderViewModel
+         {
+             Title = "Edit Category",
+             Subtitle = "Update an existing publication category."
+         }' />
+
+<form>
+
+    <div class="card mt-3">
+
+        <div class="card-body">
+
+            <h3 class="card-title mb-4">
+                Category Information
+            </h3>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="CategoryName"
+                           class="form-label"></label>
+
+                    <input asp-for="CategoryName"
+                           class="form-control"
+                           value="Artificial Intelligence" />
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="Description"
+                           class="form-label"></label>
+
+                    <input asp-for="Description"
+                           class="form-control"
+                           value="AI related research" />
+
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6">
+
+                    <div class="form-check form-switch">
+
+                        <input asp-for="IsActive"
+                               class="form-check-input"
+                               checked />
+
+                        <label asp-for="IsActive"
+                               class="form-check-label">
+
+                            Active Category
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="card-footer text-end">
+
+            <a asp-controller="Categories"
+               asp-action="Index"
+               class="btn btn-secondary">
+
+                Cancel
+
+            </a>
+
+            <button type="submit"
+                    class="btn btn-primary">
+
+                <i class="ti ti-device-floppy"></i>
+
+                Save Changes
+
+            </button>
+
+        </div>
+
+    </div>
+
+</form>
