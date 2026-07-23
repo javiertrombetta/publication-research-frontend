@@ -1,0 +1,15 @@
+{
+  "version": "3.0",
+  "defaultProvider": "unpkg",
+  "libraries": [
+    {
+      "library": "@tabler/core@1.2.0",
+      "destination": "wwwroot/lib/tabler"
+    },
+    {
+      "provider": "unpkg",
+      "library": "@tabler/icons-webfont@3.45.0",
+      "destination": "wwwroot/lib/tabler-icons"
+    }
+  ]
+}

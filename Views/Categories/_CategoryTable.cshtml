@@ -1,0 +1,71 @@
+﻿@model List<ResearchPublicationManagementSystem.Models.CategoryListItemViewModel>
+
+<div class="table-responsive">
+
+    <table class="table table-vcenter card-table">
+
+        <thead>
+
+            <tr>
+
+                <th>Category Name</th>
+
+                <th>Description</th>
+
+                <th>Publications</th>
+
+                <th>Status</th>
+
+               
+                <th class="text-end">Actions</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            @foreach (var category in Model)
+            {
+
+                <tr>
+
+                    <td>
+
+                        @category.CategoryName
+
+                    </td>
+
+                    <td>
+
+                        @category.Description
+
+                    </td>
+
+                    <td>
+
+                        @category.PublicationCount
+
+                    </td>
+
+                    <td>
+
+                        <partial name="_StatusBadge"
+                                 model="category.IsActive" />
+
+                    </td>
+
+                    
+                    <td class="text-end">
+                        <partial name="_ActionButtons" />
+                    </td>
+
+                </tr>
+
+            }
+
+        </tbody>
+
+    </table>
+
+</div>

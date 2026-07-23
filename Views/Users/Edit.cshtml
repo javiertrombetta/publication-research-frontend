@@ -1,0 +1,210 @@
+﻿@model EditUserViewModel
+@using ResearchPublicationManagementSystem.Models
+
+@{
+    ViewData["Title"] = "Create User";
+}
+
+<partial name="_PageHeader"
+         model='new PageHeaderViewModel
+         {
+             Title = "Edit User",
+             Subtitle = "Update an existing user account."
+         }' />
+<form asp-action="Create" method="post">
+    <div class="card mt-4">
+        <div class="card-body">
+
+            <h3 class="card-title mb-4">
+                Personal Information
+            </h3>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="FullName" class="form-label"></label>
+                    <input asp-for="FullName" class="form-control" />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Phone" class="form-label"></label>
+                    <input asp-for="Phone" class="form-control" />
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Department" class="form-label"></label>
+                    <input asp-for="Department" class="form-control" />
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+    <div class="card mt-4">
+        <div class="card-body">
+
+            <h3 class="card-title mb-4">
+                Account Information
+            </h3>
+
+            <div class="row">
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Assigned Roles</label>
+
+                    <div class="row">
+
+                        <div class="col-md-6">
+
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="roleStudent" checked>
+                                <label class="form-check-label" for="roleStudent">
+                                    Student
+                                </label>
+                            </div>
+
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="roleSupervisor">
+                                <label class="form-check-label" for="roleSupervisor">
+                                    Supervisor
+                                </label>
+                            </div>
+
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="roleHOD">
+                                <label class="form-check-label" for="roleHOD">
+                                    Head of Department
+                                </label>
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="roleCommittee">
+                                <label class="form-check-label" for="roleCommittee">
+                                    Committee Member
+                                </label>
+                            </div>
+
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="roleCoordinator">
+                                <label class="form-check-label" for="roleCoordinator">
+                                    Research Coordinator
+                                </label>
+                            </div>
+
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="roleAdmin">
+                                <label class="form-check-label" for="roleAdmin">
+                                    Administrator
+                                </label>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        Status
+                    </label>
+
+                    <div class="form-check mt-2">
+
+                        <input asp-for="IsActive"
+                               class="form-check-input" />
+
+                        <label asp-for="IsActive"
+                               class="form-check-label">
+                            Active User
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+    <div class="card mt-4">
+        <div class="card-body">
+
+            <h3 class="card-title mb-4">
+                Account Security
+            </h3>
+
+            <div class="row align-items-end">
+
+                <div class="col-md-8 mb-3">
+
+                    <label class="form-label">
+                        Current Password
+                    </label>
+
+                    <input type="password"
+                           class="form-control"
+                           value="***************"
+                           readonly />
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <button type="button"
+                            class="btn btn-primary w-100 mt-md-4">
+
+                        <i class="ti ti-key"></i>
+
+                        Reset Password
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="alert alert-info mt-3 mb-0">
+
+                <i class="ti ti-info-circle me-2"></i>
+
+                <strong>Note:</strong>
+                Resetting the password will generate a new temporary password.
+                The user will be required to change it upon their next successful login.
+
+            </div>
+
+        </div>
+    </div>
+  
+    <div class="d-flex justify-content-end gap-2 mt-4">
+
+        <a asp-action="Index"
+           class="btn btn-secondary">
+
+            Cancel
+
+        </a>
+
+        <button type="submit"
+                class="btn btn-primary">
+
+            <i class="ti ti-device-floppy"></i>
+
+            Save Changes
+
+        </button>
+
+    </div>
+</form>

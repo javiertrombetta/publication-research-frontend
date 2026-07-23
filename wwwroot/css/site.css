@@ -1,0 +1,239 @@
+/* ==========================================================
+   RPMS - Research Publication Management System
+   Custom Theme
+   Built on Tabler UI
+   ========================================================== */
+
+/* ==========================================================
+   Tabler Override
+   ========================================================== */
+
+:root {
+    --tblr-primary: var(--rpms-primary);
+    --tblr-primary-rgb: 229,57,53;
+}
+/* ==========================================================
+   RPMS Theme
+   ========================================================== */
+
+:root {
+    /* ---------- Brand Colours ---------- */
+
+    --rpms-primary: #E53935;
+    --rpms-primary-dark: #C62828;
+    --rpms-secondary: #206BC4;
+    --rpms-success: #2FB344;
+    --rpms-warning: #F59F00;
+    --rpms-danger: #D63939;
+    --rpms-info: #4299E1;
+    /* ---------- Layout ---------- */
+
+    --rpms-sidebar-width: 260px;
+    --rpms-navbar-height: 56px;
+    /* ---------- Border Radius ---------- */
+
+    --rpms-radius: 10px;
+    /* ---------- Shadows ---------- */
+
+    --rpms-shadow: 0 .125rem .25rem rgba(0,0,0,.05);
+}
+/* ---------- Root ---------- */
+
+html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+}
+
+@media (min-width:768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+body {
+    margin: 0;
+    background: #f5f7fb;
+    font-family: var(--tblr-font-sans-serif);
+}
+
+/* ==========================================================
+   Layout
+   ========================================================== */
+
+.page {
+    min-height: 100vh;
+}
+
+    .page > .d-flex {
+        min-height: calc(100vh - 64px);
+    }
+
+.page-body {
+    padding-top: .5rem;
+    padding-bottom: 2rem;
+}
+
+.container-xl {
+    max-width: 1500px;
+}
+
+/* ==========================================================
+   Sidebar
+   ========================================================== */
+
+aside {
+    display: flex;
+    flex-direction: column;
+    width: 260px;
+    background: #fff;
+    border-right: 1px solid #e9ecef;
+}
+
+/* Logo */
+
+.navbar-brand-image {
+    max-width: 170px;
+}
+
+/* Navigation */
+
+.nav-link {
+    color: #495057;
+    border-radius: 8px;
+    padding: 12px 18px;
+    margin-bottom: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all .2s ease;
+}
+
+    .nav-link:hover {
+        background: #eef5ff;
+        color: #206bc4;
+    }
+
+    .nav-link.active {
+        background: #206bc4;
+        color: #ffffff !important;
+    }
+
+/* ==========================================================
+   RPMS Navbar
+   ========================================================== */
+
+.rpms-navbar {
+    min-height: var(--rpms-navbar-height);
+    padding-top: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e9ecef;
+    background: #fff;
+}
+
+    .rpms-navbar .btn-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .rpms-navbar .avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+/* ==========================================================
+   Cards
+   ========================================================== */
+
+.card {
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.04);
+}
+
+.card-header {
+    background: #fff;
+    border-bottom: 1px solid #eef1f4;
+}
+
+.card-title {
+    margin: 0;
+    font-weight: 700;
+}
+
+/* ==========================================================
+   Buttons
+   ========================================================== */
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary:visited {
+    color: #ffffff !important;
+}
+
+    .btn-primary svg,
+    .btn-primary i,
+    .btn-primary span {
+        color: #ffffff !important;
+    }
+
+/* ==========================================================
+   Tables
+   ========================================================== */
+
+.table th {
+    font-weight: 600;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* ==========================================================
+   Badges
+   ========================================================== */
+
+.badge {
+    font-weight: 500;
+    border-radius: 6px;
+}
+
+/* ==========================================================
+   Forms
+   ========================================================== */
+
+.form-control,
+.form-select {
+    border-radius: 8px;
+}
+
+    .form-control:focus,
+    .form-select:focus {
+        box-shadow: 0 0 0 .2rem rgba(32,107,196,.15);
+    }
+
+/* ==========================================================
+   Statistic Cards
+   ========================================================== */
+
+.avatar {
+    border-radius: 10px;
+}
+
+/* ==========================================================
+   Focus
+   ========================================================== */
+
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 .15rem rgba(32,107,196,.25);
+}

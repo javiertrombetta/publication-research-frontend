@@ -1,0 +1,77 @@
+﻿@model List<ResearchPublicationManagementSystem.Models.UserListItemViewModel>
+
+<div class="table-responsive">
+
+    <table class="table table-vcenter card-table">
+
+        <thead>
+
+            <tr>
+
+                <th>Name</th>
+
+                <th>Email</th>
+
+                <th>Role</th>
+
+                <th>Status</th>
+
+                <th>Created Date</th>
+
+                <th class="text-end">Actions</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            @foreach (var user in Model)
+            {
+
+                <tr>
+
+                    <td>
+
+                        @user.FullName
+
+                    </td>
+
+                    <td>
+
+                        @user.Email
+
+                    </td>
+
+                    <td>
+
+                        @user.Role
+
+                    </td>
+
+                    <td>
+
+                        <partial name="_StatusBadge"
+                                 model="user.IsActive" />
+
+                    </td>
+
+                    <td>
+
+                        @user.CreatedDate.ToString("yyyy-MM-dd")
+
+                    </td>
+
+                    <td class="text-end">
+                        <partial name="_ActionButtons" />
+                    </td>
+
+                </tr>
+
+            }
+
+        </tbody>
+
+    </table>
+
+</div>

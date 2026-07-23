@@ -1,0 +1,31 @@
+﻿@model ResearchPublicationManagementSystem.Models.StatisticCardViewModel
+
+<div class="card shadow-sm h-100">
+
+    <div class="card-body">
+
+        <div class="d-flex align-items-center justify-content-between mb-3">
+
+            <div class="avatar @Model.IconBackground">
+
+                <i class="ti ti-@Model.Icon"></i>
+
+            </div>
+
+        </div>
+
+        <div class="text-secondary mb-1">
+
+            @Model.Title
+
+        </div>
+
+        <div class="fs-1 fw-bold @Model.ColorClass">
+
+            @Model.Value
+
+        </div>
+
+    </div>
+
+</div>

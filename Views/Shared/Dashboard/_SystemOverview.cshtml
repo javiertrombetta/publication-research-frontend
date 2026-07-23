@@ -1,0 +1,63 @@
+﻿@model ResearchPublicationManagementSystem.Models.DashboardViewModel
+
+<div class="mb-5">
+
+    <h3 class="mb-3 fw-bold">
+
+        System Overview
+
+    </h3>
+
+    <div class="row">
+
+        <div class="col-md-3">
+
+            <partial name="_StatisticCard"
+                     model='new StatisticCardViewModel
+                     {
+                         Title = "Total Users",
+                         Value = Model.TotalUsers,
+                         ColorClass = "text-danger"
+                     }' />
+
+        </div>
+
+        <div class="col-md-3">
+
+            <partial name="_StatisticCard"
+                     model='new StatisticCardViewModel
+                     {
+                         Title = "Pending Workflow",
+                         Value = Model.PendingWorkflow,
+                         ColorClass = "text-warning"
+                     }' />
+
+        </div>
+
+        <div class="col-md-3">
+
+            <partial name="_StatisticCard"
+                     model='new StatisticCardViewModel
+                     {
+                         Title = "Publications",
+                         Value = Model.Publications,
+                         ColorClass = "text-primary"
+                     }' />
+
+        </div>
+
+        <div class="col-md-3">
+
+            <partial name="_StatisticCard"
+                     model='new StatisticCardViewModel
+                     {
+                         Title = "Online Users",
+                         Value = Model.OnlineUsers,
+                         ColorClass = "text-success"
+                     }' />
+
+        </div>
+
+    </div>
+
+</div>

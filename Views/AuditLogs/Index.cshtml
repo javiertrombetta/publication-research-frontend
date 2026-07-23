@@ -1,0 +1,177 @@
+﻿@model ResearchPublicationManagementSystem.Models.AuditLogViewModel
+@using ResearchPublicationManagementSystem.Models
+
+@{
+    ViewData["Title"] = "Audit Log";
+}
+
+<partial name="_PageHeader"
+         model='new PageHeaderViewModel
+         {
+             Title = "Audit Log",
+             Subtitle = "Monitor system activities and user actions."
+         }' />
+
+<!-- Summary Cards -->
+
+<div class="row mt-3">
+
+    <div class="col-md-3">
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <div class="text-secondary text-uppercase small">
+                    Total Logs
+                </div>
+
+                <div class="h1 mb-0">
+                    @Model.TotalLogs
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-3">
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <div class="text-secondary text-uppercase small">
+                    Today's Logs
+                </div>
+
+                <div class="h1 mb-0">
+                    @Model.TodayLogs
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-3">
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <div class="text-secondary text-uppercase small">
+                    Active Users
+                </div>
+
+                <div class="h1 mb-0">
+                    @Model.ActiveUsers
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-3">
+
+        <div class="card">
+
+            <div class="card-body">
+
+                <div class="text-secondary text-uppercase small">
+                    Critical Events
+                </div>
+
+                <div class="h1 mb-0 text-danger">
+                    @Model.CriticalEvents
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Toolbar -->
+
+<div class="card mt-3">
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <div class="col-md-4">
+
+                <input type="text"
+                       class="form-control"
+                       placeholder="Search audit logs..." />
+
+            </div>
+
+            <div class="col-md-3">
+
+                <select class="form-select">
+
+                    <option>All Modules</option>
+                    <option>Users</option>
+                    <option>Proposal</option>
+                    <option>Reviews</option>
+                    <option>Publication</option>
+                    <option>Categories</option>
+                    <option>Authentication</option>
+                    <option>System Settings</option>
+
+                </select>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <select class="form-select">
+
+                    <option>All Status</option>
+                    <option>Success</option>
+                    <option>Warning</option>
+                    <option>Error</option>
+
+                </select>
+
+            </div>
+
+            <div class="col-md-2 text-end">
+
+                <button class="btn btn-primary">
+
+                    <i class="ti ti-download"></i>
+
+                    Export
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Audit Table -->
+
+<div class="card mt-3">
+
+    <partial name="_AuditLogTable" model="Model" />
+
+    <div class="card-footer">
+
+        <partial name="_Pagination" />
+
+    </div>
+
+</div>
