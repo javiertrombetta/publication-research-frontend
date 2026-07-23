@@ -1,0 +1,287 @@
+﻿@model ResearchPublicationManagementSystem.Models.SystemSettingsViewModel
+@using ResearchPublicationManagementSystem.Models
+
+@{
+    ViewData["Title"] = "System Settings";
+}
+
+<partial name="_PageHeader"
+         model='new PageHeaderViewModel
+         {
+             Title = "System Settings",
+             Subtitle = "Configure the Research Publication Management System settings."
+         }' />
+
+<form>
+
+    <!-- General Settings -->
+
+    <div class="card mt-3">
+
+        <div class="card-body">
+
+            <h3 class="card-title mb-4">
+                General Settings
+            </h3>
+
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+
+                    <label asp-for="SystemName"
+                           class="form-label"></label>
+
+                    <input asp-for="SystemName"
+                           class="form-control" />
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label asp-for="InstitutionName"
+                           class="form-label"></label>
+
+                    <input asp-for="InstitutionName"
+                           class="form-control" />
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label asp-for="AcademicYear"
+                           class="form-label"></label>
+
+                    <input asp-for="AcademicYear"
+                           class="form-control" />
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Proposal Settings -->
+
+    <div class="card mt-3">
+
+        <div class="card-body">
+
+            <h3 class="card-title mb-4">
+                Research Proposal Settings
+            </h3>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="MaximumProposalSubmission"
+                           class="form-label"></label>
+
+                    <input asp-for="MaximumProposalSubmission"
+                           class="form-control" />
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label asp-for="SupervisorPreferenceLimit"
+                           class="form-label"></label>
+
+                    <input asp-for="SupervisorPreferenceLimit"
+                           class="form-control" />
+
+                </div>
+
+            </div>
+
+            <div class="form-check form-switch">
+
+                <input asp-for="AllowProposalRevisions"
+                       class="form-check-input" />
+
+                <label asp-for="AllowProposalRevisions"
+                       class="form-check-label">
+                </label>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Ethics Settings -->
+
+    <div class="card mt-3">
+
+        <div class="card-body">
+
+            <h3 class="card-title mb-4">
+                Ethics Settings
+            </h3>
+
+            <div class="form-check form-switch mb-3">
+
+                <input asp-for="EnableEthicsApproval"
+                       class="form-check-input" />
+
+                <label asp-for="EnableEthicsApproval"
+                       class="form-check-label">
+                </label>
+
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-4">
+
+                    <label asp-for="RequiredEthicsForms"
+                           class="form-label"></label>
+
+                    <input asp-for="RequiredEthicsForms"
+                           class="form-control" />
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+    <!-- Document Upload Settings -->
+
+    <div class="card mt-3">
+
+        <div class="card-body">
+
+            <h3 class="card-title mb-4">
+                Document Upload Settings
+            </h3>
+
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+
+                    <label asp-for="MaximumUploadFileSize"
+                           class="form-label"></label>
+
+                    <input asp-for="MaximumUploadFileSize"
+                           class="form-control" />
+
+                </div>
+
+                <div class="col-md-8 mb-3">
+
+                    <label asp-for="AllowedFileTypes"
+                           class="form-label"></label>
+
+                    <input asp-for="AllowedFileTypes"
+                           class="form-control" />
+
+                </div>
+
+            </div>
+
+            <div class="alert alert-info mb-0">
+
+                <i class="ti ti-info-circle me-2"></i>
+
+                Maximum upload size applies to all proposal and publication documents.
+                Separate file types with commas (e.g. PDF, DOCX).
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Notification Settings -->
+
+    <div class="card mt-3">
+
+        <div class="card-body">
+
+            <h3 class="card-title mb-4">
+                Notification Settings
+            </h3>
+
+            <div class="row">
+
+                <div class="col-md-6">
+
+                    <div class="form-check mb-3">
+                        <input asp-for="NotifyStudent"
+                               class="form-check-input" />
+                        <label asp-for="NotifyStudent"
+                               class="form-check-label"></label>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input asp-for="NotifySupervisor"
+                               class="form-check-input" />
+                        <label asp-for="NotifySupervisor"
+                               class="form-check-label"></label>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input asp-for="NotifyResearchCoordinator"
+                               class="form-check-input" />
+                        <label asp-for="NotifyResearchCoordinator"
+                               class="form-check-label"></label>
+                    </div>
+
+                </div>
+
+                <div class="col-md-6">
+
+                    <div class="form-check mb-3">
+                        <input asp-for="NotifyCommitteeMembers"
+                               class="form-check-input" />
+                        <label asp-for="NotifyCommitteeMembers"
+                               class="form-check-label"></label>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input asp-for="NotifyHeadOfDepartment"
+                               class="form-check-input" />
+                        <label asp-for="NotifyHeadOfDepartment"
+                               class="form-check-label"></label>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input asp-for="NotifyPublicVisitor"
+                               class="form-check-input" />
+                        <label asp-for="NotifyPublicVisitor"
+                               class="form-check-label"></label>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="card-footer text-end">
+
+            <a asp-action="Index"
+               class="btn btn-secondary">
+
+                Cancel
+
+            </a>
+
+            <button type="submit"
+                    class="btn btn-primary">
+
+                <i class="ti ti-device-floppy"></i>
+
+                Save Settings
+
+            </button>
+
+        </div>
+
+    </div>
+
+</form>
