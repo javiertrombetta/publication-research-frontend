@@ -1,0 +1,218 @@
+﻿@model UserDetailsViewModel
+@using ResearchPublicationManagementSystem.Models
+
+@{
+    ViewData["Title"] = "User Profile";
+}
+
+<partial name="_PageHeader"
+         model='new PageHeaderViewModel
+         {
+             Title = "User Profile",
+             Subtitle = "View user account information."
+         }' />
+<div class="card mt-4">
+    <div class="card-body">
+
+        <h3 class="mb-4 fw-bold">
+            Personal Information
+        </h3>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Full Name
+                </label>
+
+                <input class="form-control"
+                       value="@Model.FullName"
+                       readonly />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Email
+                </label>
+
+                <input class="form-control"
+                       value="@Model.Email"
+                       readonly />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Phone
+                </label>
+
+                <input class="form-control"
+                       value="@Model.Phone"
+                       readonly />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Department
+                </label>
+
+                <input class="form-control"
+                       value="@Model.Department"
+                       readonly />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Role
+                </label>
+
+                <input class="form-control"
+                       value="@Model.Role"
+                       readonly />
+            </div>
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label">
+                    Status
+                </label>
+
+                <br />
+
+                <partial name="_StatusBadge"
+                         model="Model.IsActive" />
+
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <label class="form-label">
+                    Created Date
+                </label>
+
+                <input class="form-control"
+                       value="@Model.CreatedDate.ToString("yyyy-MM-dd")"
+                       readonly />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Last Login
+                </label>
+
+                <input class="form-control"
+                       value="@Model.LastLogin.ToString("yyyy-MM-dd HH:mm")"
+                       readonly />
+            </div>
+
+        </div>
+
+    </div>
+</div>
+<div class="card mt-4">
+    <div class="card-body">
+
+        <h3 class="mb-4 fw-bold">
+            Role Information
+        </h3>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Assigned Supervisor
+                </label>
+
+                <input class="form-control"
+                       value="@Model.Supervisor"
+                       readonly />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Committee Member 1
+                </label>
+
+                <input class="form-control"
+                       value="@Model.CommitteeMember1"
+                       readonly />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Committee Member 2
+                </label>
+
+                <input class="form-control"
+                       value="@Model.CommitteeMember2"
+                       readonly />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Research Coordinator
+                </label>
+
+                <input class="form-control"
+                       value="@Model.ResearchCoordinator"
+                       readonly />
+            </div>
+
+        </div>
+
+    </div>
+</div>
+<div class="card mt-4">
+    <div class="card-body">
+
+        <h3 class="mb-4 fw-bold">
+            Publication Information
+        </h3>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Current Publication
+                </label>
+
+                <input class="form-control"
+                       value="@Model.CurrentPublication"
+                       readonly />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">
+                    Publication Status
+                </label>
+
+                <input class="form-control"
+                       value="@Model.PublicationStatus"
+                       readonly />
+            </div>
+
+        </div>
+
+    </div>
+</div>
+<div class="d-flex justify-content-end gap-2 mt-4">
+
+    <a asp-controller="Users"
+       asp-action="Index"
+       class="btn btn-secondary">
+
+        <i class="ti ti-arrow-left"></i>
+
+        Back
+
+    </a>
+
+    <a asp-controller="Users"
+       asp-action="Edit"
+       class="btn btn-primary">
+
+        <i class="ti ti-edit"></i>
+
+        Edit User
+
+    </a>
+
+</div>

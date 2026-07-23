@@ -1,0 +1,54 @@
+﻿@model ResearchPublicationManagementSystem.Models.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<partial name="_PageHeader"
+         model='new PageHeaderViewModel
+         {
+             Title = "Administrator Dashboard",
+             Subtitle = "Monitor system status and oversee research publication activities."
+         }' />
+
+<partial name="Dashboard/_SystemOverview" model="Model" />
+
+<div class="row">
+
+    <!-- Left -->
+
+    <div class="col-lg-7">
+
+        <div class="d-flex flex-column gap-3">
+
+            <partial name="Dashboard/_WorkflowSummary"
+                     model="Model" />
+
+            <partial name="Dashboard/_PublicationStatistics"
+                     model="Model" />
+
+        </div>
+
+    </div>
+
+    <!-- Right -->
+
+    <div class="col-lg-5">
+
+        <partial name="Dashboard/_LatestWorkflowUpdates"
+                 model="Model" />
+
+    </div>
+
+</div>
+<div class="mt-4">
+
+    <partial name="Dashboard/_RecentActivities" model="Model" />
+
+</div>
+
+<div class="mt-4">
+
+    <partial name="Dashboard/_QuickActions" model="Model" />
+
+</div>
