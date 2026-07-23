@@ -1,0 +1,71 @@
+﻿@model ResearchPublicationManagementSystem.Models.AuditLogViewModel
+
+<div class="table-responsive">
+
+    <table class="table table-vcenter table-hover card-table">
+
+        <thead>
+
+            <tr>
+                <th>Date & Time</th>
+                <th>User</th>
+                <th>Module</th>
+                <th>Activity</th>
+                <th>Status</th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            @foreach (var log in Model.AuditLogs)
+            {
+                <tr>
+
+                    <td>@log.DateTime.ToString("dd MMM yyyy HH:mm")</td>
+
+                    <td>@log.User</td>
+
+                    <td>@log.Module</td>
+
+                    <td>@log.Activity</td>
+
+                    <td>
+
+                        @switch (log.Status)
+                        {
+                            case "Success":
+                                <span class="badge bg-success text-white">
+                                    Success
+                                </span>
+                                break;
+
+                            case "Warning":
+                                <span class="badge bg-warning text-dark">
+                                    Warning
+                                </span>
+                                break;
+
+                            case "Error":
+                                <span class="badge bg-danger text-white">
+                                    Error
+                                </span>
+                                break;
+
+                            default:
+                                <span class="badge bg-secondary">
+                                    @log.Status
+                                </span>
+                                break;
+                        }
+
+                    </td>
+
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+
+</div>
