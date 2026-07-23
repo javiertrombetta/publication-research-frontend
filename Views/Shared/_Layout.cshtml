@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>
+        @ViewData["Title"] - Research Publication Management System
+    </title>
+
+    <!-- Tabler CSS -->
+    <link rel="stylesheet"
+          href="~/lib/tabler/dist/css/tabler.min.css" />
+    <!-- Tabler Icons -->
+    <link rel="stylesheet"
+          href="~/lib/tabler-icons/dist/tabler-icons.css" />
+
+    <!-- Your custom CSS -->
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+
+</head>
+
+<body>
+
+    <div class="page">
+
+        <!-- Top Navigation -->
+        <partial name="_Navbar" />
+
+        <!-- Main Layout -->
+        <div class="d-flex">
+
+            <!-- Sidebar -->
+            <partial name="_Sidebar" />
+
+            <!-- Page Content -->
+            <main class="flex-fill">
+
+                <div class="page-body">
+
+                    <div class="container-xl">
+
+                        @RenderBody()
+
+                    </div>
+
+                </div>
+
+            </main>
+
+        </div>
+
+    </div>
+
+    <!-- JavaScript -->
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="~/lib/tabler/dist/js/tabler.min.js"></script>
+
+    <script src="~/js/site.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+
+</html>
