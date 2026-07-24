@@ -1,0 +1,193 @@
+
+
+  
+            <main class="page-body m-0 py-4">
+                <div class="container-xl">
+                    
+                    <!-- Centered responsive layout wrapper -->
+                    <div class="row justify-content-center">
+                        <div class="col-12 col-md-10 col-lg-8 col-xl-7">
+                            
+                            <!-- Header Area -->
+                            <div class="mb-4 px-2">
+                                <h1 class="h1 m-0 fw-bold text-dark">Create Publication</h1>
+                            </div>
+
+                            <!-- MAIN SUBMISSION FORM -->
+                            <form id="publicationForm" action="#" method="POST" enctype="multipart/form-data" class="card shadow-sm mb-4">
+                                <div class="card-header bg-light">
+                                    <h3 class="card-title fs-3 fw-bold text-primary">Your Research Info</h3>
+                                </div>
+                                <div class="card-body p-4">
+                                    
+                                    <!-- Publication Type Dropdown -->
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold mb-1">Publication Type <span class="text-danger">*</span></label>
+                                        <select name="publicationType" class="form-select" required>
+                                            <option value="" disabled selected hidden>Select publication format...</option>
+                                            <option value="journal">Journal Article</option>
+                                            <option value="conference">Conference Proceeding</option>
+                                            <option value="thesis">Thesis / Dissertation</option>
+                                            <option value="report">Technical Report</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Title Input -->
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold mb-1">Research Title <span class="text-danger">*</span></label>
+                                        <input type="text" name="title" class="form-control" placeholder="Enter the full title of your research paper" required />
+                                    </div>
+
+                                    <!-- DYNAMIC KEYWORDS UI -->
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold mb-1">Keywords <span class="text-danger">*</span></label>
+                                        <div class="text-secondary small mb-2">Type a keyword and click Add or press Enter to add it to your research profile.</div>
+                                        
+                                        <!-- Hidden field to submit combined values cleanly to backend -->
+                                        <input type="hidden" name="keywords" id="hiddenKeywordsInput" required />
+
+                                        <!-- Input Field Action Group -->
+                                        <div class="input-group mb-2">
+                                            <input type="text" id="keywordField" class="form-control" placeholder="e.g. Machine Learning" autocomplete="off" />
+                                            <button class="btn btn-outline-secondary" type="button" id="addKeywordBtn">Add</button>
+                                        </div>
+
+                                        <!-- Interactive Tag Pool Display -->
+                                        <div id="keywordTagsContainer" class="d-flex flex-wrap gap-2 py-1">
+                                            <!-- Generated tags will attach here dynamically -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Abstract Textarea -->
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <label class="form-label fw-bold m-0">Abstract <span class="text-danger">*</span></label>
+                                            <span class="text-secondary small" id="abstractWordCount">0 / 2000 words</span>
+                                        </div>
+                                        <textarea name="abstract" id="abstractInput" class="form-control" rows="6" placeholder="Provide a concise summary of your research objectives, methodology, results, and conclusions..." required></textarea>
+                                    </div>
+
+                                    <!-- Note to Reviewer Textarea -->
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <label class="form-label fw-bold m-0">Note to Reviewer</label>
+                                            <span class="text-secondary small" id="noteWordCount">0 / 2000 words</span>
+                                        </div>
+                                        <textarea name="reviewerNote" id="noteInput" class="form-control" rows="4" placeholder="Add any specific context, funding acknowledgments, or procedural notes for the reviewing committee member..."></textarea>
+                                    </div>
+
+                                    <!-- Document Upload Area -->
+                                    <div class="mb-2">
+                                        <label class="form-label fw-bold mb-1">Upload Research File <span class="text-danger">*</span></label>
+                                        <div class="text-secondary small mb-2">Upload the full manuscript document framework. Supported formats: PDF, DOCX.</div>
+                                        <input type="file" name="researchFile" class="form-control" required accept=".pdf,.docx" />
+                                    </div>
+
+                                </div>
+
+                                <!-- Action Buttons Footer Container -->
+                                <div class="card-footer bg-light border-top d-flex justify-content-end align-items-center gap-3 py-3 px-4">
+                                    <a href="./dashboard.html" class="btn btn-link text-secondary text-decoration-none m-0 p-2">
+                                        Cancel
+                                    </a>
+                                    <button type="button" onclick="saveAsDraft()" class="btn btn-outline-secondary m-0 px-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-download me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" /><path d="M12 14v4" /><path d="M10 16l2 2l2 -2" /></svg>
+                                        Save Draft
+                                    </button>
+                                    <button type="submit" class="btn btn-primary px-4">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-send me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 14l11 -11" /><path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5" /></svg>
+                                        Submit Publication
+                                    </button>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+  
+
+
+    <script>
+        const MAX_WORDS = 2000;
+        const abstractInput = document.getElementById('abstractInput');
+        const noteInput = document.getElementById('noteInput');
+        const abstractCountEl = document.getElementById('abstractWordCount');
+        const noteCountEl = document.getElementById('noteWordCount');
+
+        // KEYWORD STATE AND DOM HANDLING
+        let keywordsArray = [];
+        const keywordField = document.getElementById('keywordField');
+        const addKeywordBtn = document.getElementById('addKeywordBtn');
+        const keywordTagsContainer = document.getElementById('keywordTagsContainer');
+        const hiddenKeywordsInput = document.getElementById('hiddenKeywordsInput');
+
+        function updateKeywordsField() {
+            // Keep hidden data sync'd for validation and submit rules
+            hiddenKeywordsInput.value = keywordsArray.join(',');
+        }
+
+        function renderTags() {
+            keywordTagsContainer.innerHTML = '';
+            keywordsArray.forEach((keyword, index) => {
+                const tag = document.createElement('span');
+                tag.className = 'badge bg-blue-lt d-inline-flex align-items-center px-2 py-1 fs-4';
+                tag.innerHTML = `
+                    ${keyword}
+                    <a class="ms-2 text-blue text-decoration-none fw-bold lh-1 p-0 cursor-pointer" style="font-size: 1.1em;" onclick="removeKeyword(${index})">×</a>
+                `;
+                keywordTagsContainer.appendChild(tag);
+            });
+            updateKeywordsField();
+        }
+
+        function addKeywordFromInput() {
+            const val = keywordField.value.trim();
+            if (val && !keywordsArray.includes(val)) {
+                keywordsArray.push(val);
+                renderTags();
+                keywordField.value = '';
+            }
+            keywordField.focus();
+        }
+
+        function removeKeyword(index) {
+            keywordsArray.splice(index, 1);
+            renderTags();
+        }
+
+        // Trigger additions on button clicks or Enter keys
+        addKeywordBtn.addEventListener('click', addKeywordFromInput);
+        keywordField.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Stop standard form submission triggers
+                addKeywordFromInput();
+            }
+        });
+
+
+        // WORD COUNTER FUNCTIONS
+        function handleWordCount(textarea, counterElement) {
+            textarea.addEventListener('input', () => {
+                const text = textarea.value.trim();
+                const words = text ? text.split(/\s+/) : [];
+                
+                if (words.length > MAX_WORDS) {
+                    const remainingWords = words.slice(0, MAX_WORDS).join(' ');
+                    textarea.value = remainingWords;
+                    counterElement.textContent = `${MAX_WORDS} / ${MAX_WORDS} words`;
+                    counterElement.classList.replace('text-secondary', 'text-danger');
+                } else {
+                    counterElement.textContent = `${words.length} / ${MAX_WORDS} words`;
+                    counterElement.classList.replace('text-danger', 'text-secondary');
+                }
+            });
+        }
+
+        handleWordCount(abstractInput, abstractCountEl);
+        handleWordCount(noteInput, noteCountEl);
+
+        function saveAsDraft() {
+            alert("Draft state saved successfully!");
+        }
