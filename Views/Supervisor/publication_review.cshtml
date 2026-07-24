@@ -1,0 +1,145 @@
+
+
+            <main class="page-body m-0 py-4">
+                <div class="container-xl">
+                    
+                    <!-- Unified Single-Column Grid Tracker -->
+                    <form id="publicationReviewForm" action="#" method="POST" enctype="multipart/form-data" class="row justify-content-center m-0">
+                        <div class="col-12 col-md-10 col-lg-8 d-flex flex-column gap-4 p-0">
+                        
+                            <!-- ==================== PAGE HEADER ==================== -->
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center px-2">
+                                    <div>
+                                        <h1 class="h1 m-0 fw-bold text-dark">Publication Manuscript Review </h1>
+                                        
+                                    </div>
+                                    
+                                </div>
+                            </div>
+
+                            <!-- ==================== VERTICAL CONTENT STACK ==================== -->
+                            
+                            <!-- Manuscript Core Metadata Card -->
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-blue text-white">
+                                    <h3 class="card-title fs-2 fw-bold text-white">Research Details</h3>
+                                </div>
+                               
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label text-secondary small fw-bold text-uppercase mb-1">Research Title</label>
+                                        <div class="text-dark fw-bold fs-3 lh-base">An Analysis of Smart Home Cryptographic Vulnerabilities in Edge Computing Environments</div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <label class="form-label text-secondary small fw-bold text-uppercase mb-1">Publication Type</label>
+                                            <div class="text-dark fw-medium"><span class="badge bg-azure-lt px-2 py-1">Journal Article</span></div>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label text-secondary small fw-bold text-uppercase mb-1">Submitted Date</label>
+                                            <div class="text-dark">July 20, 2026</div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-0">
+                                        <label class="form-label text-secondary small fw-bold text-uppercase mb-1">Keywords</label>
+                                        <div class="d-flex flex-wrap gap-1 mt-1">
+                                            <span class="badge bg-light text-secondary border">IoT Security</span>
+                                            <span class="badge bg-light text-secondary border">Asymmetric Cryptography</span>
+                                            <span class="badge bg-light text-secondary border">Edge Computing</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Abstract Card -->
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-blue text-white">
+                                    <h3 class="card-title fs-2 fw-bold text-white">Abstract</h3>
+                                </div>
+                                
+                                <div class="card-body">
+                                    <p class="text-secondary lh-lg m-0" style="text-align: justify; font-size: 0.92rem;">
+                                        This research proposal outlines a comprehensive security evaluation of public and private key infrastructure deployed across modern IoT smart home frameworks. By analyzing potential edge execution nodes, the study aims to identify cryptographic latency trade-offs alongside physical and data-driven security configurations. The experimental design relies entirely on simulated machine states and open-source protocol packages.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Submitted Materials Card -->
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-blue text-white">
+                                    <h3 class="card-title fs-2 fw-bold text-white">Submitted Materials</h3>
+                                </div>
+                                
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item d-flex align-items-center justify-content-between py-3 px-3">
+                                        <div class="d-flex align-items-center">
+                                            <span class="avatar bg-red-lt me-3 fw-bold">PDF</span>
+                                            <div>
+                                                <div class="fw-bold text-dark">Manuscript_Final_Draft.pdf</div>
+                                                <span class="text-muted small">Full Research Paper — 4.8 MB</span>
+                                            </div>
+                                        </div>
+                                        <a href="#" class="btn btn-sm btn-outline-primary px-3">Download</a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Reviewer Evaluation Interface -->
+                            <div class="card shadow-sm border-top border-primary mb-5">
+                                <div class="card-body py-4">
+
+                                    <!-- Supervisor Text Feedback Form -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold text-dark">Supervisor Evaluation
+                                            Comments</label>
+                                        <textarea class="form-control text-dark" rows="5"
+                                            placeholder="Provide detailed remarks regarding structural methodology, literature review citations, or formatting updates required..."></textarea>
+                                    </div>
+
+                                    <!-- Annotated File Upload Component -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold text-dark mb-1">Upload Annotated File
+                                            (Optional)</label>
+                                        <span class="form-hint mb-2">Attach a reviewed copy containing contextual inline
+                                            notes or tracked modifications.</span>
+                                        <div class="form-file">
+                                            <input type="file" class="form-control" id="annotatedFile"
+                                                name="annotated_file">
+                                        </div>
+                                    </div>
+
+                                    <hr class="my-4" />
+
+                                    <!-- Editorial Workflow Action Triggers -->
+                                    <div class="d-flex flex-column flex-sm-row justify-content-end gap-2">
+                                        <button type="submit" name="action" value="major_revision"
+                                            class="btn btn-outline-danger px-3">Request Major Revision</button>
+                                        <button type="submit" name="action" value="minor_revision"
+                                            class="btn btn-outline-warning px-3">Request Minor Revision</button>
+                                        <button type="submit" name="action" value="approve_pass"
+                                            class="btn btn-success px-4 fw-bold">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                class="icon icon-tabler icon-tabler-check me-1" width="24" height="24"
+                                                viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M5 12l5 5l10 -10" />
+                                            </svg>
+                                            Approve & Pass to Committee
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                            
+                            
+
+                        </div>
+                    </form>
+
+                </div>
+            </main>
+  
+
