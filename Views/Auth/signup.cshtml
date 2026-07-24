@@ -1,0 +1,138 @@
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="/lib/tabler/css/tabler.min.css" />
+</head>
+
+<body style="height: 100vh; max-height: 100vh; display: flex; flex-direction: column; overflow: hidden; background-color: var(--tblr-bg-surface); margin: 0;">
+
+    <!-- Navbar -->
+    <header class="navbar navbar-expand-md d-print-none bg-white border-bottom">
+        <div class="container-fluid px-4">
+            <div class="d-flex align-items-center">
+                <a href="/" class="navbar-brand navbar-brand-autodark">
+                    <img src="/pic/AIS logo.png" height="32" class="navbar-brand-image">
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content space stretches dynamically to fill the screen gaps perfectly -->
+    <div class="page flex-grow-1 d-flex flex-column justify-content-center" style="min-height: 0;">
+        <div id="page-wrapper" class="page-wrapper w-100 d-flex flex-column justify-content-center">
+            <main class="page-body m-0 py-4">
+                <div class="container-xl">
+                    
+                    <!-- Increased column sizing constraints to allow layout elements to fill space natively -->
+                    <div class="row align-items-center g-5 justify-content-center">
+                        
+                        <!-- Left Column: Explanation Steps Process Box -->
+                        <div class="col-lg-6 d-none d-lg-block">
+                            <h1 class="h1 mb-3" style="font-size: 2.25rem;">Join our community</h1>
+                            <p class="text-secondary mb-4 fs-3">Create your account in just a few quick actions. All submitted profiles go through administration standard vetting protocols.</p>
+                            
+                            <!-- Tabler Steps Component -->
+                            <ul class="steps steps-vertical">
+                                <li>
+                                    <div class="h3 m-0 mb-1">Step 1: Create your account</div>
+                                    <div class="text-secondary fs-4">Use your AIS institutional email if available; otherwise, register with a valid email address.</div>
+                                    <div class="text-secondary fs-4 mt-1">A confirmation email will be sent to complete your registration.</div>
+                                </li>
+                                <li>
+                                    <div class="h3 m-0 mb-1">Step 2: Await approval</div>
+                                    <div class="text-secondary fs-4">Your request will be reviewed, and you will be notified via email shortly.</div>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Right Column: Registration Input Form Elements -->
+                        <div class="col-12 col-md-10 col-lg-5">
+                            <div class="card card-md shadow-sm">
+                                <!-- Expanded container layout padding for desktop balance -->
+                                <div class="card-body py-4 px-4">
+                                    <h2 class="h2 text-center mb-4 d-lg-none">Create your account</h2>
+                                    
+                                    <form action="./" method="post" autocomplete="off" novalidate>
+                                        <!-- Swapped target input groups from -sm to regular standard sizing profiles -->
+                                        <div class="row g-3 mb-3">
+                                            <!-- First Name Field -->
+                                            <div class="col-6">
+                                                <label class="form-label mb-2">Name</label>
+                                                <input type="text" class="form-control" placeholder="John" required>
+                                            </div>
+                                            <!-- Surname Field -->
+                                            <div class="col-6">
+                                                <label class="form-label mb-2">Surname</label>
+                                                <input type="text" class="form-control" placeholder="Doe" required>
+                                            </div>
+                                        </div>
+
+                                        <!-- Email Field -->
+                                        <div class="mb-3">
+                                            <label class="form-label mb-2">Email address</label>
+                                            <input type="email" class="form-control" placeholder="john.doe@email.com" required>
+                                        </div>
+
+                                        <!-- Password Field -->
+                                        <div class="mb-3">
+                                            <label class="form-label mb-2">Password</label>
+                                            <input type="password" class="form-control" placeholder="Choose strong password" required>
+                                            
+                                            <!-- Live Strength Progress Bar Indicator Component -->
+                                            <div class="progress progress-xs mt-2">
+                                                <div class="progress-bar bg-warning" style="width: 40%" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                            <small class="text-secondary d-block mt-2" style="font-size: 0.8rem;">Password status: <span class="text-warning fw-bold">Medium strength</span></small>
+                                        </div>
+
+                                        <!-- Password Confirmation Field -->
+                                        <div class="mb-4">
+                                            <label class="form-label mb-2">Confirm password</label>
+                                            <input type="password" class="form-control" placeholder="Verify password security string" required>
+                                        </div>
+
+                                        <!-- Submit Action Button -->
+                                        <div class="form-footer mt-2">
+                                            <button type="submit" class="btn btn-primary w-100 py-2 fs-3">Create an account</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Alternate Sign-in Path Redirect -->
+                            <div class="text-center text-secondary mt-3 fs-4">
+                                Already have a profile? <a href="./login.html">Sign in here</a>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-top footer text-muted bg-light">
+        <div class="container-fluid d-flex justify-content-between align-items-center py-3 px-4">
+            <div>
+                <a asp-area="" asp-controller="Home" asp-action="Privacy" class="me-3">
+                    Privacy Policy
+                </a>
+                <a asp-area="" asp-controller="Home" asp-action="Privacy" class="me-3">
+                    Contact IT
+                </a>
+            </div>
+            <span>&copy; 2026 Auckland Institute of Studies</span>
+        </div>
+    </footer>
+
+    <script src="/lib/tabler/js/tabler.min.js"></script>
+</body>
+
+</html>
