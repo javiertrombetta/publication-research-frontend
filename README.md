@@ -73,7 +73,7 @@ Append the following routes to the URL to access each screen.
 
 | Screen | URL |
 |---------|-----|
-| Admin Dashboard | `/Admin` |
+| Admin Dashboard | `/Admin/dashboard` |
 
 ---
 
