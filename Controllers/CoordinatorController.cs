@@ -61,5 +61,11 @@ namespace MyWebApp.Controllers
             
             return View();
         }
+
+        public IActionResult assigning_committee_members()
+        {
+            
+            return View();
+        }
     }
 }
