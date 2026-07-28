@@ -101,6 +101,7 @@ Append the following routes to the URL to access each screen.
 | Ethic review after head of department | `/Coordinator/Ethic_review_afters_headofdepartment` |
 | Select a proposal for student | `/Coordinator/select_a_proposal_forstudent` |
 | Staff Profile | `/Coordinator/staff_profile` |
+| Assign Committee Members | `/Coordinator/assigning_committee_members` |
 
 
 ---
@@ -162,6 +163,15 @@ Append the following routes to the URL to access each screen.
 | Review ethic assessment checklist | `/Supervisor/Review_Ethic_assessmentchecklist` |
 | Staff Profile | `/Supervisor/staff_profile` |
 | Supervisor Dashboard | `/Supervisor/SupervisorDashboard` |
+
+---
+
+## Admin
+
+| Screen | URL |
+|---------|-----|
+| Admin Check Proposal details | `/Admin/Admin_check_proposaldetail` |
+| Assign Committee Members | `/Admin/assigning_committee_members` |
 
 
 ## Current Progress
