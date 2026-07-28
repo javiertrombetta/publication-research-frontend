@@ -237,3 +237,77 @@ aside {
 .form-check-input:focus {
     box-shadow: 0 0 0 .15rem rgba(32,107,196,.25);
 }
+/* ==========================================================
+   Detail Pages
+========================================================== */
+
+.detail-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075);
+    margin-bottom: 1.5rem;
+}
+
+.detail-section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 1rem;
+}
+
+.detail-label {
+    font-size: .85rem;
+    color: #6c757d;
+}
+
+.detail-value {
+    font-weight: 600;
+    color: #212529;
+}
+
+.detail-divider {
+    margin: 1.25rem 0;
+}
+.workflow-container {
+    margin-top: 1rem;
+}
+
+.workflow-item {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding-bottom: 20px;
+}
+
+    .workflow-item:last-child {
+        padding-bottom: 0;
+    }
+
+    .workflow-item:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        left: 15px;
+        top: 36px;
+        width: 2px;
+        height: calc(100% - 10px);
+        background: #dee2e6;
+    }
+
+.workflow-icon {
+    width: 32px;
+    margin-right: 20px;
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.workflow-badge {
+    width: 28px;
+    height: 28px;
+    line-height: 20px;
+    font-size: .85rem;
+}
+
+.workflow-content {
+    flex: 1;
+}
