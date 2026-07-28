@@ -50,5 +50,17 @@ namespace ResearchPublicationManagementSystem.Controllers
             return View(model);
         }
 
+        public IActionResult Admin_check_proposaldetail()
+        {
+            
+            return View();
+        }
+
+        public IActionResult assigning_committee_members()
+        {
+            
+            return View();
+        }    
+
     }
 }
