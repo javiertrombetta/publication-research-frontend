@@ -1,0 +1,103 @@
+﻿@model IEnumerable<ResearchPublicationManagementSystem.Models.ProposalListItemViewModel>
+
+<table class="table table-hover align-middle">
+
+    <thead>
+
+        <tr>
+
+            <th>Proposal ID</th>
+
+            <th>Proposal Title</th>
+
+            <th>Student</th>
+
+            <th>Category</th>
+
+            <th>Supervisor</th>
+
+            <th>Status</th>
+
+            <th>Submitted Date</th>
+
+            <th>Last Updated</th>
+
+            <th class="text-center">Actions</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        @foreach (var item in Model)
+        {
+            <tr>
+
+                <td>@item.ProposalId</td>
+
+                <td>
+
+                    <strong>@item.Title</strong>
+
+                </td>
+
+                <td>@item.Student</td>
+
+                <td>@item.Category</td>
+
+                <td>@item.Supervisor</td>
+
+                <td>
+
+                    @{
+                        var badge = "bg-secondary";
+
+                        switch (item.Status)
+                        {
+                            case "Pending Assignment":
+                                badge = "bg-warning text-dark";
+                                break;
+
+                            case "Under Review":
+                                badge = "bg-info text-dark";
+                                break;
+
+                            case "Approved":
+                                badge = "bg-success";
+                                break;
+                        }
+                    }
+
+                    <span class="badge rounded-pill @badge">
+
+                        @item.Status
+
+                    </span>
+
+                </td>
+
+                <td>@item.SubmittedDate</td>
+
+                <td>@item.LastUpdated</td>
+
+                <td class="text-center">
+
+                    <a asp-controller="Proposals"
+                       asp-action="Details"
+                       asp-route-id="@item.Id"
+                       class="btn btn-sm btn-outline-secondary"
+                       title="View Proposal">
+
+                        <i class="ti ti-eye"></i>
+                        View
+                    </a>
+
+                </td>
+
+            </tr>
+        }
+
+    </tbody>
+
+</table>
