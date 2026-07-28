@@ -104,5 +104,181 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             return View(model);
         }
+        public IActionResult Details(int id)
+        {
+            var model = new PublicationDetailsViewModel
+            {
+                Id = id,
+
+                PublicationId = "PB-2026-001",
+
+                Title = "Artificial Intelligence Based Healthcare Diagnosis System",
+
+                Status = "Approved",
+
+                Abstract = "This publication presents an artificial intelligence framework that assists healthcare professionals in diagnosing chronic diseases through machine learning and predictive analytics. The study demonstrates improved diagnosis accuracy while reducing processing time and supporting clinical decision-making.",
+
+                Version = "Version 2",
+
+                SubmittedDate = new DateTime(2026, 7, 25),
+
+                LastUpdated = new DateTime(2026, 8, 5),
+
+                RelatedProposalId = "RP-2026-001",
+
+                StudentId = "ST20260015",
+
+                StudentName = "John Doe",
+
+                StudentEmail = "john.doe@student.ais.ac.nz",
+
+                SupervisorName = "Dr Sarah Chen",
+
+                ResearchCategory = "Artificial Intelligence",
+
+                CommitteeName = "AI Research Committee",
+                CommitteeMembers = new List<CommitteeMemberViewModel>
+{
+    new()
+    {
+        Id = 1,
+        MemberName = "Dr Sarah Chen",
+        CommitteeRole = "Committee Chair",
+        ReviewStatus = "Completed",
+        Recommendation = "Approve"
+    },
+
+    new()
+    {
+        Id = 2,
+        MemberName = "Dr Michael Brown",
+        CommitteeRole = "Committee Member",
+        ReviewStatus = "Completed",
+        Recommendation = "Minor Revision"
+    },
+
+    new()
+    {
+        Id = 3,
+        MemberName = "Dr Alice Lim",
+        CommitteeRole = "Committee Member",
+        ReviewStatus = "Pending",
+        Recommendation = "-"
+    }
+},
+
+                CommitteeReviews = new List<CommitteeReviewViewModel>
+{
+    new()
+    {
+        Id = 1,
+        ReviewerName = "Dr Sarah Chen",
+        CommitteeRole = "Committee Chair",
+        ReviewDate = new DateTime(2026, 8, 2),
+        Recommendation = "Approve",
+        Comments = "The publication demonstrates strong methodology and significant contribution."
+    },
+
+    new()
+    {
+        Id = 2,
+        ReviewerName = "Dr Michael Brown",
+        CommitteeRole = "Committee Member",
+        ReviewDate = new DateTime(2026, 8, 3),
+        Recommendation = "Minor Revision",
+        Comments = "Minor formatting corrections required."
+    }
+},
+
+                Workflow = new List<PublicationWorkflowItemViewModel>
+        {
+            new(){ Order=1, StepName="Publication Submitted", IsCompleted=true },
+
+            new(){ Order=2, StepName="Committee Review", IsCompleted=true },
+
+            new(){ Order=3, StepName="Revision Submitted", IsCompleted=true },
+
+            new(){ Order=4, StepName="Committee Review Completed", IsCompleted=true },
+
+            new(){ Order=5, StepName="Coordinator Review Completed", IsCompleted=true },
+
+            new(){ Order=6, StepName="Publication Approved", IsCompleted=true },
+
+            new(){ Order=7, StepName="Published", IsCompleted=true, IsCurrentStep=true }
+        },
+
+                History = new List<PublicationHistoryItemViewModel>
+        {
+            new()
+            {
+                Version="Version 1",
+                Date=new DateTime(2026,7,25),
+                UpdatedBy="John Doe",
+                Description="Initial Submission"
+            },
+
+            new()
+            {
+                Version="Version 2",
+                Date=new DateTime(2026,8,5),
+                UpdatedBy="John Doe",
+                Description="Minor Revision"
+            }
+        },
+
+                ActivityLogs = new List<ActivityLogItemViewModel>
+        {
+            new()
+            {
+                ActivityDate=new DateTime(2026,7,25),
+                Description="Publication submitted"
+            },
+
+            new()
+            {
+                ActivityDate=new DateTime(2026,7,26),
+                Description="Assigned to AI Research Committee"
+            },
+
+            new()
+            {
+                ActivityDate=new DateTime(2026,7,30),
+                Description="Committee review completed"
+            },
+
+            new()
+            {
+                ActivityDate=new DateTime(2026,8,2),
+                Description="Minor revision requested"
+            },
+
+            new()
+            {
+                ActivityDate=new DateTime(2026,8,5),
+                Description="Revised publication submitted"
+            },
+
+            new()
+            {
+                ActivityDate=new DateTime(2026,8,5),
+                Description="Coordinator review completed"
+            },
+
+            new()
+            {
+                ActivityDate=new DateTime(2026,8,7),
+                Description="Publication approved"
+            },
+
+            new()
+            {
+                ActivityDate=new DateTime(2026,8,8),
+                Description="Publication published"
+            }
+        }
+            };
+
+            return View(model);
+        }
     }
 }
