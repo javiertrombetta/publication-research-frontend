@@ -69,14 +69,6 @@ Append the following routes to the URL to access each screen.
 
 ---
 
-## Dashboard
-
-| Screen | URL |
-|---------|-----|
-| Admin Dashboard | `/Admin/dashboard` |
-
----
-
 ## Authentication
 
 | Screen | URL |
@@ -170,27 +162,48 @@ Append the following routes to the URL to access each screen.
 
 | Screen | URL |
 |---------|-----|
-| Admin Check Proposal details | `/Admin/Admin_check_proposaldetail` |
+| Admin Dashboard | `/Admin/dashboard` |
+| Admin Check Proposal Details | `/Admin/Admin_check_proposaldetail` |
 | Assign Committee Members | `/Admin/assigning_committee_members` |
+
+---
+
+## Proposal Management
+
+| Screen | URL |
+|---------|-----|
+| Proposal Management | `/Proposals` |
+
+---
+
+## Publication Management
+
+| Screen | URL |
+|---------|-----|
+| Publication Management | `/Publications` |
+| Publication Details | `/Publications/Details` |
 
 
 ## Current Progress
+The frontend implementation has been completed using **ASP.NET Core MVC**, **Bootstrap 5**, and **Tabler UI**.
 
-Completed modules:
+### ✅ Completed Modules
 
-- ✅ Dashboard
-- ✅ User Management
-- ✅ Category Management
-- ✅ System Settings
-- ✅ Audit Log
+- Dashboard
+- Authentication
+- User Management
+- Category Management
+- System Settings
+- Audit Log
+- Proposal Management
+- Publication Management
+- Publication Details
 
-Modules currently under development:
+### 🔄 Next Phase
 
-- ⏳ Role Assignment
-- ⏳ Proposal Management
-- ⏳ Publication Management
-- ⏳ Workflow
-- ⏳ Reports
+- Backend API integration
+- Frontend and backend integration testing
+- Bug fixing and UI refinements
 
 ---
 
