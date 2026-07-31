@@ -1,138 +1,129 @@
+@model SignupViewModel
 @{
-    Layout = null;
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Sign up";
 }
 
-<!DOCTYPE html>
-<html>
+<div class="row align-items-center g-5 justify-content-center">
 
-<head>
-    <link rel="stylesheet" href="/lib/tabler/css/tabler.min.css" />
-</head>
+    <div class="col-lg-6 d-none d-lg-block">
+        <h1 class="h1 mb-3" style="font-size: 2.25rem;">Sign up</h1>
+        <p class="text-secondary mb-4 fs-3">Create your account in just a few quick actions. All submitted profiles go through administration standard vetting protocols.</p>
 
-<body style="height: 100vh; max-height: 100vh; display: flex; flex-direction: column; overflow: hidden; background-color: var(--tblr-bg-surface); margin: 0;">
+        <ul class="steps steps-vertical">
+            @* pb-4 on the step, not a margin on the last line: Tabler draws the connector down
+               the <li>, so padding keeps the two steps visually apart without breaking it. *@
+            <li class="pb-4">
+                <div class="h3 m-0 mb-1">Step 1: Create your account</div>
+                <div class="text-secondary fs-4">Use your AIS institutional email if available; otherwise, register with a valid email address.</div>
+                <div class="text-secondary fs-4 mt-1">A confirmation email will be sent to complete your registration.</div>
+            </li>
+            <li>
+                <div class="h3 m-0 mb-1">Step 2: Verify your email</div>
+                <div class="text-secondary fs-4">Follow the link in that email to activate your account, then sign in.</div>
+            </li>
+        </ul>
+    </div>
 
-    <!-- Navbar -->
-    <header class="navbar navbar-expand-md d-print-none bg-white border-bottom">
-        <div class="container-fluid px-4">
-            <div class="d-flex align-items-center">
-                <a href="/" class="navbar-brand navbar-brand-autodark">
-                    <img src="/pic/AIS logo.png" height="32" class="navbar-brand-image">
-                </a>
-            </div>
-        </div>
-    </header>
+    <div class="col-12 col-md-10 col-lg-5">
+        <div class="card card-md">
+            <div class="card-body py-4 px-4">
+                <h2 class="h2 text-center mb-4 d-lg-none">Create your account</h2>
 
-    <!-- Main Content space stretches dynamically to fill the screen gaps perfectly -->
-    <div class="page flex-grow-1 d-flex flex-column justify-content-center" style="min-height: 0;">
-        <div id="page-wrapper" class="page-wrapper w-100 d-flex flex-column justify-content-center">
-            <main class="page-body m-0 py-4">
-                <div class="container-xl">
-                    
-                    <!-- Increased column sizing constraints to allow layout elements to fill space natively -->
-                    <div class="row align-items-center g-5 justify-content-center">
-                        
-                        <!-- Left Column: Explanation Steps Process Box -->
-                        <div class="col-lg-6 d-none d-lg-block">
-                            <h1 class="h1 mb-3" style="font-size: 2.25rem;">Join our community</h1>
-                            <p class="text-secondary mb-4 fs-3">Create your account in just a few quick actions. All submitted profiles go through administration standard vetting protocols.</p>
-                            
-                            <!-- Tabler Steps Component -->
-                            <ul class="steps steps-vertical">
-                                <li>
-                                    <div class="h3 m-0 mb-1">Step 1: Create your account</div>
-                                    <div class="text-secondary fs-4">Use your AIS institutional email if available; otherwise, register with a valid email address.</div>
-                                    <div class="text-secondary fs-4 mt-1">A confirmation email will be sent to complete your registration.</div>
-                                </li>
-                                <li>
-                                    <div class="h3 m-0 mb-1">Step 2: Await approval</div>
-                                    <div class="text-secondary fs-4">Your request will be reviewed, and you will be notified via email shortly.</div>
-                                </li>
-                            </ul>
+
+                <form asp-controller="Auth" asp-action="signup" method="post" autocomplete="off" novalidate>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label asp-for="FirstName" class="form-label mb-2">Name</label>
+                            <input asp-for="FirstName" class="form-control" placeholder="John" />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
                         </div>
-
-                        <!-- Right Column: Registration Input Form Elements -->
-                        <div class="col-12 col-md-10 col-lg-5">
-                            <div class="card card-md shadow-sm">
-                                <!-- Expanded container layout padding for desktop balance -->
-                                <div class="card-body py-4 px-4">
-                                    <h2 class="h2 text-center mb-4 d-lg-none">Create your account</h2>
-                                    
-                                    <form action="./" method="post" autocomplete="off" novalidate>
-                                        <!-- Swapped target input groups from -sm to regular standard sizing profiles -->
-                                        <div class="row g-3 mb-3">
-                                            <!-- First Name Field -->
-                                            <div class="col-6">
-                                                <label class="form-label mb-2">Name</label>
-                                                <input type="text" class="form-control" placeholder="John" required>
-                                            </div>
-                                            <!-- Surname Field -->
-                                            <div class="col-6">
-                                                <label class="form-label mb-2">Surname</label>
-                                                <input type="text" class="form-control" placeholder="Doe" required>
-                                            </div>
-                                        </div>
-
-                                        <!-- Email Field -->
-                                        <div class="mb-3">
-                                            <label class="form-label mb-2">Email address</label>
-                                            <input type="email" class="form-control" placeholder="john.doe@email.com" required>
-                                        </div>
-
-                                        <!-- Password Field -->
-                                        <div class="mb-3">
-                                            <label class="form-label mb-2">Password</label>
-                                            <input type="password" class="form-control" placeholder="Choose strong password" required>
-                                            
-                                            <!-- Live Strength Progress Bar Indicator Component -->
-                                            <div class="progress progress-xs mt-2">
-                                                <div class="progress-bar bg-warning" style="width: 40%" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
-                                            </div>
-                                            <small class="text-secondary d-block mt-2" style="font-size: 0.8rem;">Password status: <span class="text-warning fw-bold">Medium strength</span></small>
-                                        </div>
-
-                                        <!-- Password Confirmation Field -->
-                                        <div class="mb-4">
-                                            <label class="form-label mb-2">Confirm password</label>
-                                            <input type="password" class="form-control" placeholder="Verify password security string" required>
-                                        </div>
-
-                                        <!-- Submit Action Button -->
-                                        <div class="form-footer mt-2">
-                                            <button type="submit" class="btn btn-primary w-100 py-2 fs-3">Create an account</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-
-                            <!-- Alternate Sign-in Path Redirect -->
-                            <div class="text-center text-secondary mt-3 fs-4">
-                                Already have a profile? <a href="./login.html">Sign in here</a>
-                            </div>
+                        <div class="col-6">
+                            <label asp-for="LastName" class="form-label mb-2">Surname</label>
+                            <input asp-for="LastName" class="form-control" placeholder="Doe" />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
                         </div>
-
                     </div>
 
-                </div>
-            </main>
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label mb-2">Email address</label>
+                        <input asp-for="Email" id="signup-email" class="form-control" placeholder="john.doe@aisstudent.ac.nz" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                        <small class="text-secondary d-block mt-1">Use your @@aisstudent.ac.nz or @@ais.ac.nz address — your role is assigned from the domain.</small>
+                    </div>
+
+                    <div id="student-fields" class="d-none">
+                        <div class="mb-3">
+                            <label asp-for="StudentIdNumber" class="form-label mb-2">Student ID</label>
+                            <input asp-for="StudentIdNumber" class="form-control" placeholder="e.g. AIS123456" />
+                            <span asp-validation-for="StudentIdNumber" class="text-danger"></span>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label asp-for="Programme" class="form-label mb-2">Programme</label>
+                                <input asp-for="Programme" class="form-control" placeholder="e.g. BIT" />
+                                <span asp-validation-for="Programme" class="text-danger"></span>
+                            </div>
+                            <div class="col-6">
+                                <label asp-for="Cohort" class="form-label mb-2">Cohort</label>
+                                <input asp-for="Cohort" class="form-control" placeholder="e.g. 2026-S1" />
+                                <span asp-validation-for="Cohort" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="DepartmentId" class="form-label mb-2">Department of study</label>
+                            <select asp-for="DepartmentId" class="form-select">
+                                <option value="">Select department...</option>
+                                @foreach (var dept in Model.DepartmentOptions)
+                                {
+                                    <option value="@dept.Id">@dept.Name</option>
+                                }
+                            </select>
+                            <span asp-validation-for="DepartmentId" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label mb-2">Password</label>
+                        <input asp-for="Password" class="form-control" placeholder="At least 10 characters" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="ConfirmPassword" class="form-label mb-2">Confirm password</label>
+                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Re-enter your password" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-footer mt-2">
+                        <button type="submit" class="btn btn-primary w-100 py-2 fs-3">Create an account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="text-center text-secondary mt-3 fs-4">
+            Already have a profile? <a asp-controller="Auth" asp-action="home">Sign in here</a>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="border-top footer text-muted bg-light">
-        <div class="container-fluid d-flex justify-content-between align-items-center py-3 px-4">
-            <div>
-                <a asp-area="" asp-controller="Home" asp-action="Privacy" class="me-3">
-                    Privacy Policy
-                </a>
-                <a asp-area="" asp-controller="Home" asp-action="Privacy" class="me-3">
-                    Contact IT
-                </a>
-            </div>
-            <span>&copy; 2026 Auckland Institute of Studies</span>
-        </div>
-    </footer>
+</div>
 
-    <script src="/lib/tabler/js/tabler.min.js"></script>
-</body>
+@section Scripts {
+    <script>
+        // Purely a UX affordance — the backend derives the role from the email domain
+        // server-side regardless of what's shown/hidden here.
+        (function () {
+            var emailInput = document.getElementById('signup-email');
+            var studentFields = document.getElementById('student-fields');
 
-</html>
+            function toggle() {
+                var isStudent = /@@aisstudent\.ac\.nz$/i.test(emailInput.value.trim());
+                studentFields.classList.toggle('d-none', !isStudent);
+            }
+
+            emailInput.addEventListener('input', toggle);
+            toggle();
+        })();
+    </script>
+}
