@@ -1,50 +1,85 @@
-﻿<header class="navbar navbar-expand-md d-print-none shadow-sm rpms-navbar">
+@using System.Security.Claims
+@using ResearchPublicationManagementSystem.Common
+@using ResearchPublicationManagementSystem.Services
+@{
+    var firstName = User.FindFirst(ClaimTypes.GivenName)?.Value ?? "";
+    var lastName = User.FindFirst(ClaimTypes.Surname)?.Value ?? "";
+    var fullName = $"{firstName} {lastName}".Trim();
+    var initials = $"{firstName.FirstOrDefault()}{lastName.FirstOrDefault()}".Trim();
+    var isStudent = User.IsInRole(RoleNames.Student);
+    var hasPhoto = User.FindFirst(AuthClaimTypes.HasProfilePhoto)?.Value == "true";
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+
+    var (homeController, homeAction) = RoleLanding.For(User);
+
+    // Set by pages rendered without a sidebar — the burger would toggle nothing there.
+    var hasSidebar = ViewData["HideSidebar"] as bool? != true;
+}
+
+<header class="navbar navbar-expand-md d-print-none shadow-sm rpms-navbar">
 
     <div class="container-fluid px-3">
 
         <!-- Left Side -->
-
         <div class="d-flex align-items-center">
 
-            <!-- Sidebar Toggle -->
-            <button class="btn btn-icon btn-ghost-secondary me-2"
-                    type="button">
+            @if (hasSidebar)
+            {
+                <!-- Sidebar toggle (wired in site.js) -->
+                <button class="btn btn-icon btn-ghost-secondary me-2"
+                        type="button"
+                        id="sidebar-toggle"
+                        aria-label="Toggle sidebar"
+                        aria-controls="rpms-sidebar"
+                        aria-expanded="true">
 
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     class="icon"
-                     width="24"
-                     height="24"
-                     viewBox="0 0 24 24"
-                     stroke-width="2"
-                     stroke="currentColor"
-                     fill="none"
-                     stroke-linecap="round"
-                     stroke-linejoin="round">
+                    @* The three bars are individually classed so they can morph into an X while
+                       the sidebar is open — see .rpms-burger-* in site.css. *@
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         class="icon rpms-burger"
+                         width="24"
+                         height="24"
+                         viewBox="0 0 24 24"
+                         stroke-width="2"
+                         stroke="currentColor"
+                         fill="none"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
 
-                    <path stroke="none"
-                          d="M0 0h24v24H0z"
-                          fill="none" />
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path class="rpms-burger-top" d="M4 6h16" />
+                        <path class="rpms-burger-mid" d="M4 12h16" />
+                        <path class="rpms-burger-bottom" d="M4 18h16" />
 
-                    <path d="M4 6h16" />
-                    <path d="M4 12h16" />
-                    <path d="M4 18h16" />
+                    </svg>
 
-                </svg>
+                </button>
+            }
 
-            </button>
+            <!-- Brand: sized to the navbar, so it never drives the bar's height -->
+            <a asp-controller="@homeController" asp-action="@homeAction" class="navbar-brand m-0 p-0 d-flex align-items-center">
+                <img src="~/images/ais-logo.png" class="rpms-navbar-logo" alt="Auckland Institute of Studies" />
+            </a>
 
         </div>
 
         <!-- Right Side -->
-
+        @* Defence in depth: every route now requires authentication, but if a page is ever
+           opened to anonymous visitors this keeps the user menu (and its Logout) hidden. *@
+        @if (!isAuthenticated)
+        {
+            <div class="navbar-nav flex-row order-md-last">
+                <a asp-controller="Auth" asp-action="home" class="btn btn-primary">Sign in</a>
+            </div>
+        }
+        else
+        {
         <div class="navbar-nav flex-row order-md-last">
 
             <!-- Notification -->
-
             <div class="nav-item me-3">
 
-                <a href="#"
-                   class="btn btn-icon btn-ghost-secondary">
+                <a href="#" class="btn btn-icon btn-ghost-secondary">
 
                     <svg xmlns="http://www.w3.org/2000/svg"
                          class="icon"
@@ -57,12 +92,8 @@
                          stroke-linecap="round"
                          stroke-linejoin="round">
 
-                        <path stroke="none"
-                              d="M0 0h24v24H0z"
-                              fill="none" />
-
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                         <path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3l1 2h-14l1-2v-3a7 7 0 0 1 4-6" />
-
                         <path d="M9 18a3 3 0 0 0 6 0" />
 
                     </svg>
@@ -71,73 +102,73 @@
 
             </div>
 
-            <!-- User Avatar -->
-
+            <!-- User menu -->
             <div class="nav-item dropdown">
 
                 <a href="#"
-                   class="nav-link d-flex align-items-center"
-                   data-bs-toggle="dropdown">
+                   class="nav-link d-flex align-items-center px-2"
+                   data-bs-toggle="dropdown"
+                   role="button"
+                   aria-expanded="false">
 
-                    <span class="avatar avatar-sm border">
+                    @if (hasPhoto)
+                    {
+                        <span class="avatar avatar-sm border rpms-avatar-photo"
+                              style="background-image: url('@Url.Action("Photo", "Profile")')"></span>
+                    }
+                    else
+                    {
+                        <span class="avatar avatar-sm border bg-primary-lt fw-bold">@initials</span>
+                    }
 
+                    <span class="d-none d-md-block ps-2">
+                        @fullName
                         <svg xmlns="http://www.w3.org/2000/svg"
-                             class="icon"
-                             width="24"
-                             height="24"
+                             class="icon icon-sm ms-1"
+                             width="16"
+                             height="16"
                              viewBox="0 0 24 24"
                              stroke-width="2"
                              stroke="currentColor"
                              fill="none"
                              stroke-linecap="round"
                              stroke-linejoin="round">
-
-                            <path stroke="none"
-                                  d="M0 0h24v24H0z"
-                                  fill="none" />
-
-                            <circle cx="12"
-                                    cy="7"
-                                    r="4" />
-
-                            <path d="M5.5 21a8.38 8.38 0 0 1 13 0" />
-
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M6 9l6 6l6 -6" />
                         </svg>
-
                     </span>
 
                 </a>
 
                 <div class="dropdown-menu dropdown-menu-end">
 
-                    <a class="dropdown-item"
-                       href="#">
-
-                        My Profile
-
-                    </a>
-
-                    <a class="dropdown-item"
-                       href="#">
-
-                        Change Password
-
-                    </a>
+                    @if (isStudent)
+                    {
+                        <a class="dropdown-item" asp-controller="Student" asp-action="studentprofile">
+                            My Profile
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="dropdown-item" asp-controller="Profile" asp-action="Me">
+                            My Profile
+                        </a>
+                    }
 
                     <div class="dropdown-divider"></div>
 
-                    <a class="dropdown-item text-danger"
-                       href="#">
-
-                        Logout
-
-                    </a>
+                    <form asp-controller="Auth" asp-action="Logout" method="post" class="m-0">
+                        <button type="submit" class="dropdown-item text-danger">
+                            Logout
+                        </button>
+                    </form>
 
                 </div>
 
             </div>
 
         </div>
+        }
 
     </div>
 

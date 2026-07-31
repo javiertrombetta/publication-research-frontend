@@ -1,7 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ResearchPublicationManagementSystem.Common;
 
-namespace MyWebApp.Controllers
+namespace ResearchPublicationManagementSystem.Controllers
 {
+    [Authorize(Roles = RoleNames.Supervisor)]
     public class SupervisorController : Controller
     {
        
