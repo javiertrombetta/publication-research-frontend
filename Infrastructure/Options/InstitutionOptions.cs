@@ -15,8 +15,16 @@ public class InstitutionOptions
     /// </summary>
     public string ItSupportEmail { get; set; } = string.Empty;
 
-    /// <summary>The institution's published privacy policy — the authoritative copy.</summary>
-    public string PrivacyPolicyUrl { get; set; } = "https://www.ais.ac.nz/privacy-policy";
+    /// <summary>
+    /// Where the institution publishes the authoritative policy.
+    ///
+    /// The fallback is the institution's home page rather than a deep link to the policy itself:
+    /// this value is only reached when the API is unreachable and nobody has configured one, and
+    /// a guessed deep link rots the moment the site is reorganised. The home page will still be
+    /// there, and it leads to the policy. An administrator sets the exact address under System
+    /// settings, which is what is used in practice.
+    /// </summary>
+    public string PrivacyPolicyUrl { get; set; } = "https://www.ais.ac.nz/";
 
     /// <summary>
     /// Where a reader writes to ask for the full text of a published paper. The catalogue shows
