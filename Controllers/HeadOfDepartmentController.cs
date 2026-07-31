@@ -151,9 +151,5 @@ namespace ResearchPublicationManagementSystem.Controllers
         [HttpGet]
         public IActionResult Edit_staff_profile() => RedirectToAction("Me", "Profile");
 
-        // ---------- Still to be wired ----------
-
-        [HttpGet]
-        public IActionResult committee_review() => View();
     }
 }
