@@ -1,521 +1,133 @@
+@using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
+@model CoordinatorDashboardViewModel
+@{
+    ViewData["Title"] = "Coordinator dashboard";
 
-    <div class="page">
-        <!--Start page wrapper-->
-        <div class="page-wrapper">
-            <!--Start of page header-->
-            <div class="page-header d-print-none">
-                <div class="container-xl">
-                    <div class="row g-2 align-items-center">
-                        <div class="col">
-                            <div class="d-flex flex-column align-items-start gap-2">
-                                <h2 class="page-title">Coordinator Dashboard</h2>
+    string StageLabel(int stage) => stage switch
+    {
+        PipelineStage.ResearchProposals => "Research proposals",
+        PipelineStage.EthicsApproval => "Ethics approval",
+        PipelineStage.ResearchPaper => "Research paper",
+        _ => "—"
+    };
+}
 
-                            </div>
-                        </div>
+<div class="mb-4">
+    <h1 class="page-title mb-1">Coordinator dashboard</h1>
+    <div class="text-secondary">The publications you coordinate, and what each one is waiting on.</div>
+</div>
+
+@if (Model.LoadFailed)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">We couldn't load your publications</h3>
+            <p class="text-secondary mb-4">
+                This is a temporary problem reaching the server. Try again in a moment.
+            </p>
+            <a asp-controller="Coordinator" asp-action="Coordinator_dashboard" class="btn btn-primary">Retry</a>
+        </div>
+    </div>
+}
+else
+{
+    @* What the coordinator has to act on, before the full list — nothing else in the pipeline
+       moves until these are dealt with. *@
+    <div class="row row-cards mb-4">
+        <div class="col-12 col-md-4">
+            <div class="card @(Model.ProposalsAwaitingDispatch.Count > 0 ? "border-primary" : "")">
+                <div class="card-body">
+                    <div class="text-secondary mb-1">Waiting on you</div>
+                    <div class="h1 m-0">@Model.ProposalsAwaitingDispatch.Count</div>
+                    <div class="text-secondary">
+                        @(Model.ProposalsAwaitingDispatch.Count == 1 ? "proposal to send out" : "proposals to send out")
                     </div>
-                </div>
-            </div>
-            <!--Start of page body-->
-            <div class="page-body">
-                <div class="container-xl">
-                    <div class="row row-cards">
-
-                        <!-- 1st card -->
-
-                        <div class="col-12 mb-4">
-                            <!-- Transparent Header Section -->
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <h3 class="m-0 text-secondary">Pending Proposal Assigning for supervisors</h3>
-                                <span class="badge bg-blue-lt">3</span>
-                            </div>
-
-                            <!-- White card wrapper -->
-                            <div class="card">
-                                <div class="table-responsive">
-                                    <table class="table card-table table-vcenter text-nowrap datatable">
-                                        <thead>
-                                            <tr style="background-color: #206bc4; color: #ffffff;">
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Student Name</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Proposal Title</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Submitted</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Status</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                        <!--End of 1st Card-->
-
-
-                        <!-- 2nd card: Selected Proposal -->
-                        <div class="col-12 mb-4">
-                            <!-- Transparent Header Section -->
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <h3 class="m-0 text-secondary">Pending Proposal Selection for students</h3>
-                                <span class="badge bg-blue-lt">3</span>
-                            </div>
-
-                            <!-- White card wrapper -->
-                            <div class="card">
-                                <div class="table-responsive">
-                                    <table class="table card-table table-vcenter text-nowrap datatable">
-                                        <thead>
-                                            <tr style="background-color: #206bc4; color: #ffffff;">
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Student Name</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Proposal Title</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Submitted</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Status</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 3rd card: -->
-                        <div class="col-12 mb-4">
-                            <!-- Transparent Header Section -->
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <h3 class="m-0 text-secondary">Pending Ethic Reviews After Supervisor</h3>
-                                <span class="badge bg-blue-lt">3</span>
-                            </div>
-
-                            <!-- White card wrapper -->
-                            <div class="card">
-                                <div class="table-responsive">
-                                    <table class="table card-table table-vcenter text-nowrap datatable">
-                                        <thead>
-                                            <tr style="background-color: #206bc4; color: #ffffff;">
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Student Name</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Proposal Title</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Submitted</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Status</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 4 card -->
-                        <div class="col-12 mb-4">
-                            <!-- Transparent Header Section -->
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <h3 class="m-0 text-secondary">Pending Ethic Reviews After Head of Department</h3>
-                                <span class="badge bg-blue-lt">3</span>
-                            </div>
-
-                            <!-- White card wrapper -->
-                            <div class="card">
-                                <div class="table-responsive">
-                                    <table class="table card-table table-vcenter text-nowrap datatable">
-                                        <thead>
-                                            <tr style="background-color: #206bc4; color: #ffffff;">
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Student Name</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Proposal Title</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Submitted</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Status</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        
-
-                        <!-- 6 card -->
-                        <div class="col-12 mb-4">
-                            <!-- Transparent Header Section -->
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <h3 class="m-0 text-secondary">Pending Committee Creation</h3>
-                                <span class="badge bg-blue-lt">3</span>
-                            </div>
-
-                            <!-- White card wrapper -->
-                            <div class="card">
-                                <div class="table-responsive">
-                                    <table class="table card-table table-vcenter text-nowrap datatable">
-                                        <thead>
-                                            <tr style="background-color: #206bc4; color: #ffffff;">
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Student Name</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Research Title</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Submitted</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Status</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 7 card: -->
-                            <div class="col-12 mb-4">
-                            <!-- Transparent Header Section -->
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <h3 class="m-0 text-secondary">Pending Committee Review</h3>
-                                <span class="badge bg-blue-lt">3</span>
-                            </div>
-
-                            <!-- White card wrapper -->
-                            <div class="card">
-                                <div class="table-responsive">
-                                    <table class="table card-table table-vcenter text-nowrap datatable">
-                                        <thead>
-                                            <tr style="background-color: #206bc4; color: #ffffff;">
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Student Name</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Research Title</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Submitted</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Status</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!--8th Card-->
-
-                           <div class="col-12 mb-4">
-                            <!-- Transparent Header Section -->
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <h3 class="m-0 text-secondary">Pending Evaluation after Committee</h3>
-                                <span class="badge bg-blue-lt">3</span>
-                            </div>
-
-                            <!-- White card wrapper -->
-                            <div class="card">
-                                <div class="table-responsive">
-                                    <table class="table card-table table-vcenter text-nowrap datatable">
-                                        <thead>
-                                            <tr style="background-color: #206bc4; color: #ffffff;">
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Student Name</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Research Title</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Submitted</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Status</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-
-
-                        </div>
-                    </div>
+                    @if (Model.ProposalsAwaitingDispatch.Count > 0)
+                    {
+                        <a asp-controller="Coordinator" asp-action="assigning_proposal_forsupervisor"
+                           class="btn btn-primary btn-sm mt-3">Send to supervisors</a>
+                    }
                 </div>
             </div>
         </div>
-        <!--End of page wrapper-->
+
+        <div class="col-12 col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-secondary mb-1">Supervisor replies</div>
+                    <div class="h1 m-0">&mdash;</div>
+                    <div class="text-secondary">proposals a supervisor has accepted</div>
+                    <a asp-controller="Coordinator" asp-action="select_a_proposal_forstudent"
+                       class="btn btn-outline-primary btn-sm mt-3">Review selections</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-secondary mb-1">Publications</div>
+                    <div class="h1 m-0">@Model.Publications.Count</div>
+                    <div class="text-secondary">under your coordination</div>
+                </div>
+            </div>
+        </div>
     </div>
 
+    @if (Model.Publications.Count == 0)
+    {
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <h3 class="mb-2">Nothing assigned to you yet</h3>
+                <p class="text-secondary m-0">
+                    Publications appear here as students in your department start them.
+                </p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table card-table table-vcenter">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Publication</th>
+                            <th>Stage</th>
+                            <th>Status</th>
+                            <th>Waiting on you</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var publication in Model.Publications)
+                        {
+                            var action = CoordinatorDashboardViewModel.ActionFor(publication);
+                            <tr>
+                                <td>@publication.StudentName</td>
+                                <td>@publication.DisplayTitle</td>
+                                <td>@StageLabel(publication.CurrentPipeline)</td>
+                                <td>
+                                    <span class="badge @StatusBadge(publication.DisplayStatus)">
+                                        @Humanise(publication.DisplayStatus)
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (action is null)
+                                    {
+                                        <span class="text-secondary">—</span>
+                                    }
+                                    else
+                                    {
+                                        <a asp-controller="Coordinator" asp-action="@action.Action"
+                                           class="btn btn-sm btn-primary">@action.Label</a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}

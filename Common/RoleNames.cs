@@ -11,4 +11,11 @@ public static class RoleNames
     public const string ExternalCommitteeMember = "ExternalCommitteeMember";
     public const string Student = "Student";
     public const string Staff = "Staff";
+
+    /// <summary>Every role, in the order they appear in the workflow. Mirrors the backend's list.</summary>
+    public static readonly string[] All =
+    [
+        Student, Supervisor, Coordinator, HeadOfDepartment,
+        InternalCommitteeMember, ExternalCommitteeMember, Admin, Staff
+    ];
 }

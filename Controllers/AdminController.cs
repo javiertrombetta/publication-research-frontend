@@ -1,70 +1,153 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ResearchPublicationManagementSystem.Common;
+using ResearchPublicationManagementSystem.Infrastructure.Api;
+using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
 using ResearchPublicationManagementSystem.Models;
+
 namespace ResearchPublicationManagementSystem.Controllers
-{    
-
+{
+    /// <summary>
+    /// The administrator's own screens: the institution-wide picture, the one workflow step that
+    /// belongs to them — putting an evaluation committee on a submitted paper — and the committee
+    /// defaults. User management lives in UsersController and the trail in AuditLogsController.
+    /// </summary>
     [Authorize(Roles = RoleNames.Admin)]
-
-    public class AdminController : Controller
+    public class AdminController(
+        AdminApiClient adminApi,
+        ContainersApiClient containersApi,
+        PublicationsApiClient publicationsApi,
+        CommitteesApiClient committeesApi,
+        UsersApiClient usersApi,
+        SettingsApiClient settingsApi) : Controller
     {
-
-
-        public IActionResult Dashboard()
+        [HttpGet]
+        public async Task<IActionResult> Dashboard()
         {
-            DashboardViewModel model = new DashboardViewModel
-            {
-                TotalUsers = 342,
-                PendingWorkflow = 35,
-                Publications = 120,
-                OnlineUsers = 12,
+            var model = new AdminDashboardViewModel();
 
-                WorkflowSummary = new List<WorkflowSummaryItemViewModel>
-        {
-            new WorkflowSummaryItemViewModel
+            var summary = await adminApi.GetSummaryAsync();
+            if (!summary.Success || summary.Data is null)
             {
-                Title = "Proposal Assignment",
-                Current = 12,
-                Total = 40,
-                BadgeText = "12 Pending",
-                ProgressColor = "bg-danger"
-            },
-
-            new WorkflowSummaryItemViewModel
-            {
-                Title = "Ethics Approval",
-                Current = 8,
-                Total = 30,
-                BadgeText = "8 Pending",
-                ProgressColor = "bg-warning"
-            },
-
-            new WorkflowSummaryItemViewModel
-            {
-                Title = "Publication Approval",
-                Current = 15,
-                Total = 50,
-                BadgeText = "15 Pending",
-                ProgressColor = "bg-primary"
+                TempData["ErrorMessage"] = summary.ErrorMessage ?? "Could not load the summary right now.";
+                model.LoadFailed = true;
+                return View(model);
             }
-        }
-            };
+
+            model.Summary = summary.Data;
+
+            var awaiting = await FindPapersAwaitingCommitteeAsync();
+            model.PapersAwaitingCommittee = awaiting.Count;
 
             return View(model);
         }
 
-        public IActionResult Admin_check_proposaldetail()
+        // ---------- The administrator's step in the workflow ----------
+
+        /// <summary>
+        /// Papers a supervisor has accepted that still have no evaluation committee. Nothing moves
+        /// until one is assigned — the coordinator's final decision is blocked on it.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> assigning_committee_members()
         {
-            
-            return View();
+            var model = new AssignCommitteeViewModel();
+
+            var items = await FindPapersAwaitingCommitteeAsync();
+            model.Items = items;
+
+            // Both committee types, since a committee normally mixes them.
+            var internals = await usersApi.GetAllAsync(role: RoleNames.InternalCommitteeMember, status: "Enabled");
+            var externals = await usersApi.GetAllAsync(role: RoleNames.ExternalCommitteeMember, status: "Enabled");
+
+            if (!internals.Success && !externals.Success)
+            {
+                TempData["ErrorMessage"] = internals.ErrorMessage ?? "Could not load the committee members.";
+                model.LoadFailed = true;
+                return View(model);
+            }
+
+            model.Members = [.. (internals.Data ?? []), .. (externals.Data ?? [])];
+
+            // Only needed as a fallback: publications opened before the figures were recorded
+            // per publication have none of their own, and the API judges those by today's rules.
+            var currentRules = await settingsApi.GetCommitteesAsync();
+            model.CurrentRules = currentRules.Data;
+
+            foreach (var item in model.Items)
+            {
+                item.RequiredInternal = item.Container.RequiredInternalCommitteeMembers
+                                        ?? currentRules.Data?.InternalMembers ?? 0;
+                item.RequiredExternal = item.Container.RequiredExternalCommitteeMembers
+                                        ?? currentRules.Data?.ExternalMembers ?? 0;
+            }
+
+            return View(model);
         }
 
-        public IActionResult assigning_committee_members()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignCommittee(
+            Guid publicationId, Guid[] memberUserIds, int minApprovalsRequired, string? comments)
         {
-            
-            return View();
-        }    
+            if (memberUserIds.Length == 0)
+            {
+                TempData["ErrorMessage"] = "Choose at least one committee member.";
+                return RedirectToAction(nameof(assigning_committee_members));
+            }
 
+            if (minApprovalsRequired < 1 || minApprovalsRequired > memberUserIds.Length)
+            {
+                TempData["ErrorMessage"] =
+                    $"The number of approvals required must be between 1 and {memberUserIds.Length}.";
+                return RedirectToAction(nameof(assigning_committee_members));
+            }
+
+            var result = await committeesApi.AssignAsync(publicationId,
+                new AssignCommitteeRequestDto(memberUserIds, minApprovalsRequired, comments ?? string.Empty));
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? $"Committee assigned. {memberUserIds.Length} " +
+                  (memberUserIds.Length == 1 ? "member has" : "members have") + " been asked to evaluate the paper."
+                : result.ErrorMessage ?? "Could not assign the committee.";
+
+            return RedirectToAction(nameof(assigning_committee_members));
+        }
+
+        // ---------- Settings ----------
+
+        // ---------- Still to be wired ----------
+
+        [HttpGet]
+        public IActionResult Admin_check_proposaldetail() => View();
+
+        // ---------- Helpers ----------
+
+        /// <summary>
+        /// A paper needs a committee when it is under review and has none. There is no endpoint
+        /// that asks that directly, so it is assembled from the container listing (which carries
+        /// the paper's status) plus a committee lookup per candidate — a short list in practice,
+        /// since only papers between the supervisor's review and the coordinator's decision qualify.
+        /// </summary>
+        private async Task<List<AwaitingCommitteeItem>> FindPapersAwaitingCommitteeAsync()
+        {
+            var items = new List<AwaitingCommitteeItem>();
+
+            var containers = await containersApi.GetAllAsync();
+            foreach (var container in (containers.Data ?? [])
+                         .Where(c => c.PaperStatus == PublicationStatus.UnderReview))
+            {
+                var paper = await publicationsApi.GetByContainerAsync(container.Id);
+                if (paper.Data is null) continue;
+
+                // No committee yet: the endpoint reports not-found rather than an empty committee.
+                var committee = await committeesApi.GetByPublicationAsync(paper.Data.Id);
+                if (committee.Success && committee.Data is not null) continue;
+
+                items.Add(new AwaitingCommitteeItem { Container = container, Paper = paper.Data });
+            }
+
+            return items;
+        }
     }
 }

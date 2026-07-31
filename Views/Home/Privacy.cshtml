@@ -1,6 +1,6 @@
 @using Microsoft.Extensions.Options
 @using ResearchPublicationManagementSystem.Infrastructure.Options
-@inject IOptions<InstitutionOptions> Institution
+@inject ResearchPublicationManagementSystem.Services.IInstitutionDetails Institution
 @{
     ViewData["Title"] = "Privacy Policy";
 
@@ -8,7 +8,7 @@
     // and the workflow menu would be wrong for them anyway.
     ViewData["HideSidebar"] = User.Identity?.IsAuthenticated != true;
 
-    var institution = Institution.Value;
+    var institution = await Institution.GetAsync();
 }
 
 @*
@@ -24,7 +24,7 @@
 
         <div class="mb-4">
             <h1 class="page-title mb-1">Privacy Policy</h1>
-            <div class="text-secondary">Auckland Institute of Studies</div>
+            <div class="text-secondary">@institution.Name</div>
         </div>
 
         <div class="card">

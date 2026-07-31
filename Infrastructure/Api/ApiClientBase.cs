@@ -45,6 +45,13 @@ public abstract class ApiClientBase(HttpClient httpClient)
         SendAsync<T>(Replayable(new HttpRequestMessage(HttpMethod.Delete, url)), ct);
 
     /// <summary>
+    /// A DELETE that carries a body. Unusual, but the API requires a reason with destructive
+    /// actions so that the audit trail records why they happened.
+    /// </summary>
+    protected Task<ApiResult<T>> DeleteJsonAsync<T>(string url, object? body, CancellationToken ct = default) =>
+        SendAsync<T>(Replayable(new HttpRequestMessage(HttpMethod.Delete, url) { Content = JsonBody(body) }), ct);
+
+    /// <summary>
     /// Fetches a binary response (a stored file) rather than the JSON envelope. Returns null
     /// when the backend has nothing to serve, which callers treat as "no file".
     /// </summary>

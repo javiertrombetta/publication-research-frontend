@@ -87,23 +87,53 @@
                                 </div>
                                 <div class="card-body p-4">
 
-                                    <!-- File field 1 -->
-                                    <div class="mb-4">
-                                        <label class="form-label fw-bold mb-1">Ethics Application Form <span class="text-danger">*</span></label>
-                                        <input type="file" asp-for="ApplicationFormFile" class="form-control" accept=".pdf,.doc,.docx,.zip" />
-                                    </div>
+                                    @* Built from what this publication was actually asked for.
+                                       An administrator decides the list, and each publication
+                                       keeps the one it was given — so this is never a fixed set
+                                       of three fields. *@
+                                    @if (Model.Required.Count == 0)
+                                    {
+                                        <p class="text-secondary">
+                                            Nothing has been requested of you yet. You will see the
+                                            documents here once your Supervisor decides that ethics
+                                            approval is needed.
+                                        </p>
+                                    }
 
-                                    <!-- File field 2 -->
-                                    <div class="mb-4">
-                                        <label class="form-label fw-bold mb-1">Participant Consent Form <span class="text-danger">*</span></label>
-                                        <input type="file" asp-for="ParticipantConsentFormFile" class="form-control" accept=".pdf,.doc,.docx,.zip" />
-                                    </div>
+                                    @foreach (var requirement in Model.Required)
+                                    {
+                                        <div class="mb-4">
+                                            <label class="form-label fw-bold mb-1" for="file-@requirement.RequirementId">
+                                                @requirement.Name
+                                                @if (requirement.IsSatisfied)
+                                                {
+                                                    <span class="badge bg-success-lt ms-1">Submitted</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-danger">*</span>
+                                                }
+                                            </label>
 
-                                    <!-- File field 3 -->
-                                    <div class="mb-4">
-                                        <label class="form-label fw-bold mb-1">Ethics Approval Certificate <span class="text-danger">*</span></label>
-                                        <input type="file" asp-for="ApprovalCertificateFile" class="form-control" accept=".pdf,.doc,.docx,.zip" />
-                                    </div>
+                                            @if (!string.IsNullOrWhiteSpace(requirement.Description))
+                                            {
+                                                <div class="text-secondary small mb-2">@requirement.Description</div>
+                                            }
+
+                                            @* Indexed by requirement id so the binder can put each
+                                               file back against the document it answers. *@
+                                            <input type="file" id="file-@requirement.RequirementId"
+                                                   name="Files[@requirement.RequirementId]"
+                                                   class="form-control" accept=".pdf,.doc,.docx,.zip" />
+
+                                            @if (requirement.IsSatisfied)
+                                            {
+                                                <div class="form-hint">
+                                                    Already submitted. Upload again only to replace it with a newer version.
+                                                </div>
+                                            }
+                                        </div>
+                                    }
 
                                     <p class="text-secondary small mb-0">Upload only the files you have ready — each one is submitted independently, so you can come back and add the rest later.</p>
                                 </div>

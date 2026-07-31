@@ -40,6 +40,11 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddHttpContextAccessor();
 
+// The institution's details are read by the footer on every page, so they are cached briefly
+// rather than fetched per view.
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IInstitutionDetails, InstitutionDetails>();
+
 // ---------- Auth bridging services ----------
 builder.Services.AddScoped<IAuthCookieService, AuthCookieService>();
 builder.Services.AddTransient<BearerTokenHandler>();
@@ -64,6 +69,15 @@ builder.Services.AddHttpClient<EthicsApiClient>(ConfigureApiClient).AddHttpMessa
 builder.Services.AddHttpClient<PublicationsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
 builder.Services.AddHttpClient<DepartmentsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
 builder.Services.AddHttpClient<UsersApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
+builder.Services.AddHttpClient<CommitteesApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
+builder.Services.AddHttpClient<AdminApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
+builder.Services.AddHttpClient<SettingsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
+
+// The handler is needed for the administrator's calls, which the API restricts to Admin. It is
+// harmless on the two anonymous ones — an invited person has no token, so nothing is attached and
+// nothing is refreshed.
+builder.Services.AddHttpClient<InvitationsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
+builder.Services.AddHttpClient<NotificationsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
 
 // The published catalogue is anonymous end to end, so no bearer handler: a visitor who has never
 // signed in has no token to attach, and requiring one would make the catalogue non-public.
@@ -80,15 +94,26 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    // Development only: tell the browser never to reuse a cached copy — of pages or of
-    // css/js. Without this a stale asset keeps being served after a change and the app
-    // silently behaves like the previous build, which is painful to diagnose.
-    // Production keeps normal caching; asp-append-version busts assets there instead.
+    // Development only: never reuse a cached *page*, so a change to a view or a controller is
+    // visible on the next navigation.
+    //
+    // Deliberately not applied to css/js. It was, and it made every navigation re-download the
+    // whole stylesheet — half a megabyte of Tabler — so the browser painted unstyled HTML and
+    // everything jumped into place once it arrived. Assets are already versioned by
+    // asp-append-version, whose query string changes the moment a file does, so caching them
+    // cannot serve anything stale.
     app.Use(async (context, next) =>
     {
-        // Set on response start so it wins over headers added later (e.g. by UseStaticFiles).
+        // Set on response start so it wins over headers added later (e.g. by UseStaticFiles),
+        // and so the content type is known — which is what tells a page from an asset.
         context.Response.OnStarting(() =>
         {
+            var isDocument = context.Response.ContentType?.Contains("text/html", StringComparison.OrdinalIgnoreCase) == true;
+            if (!isDocument)
+            {
+                return Task.CompletedTask;
+            }
+
             var headers = context.Response.Headers;
             headers.CacheControl = "no-store, no-cache, must-revalidate, max-age=0";
             headers.Pragma = "no-cache";

@@ -1,0 +1,65 @@
+@model AcceptInvitationViewModel
+@{
+    ViewData["Title"] = "Accept your invitation";
+    Layout = "_AuthLayout";
+}
+
+@* Uses the signed-out layout: the person filling this in has no account yet, so there is no
+   sidebar, no user menu and nothing for them to navigate to. *@
+
+<div class="card card-md">
+    <div class="card-body">
+
+        @if (Model.Invitation is null)
+        {
+            <h1 class="h2 mb-3">This invitation can't be used</h1>
+            <p class="text-secondary">@Model.Problem</p>
+            <a asp-controller="Auth" asp-action="home" class="btn btn-primary mt-3">Go to sign in</a>
+        }
+        else
+        {
+            <h1 class="h2 mb-1">Welcome, @Model.Invitation.FirstName</h1>
+            <p class="text-secondary mb-4">
+                You have been invited to the @Model.Invitation.InstitutionName Research Publication
+                Site as @Humanise(Model.Invitation.Role). Choose a password to finish setting up
+                your account.
+            </p>
+
+            <form asp-action="Accept" method="post">
+                <input type="hidden" asp-for="Token" />
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email address</label>
+                    @* Shown, not editable: the invitation was sent to this address, and it is what
+                       proves the person opening the link is the one who was invited. *@
+                    <input class="form-control" value="@Model.Invitation.Email" disabled />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" asp-for="Password"></label>
+                    <input asp-for="Password" type="password" class="form-control"
+                           autocomplete="new-password" autofocus />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" asp-for="ConfirmPassword"></label>
+                    <input asp-for="ConfirmPassword" type="password" class="form-control"
+                           autocomplete="new-password" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                </div>
+
+                <div class="form-footer">
+                    <button type="submit" class="btn btn-primary w-100">Create my account</button>
+                </div>
+            </form>
+
+            <p class="text-secondary small mt-3 mb-0">
+                This invitation stops working on
+                @Model.Invitation.ExpiresAt.ToLocalTime().ToString("d MMMM yyyy").
+            </p>
+        }
+
+    </div>
+</div>

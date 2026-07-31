@@ -1,8 +1,8 @@
-@using Microsoft.Extensions.Options
-@using ResearchPublicationManagementSystem.Infrastructure.Options
-@inject IOptions<InstitutionOptions> Institution
+@using ResearchPublicationManagementSystem.Services
+@inject IInstitutionDetails Institution
 @{
-    var itSupportEmail = Institution.Value.ItSupportEmail;
+    var institution = await Institution.GetAsync();
+    var itSupportEmail = institution.ItSupportEmail;
 }
 
 @* Shared by _Layout (signed in) and _AuthLayout (signed out) so both stay identical. *@
@@ -14,9 +14,8 @@
                 Privacy Policy
             </a>
 
-            @* The IT address hasn't been decided yet. Until Institution:ItSupportEmail is set this
-               stays plain text — a mailto: to a made-up address would look like it works and
-               quietly lose whatever anyone sent to it. *@
+            @* Plain text until an address is set under System settings — a mailto: to a
+               made-up address would look like it works and quietly lose whatever was sent. *@
             @if (string.IsNullOrWhiteSpace(itSupportEmail))
             {
                 <span class="text-secondary" title="An IT support address has not been set up yet">
@@ -32,7 +31,7 @@
         </div>
 
         <div class="text-center">
-            &copy; @DateTime.Now.Year Auckland Institute of Studies. All rights reserved.
+            &copy; @DateTime.Now.Year @institution.Name. All rights reserved.
         </div>
 
         @* Empty third column so the copyright stays optically centred on the page,

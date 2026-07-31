@@ -1,177 +1,151 @@
-﻿@model ResearchPublicationManagementSystem.Models.AuditLogViewModel
-@using ResearchPublicationManagementSystem.Models
-
+@model AuditLogViewModel
 @{
-    ViewData["Title"] = "Audit Log";
+    ViewData["Title"] = "Audit log";
+    var results = Model.Results;
+    var query = Model.Query;
+
+    // The entity types the trail actually records, so the filter offers real choices.
+    var entityTypes = new[] { "PublicationContainer", "Publication", "ResearchProposal", "EthicsApproval", "ApplicationUser", "Committee" };
 }
 
-<partial name="_PageHeader"
-         model='new PageHeaderViewModel
-         {
-             Title = "Audit Log",
-             Subtitle = "Monitor system activities and user actions."
-         }' />
-
-<!-- Summary Cards -->
-
-<div class="row mt-3">
-
-    <div class="col-md-3">
-
-        <div class="card">
-
-            <div class="card-body">
-
-                <div class="text-secondary text-uppercase small">
-                    Total Logs
-                </div>
-
-                <div class="h1 mb-0">
-                    @Model.TotalLogs
-                </div>
-
-            </div>
-
-        </div>
-
+<div class="mb-4">
+    <h1 class="page-title mb-1">Audit log</h1>
+    <div class="text-secondary">
+        Every recorded action across the institution, newest first.
     </div>
-
-    <div class="col-md-3">
-
-        <div class="card">
-
-            <div class="card-body">
-
-                <div class="text-secondary text-uppercase small">
-                    Today's Logs
-                </div>
-
-                <div class="h1 mb-0">
-                    @Model.TodayLogs
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="col-md-3">
-
-        <div class="card">
-
-            <div class="card-body">
-
-                <div class="text-secondary text-uppercase small">
-                    Active Users
-                </div>
-
-                <div class="h1 mb-0">
-                    @Model.ActiveUsers
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="col-md-3">
-
-        <div class="card">
-
-            <div class="card-body">
-
-                <div class="text-secondary text-uppercase small">
-                    Critical Events
-                </div>
-
-                <div class="h1 mb-0 text-danger">
-                    @Model.CriticalEvents
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
 </div>
 
-<!-- Toolbar -->
-
-<div class="card mt-3">
-
+<!-- GET so a filtered view can be linked to and reloaded. -->
+<form method="get" asp-controller="AuditLogs" asp-action="Index" class="card mb-4">
     <div class="card-body">
+        <div class="row g-3 align-items-end">
 
-        <div class="row">
-
-            <div class="col-md-4">
-
-                <input type="text"
-                       class="form-control"
-                       placeholder="Search audit logs..." />
-
-            </div>
-
-            <div class="col-md-3">
-
-                <select class="form-select">
-
-                    <option>All Modules</option>
-                    <option>Users</option>
-                    <option>Proposal</option>
-                    <option>Reviews</option>
-                    <option>Publication</option>
-                    <option>Categories</option>
-                    <option>Authentication</option>
-                    <option>System Settings</option>
-
+            <div class="col-12 col-md-4">
+                <label for="audit-entity" class="form-label">Entity</label>
+                <select id="audit-entity" name="entityType" class="form-select">
+                    <option value="">All entities</option>
+                    @foreach (var entity in entityTypes)
+                    {
+                        <option value="@entity" selected="@(query.EntityType == entity)">@Humanise(entity)</option>
+                    }
                 </select>
-
             </div>
 
-            <div class="col-md-3">
-
-                <select class="form-select">
-
-                    <option>All Status</option>
-                    <option>Success</option>
-                    <option>Warning</option>
-                    <option>Error</option>
-
-                </select>
-
+            <div class="col-12 col-sm-6 col-md-3">
+                <label for="audit-from" class="form-label">From</label>
+                <input type="date" id="audit-from" name="from" class="form-control"
+                       value="@(query.From?.ToString("yyyy-MM-dd"))" />
             </div>
 
-            <div class="col-md-2 text-end">
+            <div class="col-12 col-sm-6 col-md-3">
+                <label for="audit-to" class="form-label">To</label>
+                <input type="date" id="audit-to" name="to" class="form-control"
+                       value="@(query.To?.ToString("yyyy-MM-dd"))" />
+            </div>
 
-                <button class="btn btn-primary">
-
-                    <i class="ti ti-download"></i>
-
-                    Export
-
-                </button>
-
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+                @if (Model.HasFiltersApplied)
+                {
+                    <a asp-controller="AuditLogs" asp-action="Index" class="btn btn-link text-secondary">Clear</a>
+                }
             </div>
 
         </div>
+    </div>
+</form>
 
+@if (Model.LoadFailed)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">We couldn't load the audit log</h3>
+            <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
+            <a asp-controller="AuditLogs" asp-action="Index" class="btn btn-primary">Retry</a>
+        </div>
+    </div>
+}
+else if (results.TotalCount == 0)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">Nothing recorded</h3>
+            <p class="text-secondary m-0">
+                @(Model.HasFiltersApplied ? "No entries match these filters." : "The audit log is empty.")
+            </p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="text-secondary mb-3">
+        Showing @results.FirstItemNumber&ndash;@results.LastItemNumber of @results.TotalCount entries
     </div>
 
-</div>
-
-<!-- Audit Table -->
-
-<div class="card mt-3">
-
-    <partial name="_AuditLogTable" model="Model" />
-
-    <div class="card-footer">
-
-        <partial name="_Pagination" />
-
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table card-table table-vcenter">
+                <thead>
+                    <tr>
+                        <th>When</th>
+                        <th>Who</th>
+                        <th>Action</th>
+                        <th>Entity</th>
+                        <th>Change</th>
+                        <th>Comments</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in results.Items)
+                    {
+                        <tr>
+                            <td class="text-nowrap">@entry.Timestamp.ToLocalTime().ToString("dd MMM yyyy 'at' HH:mm")</td>
+                            <td>
+                                @entry.ActorName
+                                @if (!string.IsNullOrWhiteSpace(entry.OnBehalfOfName))
+                                {
+                                    <span class="d-block text-secondary small">on behalf of @entry.OnBehalfOfName</span>
+                                }
+                            </td>
+                            <td>@Humanise(entry.ActionType)</td>
+                            <td>@Humanise(entry.EntityType)</td>
+                            <td>
+                                @if (entry.NewValue is null)
+                                {
+                                    <span class="text-secondary">&mdash;</span>
+                                }
+                                else
+                                {
+                                    @if (entry.PreviousValue is not null)
+                                    {
+                                        <span class="badge @StatusBadge(entry.PreviousValue)">@Humanise(entry.PreviousValue)</span>
+                                        <span class="text-secondary mx-1">&rarr;</span>
+                                    }
+                                    <span class="badge @StatusBadge(entry.NewValue)">@Humanise(entry.NewValue)</span>
+                                }
+                            </td>
+                            <td>@entry.Comments</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 
-</div>
+    @if (results.TotalPages > 1)
+    {
+        <ul class="pagination mt-4">
+            <li class="page-item @(results.HasPrevious ? "" : "disabled")">
+                <a class="page-link" asp-controller="AuditLogs" asp-action="Index"
+                   asp-all-route-data="Model.RouteValues(results.Page - 1)">Previous</a>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">Page @results.Page of @results.TotalPages</span>
+            </li>
+            <li class="page-item @(results.HasNext ? "" : "disabled")">
+                <a class="page-link" asp-controller="AuditLogs" asp-action="Index"
+                   asp-all-route-data="Model.RouteValues(results.Page + 1)">Next</a>
+            </li>
+        </ul>
+    }
+}

@@ -16,7 +16,9 @@ public static class RoleLanding
         if (set.Contains(RoleNames.Coordinator)) return ("Coordinator", "Coordinator_dashboard");
         if (set.Contains(RoleNames.Supervisor)) return ("Supervisor", "SupervisorDashboard");
         if (set.Contains(RoleNames.HeadOfDepartment)) return ("HeadOfDepartment", "Head_of_Department_dashboard");
-        if (set.Contains(RoleNames.ExternalCommitteeMember)) return ("ExternalSupervisor", "External_Supervisor_Dashboard");
+        // Both committee roles land on the same screens: they do the same job.
+        if (set.Contains(RoleNames.ExternalCommitteeMember) || set.Contains(RoleNames.InternalCommitteeMember))
+            return ("ExternalSupervisor", "External_Supervisor_Dashboard");
         if (set.Contains(RoleNames.Admin)) return ("Admin", "Dashboard");
 
         // Staff awaiting an operational role, or anything unmapped: their own profile is the

@@ -44,3 +44,14 @@ public static class PublicationStatus
     public const string Accepted = "Accepted";
     public const string Published = "Published";
 }
+
+public record PaperReviewDecisionRequestDto(bool Accept, string Comments);
+
+/// <summary>One recorded review of a paper version.</summary>
+public record ReviewDto(
+    Guid Id,
+    string ReviewerName,
+    string ReviewerType,
+    string Decision,
+    string Comments,
+    DateTime ReviewedAt);

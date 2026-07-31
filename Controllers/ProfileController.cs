@@ -2,16 +2,22 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ResearchPublicationManagementSystem.Infrastructure.Api;
+using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
+using ResearchPublicationManagementSystem.Models;
 using ResearchPublicationManagementSystem.Services;
 
 namespace ResearchPublicationManagementSystem.Controllers
 {
     /// <summary>
-    /// Profile photo management. Deliberately not on StudentController: every role has a profile
-    /// photo, and that controller is Student-only.
+    /// The signed-in person's own account: their profile, their photo, their password.
+    /// Deliberately not on StudentController — every role has these, and that controller is
+    /// Student-only.
     /// </summary>
     [Authorize]
-    public class ProfileController(UsersApiClient usersApi, IAuthCookieService authCookieService) : Controller
+    public class ProfileController(
+        UsersApiClient usersApi,
+        AuthApiClient authApi,
+        IAuthCookieService authCookieService) : Controller
     {
         private static readonly string[] AllowedContentTypes = ["image/jpeg", "image/png", "image/webp"];
 
@@ -99,5 +105,60 @@ namespace ResearchPublicationManagementSystem.Controllers
             !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
                 ? Redirect(returnUrl)
                 : RedirectToAction("studentprofile", "Student");
+
+        // ---------- Changing your own password ----------
+
+        [HttpGet]
+        public IActionResult ChangePassword() => View(new ChangePasswordViewModel());
+
+        /// <summary>
+        /// The confirmation is checked here and the current password by the API. Keeping them
+        /// apart matters: only the API can tell whether the current password is right, and only
+        /// it counts a wrong one towards locking the account.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            if (model.NewPassword != model.ConfirmPassword)
+            {
+                ModelState.AddModelError(nameof(model.ConfirmPassword),
+                    "The two new passwords do not match.");
+                return View(model);
+            }
+
+            if (model.NewPassword == model.CurrentPassword)
+            {
+                ModelState.AddModelError(nameof(model.NewPassword),
+                    "Your new password must be different from your current one.");
+                return View(model);
+            }
+
+            var accessToken = User.FindFirst(AuthClaimTypes.AccessToken)?.Value;
+            if (accessToken is null)
+            {
+                return RedirectToAction("home", "Auth");
+            }
+
+            var result = await authApi.ChangePasswordAsync(
+                new ChangePasswordRequestDto(model.CurrentPassword, model.NewPassword), accessToken);
+
+            if (!result.Success)
+            {
+                // Covers a wrong current password, a new one the rules reject, and the lockout
+                // that follows too many wrong attempts — each with the API's own wording.
+                ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Could not change your password.");
+                return View(model);
+            }
+
+            TempData["SuccessMessage"] = "Your password has been changed.";
+            return RedirectToAction(nameof(Me));
+        }
+
     }
 }

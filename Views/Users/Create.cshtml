@@ -1,192 +1,120 @@
-﻿@model CreateUserViewModel
-@using ResearchPublicationManagementSystem.Models
-
+@model CreateUserViewModel
 @{
-    ViewData["Title"] = "Create User";
+    ViewData["Title"] = "Create an account";
+    var r = Model.Request;
 }
 
-<partial name="_PageHeader"
-         model='new PageHeaderViewModel
-         {
-             Title = "Create User",
-             Subtitle = "Create a new system user."
-         }' />
-         <form asp-action="Create" method="post">
-<div class="card mt-4">
-    <div class="card-body">
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
 
-        <h3 class="card-title mb-4">
-            Personal Information
-        </h3>
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-                <label asp-for="FullName" class="form-label"></label>
-                <input asp-for="FullName" class="form-control" />
-                <span asp-validation-for="FullName" class="text-danger"></span>
+        <div class="mb-4">
+            <a asp-controller="Users" asp-action="Index" class="text-secondary text-decoration-none small">&larr; Users</a>
+            <h1 class="page-title mt-2 mb-1">Create an account</h1>
+            <div class="text-secondary">
+                For people who won't sign themselves up. The account is created already verified and
+                enabled, so it skips the email confirmation a self-registered account goes through.
             </div>
-
-            <div class="col-md-6 mb-3">
-                <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label asp-for="Phone" class="form-label"></label>
-                <input asp-for="Phone" class="form-control" />
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label asp-for="Department" class="form-label"></label>
-                <input asp-for="Department" class="form-control" />
-            </div>
-
         </div>
 
-    </div>
-</div>
-<div class="card mt-4">
-    <div class="card-body">
+        <form asp-controller="Users" asp-action="Create" method="post" class="card">
+            <div class="card-body">
+                <div class="row g-3">
 
-        <h3 class="card-title mb-4">
-            Account Information
-        </h3>
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label" for="firstName">First name</label>
+                        <input id="firstName" name="FirstName" value="@r.FirstName" class="form-control" required />
+                        <span asp-validation-for="Request.FirstName" class="text-danger small"></span>
+                    </div>
 
-        <div class="row">
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label" for="lastName">Surname</label>
+                        <input id="lastName" name="LastName" value="@r.LastName" class="form-control" required />
+                    </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Assigned Roles</label>
+                    <div class="col-12">
+                        <label class="form-label" for="email">Email address</label>
+                        <input id="email" name="Email" type="email" value="@r.Email" class="form-control" required />
+                        <span class="form-hint">
+                            An @@ais.ac.nz or @@aisstudent.ac.nz address for institutional accounts.
+                        </span>
+                    </div>
 
-                    <div class="row">
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label" for="role">Role</label>
+                        <select id="role" name="Role" class="form-select" required>
+                            <option value="">Choose a role</option>
+                            @foreach (var role in CreateUserViewModel.Roles)
+                            {
+                                <option value="@role" selected="@(r.Role == role)">@Humanise(role)</option>
+                            }
+                        </select>
+                    </div>
 
-                        <div class="col-md-6">
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label" for="institutionalId">Institutional ID</label>
+                        <input id="institutionalId" name="InstitutionalId" value="@r.InstitutionalId" class="form-control" />
+                    </div>
 
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="roleStudent">
-                                <label class="form-check-label" for="roleStudent">
-                                    Student
-                                </label>
-                            </div>
+                    <div class="col-12">
+                        <label class="form-label" for="departmentId">Department</label>
+                        <select id="departmentId" name="DepartmentId" class="form-select">
+                            <option value="">No department</option>
+                            @foreach (var department in Model.Departments)
+                            {
+                                <option value="@department.Id" selected="@(r.DepartmentId == department.Id)">@department.Name</option>
+                            }
+                        </select>
+                        <span class="form-hint">Required for students and coordinators.</span>
+                    </div>
 
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="roleSupervisor">
-                                <label class="form-check-label" for="roleSupervisor">
-                                    Supervisor
-                                </label>
-                            </div>
+                </div>
 
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="roleHOD">
-                                <label class="form-check-label" for="roleHOD">
-                                    Head of Department
-                                </label>
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-6">
-
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="roleCommittee">
-                                <label class="form-check-label" for="roleCommittee">
-                                    Committee Member
-                                </label>
-                            </div>
-
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="roleCoordinator">
-                                <label class="form-check-label" for="roleCoordinator">
-                                    Research Coordinator
-                                </label>
-                            </div>
-
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="roleAdmin">
-                                <label class="form-check-label" for="roleAdmin">
-                                    Administrator
-                                </label>
-                            </div>
-
-                        </div>
-
+                @* Role-specific fields. Shown for every role rather than toggled: the backend
+                   ignores the ones that don't apply, and hiding them behind JavaScript would make
+                   the form depend on it. *@
+                <h2 class="h3 mt-4 mb-2">If this is a student</h2>
+                <div class="row g-3">
+                    <div class="col-12 col-sm-4">
+                        <label class="form-label" for="studentIdNumber">Student ID</label>
+                        <input id="studentIdNumber" name="StudentIdNumber" value="@r.StudentIdNumber" class="form-control" />
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <label class="form-label" for="programme">Programme</label>
+                        <input id="programme" name="Programme" value="@r.Programme" class="form-control" />
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <label class="form-label" for="cohort">Cohort</label>
+                        <input id="cohort" name="Cohort" value="@r.Cohort" class="form-control" />
                     </div>
                 </div>
-            <div class="col-md-6 mb-3">
 
-                <label class="form-label">
-                    Status
-                </label>
-
-                <div class="form-check mt-2">
-
-                    <input asp-for="IsActive"
-                           class="form-check-input" />
-
-                    <label asp-for="IsActive"
-                           class="form-check-label">
-                        Active User
-                    </label>
-
+                <h2 class="h3 mt-4 mb-2">If this is a supervisor</h2>
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label" for="areasOfExpertise">Areas of expertise</label>
+                        <input id="areasOfExpertise" name="AreasOfExpertise" value="@r.AreasOfExpertise" class="form-control" />
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label" for="researchInterests">Research interests</label>
+                        <input id="researchInterests" name="ResearchInterests" value="@r.ResearchInterests" class="form-control" />
+                    </div>
                 </div>
 
+                <h2 class="h3 mt-4 mb-2">If this is a committee member</h2>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label" for="affiliation">Affiliation</label>
+                        <input id="affiliation" name="Affiliation" value="@r.Affiliation" class="form-control"
+                               placeholder="The institution an external member comes from" />
+                    </div>
+                </div>
             </div>
 
-        </div>
+            <div class="card-footer d-flex justify-content-end gap-2">
+                <a asp-controller="Users" asp-action="Index" class="btn btn-link text-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Create the account</button>
+            </div>
+        </form>
 
     </div>
 </div>
-<div class="card mt-4">
-    <div class="card-body">
-
-        <h3 class="card-title mb-4">
-            Account Security
-        </h3>
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-
-                <label asp-for="Password"
-                       class="form-label"></label>
-
-                <input asp-for="Password"
-                       class="form-control" />
-
-            </div>
-
-            <div class="col-md-6 mb-3">
-
-                <label asp-for="ConfirmPassword"
-                       class="form-label"></label>
-
-                <input asp-for="ConfirmPassword"
-                       class="form-control" />
-
-            </div>
-
-        </div>
-
-    </div>
-</div>
-<div class="d-flex justify-content-end gap-2 mt-4">
-
-    <a asp-action="Index"
-       class="btn btn-secondary">
-
-        Cancel
-
-    </a>
-
-    <button type="submit"
-            class="btn btn-primary">
-
-        <i class="ti ti-device-floppy"></i>
-
-        Create User
-
-    </button>
-
-</div>
-</form>

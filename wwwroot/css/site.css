@@ -54,6 +54,19 @@ html {
     font-size: 14px;
     position: relative;
     min-height: 100%;
+
+    /* Always leave room for the scrollbar, whether or not the page needs one.
+
+       Without this, the width of the content depends on whether it happens to overflow: a page
+       that scrolls is 15px narrower than one that doesn't, so every navigation between the two
+       shifts the whole layout sideways. Worse within a single page — the browser paints before
+       it knows the final height, so text lands, the scrollbar appears, and everything jumps left
+       and settles. That is the flicker.
+
+       Tabler solves this by reserving the width as a LEFT margin on :root, which leaves a visible
+       gap down the left of scrolling pages (undone above). This reserves it on the right, where
+       the scrollbar actually is, so nothing moves and nothing is inset. */
+    scrollbar-gutter: stable;
 }
 
 @media (min-width:768px) {
@@ -184,22 +197,29 @@ aside {
 }
 
 /* Collapsed state, toggled by the navbar burger (see site.js). Animates the width to 0 so
-   the main area reclaims the space. */
+   the main area reclaims the space.
+
+   Opening and closing take the same time and the same easing. The border is in the list too:
+   left out, it snapped back the instant the panel started opening, which read as the sidebar
+   jumping open and then sliding — the two halves of the movement disagreeing. */
 .rpms-sidebar {
     flex: 0 0 auto;
     overflow: hidden;
-    transition: width .2s ease;
+    transition: width .2s ease, border-right-width .2s ease;
 }
 
+    /* Set in <head> before the first paint, so a remembered collapsed sidebar is never drawn
+       open first. Kept in step with the class site.js toggles below. */
+    .rpms-sidebar-is-collapsed .rpms-sidebar,
     .rpms-sidebar.rpms-sidebar-collapsed {
         width: 0;
         border-right-width: 0;
-        /* Hidden only once the width animation has finished (0s delay of .2s), so the panel
-           clips away progressively instead of its contents blinking out at the start — while
-           still dropping out of the tab order once it is actually closed. Expanding uses the
-           base rule above, so it becomes visible immediately. */
+        /* Visibility is the one thing that cannot be symmetric, and should not be: closing hides
+           the panel only once the width has finished (0s change, delayed .2s) so it clips away
+           progressively instead of blinking out at the start, while opening makes it visible at
+           once so there is something to watch as it grows. Both still take .2s end to end. */
         visibility: hidden;
-        transition: width .2s ease, visibility 0s linear .2s;
+        transition: width .2s ease, border-right-width .2s ease, visibility 0s linear .2s;
     }
 
 /* Holds the expanded width regardless of the aside's animated width, so nothing inside
@@ -224,6 +244,10 @@ aside {
 .rpms-sidebar-inner .nav-link {
     color: #495057;
     border-radius: 8px;
+    /* Carried by every item, transparent until one is the open one. Adding a border only to the
+       active item would make it 2px larger than its neighbours, so the list would shift each
+       time you moved between pages. */
+    border: 1px solid transparent;
     padding: 10px 16px;
     margin-bottom: 4px;
     font-size: 16px;
@@ -233,15 +257,45 @@ aside {
     white-space: nowrap;
 }
 
-    .rpms-sidebar-inner .nav-link:hover {
+    /* Not on the open item: it has its own treatment, and lighting it red on the way past would
+       say "you could go here" about the page already being looked at. */
+    .rpms-sidebar-inner .nav-link:not(.active):hover {
         background: #fbeceb;
         color: var(--rpms-primary);
     }
 
+    /* The open item: an outline rather than a fill, so it reads as "you are here" instead of
+       competing with the brand colour the hover uses. The border breathes slowly to keep it
+       alive without pulling the eye away from the content. */
     .rpms-sidebar-inner .nav-link.active {
-        background: var(--rpms-primary);
-        color: #ffffff !important;
+        background: transparent;
+        /* The same grey as every other item: the outline is what marks it, not a change of
+           colour. Only the weight lifts, so it reads as current without shouting. */
+        color: #495057;
+        font-weight: 600;
+        border-color: #adb5bd;
+        animation: rpms-nav-active-breathe 2.8s ease-in-out infinite;
     }
+
+@keyframes rpms-nav-active-breathe {
+    0%, 100% {
+        border-color: rgba(173, 181, 189, 1);
+        box-shadow: 0 0 0 0 rgba(173, 181, 189, .35);
+    }
+
+    50% {
+        border-color: rgba(173, 181, 189, .4);
+        box-shadow: 0 0 0 3px rgba(173, 181, 189, 0);
+    }
+}
+
+/* Some people are made unwell by looping motion, and this one never stops while the page is
+   open. The outline still marks the item; only the movement goes. */
+@media (prefers-reduced-motion: reduce) {
+    .rpms-sidebar-inner .nav-link.active {
+        animation: none;
+    }
+}
 
 /* ---------- Tabs ---------- */
 
@@ -300,26 +354,46 @@ aside {
 /* Driven off the button's own aria-expanded, which site.js already keeps in sync with the
    sidebar — no extra state to maintain. Open sidebar shows an X (click to close), collapsed
    shows the three bars. Duration matches the sidebar's width transition so they move together. */
-.rpms-burger path {
-    transition: transform .2s ease, opacity .2s ease;
-    transform-box: fill-box;
-    transform-origin: center;
+/* The burger keeps its three bars in both states — it is the control that opens and closes the
+   sidebar, and it says so the same way either way. What changes is the button behind them. */
+
+/* Sidebar open: the button recedes, because the thing it opens is already on screen. */
+#sidebar-toggle {
+    background-color: transparent;
+    color: #495057;
+    border: 1px solid transparent;
+    transition: background-color .2s ease, color .2s ease, border-color .2s ease;
 }
 
-#sidebar-toggle[aria-expanded="true"] .rpms-burger-top {
-    transform: translateY(6px) rotate(45deg);
+    #sidebar-toggle:hover {
+        background-color: rgba(73, 80, 87, .08);
+        color: #495057;
+    }
+
+/* Sidebar closed: filled, so the way back is obvious once the nav is out of sight.
+
+   Keyed off the pre-paint class as well as the ARIA state. The class is on <html> before the
+   page renders, whereas aria-expanded is corrected by site.js a moment later — without the
+   first selector the button would flash the wrong style on every load, which is the problem
+   the sidebar itself already had. */
+:root.rpms-sidebar-is-collapsed #sidebar-toggle,
+#sidebar-toggle[aria-expanded="false"] {
+    /* Grey rather than black: it marks the closed state without turning the top bar's lightest
+       corner into its heaviest. White bars still clear the contrast threshold on this tone. */
+    background-color: #6c757d;
+    color: #ffffff;
+    border-color: #6c757d;
 }
 
-#sidebar-toggle[aria-expanded="true"] .rpms-burger-mid {
-    opacity: 0;
-}
-
-#sidebar-toggle[aria-expanded="true"] .rpms-burger-bottom {
-    transform: translateY(-6px) rotate(-45deg);
-}
+    :root.rpms-sidebar-is-collapsed #sidebar-toggle:hover,
+    #sidebar-toggle[aria-expanded="false"]:hover {
+        background-color: #5a6268;
+        color: #ffffff;
+        border-color: #5a6268;
+    }
 
 @media (prefers-reduced-motion: reduce) {
-    .rpms-burger path,
+    #sidebar-toggle,
     .rpms-sidebar {
         transition: none;
     }
@@ -625,6 +699,14 @@ aside {
         color: var(--rpms-danger);
     }
 
+.rpms-toast-info {
+    border-left-color: var(--rpms-info);
+}
+
+    .rpms-toast-info .rpms-toast-icon {
+        color: var(--rpms-info);
+    }
+
 .rpms-toast-icon {
     flex: 0 0 auto;
     line-height: 1;
@@ -695,4 +777,44 @@ aside {
     .rpms-toast.rpms-toast-leaving {
         animation: none;
     }
+}
+
+/* ---------- Notification bell ---------- */
+
+/* Colour is the signal, not just the count: the bell has to read as "something is waiting"
+   at a glance, before anyone reads a number. */
+.rpms-bell-unread {
+    color: var(--rpms-primary);
+}
+
+.rpms-bell {
+    position: relative;
+}
+
+.rpms-bell-count {
+    position: absolute;
+    top: 0.15rem;
+    right: 0.15rem;
+    min-width: 1.05rem;
+    padding: 0 0.25rem;
+    border-radius: 999px;
+    background: var(--rpms-primary);
+    color: #fff;
+    font-size: 0.65rem;
+    line-height: 1.05rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* The sidebar does not animate until the first paint has happened. Restoring a remembered state
+   is a starting condition, not a change the user made, and animating it is what made every
+   navigation flicker. Removed by site.js once the page is up.
+
+   Scoped to the sidebar deliberately. A blanket `*` rule reaches every element on the page, so
+   removing the class forces the browser to recompute styles for all of them at once — which is
+   its own visible hitch, and exactly the kind of "something happens to everything just after it
+   renders" this was meant to stop. Only the sidebar has a restored state to suppress. */
+.rpms-no-transitions .rpms-sidebar,
+.rpms-no-transitions .rpms-sidebar-inner {
+    transition: none !important;
 }
