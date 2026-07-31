@@ -26,6 +26,12 @@ namespace ResearchPublicationManagementSystem.Models
     /// <summary>Ethics documentation awaiting the Head of Department's comments.</summary>
     public class HeadOfDepartmentEthicsViewModel
     {
+
+        /// <summary>
+        /// Which page of the queue this is. Null where everything fits on one, so the controls
+        /// only appear when there is somewhere to go.
+        /// </summary>
+        public PagerViewModel? Pager { get; set; }
         public List<HeadOfDepartmentEthicsItem> Items { get; set; } = [];
 
         public bool LoadFailed { get; set; }
@@ -43,6 +49,12 @@ namespace ResearchPublicationManagementSystem.Models
     /// <summary>Every proposal from students in the department, for oversight rather than action.</summary>
     public class DepartmentProposalsViewModel
     {
+
+        /// <summary>
+        /// Which page of the queue this is. Null where everything fits on one, so the controls
+        /// only appear when there is somewhere to go.
+        /// </summary>
+        public PagerViewModel? Pager { get; set; }
         public List<DepartmentProposalItem> Items { get; set; } = [];
 
         public bool LoadFailed { get; set; }

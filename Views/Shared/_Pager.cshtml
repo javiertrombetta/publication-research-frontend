@@ -1,0 +1,21 @@
+@model PagerViewModel
+
+@* Drawn only when there is somewhere to go. A single page of results needs no controls. *@
+@if (Model.TotalPages > 1)
+{
+    <ul class="pagination mt-4">
+        <li class="page-item @(Model.HasPrevious ? "" : "disabled")">
+            <a class="page-link" asp-controller="@Model.Controller" asp-action="@Model.Action"
+               asp-all-route-data="Model.RouteValuesFor(Model.Page - 1)">Previous</a>
+        </li>
+
+        <li class="page-item disabled">
+            <span class="page-link">Page @Model.Page of @Model.TotalPages</span>
+        </li>
+
+        <li class="page-item @(Model.HasNext ? "" : "disabled")">
+            <a class="page-link" asp-controller="@Model.Controller" asp-action="@Model.Action"
+               asp-all-route-data="Model.RouteValuesFor(Model.Page + 1)">Next</a>
+        </li>
+    </ul>
+}

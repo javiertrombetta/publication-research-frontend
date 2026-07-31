@@ -52,14 +52,25 @@ else
                         @foreach (var proposal in item.Proposals)
                         {
                             <tr>
-                                <td>@proposal.Title</td>
-                                <td>@(proposal.SubmittedAt?.ToLocalTime().ToString("dd MMM yyyy") ?? "—")</td>
-                                <td><span class="badge @StatusBadge(proposal.Status)">@Humanise(proposal.Status)</span></td>
+                                <td>
+                                    @proposal.Title
+                                    @* The abstract is what the proposal actually says. A title alone
+                                       tells a head of department the subject and nothing about whether
+                                       the work is worth supervising. *@
+                                    <span class="d-block text-secondary small rpms-preserve-lines">@proposal.Abstract</span>
+                                </td>
+                                <td class="text-nowrap align-top">@(proposal.SubmittedAt?.ToLocalTime().ToString("dd MMM yyyy") ?? "—")</td>
+                                <td class="align-top"><span class="badge @StatusBadge(proposal.Status)">@Humanise(proposal.Status)</span></td>
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
         </div>
+    }
+
+    @if (Model.Pager is not null)
+    {
+        <partial name="_Pager" model="Model.Pager" />
     }
 }

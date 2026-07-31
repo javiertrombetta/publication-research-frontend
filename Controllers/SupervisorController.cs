@@ -151,7 +151,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         // ---------- Pipeline 3: the research paper ----------
 
         [HttpGet]
-        public async Task<IActionResult> publication_review()
+        public async Task<IActionResult> publication_review(int page = 1)
         {
             var model = new SupervisorPapersViewModel();
 
@@ -163,7 +163,16 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return View(model);
             }
 
-            model.Papers = papers.Data ?? [];
+            var all = papers.Data ?? [];
+            model.Papers = Paging.Page(all, page);
+            model.Pager = new PagerViewModel
+            {
+                Controller = "Supervisor",
+                Action = nameof(publication_review),
+                Page = Paging.ClampPage(page, all.Count),
+                TotalPages = Paging.TotalPages(all.Count)
+            };
+
             return View(model);
         }
 

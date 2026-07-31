@@ -45,7 +45,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// one publication, so a link from the dashboard opens straight onto it.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> Headofdepartment_feedback(Guid? id)
+        public async Task<IActionResult> Headofdepartment_feedback(Guid? id, int page = 1)
         {
             var model = new HeadOfDepartmentEthicsViewModel();
 
@@ -71,7 +71,20 @@ namespace ResearchPublicationManagementSystem.Controllers
                 }
             }
 
-            foreach (var container in candidates)
+            // Paged before the details are fetched, not after: each row costs two requests to
+            // fill in, so a department with fifty waiting used to pay a hundred of them to render
+            // ten. Now the page decides how many are asked for.
+            var total = candidates.Count;
+            model.Pager = new PagerViewModel
+            {
+                Controller = "HeadOfDepartment",
+                Action = nameof(Headofdepartment_feedback),
+                Page = Paging.ClampPage(page, total),
+                TotalPages = Paging.TotalPages(total),
+                RouteValues = id is null ? [] : new() { ["id"] = id.ToString() }
+            };
+
+            foreach (var container in Paging.Page(candidates, page))
             {
                 var approval = await ethicsApi.GetApprovalAsync(container.Id);
                 if (approval.Data is null) continue;
@@ -116,7 +129,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// not part of the proposal workflow, but does need to see what their department is doing.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> all_proposals_fromstudent()
+        public async Task<IActionResult> all_proposals_fromstudent(int page = 1)
         {
             var model = new DepartmentProposalsViewModel();
 
@@ -148,6 +161,16 @@ namespace ResearchPublicationManagementSystem.Controllers
                     Proposals = forContainer
                 });
             }
+
+            var total = model.Items.Count;
+            model.Items = Paging.Page(model.Items, page);
+            model.Pager = new PagerViewModel
+            {
+                Controller = "HeadOfDepartment",
+                Action = nameof(all_proposals_fromstudent),
+                Page = Paging.ClampPage(page, total),
+                TotalPages = Paging.TotalPages(total)
+            };
 
             return View(model);
         }
