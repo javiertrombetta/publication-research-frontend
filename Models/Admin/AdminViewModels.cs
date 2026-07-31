@@ -33,9 +33,7 @@ namespace ResearchPublicationManagementSystem.Models
 
     public class AwaitingCommitteeItem
     {
-        public PublicationContainerDto Container { get; set; } = null!;
-
-        public PublicationDto Paper { get; set; } = null!;
+        public AwaitingCommitteeDto Paper { get; set; } = null!;
 
         /// <summary>
         /// What this publication's committee must look like. Taken from the publication itself

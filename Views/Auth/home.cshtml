@@ -45,17 +45,14 @@
         </div>
     </div>
 
-    <div class="text-center text-secondary mt-3">
-        @* Offered only when self-registration is open. Elsewhere the link would lead straight to
-           "accounts here are by invitation", which is a dead end dressed up as an invitation. *@
-        @if (selfRegistrationOpen)
-        {
+    @* Offered only when self-registration is open. Elsewhere the link would lead straight to
+       "accounts here are by invitation", which is a dead end dressed up as an invitation — and
+       someone who has been invited arrives with a link, so they need telling nothing here. *@
+    @if (selfRegistrationOpen)
+    {
+        <div class="text-center text-secondary mt-3">
             <span>Don't have an account yet? <a asp-controller="Auth" asp-action="signup" tabindex="-1">Sign up</a></span>
-        }
-        else
-        {
-            <span>Accounts are issued by an administrator.</span>
-        }
-    </div>
+        </div>
+    }
 
 </div>

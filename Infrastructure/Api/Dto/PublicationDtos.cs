@@ -55,3 +55,17 @@ public record ReviewDto(
     string Decision,
     string Comments,
     DateTime ReviewedAt);
+
+/// <summary>
+/// A research paper waiting for an evaluation committee: approved by its supervisor, with none
+/// appointed. Carries the composition the publication was opened under, which is what the API
+/// will judge the administrator's selection against.
+/// </summary>
+public record AwaitingCommitteeDto(
+    Guid Id,
+    Guid PublicationContainerId,
+    string Title,
+    string Abstract,
+    string StudentName,
+    int? RequiredInternalCommitteeMembers,
+    int? RequiredExternalCommitteeMembers);
