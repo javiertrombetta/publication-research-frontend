@@ -1,6 +1,186 @@
-﻿@{
+@using Microsoft.Extensions.Options
+@using ResearchPublicationManagementSystem.Infrastructure.Options
+@inject IOptions<InstitutionOptions> Institution
+@{
     ViewData["Title"] = "Privacy Policy";
-}
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+    // A signed-in reader keeps their navigation; a signed-out one has nothing to navigate to,
+    // and the workflow menu would be wrong for them anyway.
+    ViewData["HideSidebar"] = User.Identity?.IsAuthenticated != true;
+
+    var institution = Institution.Value;
+}
+
+@*
+    The institution's published privacy policy, reproduced from www.ais.ac.nz/privacy-policy so a
+    reader doesn't have to leave the application to find it.
+
+    AIS's own site holds the authoritative copy and states that it is updated frequently, so the
+    link to it is kept visible rather than tucked away: if the two ever disagree, theirs wins.
+    The wording below is quoted as published and deliberately left unedited.
+*@
+<div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+
+        <div class="mb-4">
+            <h1 class="page-title mb-1">Privacy Policy</h1>
+            <div class="text-secondary">Auckland Institute of Studies</div>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-4 p-md-5">
+
+                <p>
+                    At Auckland Institute of Studies (AIS) we are committed to ensuring and protecting
+                    your privacy at any time you are on our website or communicate electronically with
+                    our personnel. This Privacy Policy has been provided and approved by the employment
+                    contracts and internet contracts experts at LegalCentre.co.uk.
+                </p>
+                <p>
+                    Our Privacy Policy is contained below and provides a detailed explanation as to how
+                    we may use your personal information provided to us or any we collect through legal
+                    means.
+                </p>
+                <p>
+                    Updates of our Privacy Policy are completed frequently, thus you should peruse this
+                    Policy habitually.
+                </p>
+
+                <h2 class="h3 mt-4">1. Information We Collect from You</h2>
+                <p>
+                    Data can be collected and processed when our website is in operation by you. The
+                    following are approved methods of collection:
+                </p>
+                <p class="mb-2">1.1 If you register for information by filling out a form, we can collect the information provided.</p>
+                <p class="mb-2">
+                    1.2 Traffic data, weblogs, location data, and any other communication can be collected.
+                    These details come from your visit to our site and any resource tools you use while on
+                    the site.
+                </p>
+                <p>1.3 Any communication on our website or to personnel allows us to collect information.</p>
+
+                <h2 class="h3 mt-4">2. Use of Cookies</h2>
+                <p>
+                    Circumstances may arise when we may need to gather information about your computer to
+                    help provide appropriate services or products to you.
+                </p>
+                <p>
+                    The facts collected about you are statistical only. No identifying information will be
+                    shared about our visitors and how they made use of our site. No personal details will
+                    ever be shared.
+                </p>
+                <p>
+                    Cookies are used to collect general online usage by using a cookie file. If used, this
+                    cookie file is downloaded without prompting. It will be placed on your hard drive with
+                    information transferred to the hard drive allowing the cookies to be used for data
+                    collection. A cookie is used to improve any services/ products or overall website
+                    characteristic we offer you.
+                </p>
+                <p>
+                    Any computer has the option to decline cookies. Your web browser options include an
+                    &ldquo;enable&rdquo; button to decline cookies. It is imperative that you understand by
+                    declining cookies, you may be limiting your access to sections of our website.
+                </p>
+
+                <h2 class="h3 mt-4">3. Use of Your Information</h2>
+                <p>
+                    Information stored and collected about you allows us to improve our services or products
+                    for you. Added to this parameter, we may use your information for the following purposes:
+                </p>
+                <p class="mb-2">3.1 Any commitment we make on a contracted basis.</p>
+                <p class="mb-2">
+                    3.2 If information is requested from our website concerning products and services offered,
+                    we may use your data. Products and services which may be of interest to you can also deem a
+                    communication from us, if permission has been granted.
+                </p>
+                <p class="mb-2">
+                    3.3 Notification regarding changes or improvements may be sent to you in regards to products
+                    or services that could affect our service to you.
+                </p>
+                <p class="mb-2">
+                    3.4 Added use of your data may include permission for third parties to use your data. This
+                    permission would be granted by you in regards to unrelated products or services that may be
+                    in your interests. We or third parties can only contact you in regards to this information
+                    if consent has been provided for information collection.
+                </p>
+                <p class="mb-2">
+                    3.5 Third party contact or communications from our website is only made if you have granted
+                    us permission. These communications are only offered for information you consented to and no
+                    other unrelated information.
+                </p>
+                <p class="mb-2">
+                    3.6 Data that you do not want us to use or third parties to use can be withheld, once consent
+                    has been given regarding our collection of your data. We will always provide you with an
+                    opportunity to decline communications and our or third party data usage.
+                </p>
+                <p>
+                    3.7 Identifiable data, which could be used to disclose who you are, is never shared. We only
+                    provide statistical related data about our visitors to third parties to ensure your privacy.
+                </p>
+
+                <h2 class="h3 mt-4">4. Storing Your Personal Data</h2>
+                <p class="mb-2">
+                    4.1 Outside of New Zealand are places for storing and processing data we collect from you. We
+                    may take advantage of these outside areas, allowing staff to process data collected from you.
+                    We take all reasonable processes to ensure your data is secure and in agreement with our
+                    Privacy Policy as outlined here.
+                </p>
+                <p class="mb-2">4.2 Secured servers are used by AIS to ensure proper data storage.</p>
+                <p>
+                    4.3 Transmission of data on the internet can never be ultimately secure. We do not and cannot
+                    guarantee security of information collected electronically or transmitted; however, we take
+                    all necessary steps to provide the best security available. As a result of our inability to
+                    guarantee safety, you are submitting information to us at your own risk. Where needed, a
+                    password may be necessary to access areas of our site. You are responsible for the safety and
+                    confidentiality of the password you generate.
+                </p>
+
+                <h2 class="h3 mt-4">5. Disclosing Your Information</h2>
+                <p class="mb-2">5.1 Personal information to third parties may be disclosed.</p>
+                <p class="mb-2">
+                    5.2 This disclosure occurs when we sell all or a section of our business or assets to a third
+                    party.
+                </p>
+                <p class="mb-2">
+                    5.2.1 Personal information can be offered to any member of our company, such as subsidiaries,
+                    holding companies and their subsidiaries only if deemed appropriate.
+                </p>
+                <p class="mb-2">5.2.2 Legal requirements may mean a sharing of your information.</p>
+                <p>5.2.3 Lowering credit risk and fraud protection may result in information disclosure.</p>
+
+                <h2 class="h3 mt-4">6. Third Party Links</h2>
+                <p>
+                    Links might be discovered on our site that belongs to third parties. Any third party website
+                    on our site has a privacy policy. You should check their terms. We do not accept liability or
+                    responsibility for their privacy policies, based on our lack of control over these third party
+                    links.
+                </p>
+
+                <h2 class="h3 mt-4">7. Access to Information</h2>
+                <p>
+                    You may request access to any data we have about you. Contact information is given below,
+                    which should be used to gain details about the information we hold on you.
+                </p>
+
+                <h2 class="h3 mt-4">8. Contacting Us</h2>
+                <p>
+                    We welcome and hope you do not hesitate to make any queries, comments or requests you may have
+                    regarding this Privacy Policy.
+                </p>
+                <p class="mb-0">
+                    Auckland Institute of Studies<br />
+                    28a Linwood Avenue, Mt Albert, Auckland<br />
+                    +64 9 815 1717 &middot; 0800 788 392 (NZ only)
+                </p>
+
+            </div>
+        </div>
+
+        <p class="text-secondary small mt-3 mb-0">
+            AIS updates this policy from time to time. The authoritative version is published at
+            <a href="@institution.PrivacyPolicyUrl" target="_blank" rel="noopener noreferrer">@institution.PrivacyPolicyUrl</a>;
+            if the two differ, that one applies.
+        </p>
+
+    </div>
+</div>
