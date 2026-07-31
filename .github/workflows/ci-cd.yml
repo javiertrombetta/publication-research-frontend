@@ -8,6 +8,13 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Pushing twice in quick succession should not leave the first run building something already
+# replaced. The in-progress one is cancelled; tag builds are exempt, since a release is not
+# superseded by whatever lands next.
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+
 env:
   DOCKERHUB_IMAGE: javiertrombetta/publication-research-frontend
 
@@ -26,6 +33,15 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
+      # Restore pulls the same packages every run otherwise. Keyed on the project files, so it
+      # only rebuilds when a dependency actually changes.
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
       - name: Restore
         run: dotnet restore
 
@@ -39,7 +55,10 @@ jobs:
 
   build-and-push:
     name: Build & push Docker image
-    needs: build
+    # Deliberately not `needs: build`. The image build compiles the very same project, so a
+    # compile error fails it too — waiting for the other job first only added its time to every
+    # push. The Build job still stands on its own as the check that runs for pull requests,
+    # where nothing is published.
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
     permissions:
@@ -77,6 +96,10 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # No provenance attestation. It costs time on every build and publishes the image as a
+          # multi-manifest index carrying an "unknown/unknown" entry, which some registries and
+          # deployment targets handle poorly. Nothing here consumes the attestation.
+          provenance: false
           # Stamps the assembly so a running container can report its own version.
           #
           # Only on a tag. On a branch push meta.outputs.version is the primary tag's name —
