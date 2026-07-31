@@ -1,100 +1,60 @@
-﻿<aside class="border-end bg-white"
-       style="width:260px; min-height:calc(100vh - 64px);">
+@using ResearchPublicationManagementSystem.Common
+@{
+    var (homeController, homeAction) = RoleLanding.For(User);
 
-    <div class="p-4">
+    var isStudent = User.IsInRole(RoleNames.Student);
+    var isAdmin = User.IsInRole(RoleNames.Admin);
 
-        <!-- Logo -->
+    // Mirrors the [Authorize(Roles = ...)] on each controller, so the menu never offers a
+    // link that would just bounce the user to Access denied.
+    var canSeeProposals = isAdmin
+        || User.IsInRole(RoleNames.HeadOfDepartment)
+        || User.IsInRole(RoleNames.Coordinator)
+        || User.IsInRole(RoleNames.Supervisor);
 
-        <div class="text-center mb-5">
+    var canSeePublications = canSeeProposals
+        || User.IsInRole(RoleNames.InternalCommitteeMember)
+        || User.IsInRole(RoleNames.ExternalCommitteeMember);
+}
 
-            <a asp-controller="Admin"
-               asp-action="Dashboard">
+@* The AIS brand lives in the top bar (see _Navbar), not here. *@
+<aside class="border-end bg-white rpms-sidebar" id="rpms-sidebar">
 
-                <img src="~/images/ais-logo.png"
-                     style="max-width:170px;"
-                     alt="AIS Logo" />
-
-            </a>
-
-        </div>
-
-        <!-- Navigation -->
+    @* Fixed-width inner panel: keeps the nav from reflowing (and labels from wrapping) while
+       the sidebar animates open/closed — it is clipped instead. See .rpms-sidebar-inner. *@
+    <div class="p-4 rpms-sidebar-inner">
 
         <nav class="nav flex-column">
 
-            <a asp-controller="Admin"
-               asp-action="Dashboard"
-               class="nav-link active">
-
-                Dashboard
-
+            @* Label matches the heading of the page it opens. *@
+            <a asp-controller="@homeController" asp-action="@homeAction" class="nav-link">
+                @(isStudent ? "My publications" : canSeePublications ? "Dashboard" : "My account")
             </a>
 
-            <a asp-controller="Publications"
-               asp-action="Index"
-               class="nav-link">
+            @if (canSeeProposals)
+            {
+                <a asp-controller="Proposals" asp-action="Index" class="nav-link">Proposals</a>
+            }
 
-                Publications
+            @if (canSeePublications)
+            {
+                <a asp-controller="Publications" asp-action="Index" class="nav-link">Publications</a>
+            }
 
-            </a>
+            @if (isAdmin)
+            {
+                <a asp-controller="Users" asp-action="Index" class="nav-link">Users</a>
+                <a asp-controller="Categories" asp-action="Index" class="nav-link">Categories</a>
+                <a asp-controller="SystemSettings" asp-action="Index" class="nav-link">System settings</a>
+                <a asp-controller="AuditLogs" asp-action="Index" class="nav-link">Audit log</a>
+            }
 
-            <a href="#"
-               class="nav-link">
-
-                Ethics
-
-            </a>
-
-            <a href="#"
-               class="nav-link">
-
-                Reviews
-
-            </a>
-
-            <a href="#"
-               class="nav-link">
-
-                Administration
-
-            </a>
-
-            <a href="#"
-               class="nav-link">
-
-                System
-
-            </a>
-
-            <a href="#"
-               class="nav-link">
-
-                Public
-
-            </a>
+            <a asp-controller="Public" asp-action="public_catalogue" class="nav-link">Public catalogue</a>
 
         </nav>
 
     </div>
 
-    <!-- Footer -->
-
-    <div class="mt-auto p-4 border-top">
-
-        <a href="#"
-           class="d-block text-secondary text-decoration-none mb-2">
-
-            Privacy Policy
-
-        </a>
-
-        <a href="#"
-           class="d-block text-secondary text-decoration-none">
-
-            Contact IT
-
-        </a>
-
-    </div>
+    @* Privacy Policy / Contact IT live in the page footer (see _Footer), not here. *@
 
 </aside>

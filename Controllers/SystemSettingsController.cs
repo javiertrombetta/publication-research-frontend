@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using ResearchPublicationManagementSystem.Common;
 using ResearchPublicationManagementSystem.Models;
 
 namespace ResearchPublicationManagementSystem.Controllers
 {
+    [Authorize(Roles = RoleNames.Admin)]
     public class SystemSettingsController : Controller
     {
         public IActionResult Index()

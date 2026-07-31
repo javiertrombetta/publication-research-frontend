@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using ResearchPublicationManagementSystem.Common;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using ResearchPublicationManagementSystem.Models;
 
 namespace ResearchPublicationManagementSystem.Controllers
 {
+    [Authorize(Roles = RoleNames.Admin + "," + RoleNames.HeadOfDepartment + "," + RoleNames.Coordinator + "," + RoleNames.Supervisor + "," + RoleNames.InternalCommitteeMember + "," + RoleNames.ExternalCommitteeMember)]
     public class PublicationsController : Controller
     {
         public IActionResult Index()

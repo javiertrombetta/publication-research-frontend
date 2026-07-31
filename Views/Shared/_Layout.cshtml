@@ -14,10 +14,10 @@
 
     <!-- Tabler CSS -->
     <link rel="stylesheet"
-          href="~/lib/tabler/dist/css/tabler.min.css" />
+          href="~/lib/tabler/dist/css/tabler.min.css" asp-append-version="true" />
     <!-- Tabler Icons -->
     <link rel="stylesheet"
-          href="~/lib/tabler-icons/dist/tabler-icons.css" />
+          href="~/lib/tabler-icons/dist/tabler-icons.css" asp-append-version="true" />
 
     <!-- Your custom CSS -->
     <link rel="stylesheet"
@@ -28,16 +28,24 @@
 
 <body>
 
-    <div class="page">
+    @* Column layout so the footer sits below navbar + (sidebar | content) at full width,
+       and is pushed to the bottom of the viewport on short pages. *@
+    <div class="page rpms-shell">
 
         <!-- Top Navigation -->
         <partial name="_Navbar" />
 
         <!-- Main Layout -->
-        <div class="d-flex">
+        <div class="d-flex flex-fill">
 
-            <!-- Sidebar -->
-            <partial name="_Sidebar" />
+            @* Pages that aren't part of the workflow (the privacy policy, for one) set
+               HideSidebar: there is nothing to navigate to from them, and the nav would
+               also be wrong for a signed-out reader. *@
+            @if (ViewData["HideSidebar"] as bool? != true)
+            {
+                <!-- Sidebar -->
+                <partial name="_Sidebar" />
+            }
 
             <!-- Page Content -->
             <main class="flex-fill">
@@ -56,17 +64,25 @@
 
         </div>
 
+        <partial name="_Footer" />
+
     </div>
+
+    <partial name="_Toasts" />
 
     <!-- JavaScript -->
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
 
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @* tabler.min.js bundles its own copy of Bootstrap and auto-initialises every
+       [data-bs-toggle] component. Do NOT also load bootstrap.bundle.js here: two Bootstrap
+       copies both handle the same click, so one opens the dropdown and the other's
+       "click outside" handler immediately closes it again. *@
+    <script src="~/lib/tabler/dist/js/tabler.min.js" asp-append-version="true"></script>
 
-    <script src="~/lib/tabler/dist/js/tabler.min.js"></script>
-
-    <script src="~/js/site.js"></script>
+    @* asp-append-version is required here: without it browsers keep serving a cached copy
+       of site.js after it changes, so behaviour wired up in it silently stops working. *@
+    <script src="~/js/site.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 
