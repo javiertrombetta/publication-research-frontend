@@ -20,6 +20,9 @@ namespace ResearchPublicationManagementSystem.Models
         /// <summary>Research papers submitted for this supervisor's review.</summary>
         public IReadOnlyList<PublicationDto> PapersAwaitingReview { get; set; } = [];
 
+        /// <summary>How many there are altogether — the dashboard states a figure, not a page.</summary>
+        public int PapersAwaitingReviewTotal { get; set; }
+
         /// <summary>Everything they supervise, whether or not it needs them right now.</summary>
         public IReadOnlyList<PublicationContainerDto> Supervising { get; set; } = [];
 

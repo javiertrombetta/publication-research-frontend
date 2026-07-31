@@ -1,3 +1,4 @@
+using ResearchPublicationManagementSystem.Common;
 using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
 
 namespace ResearchPublicationManagementSystem.Infrastructure.Api;
@@ -9,8 +10,10 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api;
 public class CommitteesApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
 {
     /// <summary>The committees the acting member sits on.</summary>
-    public Task<ApiResult<IReadOnlyList<CommitteeDto>>> GetMyAssignmentsAsync(CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<CommitteeDto>>("api/committees/my-assignments", ct);
+    public Task<ApiResult<PagedResultDto<CommitteeDto>>> GetMyAssignmentsAsync(
+        int page = 1, int pageSize = Paging.DefaultPageSize, CancellationToken ct = default) =>
+        GetAsync<PagedResultDto<CommitteeDto>>(
+            $"api/committees/my-assignments?page={Math.Max(1, page)}&pageSize={pageSize}", ct);
 
     public Task<ApiResult<CommitteeDto>> GetByPublicationAsync(Guid publicationId, CancellationToken ct = default) =>
         GetAsync<CommitteeDto>($"api/publications/{publicationId}/committee", ct);

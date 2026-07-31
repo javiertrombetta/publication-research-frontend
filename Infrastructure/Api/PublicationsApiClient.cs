@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using ResearchPublicationManagementSystem.Common;
 using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
 
 namespace ResearchPublicationManagementSystem.Infrastructure.Api;
@@ -54,8 +55,10 @@ public class PublicationsApiClient(HttpClient httpClient) : ApiClientBase(httpCl
     // ---------- Supervisor ----------
 
     /// <summary>Papers submitted by students this supervisor supervises, awaiting their review.</summary>
-    public Task<ApiResult<IReadOnlyList<PublicationDto>>> GetPendingForSupervisorAsync(CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<PublicationDto>>("api/publications/pending", ct);
+    public Task<ApiResult<PagedResultDto<PublicationDto>>> GetPendingForSupervisorAsync(
+        int page = 1, int pageSize = Paging.DefaultPageSize, CancellationToken ct = default) =>
+        GetAsync<PagedResultDto<PublicationDto>>(
+            $"api/publications/pending?page={Math.Max(1, page)}&pageSize={pageSize}", ct);
 
     /// <summary>
     /// Papers a supervisor has approved that have no evaluation committee yet — the

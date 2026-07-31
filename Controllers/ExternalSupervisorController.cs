@@ -35,7 +35,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         [HttpGet]
         public async Task<IActionResult> committee_review(Guid? id, int page = 1)
         {
-            var (model, failed) = await LoadAssignmentsAsync();
+            var (model, failed) = await LoadAssignmentsAsync(page);
 
             if (!failed && id is { } only)
             {
@@ -47,17 +47,8 @@ namespace ResearchPublicationManagementSystem.Controllers
                 }
             }
 
-            var total = model.Items.Count;
-            model.Items = Paging.Page(model.Items, page);
-            model.Pager = new PagerViewModel
-            {
-                Controller = "ExternalSupervisor",
-                Action = nameof(committee_review),
-                Page = Paging.ClampPage(page, total),
-                TotalPages = Paging.TotalPages(total),
-                // Kept so paging a single assignment stays on that assignment.
-                RouteValues = id is null ? [] : new() { ["id"] = id.ToString() }
-            };
+            // Narrowed to one assignment, there is nothing to page through.
+            if (id is not null) model.Pager = null;
 
             return View(model);
         }
@@ -94,11 +85,11 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         // ---------- Helpers ----------
 
-        private async Task<(CommitteeDashboardViewModel Model, bool Failed)> LoadAssignmentsAsync()
+        private async Task<(CommitteeDashboardViewModel Model, bool Failed)> LoadAssignmentsAsync(int page = 1)
         {
             var model = new CommitteeDashboardViewModel();
 
-            var assignments = await committeesApi.GetMyAssignmentsAsync();
+            var assignments = await committeesApi.GetMyAssignmentsAsync(page);
             if (!assignments.Success)
             {
                 TempData["ErrorMessage"] = assignments.ErrorMessage ?? "Could not load your committee assignments.";
@@ -106,9 +97,11 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return (model, true);
             }
 
+            model.Pager = Paging.PagerFor(assignments.Data, "ExternalSupervisor", nameof(committee_review));
+
             var me = CurrentUserId();
 
-            foreach (var committee in assignments.Data ?? [])
+            foreach (var committee in assignments.Data?.Items ?? [])
             {
                 // The assignment now carries the paper's title and abstract, which is all this
                 // list shows of it. It used to fetch the paper per committee, so a member on

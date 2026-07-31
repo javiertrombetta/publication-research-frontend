@@ -18,10 +18,17 @@ namespace ResearchPublicationManagementSystem.Models
         /// </summary>
         public IReadOnlyList<ProposalDto> ProposalsAwaitingDispatch { get; set; } = [];
 
+        /// <summary>
+        /// How many there are in total, not how many are on this page. The dashboard states
+        /// figures, and a figure capped at the page size would simply be wrong.
+        /// </summary>
+        public int PublicationsTotal { get; set; }
+        public int ProposalsAwaitingDispatchTotal { get; set; }
+
         public bool LoadFailed { get; set; }
 
         public int ActionsWaiting =>
-            (ProposalsAwaitingDispatch.Count > 0 ? 1 : 0) +
+            (ProposalsAwaitingDispatchTotal > 0 ? 1 : 0) +
             Publications.Count(p => ActionFor(p) is not null);
 
         /// <summary>
