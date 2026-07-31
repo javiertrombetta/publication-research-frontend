@@ -50,6 +50,20 @@ jobs:
       - name: Build
         run: dotnet build --no-restore --configuration Release
 
+      # Catches a class of bug that only ever shows up in production: a view asking for
+      # ~/images/logo.png when the file on disk is wwwroot/Images/logo.png. Windows and macOS
+      # do not care about the difference, the Linux container serving the app does, so the asset
+      # is fine on every developer's machine and 404s the moment it is deployed. This runner is
+      # Linux, so the check is simply whether the file is there.
+      - name: Check asset paths resolve case-sensitively
+        run: |
+          missing=0
+          while read -r path; do
+            [ -f "wwwroot/$path" ] || { echo "::error::Referenced asset not found: wwwroot/$path"; missing=1; }
+          done < <(grep -rhoE '(src|href)="~/[^"]+"' Views/                      | sed -E 's/^(src|href)="~\///; s/"$//'                      | sed -E 's/\?.*$//'                      | sort -u)
+          [ "$missing" -eq 0 ] && echo "Every referenced asset exists."
+          exit $missing
+
       # No test step: this repository has no test project. The suite lives with the API, which
       # is where the rules being tested live too.
 
