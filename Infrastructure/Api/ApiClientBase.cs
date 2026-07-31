@@ -13,6 +13,7 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api;
 /// </summary>
 public abstract class ApiClientBase(HttpClient httpClient)
 {
+
     /// <summary>
     /// Marks a request whose body can safely be sent a second time, so BearerTokenHandler knows
     /// it may replay it after a token refresh. JSON/no-body requests are replayable; multipart
@@ -73,6 +74,14 @@ public abstract class ApiClientBase(HttpClient httpClient)
             return null;
         }
     }
+
+    /// <summary>
+    /// The API is not answering. Recording that on the request is ApiAvailabilityHandler's job —
+    /// it sits in the message pipeline and sees every call, including the ones whose result never
+    /// reaches a controller. This only shapes the result.
+    /// </summary>
+    private static ApiResult<T> Unreachable<T>(string message, int statusCode = 0) =>
+        ApiResult<T>.Fail(message, statusCode);
 
     private static HttpRequestMessage Replayable(HttpRequestMessage request)
     {
@@ -155,16 +164,23 @@ public abstract class ApiClientBase(HttpClient httpClient)
         }
         catch (HttpRequestException ex)
         {
-            return ApiResult<T>.Fail($"Could not reach the server: {ex.Message}", 0);
+            return Unreachable<T>($"Could not reach the server: {ex.Message}");
         }
         catch (TaskCanceledException) when (!ct.IsCancellationRequested)
         {
-            return ApiResult<T>.Fail("The server did not respond in time.", 0);
+            return Unreachable<T>("The server did not respond in time.");
         }
 
         using (response)
         {
             var statusCode = (int)response.StatusCode;
+
+            // The edge answering for a service that is restarting or has fallen over. Treated the
+            // same as not reaching it at all, because to the person looking at the screen it is.
+            if (statusCode is 502 or 503 or 504)
+            {
+                return Unreachable<T>("The server is not available at the moment.", statusCode);
+            }
 
             // A 401 that survived BearerTokenHandler means the token could not be refreshed, or
             // the request body could not be replayed after refreshing (multipart uploads).

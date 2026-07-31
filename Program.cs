@@ -74,7 +74,9 @@ builder.Services.AddScoped<IInstitutionDetails, InstitutionDetails>();
 // ---------- Auth bridging services ----------
 builder.Services.AddScoped<IAuthCookieService, AuthCookieService>();
 builder.Services.AddTransient<BearerTokenHandler>();
+builder.Services.AddTransient<ApiAvailabilityHandler>();
 builder.Services.AddScoped<ForceReauthFilter>();
+builder.Services.AddScoped<ApiUnavailableFilter>();
 
 // AuthApiClient deliberately carries no BearerTokenHandler: that handler depends on
 // IAuthCookieService, which depends on AuthApiClient for token refresh — attaching the handler
@@ -83,36 +85,40 @@ builder.Services.AddScoped<ForceReauthFilter>();
 builder.Services.AddHttpClient<AuthApiClient>((sp, client) =>
 {
     client.BaseAddress = new Uri(sp.GetRequiredService<IOptions<ApiOptions>>().Value.BaseUrl);
-});
+}).AddHttpMessageHandler<ApiAvailabilityHandler>();
 
 // Everything else goes through BearerTokenHandler for automatic Bearer-attach + refresh-and-retry.
 void ConfigureApiClient(IServiceProvider sp, HttpClient client) =>
     client.BaseAddress = new Uri(sp.GetRequiredService<IOptions<ApiOptions>>().Value.BaseUrl);
 
-builder.Services.AddHttpClient<ContainersApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
-builder.Services.AddHttpClient<ProposalsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
-builder.Services.AddHttpClient<EthicsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
-builder.Services.AddHttpClient<PublicationsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
-builder.Services.AddHttpClient<DepartmentsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
-builder.Services.AddHttpClient<UsersApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
-builder.Services.AddHttpClient<CommitteesApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
-builder.Services.AddHttpClient<AdminApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
-builder.Services.AddHttpClient<SettingsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
+builder.Services.AddHttpClient<ContainersApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
+builder.Services.AddHttpClient<ProposalsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
+builder.Services.AddHttpClient<EthicsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
+builder.Services.AddHttpClient<PublicationsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
+builder.Services.AddHttpClient<DepartmentsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
+builder.Services.AddHttpClient<UsersApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
+builder.Services.AddHttpClient<CommitteesApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
+builder.Services.AddHttpClient<AdminApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
+builder.Services.AddHttpClient<SettingsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
 
 // The handler is needed for the administrator's calls, which the API restricts to Admin. It is
 // harmless on the two anonymous ones — an invited person has no token, so nothing is attached and
 // nothing is refreshed.
-builder.Services.AddHttpClient<InvitationsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
-builder.Services.AddHttpClient<NotificationsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>();
+builder.Services.AddHttpClient<InvitationsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
+builder.Services.AddHttpClient<NotificationsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
 
 // The published catalogue is anonymous end to end, so no bearer handler: a visitor who has never
 // signed in has no token to attach, and requiring one would make the catalogue non-public.
-builder.Services.AddHttpClient<CatalogueApiClient>(ConfigureApiClient);
+builder.Services.AddHttpClient<CatalogueApiClient>(ConfigureApiClient).AddHttpMessageHandler<ApiAvailabilityHandler>();
 
 // ---------- MVC ----------
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add<ForceReauthFilter>();
+
+    // After ForceReauthFilter: an expired session is worth redirecting to sign-in even if the
+    // call that discovered it also failed to reach the API.
+    options.Filters.Add<ApiUnavailableFilter>();
 });
 
 var app = builder.Build();
