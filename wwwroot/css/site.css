@@ -39,10 +39,34 @@
 }
 /* ---------- Root ---------- */
 
+/* Tabler reserves the scrollbar width as a LEFT margin on :root
+   (`@media (min-width:992px){ :root{ margin-left: calc(100vw - 100%) } }`) so content doesn't
+   shift between a page that scrolls and one that doesn't. The side effect is a visible gap
+   down the left edge of every scrolling page — header, body and footer all move inward,
+   which is why the catalogue looked inset and the (non-scrolling) dashboard did not.
+   Undone here: the scrollbar sits on the right as usual and the page stays flush. */
+:root {
+    margin-left: 0;
+    margin-right: 0;
+}
+
 html {
     font-size: 14px;
     position: relative;
     min-height: 100%;
+
+    /* Always leave room for the scrollbar, whether or not the page needs one.
+
+       Without this, the width of the content depends on whether it happens to overflow: a page
+       that scrolls is 15px narrower than one that doesn't, so every navigation between the two
+       shifts the whole layout sideways. Worse within a single page — the browser paints before
+       it knows the final height, so text lands, the scrollbar appears, and everything jumps left
+       and settles. That is the flicker.
+
+       Tabler solves this by reserving the width as a LEFT margin on :root, which leaves a visible
+       gap down the left of scrolling pages (undone above). This reserves it on the right, where
+       the scrollbar actually is, so nothing moves and nothing is inset. */
+    scrollbar-gutter: stable;
 }
 
 @media (min-width:768px) {
@@ -65,17 +89,99 @@ body {
     min-height: 100vh;
 }
 
-    .page > .d-flex {
-        min-height: calc(100vh - 64px);
+/* Signed-in shell: navbar / (sidebar + content) / footer stacked vertically, so the footer
+   spans the full width under the sidebar and is pushed to the bottom on short pages. */
+.rpms-shell {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- Footer ---------- */
+
+/* Tabler's .footer ships 2rem of vertical padding, which makes the bar far taller than the
+   single line of text it holds. Override it here rather than fighting it with utilities. */
+.rpms-footer {
+    padding-top: 1.125rem;
+    padding-bottom: 1.125rem;
+}
+
+/* Three columns with the middle auto-sized: keeps the copyright centred on the page rather
+   than centred in the space the links happen to leave. */
+.rpms-footer-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 1rem;
+}
+
+@media (max-width: 767.98px) {
+    .rpms-footer-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
     }
+
+    .rpms-footer-links {
+        order: 2;
+    }
+}
 
 .page-body {
     padding-top: .5rem;
     padding-bottom: 2rem;
 }
 
+/* The app is full-bleed: content follows the window width on every view, with only the
+   page gutter at the edges. */
 .container-xl {
-    max-width: 1500px;
+    max-width: 100%;
+}
+
+/* Most views were authored as standalone fragments and re-declare the wrappers _Layout
+   already provides. Neutralise the nested copies so their padding/margins don't stack and
+   inset the page — cheaper and safer than editing ~37 views, and harmless once a view is
+   rewritten without them. */
+.container-xl .container-xl,
+.container-fluid .container-xl,
+.container-xl .container-fluid {
+    max-width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.page-body .page-body {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* Those same views also centre themselves in a narrow reading column
+   (`row justify-content-center > col-lg-8`). Only the PAGE-LEVEL wrapper is widened —
+   the selector requires the row to be a direct child of the view's own container, so
+   grids nested deeper inside cards keep their intended column widths. */
+.container-xl .container-xl > .row.justify-content-center > [class*="col-"] {
+    flex: 0 0 100%;
+    max-width: 100%;
+}
+
+/* ---------- Auth pages (_AuthLayout) ---------- */
+
+.rpms-auth-body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--tblr-bg-surface);
+    margin: 0;
+}
+
+/* Takes the space left between navbar and footer and centres the card in it.
+   Scrolls internally when the content is taller than that space (e.g. signup). */
+.rpms-auth-main {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow-y: auto;
 }
 
 /* ==========================================================
@@ -85,9 +191,42 @@ body {
 aside {
     display: flex;
     flex-direction: column;
-    width: 260px;
+    width: var(--rpms-sidebar-width);
     background: #fff;
     border-right: 1px solid #e9ecef;
+}
+
+/* Collapsed state, toggled by the navbar burger (see site.js). Animates the width to 0 so
+   the main area reclaims the space.
+
+   Opening and closing take the same time and the same easing. The border is in the list too:
+   left out, it snapped back the instant the panel started opening, which read as the sidebar
+   jumping open and then sliding — the two halves of the movement disagreeing. */
+.rpms-sidebar {
+    flex: 0 0 auto;
+    overflow: hidden;
+    transition: width .2s ease, border-right-width .2s ease;
+}
+
+    /* Set in <head> before the first paint, so a remembered collapsed sidebar is never drawn
+       open first. Kept in step with the class site.js toggles below. */
+    .rpms-sidebar-is-collapsed .rpms-sidebar,
+    .rpms-sidebar.rpms-sidebar-collapsed {
+        width: 0;
+        border-right-width: 0;
+        /* Visibility is the one thing that cannot be symmetric, and should not be: closing hides
+           the panel only once the width has finished (0s change, delayed .2s) so it clips away
+           progressively instead of blinking out at the start, while opening makes it visible at
+           once so there is something to watch as it grows. Both still take .2s end to end. */
+        visibility: hidden;
+        transition: width .2s ease, border-right-width .2s ease, visibility 0s linear .2s;
+    }
+
+/* Holds the expanded width regardless of the aside's animated width, so nothing inside
+   re-lays-out mid-animation. */
+.rpms-sidebar-inner {
+    width: var(--rpms-sidebar-width);
+    flex: 0 0 auto;
 }
 
 /* Logo */
@@ -96,43 +235,176 @@ aside {
     max-width: 170px;
 }
 
-/* Navigation */
+/* Navigation — scoped to the sidebar on purpose.
 
-.nav-link {
+   These were written for the sidebar (solid brand fill, white label on the active item), but
+   an unscoped `.nav-link` also matches Bootstrap tabs and the navbar user menu. On tabs the
+   active one sits on a light background, so the white text was invisible. */
+
+.rpms-sidebar-inner .nav-link {
     color: #495057;
     border-radius: 8px;
-    padding: 12px 18px;
-    margin-bottom: 6px;
+    /* Carried by every item, transparent until one is the open one. Adding a border only to the
+       active item would make it 2px larger than its neighbours, so the list would shift each
+       time you moved between pages. */
+    border: 1px solid transparent;
+    padding: 10px 16px;
+    margin-bottom: 4px;
     font-size: 16px;
     font-weight: 500;
     transition: all .2s ease;
+    /* Labels stay on one line and get clipped, rather than wrapping as the sidebar animates. */
+    white-space: nowrap;
 }
 
-    .nav-link:hover {
-        background: #eef5ff;
-        color: #206bc4;
+    /* Not on the open item: it has its own treatment, and lighting it red on the way past would
+       say "you could go here" about the page already being looked at. */
+    .rpms-sidebar-inner .nav-link:not(.active):hover {
+        background: #fbeceb;
+        color: var(--rpms-primary);
     }
 
-    .nav-link.active {
-        background: #206bc4;
-        color: #ffffff !important;
+    /* The open item: an outline rather than a fill, so it reads as "you are here" instead of
+       competing with the brand colour the hover uses. The border breathes slowly to keep it
+       alive without pulling the eye away from the content. */
+    .rpms-sidebar-inner .nav-link.active {
+        background: transparent;
+        /* The same grey as every other item: the outline is what marks it, not a change of
+           colour. Only the weight lifts, so it reads as current without shouting. */
+        color: #495057;
+        font-weight: 600;
+        border-color: #adb5bd;
+        animation: rpms-nav-active-breathe 2.8s ease-in-out infinite;
     }
+
+@keyframes rpms-nav-active-breathe {
+    0%, 100% {
+        border-color: rgba(173, 181, 189, 1);
+        box-shadow: 0 0 0 0 rgba(173, 181, 189, .35);
+    }
+
+    50% {
+        border-color: rgba(173, 181, 189, .4);
+        box-shadow: 0 0 0 3px rgba(173, 181, 189, 0);
+    }
+}
+
+/* Some people are made unwell by looping motion, and this one never stops while the page is
+   open. The outline still marks the item; only the movement goes. */
+@media (prefers-reduced-motion: reduce) {
+    .rpms-sidebar-inner .nav-link.active {
+        animation: none;
+    }
+}
+
+/* ---------- Tabs ---------- */
+
+/* A tab sits on a light background, so the active one is marked with the brand colour and a
+   matching underline rather than a solid fill. Inactive tabs keep Tabler's default colour. */
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-link.active:hover,
+.nav-tabs .nav-link.active:focus {
+    color: var(--rpms-primary);
+    border-bottom-color: var(--rpms-primary);
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--rpms-primary);
+}
 
 /* ==========================================================
    RPMS Navbar
    ========================================================== */
 
+/* The bar is exactly this tall in every state. What sits inside it changes — a Sign in button
+   when signed out, nothing but the logo on the auth screens, the notification and user menu
+   when signed in — and none of those may be what decides its height, or the header would jump
+   as you sign in and out. Hence a fixed height rather than a minimum. */
 .rpms-navbar {
+    height: var(--rpms-navbar-height);
     min-height: var(--rpms-navbar-height);
-    padding-top: 4px;
-    padding-bottom: 4px;
+    padding-top: 0;
+    padding-bottom: 0;
+    align-items: center;
     border-bottom: 1px solid #e9ecef;
     background: #fff;
 }
 
+    /* Tabler puts min-height: 48px on .navbar-nav and stretches its children to match, which
+       makes the tallest control the height driver. Centre them instead. */
+    .rpms-navbar .container-fluid,
+    .rpms-navbar .navbar-nav,
+    .rpms-navbar .nav-item {
+        min-height: 0;
+        align-items: center;
+    }
+
+    .rpms-navbar .nav-link,
+    .rpms-navbar .btn {
+        min-height: 0;
+    }
+
     .rpms-navbar .btn-icon {
         width: 40px;
         height: 40px;
+    }
+
+/* ---------- Burger animation ---------- */
+
+/* Driven off the button's own aria-expanded, which site.js already keeps in sync with the
+   sidebar — no extra state to maintain. Open sidebar shows an X (click to close), collapsed
+   shows the three bars. Duration matches the sidebar's width transition so they move together. */
+/* The burger keeps its three bars in both states — it is the control that opens and closes the
+   sidebar, and it says so the same way either way. What changes is the button behind them. */
+
+/* Sidebar open: the button recedes, because the thing it opens is already on screen. */
+#sidebar-toggle {
+    background-color: transparent;
+    color: #495057;
+    border: 1px solid transparent;
+    transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+}
+
+    #sidebar-toggle:hover {
+        background-color: rgba(73, 80, 87, .08);
+        color: #495057;
+    }
+
+/* Sidebar closed: filled, so the way back is obvious once the nav is out of sight.
+
+   Keyed off the pre-paint class as well as the ARIA state. The class is on <html> before the
+   page renders, whereas aria-expanded is corrected by site.js a moment later — without the
+   first selector the button would flash the wrong style on every load, which is the problem
+   the sidebar itself already had. */
+:root.rpms-sidebar-is-collapsed #sidebar-toggle,
+#sidebar-toggle[aria-expanded="false"] {
+    /* Grey rather than black: it marks the closed state without turning the top bar's lightest
+       corner into its heaviest. White bars still clear the contrast threshold on this tone. */
+    background-color: #6c757d;
+    color: #ffffff;
+    border-color: #6c757d;
+}
+
+    :root.rpms-sidebar-is-collapsed #sidebar-toggle:hover,
+    #sidebar-toggle[aria-expanded="false"]:hover {
+        background-color: #5a6268;
+        color: #ffffff;
+        border-color: #5a6268;
+    }
+
+@media (prefers-reduced-motion: reduce) {
+    #sidebar-toggle,
+    .rpms-sidebar {
+        transition: none;
+    }
+}
+
+    /* Brand sits next to the burger. Height-capped so the logo adapts to the bar rather
+       than the bar growing to fit the logo. */
+    .rpms-navbar .rpms-navbar-logo {
+        height: 34px;
+        width: auto;
+        display: block;
     }
 
     .rpms-navbar .avatar {
@@ -146,8 +418,12 @@ aside {
 
 .card {
     border-radius: 12px;
-    border: 1px solid #e9ecef;
-    box-shadow: 0 .125rem .25rem rgba(0,0,0,.04);
+    border: none;
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.06);
+}
+
+.card-body {
+    padding: 1.5rem;
 }
 
 .card-header {
@@ -158,6 +434,41 @@ aside {
 .card-title {
     margin: 0;
     font-weight: 700;
+}
+
+/* ---------- Pipeline stage progress bars (publication cards) ---------- */
+
+.rpms-stage-bar {
+    height: 4px;
+    border-radius: 2px;
+    background: #e9ecef;
+}
+
+/* Solid counterparts of the badge tints, keyed off the same colour token — see
+   DisplayText.StatusColour. A stage's bar and its status badge are the same fact, so they must
+   never disagree: a publication in Draft gets an orange bar beside its orange badge. */
+.rpms-stage-success {
+    background: var(--rpms-success);
+}
+
+.rpms-stage-blue {
+    background: var(--tblr-blue, #066fd1);
+}
+
+.rpms-stage-orange {
+    background: var(--tblr-orange, #f76707);
+}
+
+.rpms-stage-danger {
+    background: var(--rpms-danger);
+}
+
+.rpms-stage-primary {
+    background: var(--rpms-primary);
+}
+
+.rpms-stage-secondary {
+    background: var(--tblr-secondary, #6c757d);
 }
 
 /* ==========================================================
@@ -310,4 +621,200 @@ aside {
 
 .workflow-content {
     flex: 1;
+}
+
+/* ---------- Profile photo avatars ---------- */
+
+/* Rendered as a background image so any aspect ratio is cropped to fill the circle
+   instead of being squashed. */
+.rpms-avatar-photo {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* ==========================================================
+   Toasts (flash messages)
+   ========================================================== */
+
+/* Stacked top-right, clear of the navbar. Written from scratch rather than reusing
+   Bootstrap's Toast component: Tabler bundles its own Bootstrap copy and does not expose
+   window.bootstrap, so the JS API isn't reachable to show/hide them. */
+.rpms-toasts {
+    position: fixed;
+    top: calc(var(--rpms-navbar-height) + 1rem);
+    right: 1rem;
+    z-index: 1080;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    max-width: min(28rem, calc(100vw - 2rem));
+    pointer-events: none; /* the container never blocks clicks — only the toasts do */
+}
+
+.rpms-toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .875rem 1rem;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .14);
+    border-left: 4px solid var(--rpms-secondary);
+    /* Visible is the resting state, and the entrance animation is decoration on top of it
+       (no fill-mode on purpose). A toast that only becomes visible once a script or an
+       animation frame runs stays invisible in a background tab — where animations are paused —
+       and can time out unseen. This way the message is on screen regardless. */
+    animation: rpms-toast-in .25s ease-out;
+}
+
+    .rpms-toast.rpms-toast-leaving {
+        animation: rpms-toast-out .25s ease-in forwards;
+    }
+
+@keyframes rpms-toast-in {
+    from { opacity: 0; transform: translateY(-.5rem); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes rpms-toast-out {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(1rem); }
+}
+
+.rpms-toast-success {
+    border-left-color: var(--rpms-success);
+}
+
+    .rpms-toast-success .rpms-toast-icon {
+        color: var(--rpms-success);
+    }
+
+.rpms-toast-error {
+    border-left-color: var(--rpms-danger);
+}
+
+    .rpms-toast-error .rpms-toast-icon {
+        color: var(--rpms-danger);
+    }
+
+.rpms-toast-info {
+    border-left-color: var(--rpms-info);
+}
+
+    .rpms-toast-info .rpms-toast-icon {
+        color: var(--rpms-info);
+    }
+
+.rpms-toast-icon {
+    flex: 0 0 auto;
+    line-height: 1;
+    margin-top: .1rem;
+}
+
+.rpms-toast-body {
+    flex: 1 1 auto;
+    color: #1f2937;
+    font-size: .95rem;
+    line-height: 1.4;
+}
+
+/* Catalogue listing: show the first few lines of an abstract without truncating the text
+   itself, so search engines and screen readers still get all of it. */
+.rpms-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* An author's paragraph breaks are meaningful in an abstract. */
+.rpms-preserve-lines {
+    white-space: pre-line;
+}
+
+/* An ethics screening question left unanswered when the student tried to submit. The bar is on
+   the inline edge so it reads down the list of questions as you scroll to the first one. */
+.rpms-question-missing {
+    box-shadow: inset 3px 0 0 var(--rpms-danger);
+    background: rgba(214, 57, 57, .04);
+}
+
+/* Several validation errors arrive as one toast rather than a stack of them. */
+.rpms-toast-lead {
+    font-weight: 600;
+    margin-bottom: .25rem;
+}
+
+.rpms-toast-list {
+    margin: 0;
+    padding-left: 1.1rem;
+}
+
+    .rpms-toast-list li + li {
+        margin-top: .15rem;
+    }
+
+.rpms-toast-close {
+    flex: 0 0 auto;
+    border: 0;
+    background: transparent;
+    color: #9ca3af;
+    padding: 0;
+    line-height: 1;
+    cursor: pointer;
+    transition: color .15s ease;
+}
+
+    .rpms-toast-close:hover {
+        color: #1f2937;
+    }
+
+@media (prefers-reduced-motion: reduce) {
+    /* The toast still appears and still goes away — it just doesn't slide or fade. */
+    .rpms-toast,
+    .rpms-toast.rpms-toast-leaving {
+        animation: none;
+    }
+}
+
+/* ---------- Notification bell ---------- */
+
+/* Colour is the signal, not just the count: the bell has to read as "something is waiting"
+   at a glance, before anyone reads a number. */
+.rpms-bell-unread {
+    color: var(--rpms-primary);
+}
+
+.rpms-bell {
+    position: relative;
+}
+
+.rpms-bell-count {
+    position: absolute;
+    top: 0.15rem;
+    right: 0.15rem;
+    min-width: 1.05rem;
+    padding: 0 0.25rem;
+    border-radius: 999px;
+    background: var(--rpms-primary);
+    color: #fff;
+    font-size: 0.65rem;
+    line-height: 1.05rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* The sidebar does not animate until the first paint has happened. Restoring a remembered state
+   is a starting condition, not a change the user made, and animating it is what made every
+   navigation flicker. Removed by site.js once the page is up.
+
+   Scoped to the sidebar deliberately. A blanket `*` rule reaches every element on the page, so
+   removing the class forces the browser to recompute styles for all of them at once — which is
+   its own visible hitch, and exactly the kind of "something happens to everything just after it
+   renders" this was meant to stop. Only the sidebar has a restored state to suppress. */
+.rpms-no-transitions .rpms-sidebar,
+.rpms-no-transitions .rpms-sidebar-inner {
+    transition: none !important;
 }

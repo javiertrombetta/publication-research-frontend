@@ -1,29 +1,59 @@
+@model StudentProfileViewModel
 
             <main class="page-body m-0 py-4">
                 <div class="container-xl">
-                    
-                    <!-- Centered responsive layout wrapper -->
+
+                    <!-- Centred responsive layout wrapper -->
                     <div class="row justify-content-center">
                         <div class="col-12 col-md-10 col-lg-8 col-xl-7">
-                            
+
                             <!-- Profile Hero Header Card -->
                             <div class="card shadow-sm mb-4">
                                 <div class="card-body py-4 px-4">
                                     <div class="row align-items-center g-3">
                                         <div class="col-auto">
-                                            <!-- Profile Placeholder Initials Avatar -->
-                                            <span class="avatar avatar-xl rounded-circle bg-primary-lt fw-bold fs-1">JD</span>
+                                            @if (Model.HasProfilePhoto)
+                                            {
+                                                <span class="avatar avatar-xl rounded-circle rpms-avatar-photo"
+                                                      style="background-image: url('@Url.Action("Photo", "Profile")')"></span>
+                                            }
+                                            else
+                                            {
+                                                <span class="avatar avatar-xl rounded-circle bg-primary-lt fw-bold fs-1">@Model.FirstName.FirstOrDefault()@Model.LastName.FirstOrDefault()</span>
+                                            }
                                         </div>
                                         <div class="col">
-                                            <h1 class="h1 mb-1">John Doe</h1>
+                                            <h1 class="h1 mb-1">@Model.FirstName @Model.LastName</h1>
+                                            <div class="text-secondary">@Model.Email</div>
+
+                                            <div class="btn-list mt-2">
+                                                <form asp-controller="Profile" asp-action="UploadPhoto" method="post"
+                                                      enctype="multipart/form-data" class="d-inline-flex align-items-center gap-2 m-0">
+                                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                                    @* Hidden input + label so the control reads as one button and submits on pick. *@
+                                                    <input type="file" name="photo" id="profile-photo-input"
+                                                           class="d-none" accept="image/jpeg,image/png,image/webp"
+                                                           onchange="this.form.submit()" />
+                                                    <label for="profile-photo-input" class="btn btn-outline-secondary btn-sm mb-0">
+                                                        @(Model.HasProfilePhoto ? "Change photo" : "Upload photo")
+                                                    </label>
+                                                </form>
+
+                                                @if (Model.HasProfilePhoto)
+                                                {
+                                                    <form asp-controller="Profile" asp-action="DeletePhoto" method="post" class="d-inline m-0">
+                                                        <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                                                        <button type="submit" class="btn btn-outline-danger btn-sm">Remove photo</button>
+                                                    </form>
+                                                }
+                                            </div>
                                         </div>
-                                        <!-- Actions Container: Groups Badge and Edit button -->
-                                        <div class="col-12 col-sm-auto d-flex flex-sm-column gap-2 align-items-start align-items-sm-end justify-content-between">
-                                            <span class="badge bg-success-lt fs-4 px-3 py-2 fw-bold">Active Student</span>
-                                            
-                                            <!-- Edit Profile Button component using a clean, subtle outline configuration -->
-                                            <a href="./edit-profile.html" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center mt-sm-1">
-                                                <!-- Tabler SVG Edit Icon -->
+                                        @* From sm up the two stack, and stretch makes them share the column's
+                                           width — set by whichever is wider — so their edges line up. *@
+                                        <div class="col-12 col-sm-auto d-flex flex-sm-column gap-2 align-items-start align-items-sm-stretch justify-content-between">
+                                            <span class="badge bg-success-lt fs-4 px-3 py-2 fw-bold justify-content-center">@Humanise(Model.Status)</span>
+
+                                            <a asp-controller="Student" asp-action="Edit_studentprofile" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center mt-sm-1">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-pencil me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                                     <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
@@ -41,44 +71,48 @@
                                 <div class="card-header bg-blue text-white">
                                     <h3 class="card-title fs-2 fw-bold text-white">Academic Profile Details</h3>
                                 </div>
-                               
+
                                 <div class="card-body py-4 px-4">
                                     <div class="row g-4">
-                                        
-                                        <!-- Name Data Field -->
+
                                         <div class="col-6">
                                             <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">First Name</div>
-                                            <div class="fs-2 fw-medium text-dark">John</div>
+                                            <div class="fs-2 fw-medium text-dark">@Model.FirstName</div>
                                         </div>
 
-                                        <!-- Surname Data Field -->
                                         <div class="col-6">
                                             <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">Surname</div>
-                                            <div class="fs-2 fw-medium text-dark">Doe</div>
+                                            <div class="fs-2 fw-medium text-dark">@Model.LastName</div>
                                         </div>
 
-                                        <!-- Student ID Data Field -->
                                         <div class="col-6">
                                             <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">Student ID</div>
-                                            <div class="fs-2 fw-medium text-primary fw-bold">AIS-2026-8942</div>
+                                            <div class="fs-2 fw-medium text-primary fw-bold">@(Model.StudentIdNumber ?? "—")</div>
                                         </div>
 
-                                        <!-- Cohort Data Field -->
                                         <div class="col-6">
                                             <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">Cohort</div>
-                                            <div class="fs-2 fw-medium text-dark">2026 - Intake A</div>
+                                            <div class="fs-2 fw-medium text-dark">@(Model.Cohort ?? "—")</div>
                                         </div>
 
-                                        <!-- Course / Program Data Field -->
                                         <div class="col-6">
-                                            <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">Program / Course</div>
-                                            <div class="fs-2 fw-medium text-dark">B.Sc. in Computer Science</div>
+                                            <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">Programme / Course</div>
+                                            <div class="fs-2 fw-medium text-dark">@(Model.Programme ?? "—")</div>
                                         </div>
 
-                                        <!-- Department Data Field -->
                                         <div class="col-6">
                                             <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">Department</div>
-                                            <div class="fs-2 fw-medium text-dark">Information Technology</div>
+                                            <div class="fs-2 fw-medium text-dark">@(Model.DepartmentName ?? "—")</div>
+                                        </div>
+
+                                        <div class="col-6">
+                                            <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">ORCID</div>
+                                            <div class="fs-2 fw-medium text-dark">@(Model.Orcid ?? "—")</div>
+                                        </div>
+
+                                        <div class="col-6">
+                                            <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">Research areas</div>
+                                            <div class="fs-2 fw-medium text-dark">@(Model.ResearchAreas.Count > 0 ? string.Join(", ", Model.ResearchAreas) : "—")</div>
                                         </div>
 
                                     </div>
@@ -90,4 +124,3 @@
 
                 </div>
             </main>
-   

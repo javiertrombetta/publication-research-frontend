@@ -1,105 +1,113 @@
+@using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
+@model CommitteeDashboardViewModel
+@{
+    ViewData["Title"] = "Committee dashboard";
+}
 
-    <div class="page">
-        <!--Start page wrapper-->
-        <div class="page-wrapper">
-            <!--Start of page header-->
-            <div class="page-header d-print-none">
-                <div class="container-xl">
-                    <div class="row g-2 align-items-center">
-                        <div class="col">
-                            <div class="d-flex flex-column align-items-start gap-2">
-                                <h2 class="page-title">External Supervisor Dashboard</h2>
+<div class="mb-4">
+    <h1 class="page-title mb-1">Committee dashboard</h1>
+    <div class="text-secondary">
+        @(Model.AwaitingMe.Count == 0
+            ? "Nothing is waiting on your decision."
+            : Model.AwaitingMe.Count == 1
+                ? "One paper is waiting on your decision."
+                : $"{Model.AwaitingMe.Count} papers are waiting on your decision.")
+    </div>
+</div>
 
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!--Start of page body-->
-            <div class="page-body">
-                <div class="container-xl">
-                    <div class="row row-cards">
-
-                      
-
-                        <!-- 7 card: -->
-                            <div class="col-12 mb-4">
-                            <!-- Transparent Header Section -->
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <h3 class="m-0 text-secondary">Pending Committee Review</h3>
-                                <span class="badge bg-blue-lt">3</span>
-                            </div>
-
-                            <!-- White card wrapper -->
-                            <div class="card">
-                                <div class="table-responsive">
-                                    <table class="table card-table table-vcenter text-nowrap datatable">
-                                        <thead>
-                                            <tr style="background-color: #206bc4; color: #ffffff;">
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Student Name</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Research Title</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Submitted</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Status</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>John Doe</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td><span class="badge bg-success-lt">21 July,2026</span></td>
-                                                <td>Reviewed</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Review</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                      
-
-
-
-                        </div>
-                    </div>
+@if (Model.LoadFailed)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">We couldn't load your assignments</h3>
+            <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
+            <a asp-controller="ExternalSupervisor" asp-action="External_Supervisor_Dashboard" class="btn btn-primary">Retry</a>
+        </div>
+    </div>
+}
+else if (Model.Items.Count == 0)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">You have no assignments</h3>
+            <p class="text-secondary m-0">
+                Papers appear here once an Administrator puts you on an evaluation committee.
+            </p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row row-cards mb-4">
+        <div class="col-12 col-md-6">
+            <div class="card h-100 @(Model.AwaitingMe.Count > 0 ? "border-primary" : "")">
+                <div class="card-body">
+                    <div class="text-secondary mb-1">Awaiting your decision</div>
+                    <div class="h1 m-0">@Model.AwaitingMe.Count</div>
+                    @if (Model.AwaitingMe.Count > 0)
+                    {
+                        <a asp-controller="ExternalSupervisor" asp-action="committee_review"
+                           class="btn btn-primary btn-sm mt-3">Review them</a>
+                    }
                 </div>
             </div>
         </div>
-        <!--End of page wrapper-->
+        <div class="col-12 col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-secondary mb-1">Already decided</div>
+                    <div class="h1 m-0">@Model.Decided.Count</div>
+                    <div class="text-secondary">papers you have voted on</div>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table card-table table-vcenter">
+                <thead>
+                    <tr>
+                        <th>Paper</th>
+                        <th>Committee</th>
+                        <th>Your decision</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.Title</td>
+                            <td>
+                                @* Coloured here, not through the shared mapping: for a committee
+                                   "Assigned" means not started, the opposite of what it means for
+                                   a proposal. *@
+                                <span class="badge @(item.Committee.Status == CommitteeStatus.Completed ? "bg-success-lt" : "bg-blue-lt")">
+                                    @Humanise(item.Committee.Status)
+                                </span>
+                            </td>
+                            <td>
+                                @if (item.Me is null)
+                                {
+                                    <span class="text-secondary">&mdash;</span>
+                                }
+                                else
+                                {
+                                    <span class="badge @StatusBadge(item.Me.Decision)">@Humanise(item.Me.Decision)</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!item.HasDecided)
+                                {
+                                    <a asp-controller="ExternalSupervisor" asp-action="committee_review"
+                                       asp-route-id="@item.Committee.Id" class="btn btn-sm btn-primary">Review</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

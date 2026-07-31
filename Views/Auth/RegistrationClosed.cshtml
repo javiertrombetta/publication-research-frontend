@@ -1,0 +1,32 @@
+@inject ResearchPublicationManagementSystem.Services.IInstitutionDetails Institution
+@{
+    ViewData["Title"] = "Accounts are by invitation";
+    Layout = "_AuthLayout";
+
+    var institution = await Institution.GetAsync();
+}
+
+<div class="card card-md">
+    <div class="card-body text-center py-5">
+
+        <h1 class="h2 mb-3">Accounts here are by invitation</h1>
+
+        <p class="text-secondary mb-4">
+            @institution.Name issues accounts rather than letting people create their own. If you
+            should have one, ask an administrator to invite you — they will choose your role as
+            they send it, and you will receive a link to set your password.
+        </p>
+
+        @* The only route left open to whoever landed here. *@
+        <a asp-controller="Auth" asp-action="home" class="btn btn-primary">Go to sign in</a>
+
+        @if (!string.IsNullOrWhiteSpace(institution.ItSupportEmail))
+        {
+            <p class="text-secondary small mt-4 mb-0">
+                Not sure who to ask?
+                <a href="mailto:@institution.ItSupportEmail">@institution.ItSupportEmail</a>
+            </p>
+        }
+
+    </div>
+</div>

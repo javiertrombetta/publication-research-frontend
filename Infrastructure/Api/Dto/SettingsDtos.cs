@@ -1,0 +1,172 @@
+namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
+{
+    /// <summary>
+    /// Committee composition. These govern publications opened from the moment they change:
+    /// each Publication Container keeps the figures that were in force when it was created, so
+    /// research already under way is judged by the rules it started under.
+    /// </summary>
+    public record CommitteeSettingsDto(int InternalMembers, int ExternalMembers, int MinimumApprovals);
+
+    public record UpdateCommitteeSettingsRequestDto(int InternalMembers, int ExternalMembers, int MinimumApprovals);
+
+    /// <summary>
+    /// What counts as an acceptable password, how long one lasts, and when an account locks.
+    /// <see cref="ExpiryDays"/> of zero means passwords never expire.
+    /// </summary>
+    public record PasswordSettingsDto(
+        int MinimumLength,
+        bool RequireDigit,
+        bool RequireUppercase,
+        bool RequireLowercase,
+        bool RequireSymbol,
+        int ExpiryDays,
+        int LockoutAttempts,
+        int LockoutMinutes);
+
+    public record UpdatePasswordSettingsRequestDto(
+        int MinimumLength,
+        bool RequireDigit,
+        bool RequireUppercase,
+        bool RequireLowercase,
+        bool RequireSymbol,
+        int ExpiryDays,
+        int LockoutAttempts,
+        int LockoutMinutes);
+
+    /// <summary>
+    /// The mail server, and whether notifications are emailed at all. The stored SMTP password
+    /// is never sent back — <see cref="HasPassword"/> only says whether one exists.
+    /// </summary>
+    public record NotificationSettingsDto(
+        bool EmailEnabled,
+        string? SmtpHost,
+        int SmtpPort,
+        string? SmtpUsername,
+        bool HasPassword,
+        bool UseSsl,
+        string? FromAddress,
+        string? FromName);
+
+    /// <summary>
+    /// A null <see cref="SmtpPassword"/> keeps whatever is stored, so changing the port does not
+    /// require retyping a password nobody can read back. An empty string clears it.
+    /// </summary>
+    public record UpdateNotificationSettingsRequestDto(
+        bool EmailEnabled,
+        string? SmtpHost,
+        int SmtpPort,
+        string? SmtpUsername,
+        string? SmtpPassword,
+        bool UseSsl,
+        string? FromAddress,
+        string? FromName);
+
+    /// <summary>
+    /// One document the ethics stage asks students for. <see cref="IsInUse"/> means someone has
+    /// already been asked for it, so it can be retired but never removed.
+    /// </summary>
+    public record EthicsDocumentRequirementDto(
+        Guid Id,
+        string Name,
+        string? Description,
+        int SortOrder,
+        bool IsActive,
+        bool IsInUse);
+
+    public record SaveEthicsDocumentRequirementRequestDto(string Name, string? Description, int SortOrder);
+
+    /// <summary>
+    /// Who may get an account, and how long a session lasts.
+    ///
+    /// <see cref="IsEnvironmentDefault"/> means nobody has chosen and the mode is coming from the
+    /// hosting environment — open in development, invite-only anywhere else.
+    /// <see cref="AzureSsoConfigured"/> is a fact about the server, not a setting: it says
+    /// whether a Microsoft Entra tenant exists to sign in against.
+    /// </summary>
+    public record AccessSettingsDto(
+        string RegistrationMode,
+        bool IsEnvironmentDefault,
+        bool AzureSsoEnabled,
+        bool AzureSsoConfigured,
+        int InvitationValidDays,
+        int AccessTokenMinutes,
+        int RefreshTokenDays);
+
+    public record UpdateAccessSettingsRequestDto(
+        string RegistrationMode,
+        bool AzureSsoEnabled,
+        int InvitationValidDays,
+        int AccessTokenMinutes,
+        int RefreshTokenDays);
+
+    public record UploadSettingsDto(int MaxMegabytes, string AllowedExtensions);
+
+    public record UpdateUploadSettingsRequestDto(int MaxMegabytes, string AllowedExtensions);
+
+    /// <summary>
+    /// The institution itself. Read anonymously, because the sign-in page, the footer and the
+    /// public catalogue all need it before anyone has signed in.
+    /// </summary>
+    public record InstitutionSettingsDto(
+        string Name,
+        string StudentEmailDomain,
+        string StaffEmailDomain,
+        string? ItSupportEmail,
+        string? ResearchEnquiriesEmail,
+        string? PrivacyPolicyUrl,
+        string? CurrentAcademicCycle,
+        /// <summary>
+        /// Whether anyone may sign themselves up. Set under access settings and read-only here;
+        /// it travels on this group because this is the one settings endpoint a signed-out
+        /// visitor can call, and the sign-up page needs it.
+        /// </summary>
+        bool SelfRegistrationOpen = false);
+
+    public record UpdateInstitutionSettingsRequestDto(
+        string Name,
+        string StudentEmailDomain,
+        string StaffEmailDomain,
+        string? ItSupportEmail,
+        string? ResearchEnquiriesEmail,
+        string? PrivacyPolicyUrl,
+        string? CurrentAcademicCycle);
+
+    /// <summary>How long each stage should take. Zero means nothing is ever reported late.</summary>
+    public record DeadlineSettingsDto(int SupervisorResponseDays, int EthicsReviewDays, int CommitteeReviewDays);
+
+    public record UpdateDeadlineSettingsRequestDto(int SupervisorResponseDays, int EthicsReviewDays, int CommitteeReviewDays);
+
+    /// <summary>An invitation as an administrator sees it. The token is never returned.</summary>
+    public record UserInvitationDto(
+        Guid Id,
+        string Email,
+        string Role,
+        string FirstName,
+        string LastName,
+        Guid? DepartmentId,
+        string? DepartmentName,
+        string InvitedByName,
+        DateTime CreatedAt,
+        DateTime ExpiresAt,
+        DateTime? AcceptedAt,
+        DateTime? RevokedAt,
+        string Status);
+
+    public record CreateInvitationRequestDto(
+        string Email,
+        string Role,
+        string FirstName,
+        string LastName,
+        Guid? DepartmentId);
+
+    /// <summary>What an invited person is shown before they accept.</summary>
+    public record InvitationPreviewDto(
+        string Email,
+        string Role,
+        string FirstName,
+        string LastName,
+        string InstitutionName,
+        DateTime ExpiresAt);
+
+    public record AcceptInvitationRequestDto(string Token, string Password);
+}

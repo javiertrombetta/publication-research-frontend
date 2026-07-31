@@ -1,0 +1,46 @@
+namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
+
+public record ProposalDto(
+    Guid Id,
+    Guid PublicationContainerId,
+    string Title,
+    string Abstract,
+    string Status,
+    DateTime? SubmittedAt);
+
+public record SaveProposalRequestDto(string Title, string Abstract);
+
+/// <summary>A Coordinator inviting supervisors to consider a set of proposals.</summary>
+public record SendToSupervisorsRequestDto(
+    IReadOnlyList<Guid> ProposalIds,
+    IReadOnlyList<Guid> SupervisorIds,
+    string Comments);
+
+public record AssignSupervisorRequestDto(Guid SupervisorId, string Comments);
+
+/// <summary>
+/// A supervisor invited to a proposal. IsSelected is their answer: true once they have said they
+/// are willing to supervise it, which is what a Coordinator waits for before assigning.
+/// </summary>
+public record SupervisorInvitationDto(
+    Guid ProposalId,
+    Guid SupervisorId,
+    string SupervisorName,
+    bool IsSelected,
+    string? Comments,
+    DateTime InvitedAt,
+    DateTime? SelectedAt);
+
+/// <summary>Matches the backend's ProposalStatus enum values.</summary>
+public static class ProposalStatus
+{
+    public const string Draft = "Draft";
+    public const string Submitted = "Submitted";
+    public const string UnderSupervisorReview = "UnderSupervisorReview";
+    public const string Assigned = "Assigned";
+    public const string Rejected = "Rejected";
+    public const string DeferredToNextCycle = "DeferredToNextCycle";
+}
+
+/// <summary>A supervisor saying they are willing to take a proposal on. Comments are optional.</summary>
+public record SupervisorSelectionRequestDto(string? Comments);

@@ -1,0 +1,180 @@
+@model InvitationsViewModel
+@{
+    ViewData["Title"] = "Invitations";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-9">
+
+        <div class="mb-4">
+            <a asp-controller="SystemSettings" asp-action="Index" asp-route-tab="access" class="text-secondary">&larr; System settings</a>
+            <h1 class="page-title mt-2 mb-1">Invitations</h1>
+            <div class="text-secondary">
+                Invite anyone, to any role. This is the only way an external committee member can
+                get in — they are outside the institution, so no email domain says what they are.
+            </div>
+        </div>
+
+        @if (Model.LoadFailed)
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <h3 class="mb-2">We couldn't load the invitations</h3>
+                    <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
+                    <a asp-action="Index" class="btn btn-primary">Retry</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="h3 mb-3">Invite someone</h2>
+
+                    <form asp-action="Send" method="post" class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="invite-first-name">First name</label>
+                            <input id="invite-first-name" name="firstName" class="form-control" required />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="invite-last-name">Surname</label>
+                            <input id="invite-last-name" name="lastName" class="form-control" required />
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="invite-email">Email address</label>
+                            <input id="invite-email" name="email" type="email" class="form-control" required />
+                            <small class="form-hint">Any address — it does not have to be an institutional one.</small>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="invite-role">Role</label>
+                            <select id="invite-role" name="role" class="form-select" required>
+                                <option value="">Choose a role</option>
+                                @foreach (var role in RoleNames.All)
+                                {
+                                    <option value="@role">@Humanise(role)</option>
+                                }
+                            </select>
+                            <small class="form-hint">Fixed when you send it — the person cannot choose their own.</small>
+                        </div>
+
+                        @* Required for the roles that belong to a department, ignored for the rest.
+                           External committee members belong to none, which is why the API decides
+                           rather than the form. *@
+                        <div class="col-12">
+                            <label class="form-label" for="invite-department">Department</label>
+                            <select id="invite-department" name="departmentId" class="form-select">
+                                <option value="">Not applicable</option>
+                                @foreach (var department in Model.Departments)
+                                {
+                                    <option value="@department.Id">@department.Name</option>
+                                }
+                            </select>
+                            <small class="form-hint">
+                                Needed for students, supervisors, coordinators and heads of department.
+                            </small>
+                        </div>
+
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Send the invitation</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="card-title m-0">Waiting for a reply</h3>
+                </div>
+
+                @if (!Model.Pending.Any())
+                {
+                    <div class="card-body text-secondary">Nothing is outstanding.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table card-table table-vcenter">
+                            <thead>
+                                <tr>
+                                    <th>Person</th>
+                                    <th>Role</th>
+                                    <th>Expires</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var invitation in Model.Pending)
+                                {
+                                    <tr>
+                                        <td>
+                                            @invitation.FirstName @invitation.LastName
+                                            <span class="d-block text-secondary small">@invitation.Email</span>
+                                        </td>
+                                        <td>
+                                            @Humanise(invitation.Role)
+                                            @if (invitation.DepartmentName is not null)
+                                            {
+                                                <span class="d-block text-secondary small">@invitation.DepartmentName</span>
+                                            }
+                                        </td>
+                                        <td>@invitation.ExpiresAt.ToLocalTime().ToString("d MMM yyyy")</td>
+                                        <td class="text-end">
+                                            <form asp-action="Resend" method="post" class="d-inline m-0">
+                                                <input type="hidden" name="id" value="@invitation.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary">Send again</button>
+                                            </form>
+                                            <form asp-action="Revoke" method="post" class="d-inline m-0">
+                                                <input type="hidden" name="id" value="@invitation.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Withdraw</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            @if (Model.Settled.Any())
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title m-0">Already dealt with</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table card-table table-vcenter">
+                            <thead>
+                                <tr>
+                                    <th>Person</th>
+                                    <th>Role</th>
+                                    <th>Invited by</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var invitation in Model.Settled)
+                                {
+                                    <tr>
+                                        <td>
+                                            @invitation.FirstName @invitation.LastName
+                                            <span class="d-block text-secondary small">@invitation.Email</span>
+                                        </td>
+                                        <td>@Humanise(invitation.Role)</td>
+                                        <td>@invitation.InvitedByName</td>
+                                        <td>
+                                            <span class="badge @StatusBadge(invitation.Status)">@invitation.Status</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        }
+
+    </div>
+</div>

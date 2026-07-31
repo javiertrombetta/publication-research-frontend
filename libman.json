@@ -3,7 +3,7 @@
   "defaultProvider": "unpkg",
   "libraries": [
     {
-      "library": "@tabler/core@1.2.0",
+      "library": "@tabler/core@1.4.0",
       "destination": "wwwroot/lib/tabler"
     },
     {

@@ -1,54 +1,123 @@
-﻿@model ResearchPublicationManagementSystem.Models.DashboardViewModel
-
+@model AdminDashboardViewModel
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Admin dashboard";
+    var s = Model.Summary;
 }
 
-<partial name="_PageHeader"
-         model='new PageHeaderViewModel
-         {
-             Title = "Administrator Dashboard",
-             Subtitle = "Monitor system status and oversee research publication activities."
-         }' />
+<div class="mb-4">
+    <h1 class="page-title mb-1">Admin dashboard</h1>
+    <div class="text-secondary">The institution's research activity at a glance.</div>
+</div>
 
-<partial name="Dashboard/_SystemOverview" model="Model" />
-
-<div class="row">
-
-    <!-- Left -->
-
-    <div class="col-lg-7">
-
-        <div class="d-flex flex-column gap-3">
-
-            <partial name="Dashboard/_WorkflowSummary"
-                     model="Model" />
-
-            <partial name="Dashboard/_PublicationStatistics"
-                     model="Model" />
-
+@if (Model.LoadFailed || s is null)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">We couldn't load the summary</h3>
+            <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
+            <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-primary">Retry</a>
         </div>
+    </div>
+}
+else
+{
+    @* The one thing on this page that is a task rather than a number. *@
+    @if (Model.PapersAwaitingCommittee > 0)
+    {
+        <div class="card border-primary mb-4">
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h3 class="mb-1">
+                        @Model.PapersAwaitingCommittee
+                        @(Model.PapersAwaitingCommittee == 1 ? "paper needs" : "papers need") an evaluation committee
+                    </h3>
+                    <div class="text-secondary">
+                        A coordinator cannot make the final decision until a committee has reviewed the paper.
+                    </div>
+                </div>
+                <a asp-controller="Admin" asp-action="assigning_committee_members" class="btn btn-primary">
+                    Assign committees
+                </a>
+            </div>
+        </div>
+    }
 
+    <div class="row row-cards mb-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-secondary mb-1">Publications</div>
+                    <div class="h1 m-0">@s.TotalContainers</div>
+                    <div class="text-secondary">@s.ContainersInProgress in progress &middot; @s.ContainersCompleted completed</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-secondary mb-1">In the public catalogue</div>
+                    <div class="h1 m-0">@s.PublishedPublicationsCount</div>
+                    <div class="text-secondary">papers published</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-secondary mb-1">Committee reviews</div>
+                    <div class="h1 m-0">@s.PendingCommitteeReviews</div>
+                    <div class="text-secondary">pending &middot; @s.CompletedCommitteeReviews completed</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-secondary mb-1">Ethics approvals</div>
+                    <div class="h1 m-0">@s.EthicsApprovalsByStatus.Values.Sum()</div>
+                    <div class="text-secondary">across all stages</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Right -->
-
-    <div class="col-lg-5">
-
-        <partial name="Dashboard/_LatestWorkflowUpdates"
-                 model="Model" />
-
+    @* The breakdowns are keyed by enum name, so a new status appears here on its own. *@
+    <div class="row row-cards">
+        @foreach (var (heading, counts) in new (string, IReadOnlyDictionary<string, int>)[]
+        {
+            ("Publications by stage", s.ContainersByPipelineStage),
+            ("Papers by status", s.PublicationsByStatus),
+            ("Ethics by status", s.EthicsApprovalsByStatus),
+            ("Review decisions", s.ReviewDecisionCounts)
+        })
+        {
+            <div class="col-12 col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3 class="mb-3">@heading</h3>
+                        @if (counts.Count == 0)
+                        {
+                            <p class="text-secondary m-0">Nothing recorded yet.</p>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table card-table table-vcenter">
+                                    <tbody>
+                                        @foreach (var (key, count) in counts.OrderByDescending(c => c.Value))
+                                        {
+                                            <tr>
+                                                <td><span class="badge @StatusBadge(key)">@Humanise(key)</span></td>
+                                                <td class="text-end fw-bold">@count</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
     </div>
-
-</div>
-<div class="mt-4">
-
-    <partial name="Dashboard/_RecentActivities" model="Model" />
-
-</div>
-
-<div class="mt-4">
-
-    <partial name="Dashboard/_QuickActions" model="Model" />
-
-</div>
+}

@@ -4,3 +4,8 @@ obj/
 
 *.user
 *.suo
+# Local editor/tooling config and state — not part of the project
+.claude/
+
+# macOS
+.DS_Store
