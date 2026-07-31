@@ -1,13 +1,15 @@
 @using Microsoft.Extensions.Options
 @using ResearchPublicationManagementSystem.Infrastructure.Options
-@inject IOptions<InstitutionOptions> Institution
+@inject ResearchPublicationManagementSystem.Services.IInstitutionDetails Institution
 @model CatalogueEntryViewModel
 @{
     var entry = Model.Entry;
     ViewData["Title"] = entry.Title;
     ViewData["HideSidebar"] = User.Identity?.IsAuthenticated != true;
 
-    var enquiriesEmail = Institution.Value.ResearchEnquiriesEmail;
+    var institution = await Institution.GetAsync();
+    var enquiriesEmail = institution.ResearchEnquiriesEmail;
+    var institutionName = institution.Name;
 }
 
 <div class="row justify-content-center">
@@ -104,10 +106,12 @@
 
                 @if (string.IsNullOrWhiteSpace(enquiriesEmail))
                 {
-                    @* No address decided yet — say so rather than offer a link to nowhere. *@
+                    @* No address configured yet — say so rather than offer a link to nowhere.
+                       Deliberately no telephone number: one hardcoded here would outlive its
+                       accuracy, and the address is a setting precisely so it can be corrected. *@
                     <p class="text-secondary m-0">
                         An email address for research enquiries hasn't been published yet.
-                        Please contact Auckland Institute of Studies on +64 9 815 1717.
+                        Please contact @institutionName through the usual channels.
                     </p>
                 }
                 else

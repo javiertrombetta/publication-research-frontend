@@ -1,34 +1,131 @@
-﻿@model UserListViewModel
-@using ResearchPublicationManagementSystem.Models
-
+@using ResearchPublicationManagementSystem.Common
+@model UserDirectoryViewModel
 @{
-    ViewData["Title"] = "User Management";
+    ViewData["Title"] = "Users";
+    var statuses = new[] { "Pending", "Enabled", "Disabled" };
 }
 
-<partial name="_PageHeader"
-         model='new PageHeaderViewModel
-         {
-             Title = "User Management",
-             Subtitle = "Manage system users and their roles."
-         }' />
-
-<div class="card">
-    <div class="card-body">
-        <!-- Search Box and Add User Button-->
-        <partial name="_ListToolbar"
-                 model="Model.Toolbar" />
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="page-title mb-1">Users</h1>
+        <div class="text-secondary">
+            Accounts and the roles they hold. People sign themselves up; you decide what they can do.
+        </div>
     </div>
+    <a asp-controller="Users" asp-action="Create" class="btn btn-primary">Create an account</a>
 </div>
-<div class="card mt-3">
 
+<form method="get" asp-controller="Users" asp-action="Index" class="card mb-4">
     <div class="card-body">
+        <div class="row g-3 align-items-end">
 
-        <partial name="_UserTable"
-                 model="Model.Users" />
+            <div class="col-12 col-md">
+                <label for="user-search" class="form-label">Search</label>
+                <input type="search" id="user-search" name="search" value="@Model.Search"
+                       class="form-control" placeholder="Name or email address" />
+            </div>
 
+            <div class="col-12 col-sm-6 col-md-3">
+                <label for="user-role" class="form-label">Role</label>
+                <select id="user-role" name="role" class="form-select">
+                    <option value="">All roles</option>
+                    @foreach (var role in RoleNames.All)
+                    {
+                        <option value="@role" selected="@(Model.Role == role)">@Humanise(role)</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3">
+                <label for="user-status" class="form-label">Status</label>
+                <select id="user-status" name="status" class="form-select">
+                    <option value="">All statuses</option>
+                    @foreach (var status in statuses)
+                    {
+                        <option value="@status" selected="@(Model.Status == status)">@status</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-12 col-md-auto d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                @if (Model.HasFilters)
+                {
+                    <a asp-controller="Users" asp-action="Index" class="btn btn-link text-secondary">Clear</a>
+                }
+            </div>
+
+        </div>
     </div>
-    <div class="card-footer">
-        <partial name="_Pagination" />
-    </div>
+</form>
 
-</div>
+@if (Model.LoadFailed)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">We couldn't load the directory</h3>
+            <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
+            <a asp-controller="Users" asp-action="Index" class="btn btn-primary">Retry</a>
+        </div>
+    </div>
+}
+else if (Model.Users.Count == 0)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">No accounts match</h3>
+            <p class="text-secondary m-0">
+                @(Model.HasFilters ? "Try a broader filter." : "There are no accounts yet.")
+            </p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="text-secondary mb-3">@Model.Users.Count @(Model.Users.Count == 1 ? "account" : "accounts")</div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table card-table table-vcenter">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Roles</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model.Users)
+                    {
+                        <tr>
+                            <td>@user.FullName</td>
+                            <td>@user.Email</td>
+                            <td>
+                                @if (user.Roles.Count == 0)
+                                {
+                                    <span class="text-secondary">No role yet</span>
+                                }
+                                else
+                                {
+                                    @foreach (var role in user.Roles)
+                                    {
+                                        <span class="badge bg-secondary-lt me-1">@Humanise(role)</span>
+                                    }
+                                }
+                            </td>
+                            <td><span class="badge @StatusBadge(user.Status)">@Humanise(user.Status)</span></td>
+                            <td class="text-nowrap">@user.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</td>
+                            <td>
+                                <a asp-controller="Users" asp-action="Details" asp-route-id="@user.Id"
+                                   class="btn btn-sm btn-outline-primary">Manage</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

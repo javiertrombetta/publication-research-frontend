@@ -339,10 +339,13 @@ namespace ResearchPublicationManagementSystem.Controllers
             var (container, redirect) = await GetOwnedContainerAsync(id, PipelineStage.EthicsApproval);
             if (redirect is not null) return redirect;
 
+            var required = await ethicsApi.GetRequiredDocumentsAsync(id);
             var docsResult = await ethicsApi.GetDocumentsAsync(id);
+
             return View(new UploadEthicsDocumentsViewModel
             {
                 ContainerId = container!.Id,
+                Required = required.Data ?? [],
                 ExistingDocuments = docsResult.Data ?? []
             });
         }
@@ -356,22 +359,27 @@ namespace ResearchPublicationManagementSystem.Controllers
             var (_, redirect) = await GetOwnedContainerAsync(model.ContainerId, PipelineStage.EthicsApproval);
             if (redirect is not null) return redirect;
 
-            var uploads = new (string Type, IFormFile? File)[]
-            {
-                (EthicsDocumentType.ApplicationForm, model.ApplicationFormFile),
-                (EthicsDocumentType.ParticipantConsentForm, model.ParticipantConsentFormFile),
-                (EthicsDocumentType.ApprovalCertificate, model.ApprovalCertificateFile)
-            };
+            // The requirements are re-read rather than trusted from the form: what the API will
+            // accept is what this publication was asked for, and a posted key that is not on that
+            // list has no business being uploaded.
+            var required = await ethicsApi.GetRequiredDocumentsAsync(model.ContainerId);
+            var requirements = required.Data ?? [];
 
             var anyUploaded = false;
-            foreach (var (type, file) in uploads)
+            foreach (var requirement in requirements)
             {
-                if (file is not { Length: > 0 }) continue;
+                if (!model.Files.TryGetValue(requirement.RequirementId, out var file) ||
+                    file is not { Length: > 0 })
+                {
+                    continue;
+                }
 
-                var result = await ethicsApi.UploadDocumentAsync(model.ContainerId, type, file);
+                var result = await ethicsApi.UploadDocumentAsync(
+                    model.ContainerId, requirement.RequirementId.ToString(), file);
+
                 if (!result.Success)
                 {
-                    AddApiErrors(result, $"Could not upload the {type} document.");
+                    AddApiErrors(result, $"Could not upload the {requirement.Name}.");
                 }
                 else
                 {
@@ -387,6 +395,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             if (!ModelState.IsValid)
             {
                 var docsResult = await ethicsApi.GetDocumentsAsync(model.ContainerId);
+                model.Required = requirements;
                 model.ExistingDocuments = docsResult.Data ?? [];
                 return View(model);
             }

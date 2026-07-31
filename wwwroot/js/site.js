@@ -1,12 +1,46 @@
 // Sidebar collapse/expand, toggled by the navbar burger button.
-// The chosen state is remembered across page loads so navigating doesn't reset it.
+//
+// The remembered state is applied by a small inline script in <head>, which adds
+// .rpms-sidebar-is-collapsed to <html> before the page paints. This file only takes over from
+// there: it moves the state onto the sidebar itself and handles clicks. Restoring the state
+// here instead would mean painting an expanded sidebar first and animating it shut on every
+// navigation.
 (function () {
     var STORAGE_KEY = 'rpms.sidebar.collapsed';
+    var PREPAINT_CLASS = 'rpms-sidebar-is-collapsed';
+
+    var root = document.documentElement;
+
+    // Let the first paint finish before anything is allowed to animate. Two frames, because one
+    // only guarantees the style has been computed, not that it has been drawn.
+    //
+    // Backed by a timer as well: requestAnimationFrame does not run in a hidden tab, and without
+    // the fallback a page opened in a background tab would come back with every transition and
+    // animation permanently switched off.
+    function allowTransitions() {
+        var released = false;
+
+        function release() {
+            if (released) return;
+            released = true;
+            root.classList.remove('rpms-no-transitions');
+        }
+
+        requestAnimationFrame(function () {
+            requestAnimationFrame(release);
+        });
+
+        setTimeout(release, 100);
+    }
 
     var toggle = document.getElementById('sidebar-toggle');
     var sidebar = document.getElementById('rpms-sidebar');
 
-    if (!toggle || !sidebar) return;
+    if (!toggle || !sidebar) {
+        // Pages without a sidebar still need the guard lifted, or nothing on them animates.
+        allowTransitions();
+        return;
+    }
 
     function apply(collapsed) {
         sidebar.classList.toggle('rpms-sidebar-collapsed', collapsed);
@@ -14,13 +48,23 @@
         toggle.setAttribute('aria-expanded', String(!collapsed));
     }
 
-    // Restore the previous state before the user interacts.
-    apply(localStorage.getItem(STORAGE_KEY) === 'true');
+    // Hand the state over from <html> to the sidebar. Both selectors collapse it, so this swap
+    // is invisible — but from here on the element owns its own state.
+    var collapsed = root.classList.contains(PREPAINT_CLASS);
+    apply(collapsed);
+    root.classList.remove(PREPAINT_CLASS);
+
+    allowTransitions();
 
     toggle.addEventListener('click', function () {
-        var collapsed = !sidebar.classList.contains('rpms-sidebar-collapsed');
-        apply(collapsed);
-        localStorage.setItem(STORAGE_KEY, String(collapsed));
+        var nowCollapsed = !sidebar.classList.contains('rpms-sidebar-collapsed');
+        apply(nowCollapsed);
+
+        try {
+            localStorage.setItem(STORAGE_KEY, String(nowCollapsed));
+        } catch (e) {
+            // Private browsing: the choice just won't survive the next navigation.
+        }
     });
 })();
 

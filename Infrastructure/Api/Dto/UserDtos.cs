@@ -36,3 +36,16 @@ public record UpdateMyProfileRequestDto(
     IReadOnlyList<Guid>? ResearchAreaIds,
     string? AreasOfExpertise,
     string? ResearchInterests);
+
+/// <summary>A user as they appear in a listing.</summary>
+public record UserListItemDto(
+    Guid Id,
+    string Email,
+    string FirstName,
+    string LastName,
+    string Status,
+    IReadOnlyList<string> Roles,
+    DateTime CreatedAt)
+{
+    public string FullName => $"{FirstName} {LastName}".Trim();
+}

@@ -13,6 +13,12 @@ public class AuthCookieService(AuthApiClient authApiClient) : IAuthCookieService
         var principal = BuildPrincipal(auth);
         var properties = new AuthenticationProperties { IsPersistent = isPersistent };
         await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, properties);
+
+        // SignInAsync only issues the cookie; the browser sends it back on the *next* request, so
+        // without this the rest of this one still runs as an anonymous visitor. Anything acting
+        // straight after signing in — the outgoing API calls read their bearer token from these
+        // claims — would find no token and quietly do nothing.
+        httpContext.User = principal;
     }
 
     public async Task SignOutAsync(HttpContext httpContext)
@@ -27,6 +33,7 @@ public class AuthCookieService(AuthApiClient authApiClient) : IAuthCookieService
 
         var principal = BuildPrincipal(result.Data);
         await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+        httpContext.User = principal;
         return result.Data.AccessToken;
     }
 
@@ -40,7 +47,9 @@ public class AuthCookieService(AuthApiClient authApiClient) : IAuthCookieService
             .ToList();
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
+        var principal = new ClaimsPrincipal(identity);
+        await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+        httpContext.User = principal;
     }
 
     private static ClaimsPrincipal BuildPrincipal(AuthResponseDto auth)

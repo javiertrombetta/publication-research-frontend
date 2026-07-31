@@ -19,7 +19,25 @@ public record PublicationContainerDto(
     /// The research paper's own status, null until a paper exists. Status only says InProgress or
     /// Completed, which can't distinguish an accepted paper from one still under review.
     /// </summary>
-    string? PaperStatus = null)
+    string? PaperStatus = null,
+    /// <summary>
+    /// The ethics approval's status, null before the student has declared. Lets a listing show
+    /// what a publication is waiting on without a request per row.
+    /// </summary>
+    string? EthicsStatus = null,
+    /// <summary>
+    /// Whose turn it is in the ethics workflow, as a role name, or null when nothing is pending.
+    /// EthicsStatus can't answer this on its own: PendingVerification covers four different
+    /// waits, told apart on the backend by which timestamps have been set.
+    /// </summary>
+    string? EthicsAwaitingRole = null,
+    /// <summary>
+    /// The evaluation committee this publication needs, as agreed when it was opened rather than
+    /// as configured today. Null on publications created before the figures were recorded; the
+    /// current settings govern those.
+    /// </summary>
+    int? RequiredInternalCommitteeMembers = null,
+    int? RequiredExternalCommitteeMembers = null)
 {
     /// <summary>
     /// True once the paper has cleared review, whether or not its author has yet decided to put

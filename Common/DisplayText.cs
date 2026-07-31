@@ -34,30 +34,37 @@ namespace ResearchPublicationManagementSystem.Common
         /// wherever it appears — a paper that reads Accepted in green on the listing must not read
         /// Accepted in red inside the publication, and its progress bar must not disagree with its
         /// badge. Statuses come from several backend enums (proposals, ethics, papers, containers)
-        /// and are matched by name, which is safe because the names don't collide across them.
+        /// and are matched by name. That is safe except for "Assigned", which means a supervisor
+        /// took a proposal on (resolved) but also that a committee has yet to start (in progress);
+        /// the committee views colour their own status rather than asking here.
         /// Returns a colour token; <see cref="StatusBadge"/> and <see cref="StatusBar"/> dress it.
         /// </summary>
         public static string StatusColour(string? status) => status switch
         {
             // Resolved, and resolved well: nothing further is being waited on.
-            "Accepted" or "Published" or "Verified" or "Assigned" or "Completed"
+            // Approve is a review decision rather than a status, and reads on the same screens.
+            "Accepted" or "Published" or "Verified" or "Assigned" or "Completed" or "Approve"
                 => "success",
 
             // Resolved against the student, or sent back to them for work. Both spellings
             // appear: papers use RevisionsRequested, ethics documents RevisionRequested.
+            // Revoked is an invitation an administrator withdrew — a decision against it, and
+            // the one state on that screen someone might need to notice at a glance.
             "Rejected" or "DeferredToNextCycle" or "RevisionsRequested" or "RevisionRequested"
+                or "Reject" or "RequestRevision" or "Revoked"
                 => "danger",
 
             // Under way. Blue rather than the brand red, which reads as something needing
             // attention when in fact the work is simply in hand.
-            "InProgress" or "In Progress" => "blue",
+            "InProgress" or "In Progress" or "Pending" => "blue",
 
             // Started but not submitted — the student still has it, and it needs their action.
             "Draft" => "orange",
 
-            // Nothing to do and nothing achieved: a step that turned out not to apply, or one
-            // not started. Grey keeps them from competing with the states that carry a result.
-            "NotRequired" or "NotStarted" => "secondary",
+            // Nothing to do and nothing achieved: a step that turned out not to apply, one not
+            // started, or an invitation that simply ran out. Grey keeps them from competing with
+            // the states that carry a result.
+            "NotRequired" or "NotStarted" or "Expired" => "secondary",
 
             // Everything still in flight.
             _ => "primary"

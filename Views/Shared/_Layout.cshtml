@@ -15,14 +15,38 @@
     <!-- Tabler CSS -->
     <link rel="stylesheet"
           href="~/lib/tabler/dist/css/tabler.min.css" asp-append-version="true" />
-    <!-- Tabler Icons -->
-    <link rel="stylesheet"
-          href="~/lib/tabler-icons/dist/tabler-icons.css" asp-append-version="true" />
+    @* No icon-font stylesheet. Every icon in this application is an inline SVG — the "icon
+       icon-tabler" classes on them are Tabler's SVG convention, not the font. Loading it cost
+       252KB on every page for a font nothing asked for. *@
 
     <!-- Your custom CSS -->
     <link rel="stylesheet"
           href="~/css/site.css"
           asp-append-version="true" />
+
+    @* Runs before the body exists, so the sidebar is already in its remembered state when the
+       page first paints. Left to site.js at the end of the body it painted expanded and then
+       animated shut on every single navigation, which is what the flicker was.
+
+       Inline and unversioned on purpose: an external file would be fetched after this point and
+       so could not beat the first paint. *@
+    <script>
+        (function () {
+            var root = document.documentElement;
+            try {
+                if (localStorage.getItem('rpms.sidebar.collapsed') === 'true') {
+                    root.classList.add('rpms-sidebar-is-collapsed');
+                }
+            } catch (e) {
+                // Private browsing can refuse localStorage. An expanded sidebar is the sane
+                // fallback, and the burger still works.
+            }
+
+            // Suppressed until the first paint is done, so restoring the state is instant while
+            // the user's own clicks still animate.
+            root.classList.add('rpms-no-transitions');
+        })();
+    </script>
 
 </head>
 

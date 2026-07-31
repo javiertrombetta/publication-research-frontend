@@ -11,6 +11,8 @@ namespace ResearchPublicationManagementSystem.Controllers
     public class AuthController(
         AuthApiClient authApiClient,
         DepartmentsApiClient departmentsApiClient,
+        NotificationsApiClient notificationsApiClient,
+        IInstitutionDetails institutionDetails,
         IAuthCookieService authCookieService) : Controller
     {
         // GET: /Auth/home
@@ -47,6 +49,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             }
 
             await authCookieService.SignInAsync(HttpContext, result.Data, model.RememberMe);
+            await AnnounceUnreadNotificationsAsync();
 
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
@@ -117,6 +120,14 @@ namespace ResearchPublicationManagementSystem.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> signup()
         {
+            // Closed systems say so before the form, not after it has been filled in. The API
+            // would refuse the registration either way; this is about not wasting someone's time.
+            var institution = await institutionDetails.GetAsync();
+            if (!institution.SelfRegistrationOpen)
+            {
+                return View("RegistrationClosed");
+            }
+
             var model = new SignupViewModel();
             await PopulateDepartmentOptionsAsync(model);
             return View(model);
@@ -127,7 +138,15 @@ namespace ResearchPublicationManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> signup(SignupViewModel model)
         {
-            var isStudentEmail = model.Email.EndsWith("@aisstudent.ac.nz", StringComparison.OrdinalIgnoreCase);
+            var institution = await institutionDetails.GetAsync();
+            if (!institution.SelfRegistrationOpen)
+            {
+                return View("RegistrationClosed");
+            }
+
+            // The domain comes from settings: an institution that adds a second student domain
+            // should not find this form still asking the old one for a student ID.
+            var isStudentEmail = model.Email.EndsWith(institution.StudentEmailDomain, StringComparison.OrdinalIgnoreCase);
             if (isStudentEmail)
             {
                 if (string.IsNullOrWhiteSpace(model.StudentIdNumber)) ModelState.AddModelError(nameof(model.StudentIdNumber), "Student ID is required.");
@@ -222,6 +241,28 @@ namespace ResearchPublicationManagementSystem.Controllers
         {
             var (controller, action) = roles is null ? RoleLanding.For(User) : RoleLanding.For(roles);
             return RedirectToAction(action, controller);
+        }
+
+        /// <summary>
+        /// Tells someone, as they arrive, that something is waiting. The bell alone is easy to
+        /// walk past, and with email switched off the application is the only place a
+        /// notification ever appears.
+        ///
+        /// Runs after the sign-in cookie is issued, because the count is fetched with the token
+        /// that cookie carries. Failure is silent: an unreachable count is not worth turning a
+        /// successful sign-in into an error.
+        /// </summary>
+        private async Task AnnounceUnreadNotificationsAsync()
+        {
+            var unread = await notificationsApiClient.GetUnreadCountAsync();
+            if (!unread.Success || unread.Data <= 0)
+            {
+                return;
+            }
+
+            TempData["InfoMessage"] = unread.Data == 1
+                ? "You have 1 unread notification."
+                : $"You have {unread.Data} unread notifications.";
         }
     }
 }
