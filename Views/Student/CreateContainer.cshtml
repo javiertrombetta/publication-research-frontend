@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Start a publication";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-7">
+
+        <div class="card shadow-sm">
+            <div class="card-body py-5 px-4 text-center">
+                <h1 class="h1 mb-3">Start a new publication</h1>
+                <p class="text-secondary mb-4">
+                    This creates a new publication and automatically assigns a Coordinator based on your
+                    department. From there you'll submit research proposals, go through ethics approval,
+                    and finally submit your paper. You can run more than one publication at a time.
+                </p>
+                <form asp-controller="Student" asp-action="CreateContainer" method="post">
+                    <button type="submit" class="btn btn-primary px-4">
+                        Start the publication process
+                    </button>
+                </form>
+                <a asp-controller="Student" asp-action="student_dashboard" class="d-inline-block mt-3 text-secondary text-decoration-none">
+                    Cancel
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>

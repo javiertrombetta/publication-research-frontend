@@ -1,0 +1,101 @@
+@model NotificationsViewModel
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+
+        <div class="d-flex align-items-start justify-content-between mb-4">
+            <div>
+                <h1 class="page-title mb-1">Notifications</h1>
+                <div class="text-secondary">
+                    @if (Model.UnreadCount > 0)
+                    {
+                        <span>@Model.UnreadCount unread.</span>
+                    }
+                    else
+                    {
+                        <span>Nothing unread.</span>
+                    }
+                </div>
+            </div>
+
+            @if (Model.UnreadCount > 0)
+            {
+                <form asp-action="MarkAllRead" method="post" class="m-0">
+                    <button type="submit" class="btn btn-outline-secondary">Mark all as read</button>
+                </form>
+            }
+        </div>
+
+        @if (Model.LoadFailed)
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <h3 class="mb-2">We couldn't load your notifications</h3>
+                    <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
+                    <a asp-action="Index" class="btn btn-primary">Retry</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <a class="nav-link @(Model.UnreadOnly ? "" : "active")"
+                       asp-action="Index">Everything</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(Model.UnreadOnly ? "active" : "")"
+                       asp-action="Index" asp-route-unreadOnly="true">Unread</a>
+                </li>
+            </ul>
+
+            if (Model.Notifications.Count == 0)
+            {
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <h3 class="mb-2">
+                            @(Model.UnreadOnly ? "You have read everything" : "Nothing yet")
+                        </h3>
+                        <p class="text-secondary m-0">
+                            You will be told here whenever something needs you, or when a decision
+                            is made about your work.
+                        </p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="list-group list-group-flush">
+                        @foreach (var notification in Model.Notifications)
+                        {
+                            @* Unread ones are heavier, not merely tinted: the difference has to
+                               survive being skimmed. *@
+                            <a class="list-group-item list-group-item-action"
+                               asp-action="Open"
+                               asp-route-id="@notification.Id">
+
+                                <div class="d-flex align-items-start justify-content-between gap-3">
+                                    <div>
+                                        <div class="@(notification.IsRead ? "" : "fw-bold")">
+                                            @notification.Title
+                                        </div>
+                                        <div class="text-secondary">@notification.Message</div>
+                                    </div>
+
+                                    <div class="text-secondary small text-nowrap">
+                                        @notification.CreatedAt.ToLocalTime().ToString("d MMM yyyy, HH:mm")
+                                    </div>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        }
+
+    </div>
+</div>

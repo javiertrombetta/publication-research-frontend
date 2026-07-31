@@ -14,30 +14,62 @@
 
     <!-- Tabler CSS -->
     <link rel="stylesheet"
-          href="~/lib/tabler/dist/css/tabler.min.css" />
-    <!-- Tabler Icons -->
-    <link rel="stylesheet"
-          href="~/lib/tabler-icons/dist/tabler-icons.css" />
+          href="~/lib/tabler/dist/css/tabler.min.css" asp-append-version="true" />
+    @* No icon-font stylesheet. Every icon in this application is an inline SVG — the "icon
+       icon-tabler" classes on them are Tabler's SVG convention, not the font. Loading it cost
+       252KB on every page for a font nothing asked for. *@
 
     <!-- Your custom CSS -->
     <link rel="stylesheet"
           href="~/css/site.css"
           asp-append-version="true" />
 
+    @* Runs before the body exists, so the sidebar is already in its remembered state when the
+       page first paints. Left to site.js at the end of the body it painted expanded and then
+       animated shut on every single navigation, which is what the flicker was.
+
+       Inline and unversioned on purpose: an external file would be fetched after this point and
+       so could not beat the first paint. *@
+    <script>
+        (function () {
+            var root = document.documentElement;
+            try {
+                if (localStorage.getItem('rpms.sidebar.collapsed') === 'true') {
+                    root.classList.add('rpms-sidebar-is-collapsed');
+                }
+            } catch (e) {
+                // Private browsing can refuse localStorage. An expanded sidebar is the sane
+                // fallback, and the burger still works.
+            }
+
+            // Suppressed until the first paint is done, so restoring the state is instant while
+            // the user's own clicks still animate.
+            root.classList.add('rpms-no-transitions');
+        })();
+    </script>
+
 </head>
 
 <body>
 
-    <div class="page">
+    @* Column layout so the footer sits below navbar + (sidebar | content) at full width,
+       and is pushed to the bottom of the viewport on short pages. *@
+    <div class="page rpms-shell">
 
         <!-- Top Navigation -->
         <partial name="_Navbar" />
 
         <!-- Main Layout -->
-        <div class="d-flex">
+        <div class="d-flex flex-fill">
 
-            <!-- Sidebar -->
-            <partial name="_Sidebar" />
+            @* Pages that aren't part of the workflow (the privacy policy, for one) set
+               HideSidebar: there is nothing to navigate to from them, and the nav would
+               also be wrong for a signed-out reader. *@
+            @if (ViewData["HideSidebar"] as bool? != true)
+            {
+                <!-- Sidebar -->
+                <partial name="_Sidebar" />
+            }
 
             <!-- Page Content -->
             <main class="flex-fill">
@@ -56,17 +88,25 @@
 
         </div>
 
+        <partial name="_Footer" />
+
     </div>
+
+    <partial name="_Toasts" />
 
     <!-- JavaScript -->
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
 
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @* tabler.min.js bundles its own copy of Bootstrap and auto-initialises every
+       [data-bs-toggle] component. Do NOT also load bootstrap.bundle.js here: two Bootstrap
+       copies both handle the same click, so one opens the dropdown and the other's
+       "click outside" handler immediately closes it again. *@
+    <script src="~/lib/tabler/dist/js/tabler.min.js" asp-append-version="true"></script>
 
-    <script src="~/lib/tabler/dist/js/tabler.min.js"></script>
-
-    <script src="~/js/site.js"></script>
+    @* asp-append-version is required here: without it browsers keep serving a cached copy
+       of site.js after it changes, so behaviour wired up in it silently stops working. *@
+    <script src="~/js/site.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 

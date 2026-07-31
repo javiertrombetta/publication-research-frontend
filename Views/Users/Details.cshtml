@@ -1,218 +1,262 @@
-﻿@model UserDetailsViewModel
-@using ResearchPublicationManagementSystem.Models
-
+@model UserDetailViewModel
 @{
-    ViewData["Title"] = "User Profile";
+    var user = Model.User;
+    ViewData["Title"] = $"{user.FirstName} {user.LastName}";
 }
 
-<partial name="_PageHeader"
-         model='new PageHeaderViewModel
-         {
-             Title = "User Profile",
-             Subtitle = "View user account information."
-         }' />
-<div class="card mt-4">
-    <div class="card-body">
+<div class="mb-4">
+    <a asp-controller="Users" asp-action="Index" class="text-secondary text-decoration-none small">&larr; Users</a>
+    <h1 class="page-title mt-2 mb-1">@user.FirstName @user.LastName</h1>
+    <div class="text-secondary">@user.Email</div>
+</div>
 
-        <h3 class="mb-4 fw-bold">
-            Personal Information
-        </h3>
+<div class="row">
+    <div class="col-12 col-lg-7">
 
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">
-                    Full Name
-                </label>
-
-                <input class="form-control"
-                       value="@Model.FullName"
-                       readonly />
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h3 mb-3">Account</h2>
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6">
+                        <div class="text-secondary small">Status</div>
+                        <span class="badge @StatusBadge(user.Status)">@Humanise(user.Status)</span>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="text-secondary small">Roles</div>
+                        <div>
+                            @if (user.Roles.Count == 0)
+                            {
+                                <span class="text-secondary">No role yet</span>
+                            }
+                            else
+                            {
+                                @foreach (var role in user.Roles)
+                                {
+                                    <span class="badge bg-secondary-lt me-1">@Humanise(role)</span>
+                                }
+                            }
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="text-secondary small">Joined</div>
+                        <div>@user.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</div>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            <div class="col-md-6 mb-3">
-                <label class="form-label">
-                    Email
-                </label>
-
-                <input class="form-control"
-                       value="@Model.Email"
-                       readonly />
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h3 mb-3">Edit details</h2>
+                <form asp-controller="Users" asp-action="Update" method="post">
+                    <input type="hidden" name="id" value="@user.Id" />
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label" for="first-name">First name</label>
+                            <input id="first-name" name="firstName" value="@user.FirstName" class="form-control" required />
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label" for="last-name">Surname</label>
+                            <input id="last-name" name="lastName" value="@user.LastName" class="form-control" required />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="institutional-id">Institutional ID</label>
+                            <input id="institutional-id" name="institutionalId" value="@user.InstitutionalId" class="form-control" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="update-comments">Reason for the change</label>
+                            <input id="update-comments" name="comments" class="form-control"
+                                   placeholder="Recorded in the audit log" />
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3">Save changes</button>
+                </form>
             </div>
+        </div>
 
-            <div class="col-md-6 mb-3">
-                <label class="form-label">
-                    Phone
-                </label>
+    </div>
 
-                <input class="form-control"
-                       value="@Model.Phone"
-                       readonly />
+    <div class="col-12 col-lg-5">
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h3 mb-2">Role</h2>
+                <p class="text-secondary">
+                    Granting a role replaces whatever the account holds. Until one is granted the
+                    person can sign in but cannot take part in the workflow.
+                </p>
+                <form asp-controller="Users" asp-action="ChangeRole" method="post">
+                    <input type="hidden" name="id" value="@user.Id" />
+                    <div class="mb-3">
+                        <label class="form-label" for="role">Role</label>
+                        <select id="role" name="role" class="form-select" required>
+                            @foreach (var role in UserDetailViewModel.AssignableRoles)
+                            {
+                                <option value="@role" selected="@(user.Roles.Contains(role))">@Humanise(role)</option>
+                            }
+                        </select>
+                    </div>
+                    @* Shown only for the roles that belong to one. The API refuses the change
+                       without it rather than granting a role the person could not use, so asking
+                       here is what keeps that refusal from ever being reached. *@
+                    <div class="mb-3 d-none" data-role-department>
+                        <label class="form-label" for="role-department">Department</label>
+                        <select id="role-department" name="departmentId" class="form-select">
+                            <option value="">Choose a department</option>
+                            @foreach (var department in Model.Departments)
+                            {
+                                <option value="@department.Id">@department.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3 d-none" data-role-affiliation>
+                        <label class="form-label" for="role-affiliation">Affiliation</label>
+                        <input id="role-affiliation" name="affiliation" class="form-control"
+                               placeholder="The institution they come from" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="role-comments">Reason</label>
+                        <input id="role-comments" name="comments" class="form-control" placeholder="Recorded in the audit log" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Change role</button>
+                </form>
             </div>
+        </div>
 
-            <div class="col-md-6 mb-3">
-                <label class="form-label">
-                    Department
-                </label>
-
-                <input class="form-control"
-                       value="@Model.Department"
-                       readonly />
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h3 mb-2">Access</h2>
+                <p class="text-secondary">
+                    Disabling stops the account signing in but keeps everything else about it,
+                    so it can be turned back on. Prefer it to deleting whenever the person might
+                    return.
+                </p>
+                <form asp-controller="Users" asp-action="SetEnabled" method="post">
+                    <input type="hidden" name="id" value="@user.Id" />
+                    <input type="hidden" name="enabled" value="@((!Model.IsEnabled).ToString().ToLowerInvariant())" />
+                    <div class="mb-3">
+                        <label class="form-label" for="access-comments">Reason</label>
+                        <input id="access-comments" name="comments" class="form-control" placeholder="Recorded in the audit log" />
+                    </div>
+                    <button type="submit" class="btn @(Model.IsEnabled ? "btn-outline-danger" : "btn-primary")">
+                        @(Model.IsEnabled ? "Disable this account" : "Enable this account")
+                    </button>
+                </form>
             </div>
+        </div>
 
-            <div class="col-md-6 mb-3">
-                <label class="form-label">
-                    Role
-                </label>
-
-                <input class="form-control"
-                       value="@Model.Role"
-                       readonly />
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="h3 mb-2">Password</h2>
+                <p class="text-secondary">
+                    Sends the account a reset link. You never choose someone else's password.
+                </p>
+                <form asp-controller="Users" asp-action="ResetPassword" method="post">
+                    <input type="hidden" name="id" value="@user.Id" />
+                    <div class="mb-3">
+                        <label class="form-label" for="reset-comments">Reason</label>
+                        <input id="reset-comments" name="comments" class="form-control" placeholder="Recorded in the audit log" />
+                    </div>
+                    <button type="submit" class="btn btn-outline-secondary">Send a reset email</button>
+                </form>
             </div>
+        </div>
 
-            <div class="col-md-3 mb-3">
+        @* Destructive and irreversible, so it is last, visually separated, and the reason has to
+           be typed before the button that carries it out is even on screen. *@
+        <div class="card border-danger">
+            <div class="card-body">
+                <h2 class="h3 mb-2">Delete this account</h2>
+                <p class="text-secondary">
+                    The person can no longer sign in and their personal details are removed. What
+                    they did stays attributable: a publication keeps its author, and the audit
+                    trail keeps this deletion, who did it and why.
+                </p>
 
-                <label class="form-label">
-                    Status
-                </label>
+                <button type="button" class="btn btn-outline-danger" data-delete-account-start>
+                    Delete this account
+                </button>
 
-                <br />
+                <form asp-controller="Users" asp-action="Delete" method="post"
+                      class="mt-3 d-none" data-delete-account-form>
+                    <input type="hidden" name="id" value="@user.Id" />
 
-                <partial name="_StatusBadge"
-                         model="Model.IsActive" />
+                    <label class="form-label" for="delete-comments">
+                        Why is this account being deleted?
+                    </label>
+                    <textarea id="delete-comments" name="comments" rows="3" class="form-control"
+                              placeholder="Recorded in the audit trail" required></textarea>
 
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-danger">Delete @user.FirstName @user.LastName</button>
+                        <button type="button" class="btn btn-link link-secondary" data-delete-account-cancel>
+                            Cancel
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <div class="col-md-3 mb-3">
-                <label class="form-label">
-                    Created Date
-                </label>
-
-                <input class="form-control"
-                       value="@Model.CreatedDate.ToString("yyyy-MM-dd")"
-                       readonly />
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">
-                    Last Login
-                </label>
-
-                <input class="form-control"
-                       value="@Model.LastLogin.ToString("yyyy-MM-dd HH:mm")"
-                       readonly />
-            </div>
-
         </div>
 
     </div>
 </div>
-<div class="card mt-4">
-    <div class="card-body">
 
-        <h3 class="mb-4 fw-bold">
-            Role Information
-        </h3>
+@section Scripts {
+    <script>
+        // Which extra fields a role needs. Kept in step with the API's own rule: the roles that
+        // belong to a department cannot be granted without one.
+        (function () {
+            var departmentRoles = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(UserDetailViewModel.DepartmentRoles));
+            var committeeRoles = ['InternalCommitteeMember', 'ExternalCommitteeMember'];
 
-        <div class="row">
+            var role = document.getElementById('role');
+            var department = document.querySelector('[data-role-department]');
+            var affiliation = document.querySelector('[data-role-affiliation]');
 
-            <div class="col-md-6 mb-3">
-                <label class="form-label">
-                    Assigned Supervisor
-                </label>
+            function update() {
+                var needsDepartment = departmentRoles.indexOf(role.value) !== -1;
+                department.classList.toggle('d-none', !needsDepartment);
+                department.querySelector('select').required = needsDepartment;
 
-                <input class="form-control"
-                       value="@Model.Supervisor"
-                       readonly />
-            </div>
+                affiliation.classList.toggle('d-none', committeeRoles.indexOf(role.value) === -1);
+            }
 
-            <div class="col-md-6 mb-3">
-                <label class="form-label">
-                    Committee Member 1
-                </label>
+            role.addEventListener('change', update);
+            update();
+        })();
+    </script>
 
-                <input class="form-control"
-                       value="@Model.CommitteeMember1"
-                       readonly />
-            </div>
+    <script>
+        // Deliberately hand-rolled rather than a Bootstrap modal: Tabler's tabler.min.js does not
+        // bundle Bootstrap's JS, so data-bs-toggle does nothing on these pages.
+        (function () {
+            var form = document.querySelector('[data-delete-account-form]');
+            var start = document.querySelector('[data-delete-account-start]');
+            var cancel = document.querySelector('[data-delete-account-cancel]');
+            var reason = document.getElementById('delete-comments');
 
-            <div class="col-md-6 mb-3">
-                <label class="form-label">
-                    Committee Member 2
-                </label>
+            start.addEventListener('click', function () {
+                form.classList.remove('d-none');
+                start.classList.add('d-none');
+                reason.focus();
+            });
 
-                <input class="form-control"
-                       value="@Model.CommitteeMember2"
-                       readonly />
-            </div>
+            cancel.addEventListener('click', function () {
+                reason.value = '';
+                form.classList.add('d-none');
+                start.classList.remove('d-none');
+                start.focus();
+            });
 
-            <div class="col-md-6 mb-3">
-                <label class="form-label">
-                    Research Coordinator
-                </label>
+            // The reason is what makes the deletion traceable, so an empty one never reaches the API.
+            form.addEventListener('submit', function (event) {
+                if (reason.value.trim()) return;
 
-                <input class="form-control"
-                       value="@Model.ResearchCoordinator"
-                       readonly />
-            </div>
-
-        </div>
-
-    </div>
-</div>
-<div class="card mt-4">
-    <div class="card-body">
-
-        <h3 class="mb-4 fw-bold">
-            Publication Information
-        </h3>
-
-        <div class="row">
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">
-                    Current Publication
-                </label>
-
-                <input class="form-control"
-                       value="@Model.CurrentPublication"
-                       readonly />
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">
-                    Publication Status
-                </label>
-
-                <input class="form-control"
-                       value="@Model.PublicationStatus"
-                       readonly />
-            </div>
-
-        </div>
-
-    </div>
-</div>
-<div class="d-flex justify-content-end gap-2 mt-4">
-
-    <a asp-controller="Users"
-       asp-action="Index"
-       class="btn btn-secondary">
-
-        <i class="ti ti-arrow-left"></i>
-
-        Back
-
-    </a>
-
-    <a asp-controller="Users"
-       asp-action="Edit"
-       class="btn btn-primary">
-
-        <i class="ti ti-edit"></i>
-
-        Edit User
-
-    </a>
-
-</div>
+                event.preventDefault();
+                window.rpmsToast('error', 'Give a reason for deleting this account.');
+                reason.focus();
+            });
+        })();
+    </script>
+}

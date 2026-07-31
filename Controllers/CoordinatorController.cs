@@ -1,71 +1,377 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ResearchPublicationManagementSystem.Common;
+using ResearchPublicationManagementSystem.Infrastructure.Api;
+using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
+using ResearchPublicationManagementSystem.Models;
 
-namespace MyWebApp.Controllers
+namespace ResearchPublicationManagementSystem.Controllers
 {
-    public class CoordinatorController : Controller
+    /// <summary>
+    /// The coordinator sits between the student and everyone else: they send proposals out to
+    /// supervisors, assign the one a supervisor accepts, confirm ethics decisions, and take the
+    /// final decision on a research paper.
+    /// </summary>
+    [Authorize(Roles = RoleNames.Coordinator)]
+    public class CoordinatorController(
+        ContainersApiClient containersApi,
+        ProposalsApiClient proposalsApi,
+        EthicsApiClient ethicsApi,
+        PublicationsApiClient publicationsApi,
+        UsersApiClient usersApi) : Controller
     {
-       
+        // ---------- Overview ----------
+
         [HttpGet]
-        public IActionResult committee_review()
+        public async Task<IActionResult> Coordinator_dashboard()
         {
-            
-            return View();
+            var model = new CoordinatorDashboardViewModel();
+
+            // Scoped to this coordinator: the endpoint would happily return every container in
+            // the institution, which is not what a coordinator's queue means.
+            var containers = await containersApi.GetAllAsync(coordinatorId: CurrentUserId());
+            if (!containers.Success)
+            {
+                TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your publications right now.";
+                model.LoadFailed = true;
+                return View(model);
+            }
+
+            model.Publications = containers.Data ?? [];
+
+            var pending = await proposalsApi.GetPendingAsync();
+            model.ProposalsAwaitingDispatch = pending.Data ?? [];
+
+            return View(model);
         }
 
-          public IActionResult Edit_staff_profile()
+        // ---------- Pipeline 1: sending proposals out and assigning a supervisor ----------
+
+        /// <summary>
+        /// Submitted proposals waiting to go to supervisors, and the supervisors they can be sent
+        /// to. Proposals go out as a batch, because a supervisor is choosing between them.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> assigning_proposal_forsupervisor()
         {
-            
-            return View();
+            var model = new AssignProposalsViewModel();
+
+            var pending = await proposalsApi.GetPendingAsync();
+            if (!pending.Success)
+            {
+                TempData["ErrorMessage"] = pending.ErrorMessage ?? "Could not load the proposals waiting to be sent.";
+                model.LoadFailed = true;
+                return View(model);
+            }
+
+            model.Proposals = pending.Data ?? [];
+
+            var supervisors = await usersApi.GetSupervisorsAsync();
+            model.Supervisors = (supervisors.Data ?? [])
+                .OrderBy(s => s.LastName)
+                .ThenBy(s => s.FirstName)
+                .ToList();
+
+            // A proposal doesn't carry its student's name, so the coordinator's containers are
+            // fetched once and matched up rather than one request per proposal.
+            var containers = await containersApi.GetAllAsync(coordinatorId: CurrentUserId());
+            model.Containers = containers.Data ?? [];
+
+            return View(model);
         }
 
-        public IActionResult Coordinator_dashboard()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendToSupervisors(Guid[] proposalIds, Guid[] supervisorIds, string? comments)
         {
-            
-            return View();
+            if (proposalIds.Length == 0 || supervisorIds.Length == 0)
+            {
+                TempData["ErrorMessage"] = "Choose at least one proposal and at least one supervisor.";
+                return RedirectToAction(nameof(assigning_proposal_forsupervisor));
+            }
+
+            var result = await proposalsApi.SendToSupervisorsAsync(
+                new SendToSupervisorsRequestDto(proposalIds, supervisorIds, comments ?? string.Empty));
+
+            if (!result.Success)
+            {
+                TempData["ErrorMessage"] = result.ErrorMessage ?? "Could not send the proposals.";
+                return RedirectToAction(nameof(assigning_proposal_forsupervisor));
+            }
+
+            TempData["SuccessMessage"] = supervisorIds.Length == 1
+                ? "Sent to the supervisor."
+                : $"Sent to {supervisorIds.Length} supervisors.";
+
+            return RedirectToAction(nameof(assigning_proposal_forsupervisor));
         }
 
-       
-
-         public IActionResult Ethic_review_afters_headofdepartment()
+        /// <summary>
+        /// Proposals a supervisor has offered to take on, waiting for the coordinator to make the
+        /// assignment official.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> select_a_proposal_forstudent()
         {
-            
-            return View();
+            var model = new SupervisorSelectionsViewModel();
+
+            var containers = await containersApi.GetAllAsync(coordinatorId: CurrentUserId());
+            if (!containers.Success)
+            {
+                TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your publications right now.";
+                model.LoadFailed = true;
+                return View(model);
+            }
+
+            // Only publications still choosing a supervisor can have anything to act on.
+            var candidates = (containers.Data ?? [])
+                .Where(c => c.CurrentPipeline == PipelineStage.ResearchProposals && c.Status != "Completed")
+                .ToList();
+
+            foreach (var container in candidates)
+            {
+                var proposals = await proposalsApi.GetByContainerAsync(container.Id);
+                foreach (var proposal in proposals.Data ?? [])
+                {
+                    var selections = await proposalsApi.GetSelectionsAsync(proposal.Id);
+                    var invitations = selections.Data ?? [];
+
+                    // Nothing to decide until a supervisor has actually accepted one.
+                    if (!invitations.Any(i => i.IsSelected)) continue;
+
+                    model.Items.Add(new SupervisorSelectionItem
+                    {
+                        Container = container,
+                        Proposal = proposal,
+                        Invitations = invitations
+                    });
+                }
+            }
+
+            return View(model);
         }
 
-         public IActionResult Ethic_review_aftersupervisor()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignSupervisor(Guid proposalId, Guid supervisorId, string? comments)
         {
-            
-            return View();
+            var result = await proposalsApi.AssignSupervisorAsync(
+                proposalId, new AssignSupervisorRequestDto(supervisorId, comments ?? string.Empty));
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? "Supervisor assigned. The student can now start their ethics declaration."
+                : result.ErrorMessage ?? "Could not assign the supervisor.";
+
+            return RedirectToAction(nameof(select_a_proposal_forstudent));
         }
 
-         public IActionResult Evaluation_after_committee()
+        // ---------- Profile ----------
+
+        // One profile screen for every role, rather than a copy per role.
+        [HttpGet]
+        public IActionResult staff_profile() => RedirectToAction("Me", "Profile");
+
+        [HttpGet]
+        public IActionResult Edit_staff_profile() => RedirectToAction("Me", "Profile");
+
+        // ---------- Pipeline 2: ethics ----------
+
+        /// <summary>
+        /// The coordinator's first ethics screen. It covers two decisions that arrive at the same
+        /// point in the workflow: confirming a supervisor's finding that no documentation is
+        /// needed, and reviewing the documents once a supervisor has accepted them.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> Ethic_review_aftersupervisor(Guid? id)
         {
-            
-            return View();
+            var (model, redirect) = await LoadEthicsQueueAsync(id, EthicsStage.AfterSupervisor);
+            return redirect ?? View(model);
         }
 
-         public IActionResult select_a_proposal_forstudent()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmEthicsNotRequired(Guid id, bool requireDocumentation, string? comments)
         {
-            
-            return View();
+            var result = await ethicsApi.CoordinatorNotRequiredReviewAsync(
+                id, new CoordinatorNotRequiredReviewRequestDto(requireDocumentation, comments ?? string.Empty));
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? requireDocumentation
+                    ? "Recorded. The student has been asked to upload ethics documentation after all."
+                    : "Ethics confirmed as not required. The student can now start their research paper."
+                : result.ErrorMessage ?? "Could not record your decision.";
+
+            return RedirectToAction(nameof(Ethic_review_aftersupervisor));
         }
 
-         public IActionResult staff_profile()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReviewEthicsDocuments(Guid id, bool approve, string? comments)
         {
-            
-            return View();
+            var result = await ethicsApi.CoordinatorDocumentReviewAsync(
+                id, new CoordinatorDocumentReviewRequestDto(approve, comments ?? string.Empty));
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? approve
+                    ? "Approved. The Head of Department has been asked to review it."
+                    : "Sent back to the student with your comments."
+                : result.ErrorMessage ?? "Could not record your review.";
+
+            return RedirectToAction(nameof(Ethic_review_aftersupervisor));
         }
 
-        public IActionResult assigning_proposal_forsupervisor()
+        /// <summary>
+        /// The coordinator's closing decision on ethics, once the Head of Department has
+        /// commented. Approving it verifies the ethics stage and opens the research paper.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> Ethic_review_afters_headofdepartment(Guid? id)
         {
-            
-            return View();
+            var (model, redirect) = await LoadEthicsQueueAsync(id, EthicsStage.AfterHeadOfDepartment);
+            return redirect ?? View(model);
         }
 
-        public IActionResult assigning_committee_members()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> FinaliseEthics(Guid id, bool approve, string? comments)
         {
-            
-            return View();
+            var result = await ethicsApi.CoordinatorFinalDecisionAsync(
+                id, new CoordinatorFinalDecisionRequestDto(approve, comments ?? string.Empty));
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? approve
+                    ? "Ethics approved. The student can now start their research paper."
+                    : "Sent back to the student with your comments."
+                : result.ErrorMessage ?? "Could not record your decision.";
+
+            return RedirectToAction(nameof(Ethic_review_afters_headofdepartment));
         }
+
+        // ---------- Pipeline 3: the final decision on the paper ----------
+
+        [HttpGet]
+        public async Task<IActionResult> Evaluation_after_committee()
+        {
+            var model = new CoordinatorPapersViewModel();
+
+            var containers = await containersApi.GetAllAsync(coordinatorId: CurrentUserId());
+            if (!containers.Success)
+            {
+                TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your publications right now.";
+                model.LoadFailed = true;
+                return View(model);
+            }
+
+            // Only a paper still under review can be decided on. The backend additionally
+            // requires the evaluation committee to have finished, and says so if it hasn't.
+            var candidates = (containers.Data ?? [])
+                .Where(c => c.PaperStatus == PublicationStatus.UnderReview)
+                .ToList();
+
+            foreach (var container in candidates)
+            {
+                var paper = await publicationsApi.GetByContainerAsync(container.Id);
+                if (paper.Data is null) continue;
+
+                var reviews = await publicationsApi.GetReviewsAsync(paper.Data.Id);
+
+                model.Items.Add(new CoordinatorPaperItem
+                {
+                    Container = container,
+                    Paper = paper.Data,
+                    Reviews = reviews.Data ?? []
+                });
+            }
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DecideOnPaper(Guid publicationId, bool accept, string? comments)
+        {
+            var result = await publicationsApi.CoordinatorFinalDecisionAsync(
+                publicationId, new PaperReviewDecisionRequestDto(accept, comments ?? string.Empty));
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? accept
+                    ? "Accepted. The student now decides whether it goes into the public catalogue."
+                    : "Sent back to the student with your comments."
+                : result.ErrorMessage ?? "Could not record your decision.";
+
+            return RedirectToAction(nameof(Evaluation_after_committee));
+        }
+
+        // ---------- Still to be wired ----------
+
+        [HttpGet]
+        public IActionResult committee_review() => View();
+
+        [HttpGet]
+        public IActionResult assigning_committee_members() => View();
+
+        // ---------- Helpers ----------
+
+        private enum EthicsStage { AfterSupervisor, AfterHeadOfDepartment }
+
+        /// <summary>
+        /// The publications waiting on the coordinator at one point of the ethics workflow, with
+        /// the approval and documents for each. An optional id narrows it to a single one, so a
+        /// link from the dashboard opens straight onto that publication.
+        /// </summary>
+        private async Task<(CoordinatorEthicsViewModel Model, IActionResult? Redirect)> LoadEthicsQueueAsync(
+            Guid? containerId, EthicsStage stage)
+        {
+            var model = new CoordinatorEthicsViewModel { Stage = stage.ToString() };
+
+            var containers = await containersApi.GetAllAsync(coordinatorId: CurrentUserId());
+            if (!containers.Success)
+            {
+                TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your publications right now.";
+                model.LoadFailed = true;
+                return (model, null);
+            }
+
+            // Which of the coordinator's two ethics steps a publication is at is decided below,
+            // from the approval itself — the listing only says the turn is theirs.
+            var candidates = (containers.Data ?? [])
+                .Where(c => c.EthicsAwaitingRole == RoleNames.Coordinator)
+                .ToList();
+
+            if (containerId is { } only)
+            {
+                candidates = candidates.Where(c => c.Id == only).ToList();
+                if (candidates.Count == 0)
+                {
+                    TempData["ErrorMessage"] = "That publication isn't waiting on you at this step.";
+                    return (model, RedirectToAction(nameof(Coordinator_dashboard)));
+                }
+            }
+
+            foreach (var container in candidates)
+            {
+                var approval = await ethicsApi.GetApprovalAsync(container.Id);
+                if (approval.Data is null) continue;
+
+                // The closing decision only exists once the Head of Department has commented.
+                var isFinalStep = approval.Data.HeadOfDepartmentReviewedAt is not null;
+                if ((stage == EthicsStage.AfterHeadOfDepartment) != isFinalStep) continue;
+
+                var documents = await ethicsApi.GetDocumentsAsync(container.Id);
+
+                model.Items.Add(new CoordinatorEthicsItem
+                {
+                    Container = container,
+                    Approval = approval.Data,
+                    Documents = documents.Data ?? []
+                });
+            }
+
+            return (model, null);
+        }
+
+        private Guid? CurrentUserId() =>
+            Guid.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : null;
     }
 }

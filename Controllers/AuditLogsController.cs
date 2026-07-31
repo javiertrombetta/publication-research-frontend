@@ -1,86 +1,36 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using ResearchPublicationManagementSystem.Common;
+using ResearchPublicationManagementSystem.Infrastructure.Api;
 using ResearchPublicationManagementSystem.Models;
 
 namespace ResearchPublicationManagementSystem.Controllers
 {
-    public class AuditLogsController : Controller
+    /// <summary>
+    /// The institution-wide audit trail: every recorded action against every entity. Distinct
+    /// from a publication's activity history, which is one publication's story told to the people
+    /// working on it.
+    /// </summary>
+    [Authorize(Roles = RoleNames.Admin)]
+    public class AuditLogsController(AdminApiClient adminApi) : Controller
     {
-        public IActionResult Index()
+        [HttpGet]
+        public async Task<IActionResult> Index([FromQuery] AuditLogQuery query)
         {
-            var model = new AuditLogViewModel
+            query.Page = Math.Max(1, query.Page);
+            query.PageSize = AuditLogQuery.DefaultPageSize;
+
+            var model = new AuditLogViewModel { Query = query };
+
+            var result = await adminApi.GetAuditLogAsync(query);
+            if (!result.Success || result.Data is null)
             {
-                TotalLogs = 2485,
-                TodayLogs = 42,
-                ActiveUsers = 87,
-                CriticalEvents = 3
-            };
+                TempData["ErrorMessage"] = result.ErrorMessage ?? "Could not load the audit log.";
+                model.LoadFailed = true;
+                return View(model);
+            }
 
-            model.AuditLogs.AddRange(new List<AuditLogItemViewModel>
-            {
-                new AuditLogItemViewModel
-                {
-                    DateTime = DateTime.Now.AddMinutes(-10),
-                    User = "admin@test.com",
-                    Module = "Users",
-                    Activity = "Created User",
-                    Status = "Success"
-                },
-
-                new AuditLogItemViewModel
-                {
-                    DateTime = DateTime.Now.AddMinutes(-30),
-                    User = "student1@test.com",
-                    Module = "Proposal",
-                    Activity = "Submitted Proposal",
-                    Status = "Success"
-                },
-
-                new AuditLogItemViewModel
-                {
-                    DateTime = DateTime.Now.AddHours(-1),
-                    User = "supervisor@test.com",
-                    Module = "Reviews",
-                    Activity = "Approved Proposal",
-                    Status = "Success"
-                },
-
-                new AuditLogItemViewModel
-                {
-                    DateTime = DateTime.Now.AddHours(-2),
-                    User = "admin@test.com",
-                    Module = "Categories",
-                    Activity = "Deleted Category",
-                    Status = "Warning"
-                },
-
-                new AuditLogItemViewModel
-                {
-                    DateTime = DateTime.Now.AddHours(-3),
-                    User = "system",
-                    Module = "Authentication",
-                    Activity = "Failed Login Attempt",
-                    Status = "Error"
-                },
-
-                new AuditLogItemViewModel
-                {
-                    DateTime = DateTime.Now.AddHours(-5),
-                    User = "committee@test.com",
-                    Module = "Publication",
-                    Activity = "Approved Publication",
-                    Status = "Success"
-                },
-
-                new AuditLogItemViewModel
-                {
-                    DateTime = DateTime.Now.AddHours(-6),
-                    User = "admin@test.com",
-                    Module = "System Settings",
-                    Activity = "Updated Configuration",
-                    Status = "Success"
-                }
-            });
-
+            model.Results = result.Data;
             return View(model);
         }
     }

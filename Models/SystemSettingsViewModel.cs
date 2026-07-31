@@ -1,59 +1,54 @@
-﻿using System.ComponentModel.DataAnnotations;
+using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
 
 namespace ResearchPublicationManagementSystem.Models
 {
+    /// <summary>
+    /// Everything the System settings screen shows, in the four groups the API validates as
+    /// units. Loaded together because they are one screen; saved separately, so a mistake in the
+    /// mail server does not discard an edit to the password rules.
+    /// </summary>
     public class SystemSettingsViewModel
     {
-        // General Settings
-        [Display(Name = "System Name")]
-        public string SystemName { get; set; } = "";
+        public CommitteeSettingsDto Committees { get; set; } = new(0, 0, 0);
 
-        [Display(Name = "Institution Name")]
-        public string InstitutionName { get; set; } = "";
+        public PasswordSettingsDto Passwords { get; set; } = new(10, true, true, true, true, 0, 5, 15);
 
-        [Display(Name = "Academic Year")]
-        public string AcademicYear { get; set; } = "";
+        public NotificationSettingsDto Notifications { get; set; } =
+            new(false, null, 587, null, false, true, null, null);
 
-        // Proposal Settings
-        [Display(Name = "Maximum Proposal Submission")]
-        public int MaximumProposalSubmission { get; set; }
+        /// <summary>
+        /// Every ethics document, retired ones included, so an administrator can see what was
+        /// once asked for and bring it back rather than recreating it under a name already taken.
+        /// </summary>
+        public IReadOnlyList<EthicsDocumentRequirementDto> EthicsDocuments { get; set; } = [];
 
-        [Display(Name = "Supervisor Preference Limit")]
-        public int SupervisorPreferenceLimit { get; set; }
+        public AccessSettingsDto Access { get; set; } = new("InviteOnly", true, false, false, 14, 30, 14);
 
-        [Display(Name = "Allow Proposal Revisions")]
-        public bool AllowProposalRevisions { get; set; }
+        public UploadSettingsDto Uploads { get; set; } = new(50, ".pdf,.doc,.docx,.zip");
 
-        // Ethics Settings
-        [Display(Name = "Enable Ethics Approval Module")]
-        public bool EnableEthicsApproval { get; set; }
+        public InstitutionSettingsDto Institution { get; set; } =
+            new("Auckland Institute of Studies", "@aisstudent.ac.nz", "@ais.ac.nz", null, null, null, null);
 
-        [Display(Name = "Required Ethics Forms")]
-        public int RequiredEthicsForms { get; set; }
+        public DeadlineSettingsDto Deadlines { get; set; } = new(14, 21, 30);
 
-        // Upload Settings
-        [Display(Name = "Maximum Upload File Size (MB)")]
-        public int MaximumUploadFileSize { get; set; }
+        public bool LoadFailed { get; set; }
 
-        [Display(Name = "Allowed File Types")]
-        public string AllowedFileTypes { get; set; } = "";
+        /// <summary>
+        /// Which tab to open on. Carried through the redirect after a save so the administrator
+        /// lands back where they were working rather than on the first tab.
+        /// </summary>
+        public string ActiveTab { get; set; } = "committees";
 
-        [Display(Name = "Notify Student")]
-        public bool NotifyStudent { get; set; }
+        /// <summary>
+        /// Whether open self-registration can be chosen at all. The API refuses it outside a
+        /// development environment, so offering the choice would only produce a rejection.
+        /// </summary>
+        public bool CanOpenRegistration { get; set; }
 
-        [Display(Name = "Notify Supervisor")]
-        public bool NotifySupervisor { get; set; }
+        public IEnumerable<EthicsDocumentRequirementDto> ActiveEthicsDocuments =>
+            EthicsDocuments.Where(d => d.IsActive).OrderBy(d => d.SortOrder).ThenBy(d => d.Name);
 
-        [Display(Name = "Notify Research Coordinator")]
-        public bool NotifyResearchCoordinator { get; set; }
-
-        [Display(Name = "Notify Committee Members")]
-        public bool NotifyCommitteeMembers { get; set; }
-
-        [Display(Name = "Notify Head of Department")]
-        public bool NotifyHeadOfDepartment { get; set; }
-
-        [Display(Name = "Notify Public Visitor")]
-        public bool NotifyPublicVisitor { get; set; }
+        public IEnumerable<EthicsDocumentRequirementDto> RetiredEthicsDocuments =>
+            EthicsDocuments.Where(d => !d.IsActive).OrderBy(d => d.Name);
     }
 }

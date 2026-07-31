@@ -1,0 +1,365 @@
+@model PublicationDetailViewModel
+@* For the EthicsStatus constants — imported here rather than in _ViewImports so the DTO
+   namespace doesn't shadow anything in the other ~90 views. *@
+@using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
+@{
+    ViewData["Title"] = Model.DisplayTitle;
+    var container = Model.Container;
+    var isDone = container.Status == "Completed";
+
+    // An accepted paper finishes the publication stage, even though the container stays
+    // InProgress until its author decides whether it goes into the public catalogue.
+    var stagesFinished = isDone || container.IsPaperDecided;
+
+    // Same colours as every other status badge: finished green, under way blue, not started grey.
+    string StageBadge(int stage) =>
+        stagesFinished || container.CurrentPipeline > stage ? StatusBadge("Completed")
+        : container.CurrentPipeline == stage ? StatusBadge("InProgress") : StatusBadge("NotStarted");
+
+    string StageText(int stage) =>
+        stagesFinished || container.CurrentPipeline > stage ? "Complete"
+        : container.CurrentPipeline == stage ? "In progress" : "Not started";
+}
+
+<div class="mb-4">
+    <a asp-controller="Student" asp-action="student_dashboard" class="text-secondary text-decoration-none small">
+        @* Names the destination exactly as the sidebar and that page's own heading do. *@
+        &larr; My publications
+    </a>
+
+    <div class="d-flex justify-content-between align-items-start mt-2">
+        <div>
+            <h1 class="page-title mb-1">@Model.DisplayTitle</h1>
+            <div class="text-secondary">
+                Started @container.CreatedAt.ToLocalTime().ToString("dd MMM yyyy 'at' HH:mm")
+                &middot; Coordinator: <strong>@container.CoordinatorName</strong>
+                @if (container.AssignedSupervisorName is not null)
+                {
+                    <span>&middot; Supervisor: <strong>@container.AssignedSupervisorName</strong></span>
+                }
+            </div>
+        </div>
+
+        @* Only offered while the publication is still empty — see PublicationContainerDto.CanBeDeleted. *@
+        @if (container.CanBeDeleted)
+        {
+            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#delete-publication-modal">
+                Delete publication
+            </button>
+        }
+    </div>
+</div>
+
+@if (container.CanBeDeleted)
+{
+    <div class="modal modal-blur fade" id="delete-publication-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <h3>Delete this publication?</h3>
+                    <div class="text-secondary">
+                        It has no research proposals yet, so nothing is lost. This can't be undone,
+                        and once you add a proposal it can no longer be deleted.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Cancel</button>
+                    <form asp-controller="Student" asp-action="DeletePublication" asp-route-id="@container.Id" method="post" class="m-0">
+                        <button type="submit" class="btn btn-danger">Delete publication</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@* Two views of the same publication: where it stands now, and how it got there. *@
+<ul class="nav nav-tabs mb-4" data-bs-toggle="tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a href="#publication-progress" class="nav-link active" data-bs-toggle="tab"
+           role="tab" aria-selected="true">Progress</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a href="#publication-history" class="nav-link" data-bs-toggle="tab"
+           role="tab" aria-selected="false">
+            Activity history
+            @if (Model.History.Count > 0)
+            {
+                <span class="badge bg-secondary-lt ms-1">@Model.History.Count</span>
+            }
+        </a>
+    </li>
+</ul>
+
+<div class="tab-content">
+<div class="tab-pane active show" id="publication-progress" role="tabpanel">
+
+<!-- Stage overview -->
+<div class="row row-cards mb-4">
+    <div class="col-md-4">
+        <div class="card h-100 @(container.CurrentPipeline == 1 && !stagesFinished ? "border-primary" : "")">
+            <div class="card-body">
+                <div class="text-secondary mb-1">Stage 1</div>
+                <div class="fs-2 fw-bold">Research Proposals</div>
+                <span class="badge @StageBadge(1) mt-2">@StageText(1)</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 @(container.CurrentPipeline == 2 && !stagesFinished ? "border-primary" : "")">
+            <div class="card-body">
+                <div class="text-secondary mb-1">Stage 2</div>
+                <div class="fs-2 fw-bold">Ethics Approval</div>
+                <span class="badge @StageBadge(2) mt-2">@StageText(2)</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 @(container.CurrentPipeline == 3 && !stagesFinished ? "border-primary" : "")">
+            <div class="card-body">
+                <div class="text-secondary mb-1">Stage 3</div>
+                <div class="fs-2 fw-bold">Research Paper</div>
+                <span class="badge @StageBadge(3) mt-2">@StageText(3)</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Proposals -->
+<div class="mb-4">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+        <h3 class="m-0 text-secondary">Research Proposals</h3>
+        @if (container.CurrentPipeline == 1)
+        {
+            <a asp-controller="Student" asp-action="Create_proposals" asp-route-id="@container.Id" class="btn btn-sm btn-primary">
+                @(Model.Proposals.Count > 0 ? "Continue" : "Get started")
+            </a>
+        }
+    </div>
+
+    @if (Model.Proposals.Count == 0)
+    {
+        <div class="card"><div class="card-body text-secondary">No proposals submitted yet.</div></div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table card-table table-vcenter">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Submitted</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var proposal in Model.Proposals)
+                        {
+                            <tr>
+                                <td>@proposal.Title</td>
+                                <td>@(proposal.SubmittedAt?.ToString("dd MMM yyyy") ?? "—")</td>
+                                <td><span class="badge @StatusBadge(proposal.Status)">@Humanise(proposal.Status)</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Ethics -->
+<div class="mb-4">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+        <h3 class="m-0 text-secondary">Ethics Approval</h3>
+        @if (container.CurrentPipeline >= 2)
+        {
+            <div class="btn-list">
+                @if (Model.EthicsApproval is null)
+                {
+                    <a asp-controller="Student" asp-action="Ethic_risk_assessment" asp-route-id="@container.Id" class="btn btn-sm btn-primary">
+                        Start declaration
+                    </a>
+                }
+                else if (Model.EthicsApproval.Status == EthicsStatus.PendingUpload)
+                {
+                    <a asp-controller="Student" asp-action="Upload_Ethic_file" asp-route-id="@container.Id" class="btn btn-sm btn-primary">
+                        Upload documents
+                    </a>
+                }
+                else if (Model.EthicsApproval.Status != EthicsStatus.PendingSupervisorDecision)
+                {
+                    @* Nothing to view while the declaration is still with the supervisor —
+                       no documents have been asked for yet. *@
+                    <a asp-controller="Student" asp-action="Upload_Ethic_file" asp-route-id="@container.Id" class="btn btn-sm btn-outline-primary">
+                        View documents
+                    </a>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            @if (container.CurrentPipeline < 2)
+            {
+                <span class="text-secondary">
+                    Opens once one of your proposals has been approved and a supervisor assigned.
+                </span>
+            }
+            else if (Model.EthicsApproval is null)
+            {
+                <span class="text-secondary">You haven't made your ethics declaration yet.</span>
+            }
+            else
+            {
+                <span class="badge @StatusBadge(Model.EthicsApproval.Status)">@Humanise(Model.EthicsApproval.Status)</span>
+                @if (Model.EthicsApproval.Status == EthicsStatus.PendingSupervisorDecision)
+                {
+                    @* Otherwise the bare status reads as though the student has to do something. *@
+                    <p class="mt-2 mb-0 text-secondary">
+                        Your declaration has been sent. Your supervisor will decide whether ethics
+                        documentation is required.
+                    </p>
+                }
+                @if (!string.IsNullOrEmpty(Model.EthicsApproval.SupervisorDecisionComments))
+                {
+                    <p class="mt-2 mb-0 text-secondary">Supervisor: @Model.EthicsApproval.SupervisorDecisionComments</p>
+                }
+                @if (!string.IsNullOrEmpty(Model.EthicsApproval.HeadOfDepartmentComments))
+                {
+                    <p class="mt-1 mb-0 text-secondary">Head of Department: @Model.EthicsApproval.HeadOfDepartmentComments</p>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Research paper -->
+<div class="mb-4">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+        <h3 class="m-0 text-secondary">Research Paper</h3>
+        @* Nothing left to continue once the publication decision has closed the process. *@
+        @if (container.CurrentPipeline >= 3 && !isDone)
+        {
+            <a asp-controller="Student" asp-action="Create_Publication" asp-route-id="@container.Id" class="btn btn-sm btn-primary">
+                @(Model.Publication is null ? "Get started" : "Continue")
+            </a>
+        }
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            @if (container.CurrentPipeline < 3)
+            {
+                <span class="text-secondary">
+                    Opens once this publication's ethics approval has been completed.
+                </span>
+            }
+            else if (Model.Publication is null)
+            {
+                <span class="text-secondary">You haven't started your research paper yet.</span>
+            }
+            else
+            {
+                <div class="fw-bold">@(string.IsNullOrEmpty(Model.Publication.Title) ? "(untitled)" : Model.Publication.Title)</div>
+                <span class="badge @StatusBadge(Model.Publication.Status) mt-1">@Humanise(Model.Publication.Status)</span>
+
+                @* Only worth saying once the decision has been made, and worded as the outcome
+                   rather than repeated as a status — the badge above already says "Published". *@
+                @if (Model.Publication.IsPublished)
+                {
+                    <p class="text-secondary mt-2 mb-0">
+                        Listed in the <a asp-controller="Public" asp-action="public_catalogue">public catalogue</a>.
+                    </p>
+                }
+                else if (isDone)
+                {
+                    <p class="text-secondary mt-2 mb-0">
+                        You chose to keep this paper out of the public catalogue.
+                    </p>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@* The final step, and the student's alone: an accepted paper only reaches the public catalogue
+   if its author says so.
+
+   !isDone is what makes this a one-off. Declining leaves the paper Accepted and unpublished —
+   the same shape as "not decided yet" — so the container's own Completed status is the only
+   thing that records that the question was already answered. *@
+@if (!isDone && Model.Publication is { Status: PublicationStatus.Accepted, IsPublished: false })
+{
+    <div class="card border-primary mb-4">
+        <div class="card-body">
+            <h3 class="mb-1">Your paper has been accepted</h3>
+            <p class="text-secondary">
+                You decide whether it appears in the public catalogue, where anyone can find and
+                read it. Keeping it out does not affect its acceptance — the paper stays on your
+                record either way. This decision closes the publication, so make it when you're ready.
+            </p>
+
+            <div class="btn-list">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#publish-yes-modal">
+                    Publish to the catalogue
+                </button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#publish-no-modal">
+                    Keep it private
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @* One modal per answer: both are final, so neither should be a single stray click. *@
+    <div class="modal modal-blur fade" id="publish-yes-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body py-4">
+                    <h3 class="mb-2">Publish to the public catalogue?</h3>
+                    <div class="text-secondary">
+                        Your paper and its abstract become publicly readable, and this can't be
+                        undone from here — only an Administrator can remove a published paper.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Cancel</button>
+                    <form asp-controller="Student" asp-action="PublishDecision" asp-route-id="@container.Id" method="post" class="m-0">
+                        <input type="hidden" name="publish" value="true" />
+                        <button type="submit" class="btn btn-primary">Publish it</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal modal-blur fade" id="publish-no-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body py-4">
+                    <h3 class="mb-2">Keep it out of the catalogue?</h3>
+                    <div class="text-secondary">
+                        Your paper stays accepted and on your record, but it won't be publicly
+                        listed. This closes the publication.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Cancel</button>
+                    <form asp-controller="Student" asp-action="PublishDecision" asp-route-id="@container.Id" method="post" class="m-0">
+                        <input type="hidden" name="publish" value="false" />
+                        <button type="submit" class="btn btn-outline-secondary">Keep it private</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+</div><!-- /progress tab -->
+
+<div class="tab-pane" id="publication-history" role="tabpanel">
+    <partial name="_ActivityHistory" model="Model.History" />
+</div><!-- /history tab -->
+</div><!-- /tab-content -->

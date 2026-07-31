@@ -1,287 +1,663 @@
-﻿@model ResearchPublicationManagementSystem.Models.SystemSettingsViewModel
-@using ResearchPublicationManagementSystem.Models
-
+@model SystemSettingsViewModel
 @{
-    ViewData["Title"] = "System Settings";
+    ViewData["Title"] = "System settings";
 }
 
-<partial name="_PageHeader"
-         model='new PageHeaderViewModel
-         {
-             Title = "System Settings",
-             Subtitle = "Configure the Research Publication Management System settings."
-         }' />
+@* Tabs are links rather than Bootstrap's JS tabs: Tabler's tabler.min.js does not bundle
+   Bootstrap's JavaScript. A link also survives the redirect after a save, and can be bookmarked.
 
-<form>
+   Each checkbox is followed by a hidden field of the same name carrying "false". An unchecked
+   box posts nothing at all, so without it, clearing a switch would be indistinguishable from
+   not touching it. *@
+@functions {
+    string TabClass(string tab) => Model.ActiveTab == tab ? "nav-link active" : "nav-link";
+}
 
-    <!-- General Settings -->
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-9">
 
-    <div class="card mt-3">
-
-        <div class="card-body">
-
-            <h3 class="card-title mb-4">
-                General Settings
-            </h3>
-
-            <div class="row">
-
-                <div class="col-md-4 mb-3">
-
-                    <label asp-for="SystemName"
-                           class="form-label"></label>
-
-                    <input asp-for="SystemName"
-                           class="form-control" />
-
-                </div>
-
-                <div class="col-md-4 mb-3">
-
-                    <label asp-for="InstitutionName"
-                           class="form-label"></label>
-
-                    <input asp-for="InstitutionName"
-                           class="form-control" />
-
-                </div>
-
-                <div class="col-md-4 mb-3">
-
-                    <label asp-for="AcademicYear"
-                           class="form-label"></label>
-
-                    <input asp-for="AcademicYear"
-                           class="form-control" />
-
-                </div>
-
+        <div class="mb-4">
+            <h1 class="page-title mb-1">System settings</h1>
+            <div class="text-secondary">
+                The rules the whole system runs by. Changes to committees and to ethics documents
+                apply to publications started afterwards, so research already under way is judged
+                by the rules it began under.
             </div>
-
         </div>
+
+        @if (Model.LoadFailed)
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <h3 class="mb-2">We couldn't load the settings</h3>
+                    <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
+                    <a asp-action="Index" class="btn btn-primary">Retry</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <a class="@TabClass("committees")" asp-action="Index" asp-route-tab="committees">Committees</a>
+                </li>
+                <li class="nav-item">
+                    <a class="@TabClass("ethics")" asp-action="Index" asp-route-tab="ethics">Ethics documents</a>
+                </li>
+                <li class="nav-item">
+                    <a class="@TabClass("deadlines")" asp-action="Index" asp-route-tab="deadlines">Deadlines</a>
+                </li>
+                <li class="nav-item">
+                    <a class="@TabClass("uploads")" asp-action="Index" asp-route-tab="uploads">Uploads</a>
+                </li>
+                <li class="nav-item">
+                    <a class="@TabClass("passwords")" asp-action="Index" asp-route-tab="passwords">Passwords</a>
+                </li>
+                <li class="nav-item">
+                    <a class="@TabClass("access")" asp-action="Index" asp-route-tab="access">Access</a>
+                </li>
+                <li class="nav-item">
+                    <a class="@TabClass("notifications")" asp-action="Index" asp-route-tab="notifications">Notifications</a>
+                </li>
+                <li class="nav-item">
+                    <a class="@TabClass("institution")" asp-action="Index" asp-route-tab="institution">Institution</a>
+                </li>
+            </ul>
+
+            if (Model.ActiveTab == "committees")
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h3 mb-2">Evaluation committees</h2>
+                        <p class="text-secondary">
+                            How many members an evaluation committee needs, and how many of them must
+                            approve for a research paper to pass. A publication records these figures
+                            when it is opened, so changing them here never moves the goalposts for
+                            work already in progress.
+                        </p>
+
+                        <form asp-action="SaveCommittees" method="post" class="row g-3">
+                            <div class="col-12 col-sm-4">
+                                <label class="form-label" for="internal-members">Internal members</label>
+                                <input id="internal-members" name="internalMembers" type="number" min="0" max="20"
+                                       value="@Model.Committees.InternalMembers" class="form-control" required />
+                            </div>
+                            <div class="col-12 col-sm-4">
+                                <label class="form-label" for="external-members">External members</label>
+                                <input id="external-members" name="externalMembers" type="number" min="0" max="20"
+                                       value="@Model.Committees.ExternalMembers" class="form-control" required />
+                            </div>
+                            <div class="col-12 col-sm-4">
+                                <label class="form-label" for="minimum-approvals">Approvals needed</label>
+                                <input id="minimum-approvals" name="minimumApprovals" type="number" min="1" max="40"
+                                       value="@Model.Committees.MinimumApprovals" class="form-control" required />
+                                <small class="form-hint">Cannot exceed the committee's size.</small>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">Save committee rules</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            if (Model.ActiveTab == "ethics")
+            {
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="h3 mb-2">Documents students must supply</h2>
+                        <p class="text-secondary">
+                            What the ethics stage asks for. A publication is given this list when its
+                            documentation is first requested and keeps it, so adding or retiring a
+                            document changes what the next student is asked for, not what a student
+                            halfway through already owes.
+                        </p>
+
+                        @if (!Model.ActiveEthicsDocuments.Any())
+                        {
+                            <p class="text-secondary">
+                                Nothing is configured, so no student can be asked for ethics
+                                documentation. Add at least one below.
+                            </p>
+                        }
+
+                        @foreach (var document in Model.ActiveEthicsDocuments)
+                        {
+                            <div class="border rounded p-3 mb-3">
+                                <form asp-action="UpdateEthicsDocument" method="post" class="row g-2 align-items-end">
+                                    <input type="hidden" name="id" value="@document.Id" />
+                                    <div class="col-12 col-md-5">
+                                        <label class="form-label" for="name-@document.Id">Name</label>
+                                        <input id="name-@document.Id" name="name" value="@document.Name"
+                                               maxlength="200" class="form-control" required />
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <label class="form-label" for="description-@document.Id">Description</label>
+                                        <input id="description-@document.Id" name="description" value="@document.Description"
+                                               class="form-control" placeholder="Shown to the student" />
+                                    </div>
+                                    <div class="col-4 col-md-1">
+                                        <label class="form-label" for="order-@document.Id">Order</label>
+                                        <input id="order-@document.Id" name="sortOrder" type="number" min="0"
+                                               value="@document.SortOrder" class="form-control" required />
+                                    </div>
+                                    <div class="col-8 col-md-2 text-end">
+                                        <button type="submit" class="btn btn-outline-primary w-100">Save</button>
+                                    </div>
+                                </form>
+
+                                <form asp-action="SetEthicsDocumentActive" method="post" class="mt-2">
+                                    <input type="hidden" name="id" value="@document.Id" />
+                                    <input type="hidden" name="isActive" value="false" />
+                                    <button type="submit" class="btn btn-link link-secondary p-0">
+                                        Stop asking for this
+                                    </button>
+                                    @if (document.IsInUse)
+                                    {
+                                        <small class="text-secondary d-block">
+                                            Students have already uploaded against this, so it is retired rather
+                                            than removed and their submissions stay intact.
+                                        </small>
+                                    }
+                                </form>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="h3 mb-3">Add a document</h2>
+                        <form asp-action="AddEthicsDocument" method="post" class="row g-2 align-items-end">
+                            <div class="col-12 col-md-5">
+                                <label class="form-label" for="new-name">Name</label>
+                                <input id="new-name" name="name" maxlength="200" class="form-control"
+                                       placeholder="Ethics Approval Certificate" required />
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label" for="new-description">Description</label>
+                                <input id="new-description" name="description" class="form-control"
+                                       placeholder="Shown to the student" />
+                            </div>
+                            <div class="col-4 col-md-1">
+                                <label class="form-label" for="new-order">Order</label>
+                                <input id="new-order" name="sortOrder" type="number" min="0"
+                                       value="@(Model.ActiveEthicsDocuments.Count() + 1)" class="form-control" required />
+                            </div>
+                            <div class="col-8 col-md-2 text-end">
+                                <button type="submit" class="btn btn-primary w-100">Add</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                if (Model.RetiredEthicsDocuments.Any())
+                {
+                    <div class="card">
+                        <div class="card-body">
+                            <h2 class="h3 mb-2">No longer asked for</h2>
+                            <p class="text-secondary">
+                                Kept so that submissions made against them stay readable, and so one can
+                                be brought back rather than recreated.
+                            </p>
+
+                            @foreach (var document in Model.RetiredEthicsDocuments)
+                            {
+                                <form asp-action="SetEthicsDocumentActive" method="post"
+                                      class="d-flex align-items-center justify-content-between border-top py-2">
+                                    <input type="hidden" name="id" value="@document.Id" />
+                                    <input type="hidden" name="isActive" value="true" />
+                                    <span>@document.Name</span>
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Ask for it again</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+
+            if (Model.ActiveTab == "passwords")
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h3 mb-2">Passwords</h2>
+                        <p class="text-secondary">
+                            Applies to everyone. The rules take effect the next time a password is set —
+                            tightening them does not invalidate passwords already in use.
+                        </p>
+
+                        <form asp-action="SavePasswords" method="post">
+                            <div class="row g-3">
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label" for="minimum-length">Minimum length</label>
+                                    <input id="minimum-length" name="minimumLength" type="number" min="8" max="128"
+                                           value="@Model.Passwords.MinimumLength" class="form-control" required />
+                                    <small class="form-hint">At least 8.</small>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label" for="expiry-days">Expires after (days)</label>
+                                    <input id="expiry-days" name="expiryDays" type="number" min="0" max="3650"
+                                           value="@Model.Passwords.ExpiryDays" class="form-control" required />
+                                    <small class="form-hint">0 means passwords never expire. Otherwise at least 30 days.</small>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <div class="form-label">Must contain</div>
+                                <label class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="requireDigit" value="true"
+                                           checked="@Model.Passwords.RequireDigit" />
+                                    <input type="hidden" name="requireDigit" value="false" />
+                                    <span class="form-check-label">A number</span>
+                                </label>
+                                <label class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="requireUppercase" value="true"
+                                           checked="@Model.Passwords.RequireUppercase" />
+                                    <input type="hidden" name="requireUppercase" value="false" />
+                                    <span class="form-check-label">A capital letter</span>
+                                </label>
+                                <label class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="requireLowercase" value="true"
+                                           checked="@Model.Passwords.RequireLowercase" />
+                                    <input type="hidden" name="requireLowercase" value="false" />
+                                    <span class="form-check-label">A lower-case letter</span>
+                                </label>
+                                <label class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="requireSymbol" value="true"
+                                           checked="@Model.Passwords.RequireSymbol" />
+                                    <input type="hidden" name="requireSymbol" value="false" />
+                                    <span class="form-check-label">A symbol, such as ! or ?</span>
+                                </label>
+                            </div>
+
+                            <hr class="my-4" />
+
+                            <h3 class="h4 mb-2">Locking an account out</h3>
+                            <p class="text-secondary">
+                                Counts wrong passwords on signing in and on changing a password alike.
+                            </p>
+
+                            <div class="row g-3">
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label" for="lockout-attempts">Failed attempts allowed</label>
+                                    <input id="lockout-attempts" name="lockoutAttempts" type="number" min="3" max="20"
+                                           value="@Model.Passwords.LockoutAttempts" class="form-control" required />
+                                    <small class="form-hint">Between 3 and 20.</small>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label" for="lockout-minutes">Locked for (minutes)</label>
+                                    <input id="lockout-minutes" name="lockoutMinutes" type="number" min="1" max="1440"
+                                           value="@Model.Passwords.LockoutMinutes" class="form-control" required />
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">Save password rules</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            if (Model.ActiveTab == "notifications")
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h3 mb-2">Notifications</h2>
+                        <p class="text-secondary">
+                            Everyone is notified inside the application, where they see it when they
+                            next sign in. Email is an additional copy, and needs a mail server.
+                        </p>
+
+                        <form asp-action="SaveNotifications" method="post">
+                            <label class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="emailEnabled" value="true"
+                                       checked="@Model.Notifications.EmailEnabled" />
+                                <input type="hidden" name="emailEnabled" value="false" />
+                                <span class="form-check-label">Also send notifications by email</span>
+                            </label>
+
+                            <div class="row g-3">
+                                <div class="col-12 col-sm-8">
+                                    <label class="form-label" for="smtp-host">SMTP server</label>
+                                    <input id="smtp-host" name="smtpHost" value="@Model.Notifications.SmtpHost"
+                                           class="form-control" placeholder="smtp.example.com" />
+                                </div>
+                                <div class="col-12 col-sm-4">
+                                    <label class="form-label" for="smtp-port">Port</label>
+                                    <input id="smtp-port" name="smtpPort" type="number" min="1" max="65535"
+                                           value="@Model.Notifications.SmtpPort" class="form-control" required />
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label" for="smtp-username">Username</label>
+                                    <input id="smtp-username" name="smtpUsername" value="@Model.Notifications.SmtpUsername"
+                                           class="form-control" autocomplete="off" />
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label" for="smtp-password">Password</label>
+                                    <input id="smtp-password" name="smtpPassword" type="password"
+                                           class="form-control" autocomplete="new-password" />
+                                    <small class="form-hint">
+                                        @if (Model.Notifications.HasPassword)
+                                        {
+                                            <span>
+                                                A password is stored. It is never shown again — leave this
+                                                blank unless you are changing it.
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span>No password is stored yet.</span>
+                                        }
+                                    </small>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label" for="from-address">Sender address</label>
+                                    <input id="from-address" name="fromAddress" type="email"
+                                           value="@Model.Notifications.FromAddress" class="form-control"
+                                           placeholder="no-reply@ais.ac.nz" />
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="form-label" for="from-name">Sender name</label>
+                                    <input id="from-name" name="fromName" value="@Model.Notifications.FromName"
+                                           class="form-control" placeholder="AIS Research Publication Site" />
+                                </div>
+                            </div>
+
+                            <label class="form-check mt-3">
+                                <input class="form-check-input" type="checkbox" name="useSsl" value="true"
+                                       checked="@Model.Notifications.UseSsl" />
+                                <input type="hidden" name="useSsl" value="false" />
+                                <span class="form-check-label">Use a secure connection (STARTTLS)</span>
+                            </label>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">Save notification settings</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            if (Model.ActiveTab == "deadlines")
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h3 mb-2">Stage deadlines</h2>
+                        <p class="text-secondary">
+                            How long each stage is expected to take. These mark work as overdue —
+                            they never stop it being done late, because a deadline that blocked a
+                            supervisor from responding would only strand the student waiting.
+                            Use 0 where nothing should ever be reported late.
+                        </p>
+
+                        <form asp-action="SaveDeadlines" method="post" class="row g-3">
+                            <div class="col-12 col-sm-4">
+                                <label class="form-label" for="supervisor-days">Supervisor response</label>
+                                <div class="input-group">
+                                    <input id="supervisor-days" name="supervisorResponseDays" type="number" min="0" max="365"
+                                           value="@Model.Deadlines.SupervisorResponseDays" class="form-control" required />
+                                    <span class="input-group-text">days</span>
+                                </div>
+                                <small class="form-hint">From a proposal being sent to them.</small>
+                            </div>
+                            <div class="col-12 col-sm-4">
+                                <label class="form-label" for="ethics-days">Ethics review</label>
+                                <div class="input-group">
+                                    <input id="ethics-days" name="ethicsReviewDays" type="number" min="0" max="365"
+                                           value="@Model.Deadlines.EthicsReviewDays" class="form-control" required />
+                                    <span class="input-group-text">days</span>
+                                </div>
+                                <small class="form-hint">From the documentation being submitted.</small>
+                            </div>
+                            <div class="col-12 col-sm-4">
+                                <label class="form-label" for="committee-days">Committee review</label>
+                                <div class="input-group">
+                                    <input id="committee-days" name="committeeReviewDays" type="number" min="0" max="365"
+                                           value="@Model.Deadlines.CommitteeReviewDays" class="form-control" required />
+                                    <span class="input-group-text">days</span>
+                                </div>
+                                <small class="form-hint">From the committee being assigned.</small>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">Save deadlines</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            if (Model.ActiveTab == "uploads")
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h3 mb-2">Uploads</h2>
+                        <p class="text-secondary">
+                            Applies to research papers and ethics documents. Profile photos have
+                            their own limits — widening this does not let someone upload an image
+                            as a research paper.
+                        </p>
+
+                        <form asp-action="SaveUploads" method="post" class="row g-3">
+                            <div class="col-12 col-sm-4">
+                                <label class="form-label" for="max-megabytes">Largest file</label>
+                                <div class="input-group">
+                                    <input id="max-megabytes" name="maxMegabytes" type="number" min="1" max="200"
+                                           value="@Model.Uploads.MaxMegabytes" class="form-control" required />
+                                    <span class="input-group-text">MB</span>
+                                </div>
+                                <small class="form-hint">Up to 200 MB, which is the server's own ceiling.</small>
+                            </div>
+                            <div class="col-12 col-sm-8">
+                                <label class="form-label" for="allowed-extensions">File types allowed</label>
+                                <input id="allowed-extensions" name="allowedExtensions"
+                                       value="@Model.Uploads.AllowedExtensions" class="form-control" required />
+                                <small class="form-hint">Separated by commas. The full stops are optional — "pdf, docx" is fine.</small>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">Save upload rules</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            if (Model.ActiveTab == "access")
+            {
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="h3 mb-2">How people get an account</h2>
+
+                        @if (Model.Access.IsEnvironmentDefault)
+                        {
+                            <p class="text-secondary">
+                                Nobody has chosen yet, so this is following the environment this
+                                server runs in.
+                            </p>
+                        }
+
+                        <form asp-action="SaveAccess" method="post">
+                            <div class="mb-3">
+                                <label class="form-check">
+                                    <input class="form-check-input" type="radio" name="registrationMode" value="InviteOnly"
+                                           checked="@(Model.Access.RegistrationMode != "Open")" />
+                                    <span class="form-check-label">
+                                        By invitation only
+                                        <span class="d-block text-secondary small">
+                                            An administrator invites each person and chooses their role as they do.
+                                        </span>
+                                    </span>
+                                </label>
+
+                                <label class="form-check">
+                                    <input class="form-check-input" type="radio" name="registrationMode" value="Open"
+                                           checked="@(Model.Access.RegistrationMode == "Open")"
+                                           disabled="@(!Model.CanOpenRegistration)" />
+                                    <span class="form-check-label">
+                                        Anyone with an institutional address can sign themselves up
+                                        <span class="d-block text-secondary small">
+                                            @if (Model.CanOpenRegistration)
+                                            {
+                                                <span>
+                                                    Available because this is a development environment. A production
+                                                    deployment cannot use it — it would hand out accounts to anyone who
+                                                    guessed the email domain.
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span>Not available outside a development environment.</span>
+                                            }
+                                        </span>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <hr class="my-4" />
+
+                            <h3 class="h4 mb-2">Single sign-on</h3>
+                            <label class="form-check form-switch mb-1">
+                                <input class="form-check-input" type="checkbox" name="azureSsoEnabled" value="true"
+                                       checked="@Model.Access.AzureSsoEnabled" />
+                                <input type="hidden" name="azureSsoEnabled" value="false" />
+                                <span class="form-check-label">Staff and students sign in with their institutional account</span>
+                            </label>
+                            <p class="text-secondary small">
+                                @if (Model.Access.AzureSsoConfigured)
+                                {
+                                    <span>A Microsoft Entra tenant is configured on this server.</span>
+                                }
+                                else
+                                {
+                                    <span>
+                                        No Microsoft Entra tenant is configured on this server yet, so turning this
+                                        on records the intention but changes nothing until one is.
+                                    </span>
+                                }
+                                External committee members are outside the institution and always sign in
+                                with a password here, whatever this is set to.
+                            </p>
+
+                            <hr class="my-4" />
+
+                            <div class="row g-3">
+                                <div class="col-12 col-sm-4">
+                                    <label class="form-label" for="invitation-days">Invitations stay valid for</label>
+                                    <div class="input-group">
+                                        <input id="invitation-days" name="invitationValidDays" type="number" min="1" max="90"
+                                               value="@Model.Access.InvitationValidDays" class="form-control" required />
+                                        <span class="input-group-text">days</span>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-4">
+                                    <label class="form-label" for="access-minutes">Access token lasts</label>
+                                    <div class="input-group">
+                                        <input id="access-minutes" name="accessTokenMinutes" type="number" min="5" max="240"
+                                               value="@Model.Access.AccessTokenMinutes" class="form-control" required />
+                                        <span class="input-group-text">min</span>
+                                    </div>
+                                    <small class="form-hint">Short on purpose: it cannot be withdrawn before it expires.</small>
+                                </div>
+                                <div class="col-12 col-sm-4">
+                                    <label class="form-label" for="refresh-days">Signed in for</label>
+                                    <div class="input-group">
+                                        <input id="refresh-days" name="refreshTokenDays" type="number" min="1" max="90"
+                                               value="@Model.Access.RefreshTokenDays" class="form-control" required />
+                                        <span class="input-group-text">days</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">Save access rules</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h3 mb-2">Invitations</h2>
+                        <p class="text-secondary">
+                            Invite anyone, to any role — including people with no institutional
+                            address, which is the only way an external committee member can ever
+                            get in.
+                        </p>
+                        <a asp-controller="Invitations" asp-action="Index" class="btn btn-outline-primary">
+                            Manage invitations
+                        </a>
+                    </div>
+                </div>
+            }
+
+            if (Model.ActiveTab == "institution")
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h3 mb-2">The institution</h2>
+                        <p class="text-secondary">
+                            The email domains decide what someone is when they register or arrive
+                            from single sign-on, so changing one changes who can sign up as what.
+                        </p>
+
+                        <form asp-action="SaveInstitution" method="post" class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label" for="institution-name">Name</label>
+                                <input id="institution-name" name="name" value="@Model.Institution.Name"
+                                       class="form-control" required />
+                            </div>
+
+                            <div class="col-12 col-sm-6">
+                                <label class="form-label" for="student-domain">Student email domain</label>
+                                <input id="student-domain" name="studentEmailDomain"
+                                       value="@Model.Institution.StudentEmailDomain" class="form-control" required />
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <label class="form-label" for="staff-domain">Staff email domain</label>
+                                <input id="staff-domain" name="staffEmailDomain"
+                                       value="@Model.Institution.StaffEmailDomain" class="form-control" required />
+                            </div>
+
+                            <div class="col-12 col-sm-6">
+                                <label class="form-label" for="it-email">IT support address</label>
+                                <input id="it-email" name="itSupportEmail" type="email"
+                                       value="@Model.Institution.ItSupportEmail" class="form-control" />
+                                <small class="form-hint">Shown as plain text while blank, never as a dead link.</small>
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <label class="form-label" for="enquiries-email">Research enquiries address</label>
+                                <input id="enquiries-email" name="researchEnquiriesEmail" type="email"
+                                       value="@Model.Institution.ResearchEnquiriesEmail" class="form-control" />
+                                <small class="form-hint">
+                                    Where the public writes for a paper's full text — research is not
+                                    downloadable from the catalogue, so this is the whole of that route.
+                                </small>
+                            </div>
+
+                            <div class="col-12 col-sm-6">
+                                <label class="form-label" for="privacy-url">Privacy policy address</label>
+                                <input id="privacy-url" name="privacyPolicyUrl" type="url"
+                                       value="@Model.Institution.PrivacyPolicyUrl" class="form-control"
+                                       placeholder="https://www.ais.ac.nz/privacy-policy" />
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <label class="form-label" for="academic-cycle">Current academic cycle</label>
+                                <input id="academic-cycle" name="currentAcademicCycle"
+                                       value="@Model.Institution.CurrentAcademicCycle" class="form-control"
+                                       placeholder="2026 Semester 2" />
+                                <small class="form-hint">
+                                    What a proposal deferred to the next cycle is being deferred from.
+                                </small>
+                            </div>
+
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">Save institution details</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+        }
 
     </div>
-
-    <!-- Proposal Settings -->
-
-    <div class="card mt-3">
-
-        <div class="card-body">
-
-            <h3 class="card-title mb-4">
-                Research Proposal Settings
-            </h3>
-
-            <div class="row">
-
-                <div class="col-md-6 mb-3">
-
-                    <label asp-for="MaximumProposalSubmission"
-                           class="form-label"></label>
-
-                    <input asp-for="MaximumProposalSubmission"
-                           class="form-control" />
-
-                </div>
-
-                <div class="col-md-6 mb-3">
-
-                    <label asp-for="SupervisorPreferenceLimit"
-                           class="form-label"></label>
-
-                    <input asp-for="SupervisorPreferenceLimit"
-                           class="form-control" />
-
-                </div>
-
-            </div>
-
-            <div class="form-check form-switch">
-
-                <input asp-for="AllowProposalRevisions"
-                       class="form-check-input" />
-
-                <label asp-for="AllowProposalRevisions"
-                       class="form-check-label">
-                </label>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- Ethics Settings -->
-
-    <div class="card mt-3">
-
-        <div class="card-body">
-
-            <h3 class="card-title mb-4">
-                Ethics Settings
-            </h3>
-
-            <div class="form-check form-switch mb-3">
-
-                <input asp-for="EnableEthicsApproval"
-                       class="form-check-input" />
-
-                <label asp-for="EnableEthicsApproval"
-                       class="form-check-label">
-                </label>
-
-            </div>
-
-            <div class="row">
-
-                <div class="col-md-4">
-
-                    <label asp-for="RequiredEthicsForms"
-                           class="form-label"></label>
-
-                    <input asp-for="RequiredEthicsForms"
-                           class="form-control" />
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-    <!-- Document Upload Settings -->
-
-    <div class="card mt-3">
-
-        <div class="card-body">
-
-            <h3 class="card-title mb-4">
-                Document Upload Settings
-            </h3>
-
-            <div class="row">
-
-                <div class="col-md-4 mb-3">
-
-                    <label asp-for="MaximumUploadFileSize"
-                           class="form-label"></label>
-
-                    <input asp-for="MaximumUploadFileSize"
-                           class="form-control" />
-
-                </div>
-
-                <div class="col-md-8 mb-3">
-
-                    <label asp-for="AllowedFileTypes"
-                           class="form-label"></label>
-
-                    <input asp-for="AllowedFileTypes"
-                           class="form-control" />
-
-                </div>
-
-            </div>
-
-            <div class="alert alert-info mb-0">
-
-                <i class="ti ti-info-circle me-2"></i>
-
-                Maximum upload size applies to all proposal and publication documents.
-                Separate file types with commas (e.g. PDF, DOCX).
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- Notification Settings -->
-
-    <div class="card mt-3">
-
-        <div class="card-body">
-
-            <h3 class="card-title mb-4">
-                Notification Settings
-            </h3>
-
-            <div class="row">
-
-                <div class="col-md-6">
-
-                    <div class="form-check mb-3">
-                        <input asp-for="NotifyStudent"
-                               class="form-check-input" />
-                        <label asp-for="NotifyStudent"
-                               class="form-check-label"></label>
-                    </div>
-
-                    <div class="form-check mb-3">
-                        <input asp-for="NotifySupervisor"
-                               class="form-check-input" />
-                        <label asp-for="NotifySupervisor"
-                               class="form-check-label"></label>
-                    </div>
-
-                    <div class="form-check mb-3">
-                        <input asp-for="NotifyResearchCoordinator"
-                               class="form-check-input" />
-                        <label asp-for="NotifyResearchCoordinator"
-                               class="form-check-label"></label>
-                    </div>
-
-                </div>
-
-                <div class="col-md-6">
-
-                    <div class="form-check mb-3">
-                        <input asp-for="NotifyCommitteeMembers"
-                               class="form-check-input" />
-                        <label asp-for="NotifyCommitteeMembers"
-                               class="form-check-label"></label>
-                    </div>
-
-                    <div class="form-check mb-3">
-                        <input asp-for="NotifyHeadOfDepartment"
-                               class="form-check-input" />
-                        <label asp-for="NotifyHeadOfDepartment"
-                               class="form-check-label"></label>
-                    </div>
-
-                    <div class="form-check mb-3">
-                        <input asp-for="NotifyPublicVisitor"
-                               class="form-check-input" />
-                        <label asp-for="NotifyPublicVisitor"
-                               class="form-check-label"></label>
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="card-footer text-end">
-
-            <a asp-action="Index"
-               class="btn btn-secondary">
-
-                Cancel
-
-            </a>
-
-            <button type="submit"
-                    class="btn btn-primary">
-
-                <i class="ti ti-device-floppy"></i>
-
-                Save Settings
-
-            </button>
-
-        </div>
-
-    </div>
-
-</form>
+</div>
