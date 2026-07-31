@@ -26,7 +26,11 @@ services:
       - key: Api__BaseUrl
         sync: false
 
-      # Fallbacks only, used while the API is unreachable. The real values are administrator
-      # settings held by the API and edited under System settings.
+      # Fallback only, used while the API is unreachable. The real value is an administrator
+      # setting held by the API and edited under System settings.
+      #
+      # The institution's home page rather than a deep link to the policy: a guessed deep link
+      # rots when the site is reorganised, and this is the value shown when nothing better is
+      # available.
       - key: Institution__PrivacyPolicyUrl
-        value: https://www.ais.ac.nz/privacy-policy
+        value: https://www.ais.ac.nz/
