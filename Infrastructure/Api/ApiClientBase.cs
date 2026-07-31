@@ -76,6 +76,37 @@ public abstract class ApiClientBase(HttpClient httpClient)
     }
 
     /// <summary>
+    /// Fetches a stored file along with the name the API gave it.
+    ///
+    /// Separate from GetBytesAsync because a download needs the name: the API composes one from
+    /// the paper's title or the form's name, and the stored file is a GUID. Returns null when
+    /// there is nothing to serve, which callers turn into a 404 rather than an empty download.
+    /// </summary>
+    protected async Task<(byte[] Content, string ContentType, string FileName)?> GetFileAsync(
+        string url, CancellationToken ct = default)
+    {
+        using var request = Replayable(new HttpRequestMessage(HttpMethod.Get, url));
+
+        try
+        {
+            using var response = await Http.SendAsync(request, ct);
+            if (!response.IsSuccessStatusCode) return null;
+
+            var bytes = await response.Content.ReadAsByteArrayAsync(ct);
+            var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+            var fileName = response.Content.Headers.ContentDisposition?.FileNameStar
+                           ?? response.Content.Headers.ContentDisposition?.FileName?.Trim('"')
+                           ?? "download";
+
+            return (bytes, contentType, fileName);
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
     /// The API is not answering. Recording that on the request is ApiAvailabilityHandler's job —
     /// it sits in the message pipeline and sees every call, including the ones whose result never
     /// reaches a controller. This only shapes the result.
