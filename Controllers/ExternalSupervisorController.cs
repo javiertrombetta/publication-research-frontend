@@ -33,7 +33,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// the dashboard opens straight onto that paper.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> committee_review(Guid? id)
+        public async Task<IActionResult> committee_review(Guid? id, int page = 1)
         {
             var (model, failed) = await LoadAssignmentsAsync();
 
@@ -46,6 +46,18 @@ namespace ResearchPublicationManagementSystem.Controllers
                     return RedirectToAction(nameof(External_Supervisor_Dashboard));
                 }
             }
+
+            var total = model.Items.Count;
+            model.Items = Paging.Page(model.Items, page);
+            model.Pager = new PagerViewModel
+            {
+                Controller = "ExternalSupervisor",
+                Action = nameof(committee_review),
+                Page = Paging.ClampPage(page, total),
+                TotalPages = Paging.TotalPages(total),
+                // Kept so paging a single assignment stays on that assignment.
+                RouteValues = id is null ? [] : new() { ["id"] = id.ToString() }
+            };
 
             return View(model);
         }

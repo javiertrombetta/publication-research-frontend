@@ -8,6 +8,12 @@ namespace ResearchPublicationManagementSystem.Models
     /// </summary>
     public class AssignProposalsViewModel
     {
+
+        /// <summary>
+        /// Which page of the queue this is. Null where everything fits on one, so the controls
+        /// only appear when there is somewhere to go.
+        /// </summary>
+        public PagerViewModel? Pager { get; set; }
         public IReadOnlyList<ProposalDto> Proposals { get; set; } = [];
 
         public IReadOnlyList<UserListItemDto> Supervisors { get; set; } = [];
@@ -31,6 +37,12 @@ namespace ResearchPublicationManagementSystem.Models
     /// <summary>Proposals a supervisor has offered to take on, awaiting the coordinator.</summary>
     public class SupervisorSelectionsViewModel
     {
+
+        /// <summary>
+        /// Which page of the queue this is. Null where everything fits on one, so the controls
+        /// only appear when there is somewhere to go.
+        /// </summary>
+        public PagerViewModel? Pager { get; set; }
         public List<SupervisorSelectionItem> Items { get; set; } = [];
 
         public bool LoadFailed { get; set; }

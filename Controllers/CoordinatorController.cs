@@ -53,7 +53,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// to. Proposals go out as a batch, because a supervisor is choosing between them.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> assigning_proposal_forsupervisor()
+        public async Task<IActionResult> assigning_proposal_forsupervisor(int page = 1)
         {
             var model = new AssignProposalsViewModel();
 
@@ -77,6 +77,20 @@ namespace ResearchPublicationManagementSystem.Controllers
             // fetched once and matched up rather than one request per proposal.
             var containers = await containersApi.GetAllAsync(coordinatorId: CurrentUserId());
             model.Containers = containers.Data ?? [];
+
+            // Paged by publication rather than by proposal: they are sent out per student, and a
+            // page boundary that split one student's three proposals across two pages would make
+            // the form on each of them wrong.
+            var publications = model.Proposals.Select(p => p.PublicationContainerId).Distinct().ToList();
+            var shown = Paging.Page(publications, page).ToHashSet();
+            model.Proposals = [.. model.Proposals.Where(p => shown.Contains(p.PublicationContainerId))];
+            model.Pager = new PagerViewModel
+            {
+                Controller = "Coordinator",
+                Action = nameof(assigning_proposal_forsupervisor),
+                Page = Paging.ClampPage(page, publications.Count),
+                TotalPages = Paging.TotalPages(publications.Count)
+            };
 
             return View(model);
         }
@@ -112,7 +126,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// assignment official.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> select_a_proposal_forstudent()
+        public async Task<IActionResult> select_a_proposal_forstudent(int page = 1)
         {
             var model = new SupervisorSelectionsViewModel();
 
@@ -154,6 +168,16 @@ namespace ResearchPublicationManagementSystem.Controllers
                 }
             }
 
+            var total = model.Items.Count;
+            model.Items = Paging.Page(model.Items, page);
+            model.Pager = new PagerViewModel
+            {
+                Controller = "Coordinator",
+                Action = nameof(select_a_proposal_forstudent),
+                Page = Paging.ClampPage(page, total),
+                TotalPages = Paging.TotalPages(total)
+            };
+
             return View(model);
         }
 
@@ -188,10 +212,13 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// needed, and reviewing the documents once a supervisor has accepted them.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> Ethic_review_aftersupervisor(Guid? id)
+        public async Task<IActionResult> Ethic_review_aftersupervisor(Guid? id, int page = 1)
         {
             var (model, redirect) = await LoadEthicsQueueAsync(id, EthicsStage.AfterSupervisor);
-            return redirect ?? View(model);
+            if (redirect is not null) return redirect;
+
+            ApplyPaging(model, nameof(Ethic_review_aftersupervisor), id, page);
+            return View(model);
         }
 
         [HttpPost]
@@ -231,10 +258,32 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// commented. Approving it verifies the ethics stage and opens the research paper.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> Ethic_review_afters_headofdepartment(Guid? id)
+        public async Task<IActionResult> Ethic_review_afters_headofdepartment(Guid? id, int page = 1)
         {
             var (model, redirect) = await LoadEthicsQueueAsync(id, EthicsStage.AfterHeadOfDepartment);
-            return redirect ?? View(model);
+            if (redirect is not null) return redirect;
+
+            ApplyPaging(model, nameof(Ethic_review_afters_headofdepartment), id, page);
+            return View(model);
+        }
+
+        /// <summary>
+        /// Cuts the queue down to one page. Shared by both ethics screens, which differ only in
+        /// which decision they offer and are otherwise the same list.
+        /// </summary>
+        private static void ApplyPaging(CoordinatorEthicsViewModel model, string action, Guid? id, int page)
+        {
+            var total = model.Items.Count;
+            model.Items = Paging.Page(model.Items, page);
+            model.Pager = new PagerViewModel
+            {
+                Controller = "Coordinator",
+                Action = action,
+                Page = Paging.ClampPage(page, total),
+                TotalPages = Paging.TotalPages(total),
+                // Kept so that paging a screen opened on one publication stays on it.
+                RouteValues = id is null ? [] : new() { ["id"] = id.ToString() }
+            };
         }
 
         [HttpPost]

@@ -8,6 +8,12 @@ namespace ResearchPublicationManagementSystem.Models
     /// </summary>
     public class CoordinatorEthicsViewModel
     {
+
+        /// <summary>
+        /// Which page of the queue this is. Null where everything fits on one, so the controls
+        /// only appear when there is somewhere to go.
+        /// </summary>
+        public PagerViewModel? Pager { get; set; }
         public List<CoordinatorEthicsItem> Items { get; set; } = [];
 
         /// <summary>Which of the coordinator's two ethics steps this screen is showing.</summary>

@@ -65,6 +65,12 @@ namespace ResearchPublicationManagementSystem.Models
     /// <summary>Papers waiting on this supervisor's review.</summary>
     public class SupervisorPapersViewModel
     {
+
+        /// <summary>
+        /// Which page of the queue this is. Null where everything fits on one, so the controls
+        /// only appear when there is somewhere to go.
+        /// </summary>
+        public PagerViewModel? Pager { get; set; }
         public IReadOnlyList<PublicationDto> Papers { get; set; } = [];
 
         public bool LoadFailed { get; set; }
