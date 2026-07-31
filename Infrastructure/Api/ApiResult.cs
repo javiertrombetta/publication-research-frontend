@@ -13,6 +13,19 @@ public class ApiResult<T>
     public IReadOnlyDictionary<string, string[]>? FieldErrors { get; init; }
     public int StatusCode { get; init; }
 
+    /// <summary>
+    /// The API could not be reached at all, or answered that it is not currently able to serve.
+    /// Distinct from an ordinary failure: nothing the user did caused it and nothing they can do
+    /// will fix it, so a screen should say the site is unavailable rather than show its own
+    /// half-empty version of itself.
+    ///
+    /// Zero is what ApiClientBase records for a connection failure or a timeout. The three
+    /// gateway statuses are what a platform's edge returns while the service behind it is
+    /// restarting or has fallen over — which is exactly a deploy in progress.
+    /// </summary>
+    public bool IsServiceUnavailable =>
+        !Success && StatusCode is 0 or 502 or 503 or 504;
+
     public static ApiResult<T> Ok(T? data, int statusCode = 200) =>
         new() { Success = true, Data = data, StatusCode = statusCode };
 
