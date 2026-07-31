@@ -25,7 +25,7 @@ namespace ResearchPublicationManagementSystem.Models
         public CommitteeDto Committee { get; set; } = null!;
 
         /// <summary>Null if the paper couldn't be read — the row is still worth showing.</summary>
-        public PublicationDto? Paper { get; set; }
+        public CommitteePaperDto? Paper => Committee.Paper;
 
         /// <summary>This member's own place on the committee.</summary>
         public CommitteeMemberDto? Me { get; set; }

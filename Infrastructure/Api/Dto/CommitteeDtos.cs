@@ -18,6 +18,7 @@ public record CommitteeMemberDto(
 public record CommitteeDto(
     Guid Id,
     Guid PublicationId,
+    CommitteePaperDto? Paper,
     string Status,
     int MinApprovalsRequired,
     IReadOnlyList<CommitteeMemberDto> Members)
@@ -50,3 +51,11 @@ public static class CommitteeDecision
     public const string Reject = "Reject";
     public const string RequestRevision = "RequestRevision";
 }
+
+/// <summary>The paper a committee is judging, carried with the assignment itself.</summary>
+public record CommitteePaperDto(
+    Guid Id,
+    string Title,
+    string Abstract,
+    int? PublicationYear,
+    IReadOnlyList<string> Keywords);

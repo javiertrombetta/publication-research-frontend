@@ -31,11 +31,17 @@ public class InstitutionDetails(
             _fallback.ItSupportEmail, _fallback.ResearchEnquiriesEmail, _fallback.PrivacyPolicyUrl, null,
             // Closed while the API is unreachable: offering a sign-up form that cannot be
             // submitted is worse than not offering one.
-            SelfRegistrationOpen: false);
+            SelfRegistrationOpen: false,
+            // Off for the same reason. The catalogue's every row comes from the API, so sending a
+            // visitor to it while that is down lands them on an empty page that looks like the
+            // institution has published nothing; the sign-in page at least works.
+            PublicCatalogueEnabled: false);
 
         // Short: an administrator correcting an address should see it take effect within a minute
         // rather than after a restart, and this is read on every page.
         cache.Set(CacheKey, details, TimeSpan.FromMinutes(1));
         return details;
     }
+
+    public void Invalidate() => cache.Remove(CacheKey);
 }

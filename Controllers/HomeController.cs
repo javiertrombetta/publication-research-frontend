@@ -9,21 +9,31 @@ namespace ResearchPublicationManagementSystem.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly Services.IInstitutionDetails _institution;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, Services.IInstitutionDetails institution)
         {
             _logger = logger;
+            _institution = institution;
         }
 
         /// <summary>
-        /// Entry point for "/". The published catalogue is the front door of the site, for
-        /// visitors and signed-in users alike: it is the part meant to be read by anyone, and it
-        /// is what the institution is publishing the research for. Signing in is offered from the
-        /// header, and each role still lands on its own dashboard after logging in.
+        /// Entry point for "/", and which page that is is the administrator's decision.
+        ///
+        /// With a public catalogue, it is the front door: the part meant to be read by anyone, and
+        /// what the institution is publishing the research for. Without one the site has no public
+        /// face, so a visitor is shown the sign-in page instead of a catalogue that would refuse
+        /// them. Either way each role lands on its own dashboard once signed in.
         /// </summary>
         [AllowAnonymous]
-        public IActionResult Index()
+        public async Task<IActionResult> Index(CancellationToken cancellationToken)
         {
+            if (User.Identity?.IsAuthenticated != true &&
+                !(await _institution.GetAsync(cancellationToken)).PublicCatalogueEnabled)
+            {
+                return RedirectToAction("home", "Auth");
+            }
+
             var (controller, action) = RoleLanding.Anonymous;
             return RedirectToAction(action, controller);
         }

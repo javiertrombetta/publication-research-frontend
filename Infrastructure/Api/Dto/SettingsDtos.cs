@@ -90,14 +90,16 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         bool AzureSsoConfigured,
         int InvitationValidDays,
         int AccessTokenMinutes,
-        int RefreshTokenDays);
+        int RefreshTokenDays,
+        bool PublicCatalogueEnabled = true);
 
     public record UpdateAccessSettingsRequestDto(
         string RegistrationMode,
         bool AzureSsoEnabled,
         int InvitationValidDays,
         int AccessTokenMinutes,
-        int RefreshTokenDays);
+        int RefreshTokenDays,
+        bool PublicCatalogueEnabled = true);
 
     public record UploadSettingsDto(int MaxMegabytes, string AllowedExtensions);
 
@@ -120,7 +122,12 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         /// it travels on this group because this is the one settings endpoint a signed-out
         /// visitor can call, and the sign-up page needs it.
         /// </summary>
-        bool SelfRegistrationOpen = false);
+        bool SelfRegistrationOpen = false,
+    /// <summary>
+    /// Whether the site shows a public catalogue at all. Rides on the anonymous response because
+    /// it decides the landing page, which has to be settled before anyone has signed in.
+    /// </summary>
+    bool PublicCatalogueEnabled = true);
 
     public record UpdateInstitutionSettingsRequestDto(
         string Name,

@@ -1,11 +1,15 @@
 @model CatalogueViewModel
 @inject ResearchPublicationManagementSystem.Services.IInstitutionDetails Institution
 @{
-    ViewData["Title"] = "Public catalogue";
-
     // A visitor with no account has nothing to navigate to, and the workflow menu would be wrong
     // for them. Someone signed in keeps their sidebar.
-    ViewData["HideSidebar"] = User.Identity?.IsAuthenticated != true;
+    var isVisitor = User.Identity?.IsAuthenticated != true;
+    ViewData["HideSidebar"] = isVisitor;
+
+    // For a visitor this page is the whole site, so the heading has to say what the site is. For
+    // someone signed in it is one screen among many, and the short name reads better against the
+    // menu item they arrived from.
+    ViewData["Title"] = isVisitor ? "Public catalogue of research documents" : "Public catalogue";
 
     var results = Model.Results;
     var search = Model.Search;
@@ -13,10 +17,9 @@
 }
 
 <div class="mb-4">
-    <h1 class="page-title mb-1">Public catalogue</h1>
+    <h1 class="page-title mb-1">@ViewData["Title"]</h1>
     <div class="text-secondary">
-        Research published by @institutionName students. Browse the abstracts and
-        ask us for the full text of anything you'd like to read.
+        Research published by @institutionName students.
     </div>
 </div>
 

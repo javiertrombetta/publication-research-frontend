@@ -18,4 +18,13 @@ public interface IInstitutionDetails
     /// as plain text rather than as a link that goes nowhere.
     /// </summary>
     Task<InstitutionSettingsDto> GetAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Drops the cached copy, so the next read comes from the API.
+    ///
+    /// Needed because one of these values decides the landing page. An administrator switching the
+    /// public catalogue off and being sent straight back to it would conclude the setting had not
+    /// saved — a minute is a long time to watch a page contradict you.
+    /// </summary>
+    void Invalidate();
 }

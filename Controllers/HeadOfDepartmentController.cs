@@ -128,15 +128,24 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return View(model);
             }
 
+            // The department's proposals in one request rather than one per publication: this
+            // screen lists a whole department, so the old shape made it the slowest page in the
+            // system by a distance.
+            var proposals = await proposalsApi.GetInMyDepartmentAsync();
+            var byContainer = (proposals.Data ?? []).ToLookup(p => p.PublicationContainerId);
+
             foreach (var container in containers.Data ?? [])
             {
-                var proposals = await proposalsApi.GetByContainerAsync(container.Id);
-                if (proposals.Data is not { Count: > 0 }) continue;
+                var forContainer = byContainer[container.Id]
+                    .Select(p => new ProposalDto(p.Id, p.PublicationContainerId, p.Title, p.Abstract, p.Status, p.SubmittedAt))
+                    .ToList();
+
+                if (forContainer.Count == 0) continue;
 
                 model.Items.Add(new DepartmentProposalItem
                 {
                     Container = container,
-                    Proposals = proposals.Data
+                    Proposals = forContainer
                 });
             }
 

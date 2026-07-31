@@ -515,6 +515,35 @@
 
                             <hr class="my-4" />
 
+                            <h3 class="h4 mb-2">The public catalogue</h3>
+                            <label class="form-check form-switch mb-1">
+                                <input class="form-check-input" type="checkbox" name="publicCatalogueEnabled" value="true"
+                                       checked="@Model.Access.PublicCatalogueEnabled" />
+                                <input type="hidden" name="publicCatalogueEnabled" value="false" />
+                                <span class="form-check-label">Show published research to people without an account</span>
+                            </label>
+                            <p class="text-secondary small">
+                                @if (Model.Access.PublicCatalogueEnabled)
+                                {
+                                    <span>
+                                        The catalogue is the site's landing page: a visitor arriving at the address
+                                        sees the published research first, and signs in from the header.
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>
+                                        The site has no public face. A visitor arriving at the address is shown the
+                                        sign-in page, and the catalogue is not served to anyone without an account.
+                                    </span>
+                                }
+                                Signed in, everyone keeps the catalogue either way — this governs what the world
+                                sees, not what the institution can see of its own published work. Full texts are
+                                never public, whatever this is set to.
+                            </p>
+
+                            <hr class="my-4" />
+
                             <h3 class="h4 mb-2">Single sign-on</h3>
                             <label class="form-check form-switch mb-1">
                                 <input class="form-check-input" type="checkbox" name="azureSsoEnabled" value="true"
