@@ -55,18 +55,22 @@ namespace ResearchPublicationManagementSystem.Controllers
             var items = await FindPapersAwaitingCommitteeAsync();
             model.Items = items;
 
-            // Both committee types, since a committee normally mixes them.
-            var internals = await usersApi.GetAllAsync(role: RoleNames.InternalCommitteeMember, status: "Enabled");
-            var externals = await usersApi.GetAllAsync(role: RoleNames.ExternalCommitteeMember, status: "Enabled");
+            // Anyone who works here can sit on a committee, so this is the whole enabled directory
+            // less the students — a committee judges a student's work, so it cannot be drawn from
+            // the people whose work is being judged. One request rather than one per role, and it
+            // no longer hides a supervisor or a coordinator the administrator wanted to appoint.
+            var people = await usersApi.GetAllAsync(status: "Enabled");
 
-            if (!internals.Success && !externals.Success)
+            if (!people.Success)
             {
-                TempData["ErrorMessage"] = internals.ErrorMessage ?? "Could not load the committee members.";
+                TempData["ErrorMessage"] = people.ErrorMessage ?? "Could not load the people who could be appointed.";
                 model.LoadFailed = true;
                 return View(model);
             }
 
-            model.Members = [.. (internals.Data ?? []), .. (externals.Data ?? [])];
+            model.Members = [.. (people.Data ?? [])
+                .Where(u => !u.Roles.Contains(RoleNames.Student))
+                .OrderBy(u => u.LastName).ThenBy(u => u.FirstName)];
 
             // Only needed as a fallback: publications opened before the figures were recorded
             // per publication have none of their own, and the API judges those by today's rules.

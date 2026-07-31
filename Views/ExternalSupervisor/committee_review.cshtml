@@ -60,6 +60,13 @@ else
                 {
                     <p class="rpms-preserve-lines">@item.Paper.Abstract</p>
 
+                    <div class="mb-3">
+                        <a class="btn btn-outline-primary btn-sm"
+                           asp-controller="Downloads" asp-action="Paper" asp-route-publicationId="@item.Paper.Id">
+                            Download the paper
+                        </a>
+                    </div>
+
                     @if (item.Paper.Keywords.Count > 0)
                     {
                         <div class="mb-3">

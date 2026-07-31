@@ -34,6 +34,15 @@ public class EthicsApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
             [("documentType", documentType)],
             ct);
 
+    /// <summary>One uploaded ethics document, so a reviewer can read what they are approving.</summary>
+
+    public Task<(byte[] Content, string ContentType, string FileName)?> DownloadDocumentAsync(
+
+        Guid containerId, Guid documentId, CancellationToken ct = default) =>
+
+        GetFileAsync($"api/containers/{containerId}/ethics/documents/{documentId}/download", ct);
+
+
     public Task<ApiResult<IReadOnlyList<EthicsDocumentDto>>> GetDocumentsAsync(Guid containerId, CancellationToken ct = default) =>
         GetAsync<IReadOnlyList<EthicsDocumentDto>>($"api/containers/{containerId}/ethics/documents", ct);
 

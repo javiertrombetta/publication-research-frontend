@@ -35,10 +35,10 @@ else if (Model.Members.Count == 0)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">No committee members available</h3>
+            <h3 class="mb-2">Nobody can be appointed</h3>
             <p class="text-secondary m-0">
-                There are no enabled accounts with a committee-member role. Grant one from the user
-                directory before assigning a committee.
+                There are no enabled accounts other than students. Anyone who works here can sit on a
+                committee, so add or enable a staff account from the user directory first.
             </p>
         </div>
     </div>
@@ -79,7 +79,14 @@ else
                                     <span class="form-check-label">
                                         @member.FullName
                                         <span class="d-block text-secondary small">
-                                            @string.Join(", ", member.Roles.Select(Humanise))
+                                            @* External is a fact about the person — they are from outside
+                                               the institution — so it is shown rather than chosen here, and
+                                               it is what the required composition counts. *@
+                                            @(member.Roles.Contains(RoleNames.ExternalCommitteeMember) ? "External" : "Internal")
+                                            @if (member.Roles.Any(r => r != RoleNames.ExternalCommitteeMember))
+                                            {
+                                                <span>· @string.Join(", ", member.Roles.Where(r => r != RoleNames.ExternalCommitteeMember).Select(Humanise))</span>
+                                            }
                                         </span>
                                     </span>
                                 </label>

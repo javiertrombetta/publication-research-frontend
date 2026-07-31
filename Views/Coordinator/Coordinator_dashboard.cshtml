@@ -35,7 +35,7 @@ else
        moves until these are dealt with. *@
     <div class="row row-cards mb-4">
         <div class="col-12 col-md-4">
-            <div class="card @(Model.ProposalsAwaitingDispatch.Count > 0 ? "border-primary" : "")">
+            <div class="card h-100 @(Model.ProposalsAwaitingDispatch.Count > 0 ? "border-primary" : "")">
                 <div class="card-body">
                     <div class="text-secondary mb-1">Waiting on you</div>
                     <div class="h1 m-0">@Model.ProposalsAwaitingDispatch.Count</div>
@@ -52,7 +52,7 @@ else
         </div>
 
         <div class="col-12 col-md-4">
-            <div class="card">
+            <div class="card h-100">
                 <div class="card-body">
                     <div class="text-secondary mb-1">Supervisor replies</div>
                     <div class="h1 m-0">&mdash;</div>
@@ -64,7 +64,7 @@ else
         </div>
 
         <div class="col-12 col-md-4">
-            <div class="card">
+            <div class="card h-100">
                 <div class="card-body">
                     <div class="text-secondary mb-1">Publications</div>
                     <div class="h1 m-0">@Model.Publications.Count</div>

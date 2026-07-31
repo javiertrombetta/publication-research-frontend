@@ -27,6 +27,11 @@ public class PublicationsApiClient(HttpClient httpClient) : ApiClientBase(httpCl
             [("reviewerNotes", reviewerNotes)],
             ct);
 
+    /// <summary>The file of one version, for anyone who can see the publication.</summary>
+    public Task<(byte[] Content, string ContentType, string FileName)?> DownloadVersionAsync(
+        Guid publicationId, Guid versionId, CancellationToken ct = default) =>
+        GetFileAsync($"api/publications/{publicationId}/versions/{versionId}/download", ct);
+
     public Task<ApiResult<IReadOnlyList<PublicationVersionDto>>> GetVersionsAsync(Guid publicationId, CancellationToken ct = default) =>
         GetAsync<IReadOnlyList<PublicationVersionDto>>($"api/publications/{publicationId}/versions", ct);
 
