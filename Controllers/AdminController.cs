@@ -15,7 +15,6 @@ namespace ResearchPublicationManagementSystem.Controllers
     [Authorize(Roles = RoleNames.Admin)]
     public class AdminController(
         AdminApiClient adminApi,
-        ContainersApiClient containersApi,
         PublicationsApiClient publicationsApi,
         CommitteesApiClient committeesApi,
         UsersApiClient usersApi,
@@ -76,9 +75,9 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             foreach (var item in model.Items)
             {
-                item.RequiredInternal = item.Container.RequiredInternalCommitteeMembers
+                item.RequiredInternal = item.Paper.RequiredInternalCommitteeMembers
                                         ?? currentRules.Data?.InternalMembers ?? 0;
-                item.RequiredExternal = item.Container.RequiredExternalCommitteeMembers
+                item.RequiredExternal = item.Paper.RequiredExternalCommitteeMembers
                                         ?? currentRules.Data?.ExternalMembers ?? 0;
             }
 
@@ -129,25 +128,18 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// the paper's status) plus a committee lookup per candidate — a short list in practice,
         /// since only papers between the supervisor's review and the coordinator's decision qualify.
         /// </summary>
+        /// <summary>
+        /// The API answers this in one request. It used to be reconstructed here by walking every
+        /// container and asking after each one's paper and committee — two further requests per
+        /// publication — and it still came out wrong: nothing in those responses says whether the
+        /// supervisor has approved, so papers they had not yet looked at were offered for a
+        /// committee and the assignment was then refused.
+        /// </summary>
         private async Task<List<AwaitingCommitteeItem>> FindPapersAwaitingCommitteeAsync()
         {
-            var items = new List<AwaitingCommitteeItem>();
+            var awaiting = await publicationsApi.GetAwaitingCommitteeAsync();
 
-            var containers = await containersApi.GetAllAsync();
-            foreach (var container in (containers.Data ?? [])
-                         .Where(c => c.PaperStatus == PublicationStatus.UnderReview))
-            {
-                var paper = await publicationsApi.GetByContainerAsync(container.Id);
-                if (paper.Data is null) continue;
-
-                // No committee yet: the endpoint reports not-found rather than an empty committee.
-                var committee = await committeesApi.GetByPublicationAsync(paper.Data.Id);
-                if (committee.Success && committee.Data is not null) continue;
-
-                items.Add(new AwaitingCommitteeItem { Container = container, Paper = paper.Data });
-            }
-
-            return items;
+            return [.. (awaiting.Data ?? []).Select(paper => new AwaitingCommitteeItem { Paper = paper })];
         }
     }
 }
