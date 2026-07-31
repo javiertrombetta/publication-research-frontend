@@ -32,6 +32,13 @@ public record PublicationContainerDto(
     /// </summary>
     string? EthicsAwaitingRole = null,
     /// <summary>
+    /// Whose turn it is on the research paper, or null when nothing is pending. UnderReview covers
+    /// four separate waits — the supervisor reading it, an admin appointing a committee, the
+    /// committee voting, the coordinator deciding — so the status alone cannot say. Carries
+    /// RoleNames.EvaluationCommittee where the wait belongs to the committee rather than one role.
+    /// </summary>
+    string? PaperAwaitingRole = null,
+    /// <summary>
     /// The evaluation committee this publication needs, as agreed when it was opened rather than
     /// as configured today. Null on publications created before the figures were recorded; the
     /// current settings govern those.

@@ -94,22 +94,21 @@ All six operational roles are connected to the API end to end.
 | Admin — system settings and invitations | Connected |
 | Notifications — the top bar's bell, the list, and marking as read | Connected |
 | Profile and profile photo, all roles | Connected |
-| Categories | Scaffold only — see below |
 
-### Still scaffold
+Nothing is left as a laid-out screen with sample data in it. Every controller here reaches the API,
+and the three that could not were removed rather than left to look finished:
 
-Three areas remain as laid-out views with hardcoded sample data:
-
-- **Categories** (`Controllers/CategoriesController.cs`) has no backend at all. Publication
-  categories exist as a table in the API's schema, but no endpoint exposes them, so there is
-  nothing to connect this to yet.
-- **`ProposalsController` and `PublicationsController`** are the original cross-role listing
-  screens. Each role now reaches its own proposals and publications through its own dashboard,
-  which is where the real data lives; these two are redundant, and are candidates for removal
-  rather than wiring.
-- **`committee_review` on Coordinator, Supervisor and Head of Department.** Evaluating a paper
-  belongs to committee members, and that screen is wired under `ExternalSupervisor`, which serves
-  both committee roles. The three copies do nothing.
+- **`ProposalsController` and `PublicationsController`** were cross-role listings from before each
+  role had a dashboard of its own. Every one of their screens now exists, with real data, in the
+  place its role actually starts from.
+- **`CategoriesController`** had nothing behind it. Publication categories were a table no endpoint
+  exposed and nothing ever wrote to, doing a job `ResearchArea` already does end to end — on a
+  student's profile, on a paper's metadata, and as a filter in the public catalogue. The table has
+  been dropped as well, so the question does not outlive the screen.
+- **`committee_review` on Coordinator, Supervisor and Head of Department** were three copies of a
+  screen that belongs to committee members, and none of them had a view — reaching one produced an
+  error, not an empty page. The real one is under `ExternalSupervisor`, which serves both committee
+  roles.
 
 ### The student's route through the system
 
@@ -173,8 +172,6 @@ wwwroot/              Site CSS and JavaScript, and vendored Tabler and Bootstrap
 
 ## Conventions
 
-- **British English** throughout the interface copy, and `en-GB` as the application's culture, so
-  dates read `30 Jul 2026` rather than `Jul 30, 2026`.
 - **Statuses** are humanised at the point of display — `InProgress` becomes `In Progress` — and
   coloured from a single mapping in `Common/DisplayText.cs`, so the same status is the same
   colour on every screen.

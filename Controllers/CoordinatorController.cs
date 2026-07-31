@@ -263,20 +263,32 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return View(model);
             }
 
-            // Only a paper still under review can be decided on. The backend additionally
-            // requires the evaluation committee to have finished, and says so if it hasn't.
-            var candidates = (containers.Data ?? [])
-                .Where(c => c.PaperStatus == PublicationStatus.UnderReview)
+            // Split on whose turn it is rather than on the paper's status. UnderReview covers the
+            // supervisor still reading it, an admin appointing a committee, the committee voting
+            // and this decision — so filtering on the status alone put a decision form in front of
+            // the coordinator on three papers out of four that the API would then refuse.
+            var papers = (containers.Data ?? [])
+                .Where(c => c.PaperStatus is PublicationStatus.UnderReview
+                                         or PublicationStatus.Resubmitted
+                                         or PublicationStatus.RevisionsRequested)
                 .ToList();
 
-            foreach (var container in candidates)
+            foreach (var container in papers)
             {
+                if (container.PaperAwaitingRole != RoleNames.Coordinator)
+                {
+                    // Everything this row shows is already on the containers listing, so a paper
+                    // nobody can act on here costs no further requests.
+                    model.InProgress.Add(new CoordinatorPaperInProgress { Container = container });
+                    continue;
+                }
+
                 var paper = await publicationsApi.GetByContainerAsync(container.Id);
                 if (paper.Data is null) continue;
 
                 var reviews = await publicationsApi.GetReviewsAsync(paper.Data.Id);
 
-                model.Items.Add(new CoordinatorPaperItem
+                model.ReadyForDecision.Add(new CoordinatorPaperItem
                 {
                     Container = container,
                     Paper = paper.Data,
@@ -303,10 +315,6 @@ namespace ResearchPublicationManagementSystem.Controllers
             return RedirectToAction(nameof(Evaluation_after_committee));
         }
 
-        // ---------- Still to be wired ----------
-
-        [HttpGet]
-        public IActionResult committee_review() => View();
 
         [HttpGet]
         public IActionResult assigning_committee_members() => View();

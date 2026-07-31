@@ -6,8 +6,8 @@
 <div class="mb-4">
     <h1 class="page-title mb-1">Research papers to decide on</h1>
     <div class="text-secondary">
-        Papers that have been through their reviews. Accepting one hands the publication decision
-        to its author.
+        Every research paper in your department that is still moving. Accepting one hands the
+        publication decision to its author.
     </div>
 </div>
 
@@ -21,19 +21,33 @@
         </div>
     </div>
 }
-else if (Model.Items.Count == 0)
+else if (Model.IsEmpty)
 {
     <div class="card">
         <div class="card-body text-center py-5">
             <h3 class="mb-2">Nothing waiting on you</h3>
-            <p class="text-secondary mb-4">Papers appear here once they are under review.</p>
+            <p class="text-secondary mb-4">Papers appear here once a student submits one.</p>
             <a asp-controller="Coordinator" asp-action="Coordinator_dashboard" class="btn btn-primary">Back to dashboard</a>
         </div>
     </div>
 }
 else
 {
-    @foreach (var item in Model.Items)
+    <h2 class="h3 mb-3">
+        Ready for your decision
+        <span class="badge bg-primary-lt ms-1">@Model.ReadyForDecision.Count</span>
+    </h2>
+
+    @if (Model.ReadyForDecision.Count == 0)
+    {
+        <div class="card mb-4">
+            <div class="card-body text-secondary">
+                Nothing is waiting on you right now. The papers below are still with somebody else.
+            </div>
+        </div>
+    }
+
+    @foreach (var item in Model.ReadyForDecision)
     {
         <div class="card mb-3">
             <div class="card-header">
@@ -90,6 +104,35 @@ else
                         <button type="submit" name="accept" value="false" class="btn btn-outline-danger">Send back for revision</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    }
+
+    @if (Model.InProgress.Count > 0)
+    {
+        <h2 class="h3 mt-4 mb-1">Still in progress</h2>
+        <p class="text-secondary mb-3">
+            Not yours to decide yet — shown so you can see where each one has got to, and chase
+            anything that has stopped moving.
+        </p>
+
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table card-table table-vcenter">
+                    <thead>
+                        <tr><th>Paper</th><th>Author</th><th>Waiting on</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.InProgress)
+                        {
+                            <tr>
+                                <td>@(item.Container.Title ?? "Untitled paper")</td>
+                                <td class="text-secondary">@item.Container.StudentName</td>
+                                <td class="text-secondary">@item.WaitingOn</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     }
