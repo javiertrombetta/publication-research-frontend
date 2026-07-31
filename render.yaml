@@ -1,0 +1,32 @@
+# Render Blueprint — deploys the image GitHub Actions already built and pushed to Docker Hub
+# (see .github/workflows/ci-cd.yml). Render builds nothing from source here.
+#
+# Usage: Render dashboard -> New -> Blueprint -> point at this repo. Render creates the service
+# below; anything marked `sync: false` has to be filled in by hand afterwards (Render dashboard
+# -> service -> Environment), because it is deployment-specific and does not belong in the repo.
+
+services:
+  - type: web
+    name: publication-research-frontend
+    runtime: image
+    image:
+      url: docker.io/javiertrombetta/publication-research-frontend:latest
+    plan: free
+    region: oregon
+
+    # Answers whether this process is serving, not whether the API behind it is — see Program.cs.
+    healthCheckPath: /health
+
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+
+      # Where the API lives. Left unset here rather than hard-coded: the same blueprint should
+      # be usable against a local API, a staging one, or the deployed instance.
+      - key: Api__BaseUrl
+        sync: false
+
+      # Fallbacks only, used while the API is unreachable. The real values are administrator
+      # settings held by the API and edited under System settings.
+      - key: Institution__PrivacyPolicyUrl
+        value: https://www.ais.ac.nz/privacy-policy

@@ -1,0 +1,23 @@
+# Build output — the image builds its own; copying these in would only invalidate the
+# restore cache and risk shipping a stale assembly.
+bin/
+obj/
+**/bin/
+**/obj/
+
+# wwwroot/lib is deliberately NOT ignored: Tabler and Bootstrap are vendored and committed,
+# and the image has no libman step to fetch them.
+
+.vs/
+.vscode/
+.idea/
+**/.DS_Store
+
+.git/
+.github/
+.claude/
+
+*.log
+Dockerfile
+.dockerignore
+README.md
