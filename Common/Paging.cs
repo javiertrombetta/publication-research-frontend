@@ -28,4 +28,16 @@ public static class Paging
 
     public static List<T> Page<T>(IReadOnlyList<T> all, int page, int pageSize = DefaultPageSize) =>
         [.. all.Skip((ClampPage(page, all.Count, pageSize) - 1) * pageSize).Take(pageSize)];
+
+    /// <summary>Builds the pager from what the API said about the page it returned.</summary>
+    public static Models.PagerViewModel PagerFor<T>(
+        Infrastructure.Api.Dto.PagedResultDto<T>? result, string controller, string action,
+        Dictionary<string, string?>? routeValues = null) => new()
+        {
+            Controller = controller,
+            Action = action,
+            Page = result?.Page ?? 1,
+            TotalPages = result?.TotalPages ?? 1,
+            RouteValues = routeValues ?? []
+        };
 }

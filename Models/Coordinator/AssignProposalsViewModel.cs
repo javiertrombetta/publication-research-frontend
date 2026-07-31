@@ -50,7 +50,8 @@ namespace ResearchPublicationManagementSystem.Models
 
     public class SupervisorSelectionItem
     {
-        public PublicationContainerDto Container { get; set; } = null!;
+        /// <summary>Carried on the proposal itself, so the screen needs no second request to name the author.</summary>
+        public string StudentName { get; set; } = string.Empty;
 
         public ProposalDto Proposal { get; set; } = null!;
 

@@ -38,10 +38,12 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return View(model);
             }
 
-            model.Publications = containers.Data ?? [];
+            model.Publications = containers.Data?.Items ?? [];
+            model.PublicationsTotal = containers.Data?.TotalCount ?? 0;
 
             var pending = await proposalsApi.GetPendingAsync();
-            model.ProposalsAwaitingDispatch = pending.Data ?? [];
+            model.ProposalsAwaitingDispatch = pending.Data?.Items ?? [];
+            model.ProposalsAwaitingDispatchTotal = pending.Data?.TotalCount ?? 0;
 
             return View(model);
         }
@@ -57,7 +59,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         {
             var model = new AssignProposalsViewModel();
 
-            var pending = await proposalsApi.GetPendingAsync();
+            var pending = await proposalsApi.GetPendingAsync(page);
             if (!pending.Success)
             {
                 TempData["ErrorMessage"] = pending.ErrorMessage ?? "Could not load the proposals waiting to be sent.";
@@ -65,7 +67,7 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return View(model);
             }
 
-            model.Proposals = pending.Data ?? [];
+            model.Proposals = pending.Data?.Items ?? [];
 
             var supervisors = await usersApi.GetSupervisorsAsync();
             model.Supervisors = (supervisors.Data ?? [])
@@ -76,21 +78,9 @@ namespace ResearchPublicationManagementSystem.Controllers
             // A proposal doesn't carry its student's name, so the coordinator's containers are
             // fetched once and matched up rather than one request per proposal.
             var containers = await containersApi.GetAllAsync(coordinatorId: CurrentUserId());
-            model.Containers = containers.Data ?? [];
+            model.Containers = containers.Data?.Items ?? [];
 
-            // Paged by publication rather than by proposal: they are sent out per student, and a
-            // page boundary that split one student's three proposals across two pages would make
-            // the form on each of them wrong.
-            var publications = model.Proposals.Select(p => p.PublicationContainerId).Distinct().ToList();
-            var shown = Paging.Page(publications, page).ToHashSet();
-            model.Proposals = [.. model.Proposals.Where(p => shown.Contains(p.PublicationContainerId))];
-            model.Pager = new PagerViewModel
-            {
-                Controller = "Coordinator",
-                Action = nameof(assigning_proposal_forsupervisor),
-                Page = Paging.ClampPage(page, publications.Count),
-                TotalPages = Paging.TotalPages(publications.Count)
-            };
+            model.Pager = Paging.PagerFor(pending.Data, "Coordinator", nameof(assigning_proposal_forsupervisor));
 
             return View(model);
         }
@@ -130,53 +120,25 @@ namespace ResearchPublicationManagementSystem.Controllers
         {
             var model = new SupervisorSelectionsViewModel();
 
-            var containers = await containersApi.GetAllAsync(coordinatorId: CurrentUserId());
-            if (!containers.Success)
+            // One request for the whole screen. The proposals carry their student's name and the
+            // supervisors' answers, and the API returns only the ones with an offer to allocate —
+            // so this no longer fetches every publication in the department to find a handful.
+            var proposals = await proposalsApi.GetForCoordinatorAsync(page, awaitingAllocation: true);
+            if (!proposals.Success)
             {
-                TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your publications right now.";
+                TempData["ErrorMessage"] = proposals.ErrorMessage ?? "Could not load the proposals waiting on you.";
                 model.LoadFailed = true;
                 return View(model);
             }
 
-            // Only publications still choosing a supervisor can have anything to act on.
-            var candidates = (containers.Data ?? [])
-                .Where(c => c.CurrentPipeline == PipelineStage.ResearchProposals && c.Status != "Completed")
-                .ToList();
-
-            // One request for every proposal and every supervisor's answer, joined to the
-            // publications in memory. This used to be a request per publication and then one per
-            // proposal on top, so the page grew more expensive with the department while showing
-            // the same few rows anybody could act on.
-            var proposals = await proposalsApi.GetForCoordinatorAsync();
-            var byContainer = (proposals.Data ?? [])
-                .ToLookup(p => p.PublicationContainerId);
-
-            foreach (var container in candidates)
+            model.Items = [.. (proposals.Data?.Items ?? []).Select(p => new SupervisorSelectionItem
             {
-                foreach (var proposal in byContainer[container.Id])
-                {
-                    // Nothing to decide until a supervisor has actually accepted one.
-                    if (!proposal.Invitations.Any(i => i.IsSelected)) continue;
+                StudentName = p.StudentName,
+                Proposal = new ProposalDto(p.Id, p.PublicationContainerId, p.Title, p.Abstract, p.Status, p.SubmittedAt),
+                Invitations = p.Invitations
+            })];
 
-                    model.Items.Add(new SupervisorSelectionItem
-                    {
-                        Container = container,
-                        Proposal = new ProposalDto(proposal.Id, proposal.PublicationContainerId,
-                            proposal.Title, proposal.Abstract, proposal.Status, proposal.SubmittedAt),
-                        Invitations = proposal.Invitations
-                    });
-                }
-            }
-
-            var total = model.Items.Count;
-            model.Items = Paging.Page(model.Items, page);
-            model.Pager = new PagerViewModel
-            {
-                Controller = "Coordinator",
-                Action = nameof(select_a_proposal_forstudent),
-                Page = Paging.ClampPage(page, total),
-                TotalPages = Paging.TotalPages(total)
-            };
+            model.Pager = Paging.PagerFor(proposals.Data, "Coordinator", nameof(select_a_proposal_forstudent));
 
             return View(model);
         }
@@ -214,10 +176,9 @@ namespace ResearchPublicationManagementSystem.Controllers
         [HttpGet]
         public async Task<IActionResult> Ethic_review_aftersupervisor(Guid? id, int page = 1)
         {
-            var (model, redirect) = await LoadEthicsQueueAsync(id, EthicsStage.AfterSupervisor);
+            var (model, redirect) = await LoadEthicsQueueAsync(id, EthicsStage.AfterSupervisor, page);
             if (redirect is not null) return redirect;
 
-            ApplyPaging(model, nameof(Ethic_review_aftersupervisor), id, page);
             return View(model);
         }
 
@@ -260,31 +221,12 @@ namespace ResearchPublicationManagementSystem.Controllers
         [HttpGet]
         public async Task<IActionResult> Ethic_review_afters_headofdepartment(Guid? id, int page = 1)
         {
-            var (model, redirect) = await LoadEthicsQueueAsync(id, EthicsStage.AfterHeadOfDepartment);
+            var (model, redirect) = await LoadEthicsQueueAsync(id, EthicsStage.AfterHeadOfDepartment, page);
             if (redirect is not null) return redirect;
 
-            ApplyPaging(model, nameof(Ethic_review_afters_headofdepartment), id, page);
             return View(model);
         }
 
-        /// <summary>
-        /// Cuts the queue down to one page. Shared by both ethics screens, which differ only in
-        /// which decision they offer and are otherwise the same list.
-        /// </summary>
-        private static void ApplyPaging(CoordinatorEthicsViewModel model, string action, Guid? id, int page)
-        {
-            var total = model.Items.Count;
-            model.Items = Paging.Page(model.Items, page);
-            model.Pager = new PagerViewModel
-            {
-                Controller = "Coordinator",
-                Action = action,
-                Page = Paging.ClampPage(page, total),
-                TotalPages = Paging.TotalPages(total),
-                // Kept so that paging a screen opened on one publication stays on it.
-                RouteValues = id is null ? [] : new() { ["id"] = id.ToString() }
-            };
-        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -321,7 +263,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             // supervisor still reading it, an admin appointing a committee, the committee voting
             // and this decision — so filtering on the status alone put a decision form in front of
             // the coordinator on three papers out of four that the API would then refuse.
-            var papers = (containers.Data ?? [])
+            var papers = (containers.Data?.Items ?? [])
                 .Where(c => c.PaperStatus is PublicationStatus.UnderReview
                                          or PublicationStatus.Resubmitted
                                          or PublicationStatus.RevisionsRequested)
@@ -383,11 +325,22 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// link from the dashboard opens straight onto that publication.
         /// </summary>
         private async Task<(CoordinatorEthicsViewModel Model, IActionResult? Redirect)> LoadEthicsQueueAsync(
-            Guid? containerId, EthicsStage stage)
+            Guid? containerId, EthicsStage stage, int page)
         {
             var model = new CoordinatorEthicsViewModel { Stage = stage.ToString() };
 
-            var containers = await containersApi.GetAllAsync(coordinatorId: CurrentUserId());
+            // The API is asked for this screen's queue, by name. Both of the coordinator's ethics
+            // decisions answer "waiting on the Coordinator", so a role was never enough to tell
+            // them apart — the screens used to fetch every publication and read each approval's
+            // timestamps to work it out, which meant a page of publications could hold any number
+            // of rows for either screen, or none.
+            var steps = stage == EthicsStage.AfterHeadOfDepartment
+                ? EthicsSteps.CoordinatorFinalDecision
+                : EthicsSteps.CoordinatorFirstReview;
+
+            var containers = await containersApi.GetAllAsync(
+                coordinatorId: CurrentUserId(), ethicsSteps: steps, page: page);
+
             if (!containers.Success)
             {
                 TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your publications right now.";
@@ -395,11 +348,7 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return (model, null);
             }
 
-            // Which of the coordinator's two ethics steps a publication is at is decided below,
-            // from the approval itself — the listing only says the turn is theirs.
-            var candidates = (containers.Data ?? [])
-                .Where(c => c.EthicsAwaitingRole == RoleNames.Coordinator)
-                .ToList();
+            var candidates = (containers.Data?.Items ?? []).ToList();
 
             if (containerId is { } only)
             {
@@ -411,14 +360,12 @@ namespace ResearchPublicationManagementSystem.Controllers
                 }
             }
 
+            // Only the rows on this page are filled in, so the cost follows the page rather than
+            // the department.
             foreach (var container in candidates)
             {
                 var approval = await ethicsApi.GetApprovalAsync(container.Id);
                 if (approval.Data is null) continue;
-
-                // The closing decision only exists once the Head of Department has commented.
-                var isFinalStep = approval.Data.HeadOfDepartmentReviewedAt is not null;
-                if ((stage == EthicsStage.AfterHeadOfDepartment) != isFinalStep) continue;
 
                 var documents = await ethicsApi.GetDocumentsAsync(container.Id);
 
@@ -429,6 +376,12 @@ namespace ResearchPublicationManagementSystem.Controllers
                     Documents = documents.Data ?? []
                 });
             }
+
+            model.Pager = Paging.PagerFor(containers.Data, "Coordinator",
+                stage == EthicsStage.AfterHeadOfDepartment
+                    ? nameof(Ethic_review_afters_headofdepartment)
+                    : nameof(Ethic_review_aftersupervisor),
+                containerId is null ? null : new() { ["id"] = containerId.ToString() });
 
             return (model, null);
         }

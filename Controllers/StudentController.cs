@@ -37,14 +37,14 @@ namespace ResearchPublicationManagementSystem.Controllers
         [HttpGet]
         public async Task<IActionResult> student_dashboard(string? q = null, string? sort = null)
         {
-            var result = await containersApi.GetMineAsync();
+            var result = await containersApi.GetMineAsync(pageSize: 100);
             if (!result.Success)
             {
                 TempData["ErrorMessage"] = result.ErrorMessage ?? "Could not load your publications right now.";
                 return View(new StudentDashboardViewModel { LoadFailed = true, Query = q, Sort = NormaliseSort(sort) });
             }
 
-            var all = result.Data ?? [];
+            var all = result.Data?.Items ?? [];
             var model = new StudentDashboardViewModel
             {
                 TotalCount = all.Count,
@@ -542,14 +542,14 @@ namespace ResearchPublicationManagementSystem.Controllers
         private async Task<(PublicationContainerDto? Container, IActionResult? Redirect)> GetOwnedContainerAsync(
             Guid containerId, int? requiredStage = null)
         {
-            var result = await containersApi.GetMineAsync();
+            var result = await containersApi.GetMineAsync(pageSize: 100);
             if (!result.Success)
             {
                 TempData["ErrorMessage"] = result.ErrorMessage ?? "Could not load your publications right now.";
                 return (null, RedirectToAction(nameof(student_dashboard)));
             }
 
-            var container = (result.Data ?? []).FirstOrDefault(c => c.Id == containerId);
+            var container = (result.Data?.Items ?? []).FirstOrDefault(c => c.Id == containerId);
             if (container is null)
             {
                 TempData["ErrorMessage"] = "That publication could not be found.";

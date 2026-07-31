@@ -26,7 +26,9 @@ namespace ResearchPublicationManagementSystem.Controllers
         {
             var model = new HeadOfDepartmentDashboardViewModel();
 
-            var containers = await containersApi.GetInMyDepartmentAsync();
+            // The dashboard is an overview of the department, so it asks for a generous page and
+            // states its figures from the total rather than from what fits on one.
+            var containers = await containersApi.GetInMyDepartmentAsync(pageSize: 100);
             if (!containers.Success)
             {
                 TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your department's publications.";
@@ -34,7 +36,7 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return View(model);
             }
 
-            model.Publications = containers.Data ?? [];
+            model.Publications = containers.Data?.Items ?? [];
             return View(model);
         }
 
@@ -49,7 +51,10 @@ namespace ResearchPublicationManagementSystem.Controllers
         {
             var model = new HeadOfDepartmentEthicsViewModel();
 
-            var containers = await containersApi.GetInMyDepartmentAsync();
+            // This screen's own queue, by name, one page of it. Everything else the department has
+            // in flight is somebody else's problem and no longer travels down the wire.
+            var containers = await containersApi.GetInMyDepartmentAsync(
+                ethicsSteps: EthicsSteps.HeadOfDepartmentReview, page: page);
             if (!containers.Success)
             {
                 TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your department's publications.";
@@ -57,8 +62,7 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return View(model);
             }
 
-            var candidates = (containers.Data ?? [])
-                .Where(c => c.EthicsAwaitingRole == RoleNames.HeadOfDepartment)
+            var candidates = (containers.Data?.Items ?? [])
                 .ToList();
 
             if (id is { } only)
@@ -71,20 +75,11 @@ namespace ResearchPublicationManagementSystem.Controllers
                 }
             }
 
-            // Paged before the details are fetched, not after: each row costs two requests to
-            // fill in, so a department with fifty waiting used to pay a hundred of them to render
-            // ten. Now the page decides how many are asked for.
-            var total = candidates.Count;
-            model.Pager = new PagerViewModel
-            {
-                Controller = "HeadOfDepartment",
-                Action = nameof(Headofdepartment_feedback),
-                Page = Paging.ClampPage(page, total),
-                TotalPages = Paging.TotalPages(total),
-                RouteValues = id is null ? [] : new() { ["id"] = id.ToString() }
-            };
+            // Only the rows on this page are filled in: each costs two further requests.
+            model.Pager = Paging.PagerFor(containers.Data, "HeadOfDepartment", nameof(Headofdepartment_feedback),
+                id is null ? null : new() { ["id"] = id.ToString() });
 
-            foreach (var container in Paging.Page(candidates, page))
+            foreach (var container in candidates)
             {
                 var approval = await ethicsApi.GetApprovalAsync(container.Id);
                 if (approval.Data is null) continue;
@@ -133,44 +128,29 @@ namespace ResearchPublicationManagementSystem.Controllers
         {
             var model = new DepartmentProposalsViewModel();
 
-            var containers = await containersApi.GetInMyDepartmentAsync();
-            if (!containers.Success)
+            // One paged request for the whole screen. Each proposal carries its author's name and
+            // its publication's id, so there is no second call to find out who wrote what, and the
+            // API decides how many rows come back rather than the size of the department.
+            var proposals = await proposalsApi.GetInMyDepartmentAsync(page);
+            if (!proposals.Success)
             {
-                TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your department's publications.";
+                TempData["ErrorMessage"] = proposals.ErrorMessage ?? "Could not load your department's proposals.";
                 model.LoadFailed = true;
                 return View(model);
             }
 
-            // The department's proposals in one request rather than one per publication: this
-            // screen lists a whole department, so the old shape made it the slowest page in the
-            // system by a distance.
-            var proposals = await proposalsApi.GetInMyDepartmentAsync();
-            var byContainer = (proposals.Data ?? []).ToLookup(p => p.PublicationContainerId);
-
-            foreach (var container in containers.Data ?? [])
-            {
-                var forContainer = byContainer[container.Id]
-                    .Select(p => new ProposalDto(p.Id, p.PublicationContainerId, p.Title, p.Abstract, p.Status, p.SubmittedAt))
-                    .ToList();
-
-                if (forContainer.Count == 0) continue;
-
-                model.Items.Add(new DepartmentProposalItem
+            // Still grouped by publication, since that is how a reader makes sense of them: three
+            // proposals from one student are one decision, not three.
+            model.Items = [.. (proposals.Data?.Items ?? [])
+                .GroupBy(p => p.PublicationContainerId)
+                .Select(group => new DepartmentProposalItem
                 {
-                    Container = container,
-                    Proposals = forContainer
-                });
-            }
+                    StudentName = group.First().StudentName,
+                    Proposals = [.. group.Select(p => new ProposalDto(
+                        p.Id, p.PublicationContainerId, p.Title, p.Abstract, p.Status, p.SubmittedAt))]
+                })];
 
-            var total = model.Items.Count;
-            model.Items = Paging.Page(model.Items, page);
-            model.Pager = new PagerViewModel
-            {
-                Controller = "HeadOfDepartment",
-                Action = nameof(all_proposals_fromstudent),
-                Page = Paging.ClampPage(page, total),
-                TotalPages = Paging.TotalPages(total)
-            };
+            model.Pager = Paging.PagerFor(proposals.Data, "HeadOfDepartment", nameof(all_proposals_fromstudent));
 
             return View(model);
         }

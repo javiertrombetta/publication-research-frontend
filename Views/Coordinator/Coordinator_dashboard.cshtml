@@ -35,14 +35,14 @@ else
        moves until these are dealt with. *@
     <div class="row row-cards mb-4">
         <div class="col-12 col-md-4">
-            <div class="card h-100 @(Model.ProposalsAwaitingDispatch.Count > 0 ? "border-primary" : "")">
+            <div class="card h-100 @(Model.ProposalsAwaitingDispatchTotal > 0 ? "border-primary" : "")">
                 <div class="card-body">
                     <div class="text-secondary mb-1">Waiting on you</div>
-                    <div class="h1 m-0">@Model.ProposalsAwaitingDispatch.Count</div>
+                    <div class="h1 m-0">@Model.ProposalsAwaitingDispatchTotal</div>
                     <div class="text-secondary">
-                        @(Model.ProposalsAwaitingDispatch.Count == 1 ? "proposal to send out" : "proposals to send out")
+                        @(Model.ProposalsAwaitingDispatchTotal == 1 ? "proposal to send out" : "proposals to send out")
                     </div>
-                    @if (Model.ProposalsAwaitingDispatch.Count > 0)
+                    @if (Model.ProposalsAwaitingDispatchTotal > 0)
                     {
                         <a asp-controller="Coordinator" asp-action="assigning_proposal_forsupervisor"
                            class="btn btn-primary btn-sm mt-3">Send to supervisors</a>
@@ -67,14 +67,14 @@ else
             <div class="card h-100">
                 <div class="card-body">
                     <div class="text-secondary mb-1">Publications</div>
-                    <div class="h1 m-0">@Model.Publications.Count</div>
+                    <div class="h1 m-0">@Model.PublicationsTotal</div>
                     <div class="text-secondary">under your coordination</div>
                 </div>
             </div>
         </div>
     </div>
 
-    @if (Model.Publications.Count == 0)
+    @if (Model.PublicationsTotal == 0)
     {
         <div class="card">
             <div class="card-body text-center py-5">

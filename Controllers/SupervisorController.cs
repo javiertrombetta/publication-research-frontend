@@ -34,7 +34,7 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return View(model);
             }
 
-            model.Supervising = supervising.Data ?? [];
+            model.Supervising = supervising.Data?.Items ?? [];
 
             // The listing already carries the ethics status, so the two ethics queues come out of
             // it without a request per publication.
@@ -52,8 +52,10 @@ namespace ResearchPublicationManagementSystem.Controllers
             var invited = await proposalsApi.GetInvitedAsync();
             model.InvitedProposals = invited.Data ?? [];
 
+            // The dashboard states a figure, so it takes the total rather than the page.
             var papers = await publicationsApi.GetPendingForSupervisorAsync();
-            model.PapersAwaitingReview = papers.Data ?? [];
+            model.PapersAwaitingReview = papers.Data?.Items ?? [];
+            model.PapersAwaitingReviewTotal = papers.Data?.TotalCount ?? 0;
 
             return View(model);
         }
@@ -155,7 +157,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         {
             var model = new SupervisorPapersViewModel();
 
-            var papers = await publicationsApi.GetPendingForSupervisorAsync();
+            var papers = await publicationsApi.GetPendingForSupervisorAsync(page);
             if (!papers.Success)
             {
                 TempData["ErrorMessage"] = papers.ErrorMessage ?? "Could not load the papers awaiting your review.";
@@ -163,15 +165,8 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return View(model);
             }
 
-            var all = papers.Data ?? [];
-            model.Papers = Paging.Page(all, page);
-            model.Pager = new PagerViewModel
-            {
-                Controller = "Supervisor",
-                Action = nameof(publication_review),
-                Page = Paging.ClampPage(page, all.Count),
-                TotalPages = Paging.TotalPages(all.Count)
-            };
+            model.Papers = papers.Data?.Items ?? [];
+            model.Pager = Paging.PagerFor(papers.Data, "Supervisor", nameof(publication_review));
 
             return View(model);
         }
@@ -210,7 +205,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         private async Task<(SupervisorEthicsViewModel Model, IActionResult? Redirect)> LoadEthicsAsync(Guid containerId)
         {
             var supervising = await containersApi.GetSupervisingAsync();
-            var container = (supervising.Data ?? []).FirstOrDefault(c => c.Id == containerId);
+            var container = (supervising.Data?.Items ?? []).FirstOrDefault(c => c.Id == containerId);
 
             if (container is null)
             {

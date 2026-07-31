@@ -62,7 +62,8 @@ namespace ResearchPublicationManagementSystem.Models
 
     public class DepartmentProposalItem
     {
-        public PublicationContainerDto Container { get; set; } = null!;
+        /// <summary>Carried on the proposals themselves, so the screen is one request.</summary>
+        public string StudentName { get; set; } = string.Empty;
 
         public IReadOnlyList<ProposalDto> Proposals { get; set; } = [];
     }

@@ -1,3 +1,4 @@
+using ResearchPublicationManagementSystem.Common;
 using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
 
 namespace ResearchPublicationManagementSystem.Infrastructure.Api;
@@ -23,15 +24,27 @@ public class ProposalsApiClient(HttpClient httpClient) : ApiClientBase(httpClien
     /// Every proposal in this coordinator's publications, with each supervisor's answer attached.
     /// Replaces walking the publications and asking per proposal, which cost a request a row.
     /// </summary>
-    public Task<ApiResult<IReadOnlyList<ProposalWithInvitationsDto>>> GetForCoordinatorAsync(CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<ProposalWithInvitationsDto>>("api/proposals/for-coordinator", ct);
+    /// <param name="awaitingAllocation">
+    /// Only the proposals a supervisor has offered to take on and nobody has been allocated to —
+    /// what the selection screen can act on. Filtered by the API so a page of it is a page of that
+    /// screen rather than of everything.
+    /// </param>
+    public Task<ApiResult<PagedResultDto<ProposalWithInvitationsDto>>> GetForCoordinatorAsync(
+        int page = 1, bool awaitingAllocation = false, int pageSize = Paging.DefaultPageSize,
+        CancellationToken ct = default) =>
+        GetAsync<PagedResultDto<ProposalWithInvitationsDto>>(
+            $"api/proposals/for-coordinator?page={Math.Max(1, page)}&pageSize={pageSize}&awaitingAllocation={awaitingAllocation}", ct);
 
     /// <summary>Every proposal from the students of the department this person heads.</summary>
-    public Task<ApiResult<IReadOnlyList<ProposalWithInvitationsDto>>> GetInMyDepartmentAsync(CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<ProposalWithInvitationsDto>>("api/proposals/in-my-department", ct);
+    public Task<ApiResult<PagedResultDto<ProposalWithInvitationsDto>>> GetInMyDepartmentAsync(
+        int page = 1, int pageSize = Paging.DefaultPageSize, CancellationToken ct = default) =>
+        GetAsync<PagedResultDto<ProposalWithInvitationsDto>>(
+            $"api/proposals/in-my-department?page={Math.Max(1, page)}&pageSize={pageSize}", ct);
 
-    public Task<ApiResult<IReadOnlyList<ProposalDto>>> GetPendingAsync(CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<ProposalDto>>("api/proposals/pending", ct);
+    public Task<ApiResult<PagedResultDto<ProposalDto>>> GetPendingAsync(
+        int page = 1, int pageSize = Paging.DefaultPageSize, CancellationToken ct = default) =>
+        GetAsync<PagedResultDto<ProposalDto>>(
+            $"api/proposals/pending?page={Math.Max(1, page)}&pageSize={pageSize}", ct);
 
     public Task<ApiResult<object?>> SendToSupervisorsAsync(SendToSupervisorsRequestDto request, CancellationToken ct = default) =>
         PostJsonAsync<object?>("api/proposals/send-to-supervisors", request, ct);
