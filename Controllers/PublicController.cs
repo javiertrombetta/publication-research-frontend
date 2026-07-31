@@ -12,11 +12,31 @@ namespace ResearchPublicationManagementSystem.Controllers
     /// the backend enforces that independently.
     /// </summary>
     [AllowAnonymous]
-    public class PublicController(CatalogueApiClient catalogueApi) : Controller
+    public class PublicController(
+        CatalogueApiClient catalogueApi,
+        Services.IInstitutionDetails institution) : Controller
     {
-        [HttpGet]
-        public async Task<IActionResult> public_catalogue([FromQuery] CatalogueSearchQuery search)
+        /// <summary>
+        /// Sends an anonymous visitor to sign in when there is no public catalogue to show them.
+        ///
+        /// The API refuses these requests as well — this only saves the visitor a page reporting a
+        /// failure that is not a failure. Signed-in people are unaffected: the setting governs the
+        /// public catalogue, not the institution's own access to what it has published.
+        /// </summary>
+        private async Task<IActionResult?> RedirectIfNotPublicAsync(CancellationToken cancellationToken)
         {
+            if (User.Identity?.IsAuthenticated == true) return null;
+
+            return (await institution.GetAsync(cancellationToken)).PublicCatalogueEnabled
+                ? null
+                : RedirectToAction("home", "Auth");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> public_catalogue([FromQuery] CatalogueSearchQuery search, CancellationToken cancellationToken)
+        {
+            if (await RedirectIfNotPublicAsync(cancellationToken) is { } redirect) return redirect;
+
             search.Page = Math.Max(1, search.Page);
             search.PageSize = CatalogueSearchQuery.DefaultPageSize;
 
@@ -37,8 +57,10 @@ namespace ResearchPublicationManagementSystem.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> published_detail(Guid id)
+        public async Task<IActionResult> published_detail(Guid id, CancellationToken cancellationToken)
         {
+            if (await RedirectIfNotPublicAsync(cancellationToken) is { } redirect) return redirect;
+
             var result = await catalogueApi.GetByIdAsync(id);
             if (!result.Success || result.Data is null)
             {

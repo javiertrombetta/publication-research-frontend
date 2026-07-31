@@ -19,6 +19,17 @@ public class ProposalsApiClient(HttpClient httpClient) : ApiClientBase(httpClien
     // ---------- Coordinator ----------
 
     /// <summary>Submitted proposals of the acting Coordinator that no supervisor has been invited to yet.</summary>
+    /// <summary>
+    /// Every proposal in this coordinator's publications, with each supervisor's answer attached.
+    /// Replaces walking the publications and asking per proposal, which cost a request a row.
+    /// </summary>
+    public Task<ApiResult<IReadOnlyList<ProposalWithInvitationsDto>>> GetForCoordinatorAsync(CancellationToken ct = default) =>
+        GetAsync<IReadOnlyList<ProposalWithInvitationsDto>>("api/proposals/for-coordinator", ct);
+
+    /// <summary>Every proposal from the students of the department this person heads.</summary>
+    public Task<ApiResult<IReadOnlyList<ProposalWithInvitationsDto>>> GetInMyDepartmentAsync(CancellationToken ct = default) =>
+        GetAsync<IReadOnlyList<ProposalWithInvitationsDto>>("api/proposals/in-my-department", ct);
+
     public Task<ApiResult<IReadOnlyList<ProposalDto>>> GetPendingAsync(CancellationToken ct = default) =>
         GetAsync<IReadOnlyList<ProposalDto>>("api/proposals/pending", ct);
 

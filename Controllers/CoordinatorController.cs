@@ -129,22 +129,27 @@ namespace ResearchPublicationManagementSystem.Controllers
                 .Where(c => c.CurrentPipeline == PipelineStage.ResearchProposals && c.Status != "Completed")
                 .ToList();
 
+            // One request for every proposal and every supervisor's answer, joined to the
+            // publications in memory. This used to be a request per publication and then one per
+            // proposal on top, so the page grew more expensive with the department while showing
+            // the same few rows anybody could act on.
+            var proposals = await proposalsApi.GetForCoordinatorAsync();
+            var byContainer = (proposals.Data ?? [])
+                .ToLookup(p => p.PublicationContainerId);
+
             foreach (var container in candidates)
             {
-                var proposals = await proposalsApi.GetByContainerAsync(container.Id);
-                foreach (var proposal in proposals.Data ?? [])
+                foreach (var proposal in byContainer[container.Id])
                 {
-                    var selections = await proposalsApi.GetSelectionsAsync(proposal.Id);
-                    var invitations = selections.Data ?? [];
-
                     // Nothing to decide until a supervisor has actually accepted one.
-                    if (!invitations.Any(i => i.IsSelected)) continue;
+                    if (!proposal.Invitations.Any(i => i.IsSelected)) continue;
 
                     model.Items.Add(new SupervisorSelectionItem
                     {
                         Container = container,
-                        Proposal = proposal,
-                        Invitations = invitations
+                        Proposal = new ProposalDto(proposal.Id, proposal.PublicationContainerId,
+                            proposal.Title, proposal.Abstract, proposal.Status, proposal.SubmittedAt),
+                        Invitations = proposal.Invitations
                     });
                 }
             }

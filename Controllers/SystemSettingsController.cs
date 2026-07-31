@@ -15,7 +15,10 @@ namespace ResearchPublicationManagementSystem.Controllers
     /// page — would mean a rejected mail server silently discarding an unrelated edit.
     /// </summary>
     [Authorize(Roles = RoleNames.Admin)]
-    public class SystemSettingsController(SettingsApiClient settingsApi, IHostEnvironment environment) : Controller
+    public class SystemSettingsController(
+        SettingsApiClient settingsApi,
+        IHostEnvironment environment,
+        Services.IInstitutionDetails institution) : Controller
     {
         [HttpGet]
         public async Task<IActionResult> Index(string? tab)
@@ -181,15 +184,21 @@ namespace ResearchPublicationManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SaveAccess(
             string registrationMode, bool azureSsoEnabled, int invitationValidDays,
-            int accessTokenMinutes, int refreshTokenDays)
+            int accessTokenMinutes, int refreshTokenDays, bool publicCatalogueEnabled)
         {
             var result = await settingsApi.UpdateAccessAsync(new UpdateAccessSettingsRequestDto(
-                registrationMode, azureSsoEnabled, invitationValidDays, accessTokenMinutes, refreshTokenDays));
+                registrationMode, azureSsoEnabled, invitationValidDays, accessTokenMinutes,
+                refreshTokenDays, publicCatalogueEnabled));
+
+            // The landing page is cached for a minute so it is not fetched on every render; drop
+            // that now, or an administrator switching the catalogue off would keep being sent to
+            // it and reasonably conclude the setting had not saved.
+            if (result.Success) institution.Invalidate();
 
             return Done(result.Success, "access", result.ErrorMessage,
-                registrationMode == "Open"
-                    ? "Saved. Anyone with an institutional address can now create their own account."
-                    : "Saved. Accounts are created by invitation only.");
+                publicCatalogueEnabled
+                    ? "Saved. The public catalogue is the site's landing page."
+                    : "Saved. The public catalogue is off; visitors are shown the sign-in page.");
         }
 
         // ---------- Uploads ----------

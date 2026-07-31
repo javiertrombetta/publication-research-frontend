@@ -112,6 +112,10 @@
                 <a asp-controller="AuditLogs" asp-action="Index" class="@NavClass(currentController, currentAction, "AuditLogs", "Index")">Audit log</a>
             }
 
+            @* Shown whatever the public-catalogue setting says. That setting governs what the
+               world sees, not what the institution can see of its own published work — and if it
+               were hidden here too, a student's decision to publish would have no visible effect
+               anywhere, which would make that step of the process meaningless. *@
             <a asp-controller="Public" asp-action="public_catalogue" class="@NavClass(currentController, currentAction, "Public", "public_catalogue")">Public catalogue</a>
 
         </nav>

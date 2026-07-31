@@ -44,3 +44,16 @@ public static class ProposalStatus
 
 /// <summary>A supervisor saying they are willing to take a proposal on. Comments are optional.</summary>
 public record SupervisorSelectionRequestDto(string? Comments);
+
+/// <summary>
+/// A proposal with the supervisors it went to and what each said. One request for a whole
+/// screen's worth, instead of one per proposal.
+/// </summary>
+public record ProposalWithInvitationsDto(
+    Guid Id,
+    Guid PublicationContainerId,
+    string Title,
+    string Abstract,
+    string Status,
+    DateTime? SubmittedAt,
+    IReadOnlyList<SupervisorInvitationDto> Invitations);

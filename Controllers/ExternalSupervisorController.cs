@@ -19,8 +19,7 @@ namespace ResearchPublicationManagementSystem.Controllers
     /// </summary>
     [Authorize(Roles = $"{RoleNames.InternalCommitteeMember},{RoleNames.ExternalCommitteeMember}")]
     public class ExternalSupervisorController(
-        CommitteesApiClient committeesApi,
-        PublicationsApiClient publicationsApi) : Controller
+        CommitteesApiClient committeesApi) : Controller
     {
         [HttpGet]
         public async Task<IActionResult> External_Supervisor_Dashboard()
@@ -99,14 +98,12 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             foreach (var committee in assignments.Data ?? [])
             {
-                // The assignment carries only a publication id, so the paper is fetched to have
-                // something readable to review.
-                var paper = await publicationsApi.GetByIdAsync(committee.PublicationId);
-
+                // The assignment now carries the paper's title and abstract, which is all this
+                // list shows of it. It used to fetch the paper per committee, so a member on
+                // several committees paid a request for each before the page appeared.
                 model.Items.Add(new CommitteeAssignmentItem
                 {
                     Committee = committee,
-                    Paper = paper.Data,
                     Me = committee.Members.FirstOrDefault(m => m.UserId == me)
                 });
             }
