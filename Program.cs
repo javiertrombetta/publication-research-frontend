@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
 using ResearchPublicationManagementSystem.Infrastructure.Api;
@@ -9,6 +10,15 @@ using ResearchPublicationManagementSystem.Infrastructure.Options;
 using ResearchPublicationManagementSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Most PaaS targets (Render included) assign the listen port at runtime via PORT rather than a
+// fixed value baked into config. Only override Kestrel's URLs when it is actually set, so local
+// development keeps using launchSettings.json as before.
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
 
 // ---------- Options ----------
 builder.Services.AddOptions<ApiOptions>().Bind(builder.Configuration.GetSection(ApiOptions.SectionName));
@@ -36,6 +46,22 @@ builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();
+});
+
+// Behind a TLS-terminating proxy — which is every PaaS, Render included — the request reaches
+// Kestrel over plain HTTP. Without this the app believes it is being served insecurely, and
+// UseHttpsRedirection below sends the browser to https, which the proxy forwards back as http,
+// forever. It also keeps the auth cookie's SameAsRequest secure policy from downgrading.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+    // The platform's edge is the only path into the container and its proxy address is not known
+    // in advance, so the headers are trusted whatever their source — the usual PaaS pattern.
+    // KnownNetworks rather than KnownIPNetworks: this project targets net8.0, where the
+    // newer property does not exist yet.
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
 });
 
 builder.Services.AddHttpContextAccessor();
@@ -142,6 +168,9 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedUICultures = [britishEnglish]
 });
 
+// Before anything that inspects the scheme or the client address.
+app.UseForwardedHeaders();
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -149,6 +178,12 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Deliberately shallow: it answers whether this process is up and serving, not whether the API
+// behind it is. A deployment gate that failed because the backend was briefly unavailable would
+// roll back a frontend that is perfectly fine.
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestampUtc = DateTime.UtcNow }))
+    .AllowAnonymous();
 
 app.MapControllerRoute(
     name: "default",
