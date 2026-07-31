@@ -1,210 +1,137 @@
- # Research Publication Management System (RPMS)
+# Research Publication Management System — Frontend
 
-This branch contains the frontend implementation that I developed for the Research Publication Management System (RPMS).
+The web application for Auckland Institute of Studies' research publication process: students
+submit research proposals, work through ethics approval, and submit a research paper, which
+coordinators, supervisors and an evaluation committee review before it can reach a public
+catalogue.
 
-## Running the Project
+This repository holds the frontend only. It is an ASP.NET Core MVC application that renders
+Razor views and talks to the REST API in
+[publication-research-backend](https://github.com/javiertrombetta/publication-research-backend).
+It has no database of its own.
 
-1. Clone the repository.
-2. Open the **ResearchPublicationManagementSystem** project folder in **Visual Studio 2022**.
-3. Build the solution.
-4. Press **F5** or click **Run**.
+## Architecture
 
-Alternatively, you can run the project using the .NET CLI:
+The frontend keeps no persistent state. Every piece of data comes from the API through a typed
+client, and the only thing it stores in the browser is an encrypted authentication cookie.
+
+Authentication bridges two models. The API issues JWT access and refresh tokens; the browser
+never sees them. On a successful sign-in the tokens are stored as claims inside an encrypted
+cookie, along with the user's roles, so `[Authorize(Roles = ...)]` works directly against the
+role claims. A `DelegatingHandler` attaches the bearer token to every outgoing API call,
+refreshes it shortly before it expires, and retries once on a `401`.
+
+Authorisation is deny-by-default: a global fallback policy requires an authenticated user, and
+anything reachable without an account — the public catalogue, sign-in, sign-up, password
+recovery, the privacy policy — says so explicitly with `[AllowAnonymous]`.
+
+```
+Browser ──cookie──▶ ASP.NET Core MVC (this repo) ──Bearer JWT──▶ REST API ──▶ MySQL
+```
+
+## Requirements
+
+- [.NET SDK 8.0](https://dotnet.microsoft.com/download) or newer
+- A running instance of the backend API
+
+## Configuration
+
+`appsettings.json` holds the defaults; `appsettings.Development.json` points at a local API.
+
+| Key | Purpose |
+| --- | --- |
+| `Api:BaseUrl` | Where the backend API lives. |
+| `Institution:ItSupportEmail` | Address behind the footer's "Contact IT". Empty until decided, and while empty the footer shows plain text rather than a link that goes nowhere. |
+| `Institution:ResearchEnquiriesEmail` | Address a reader writes to for the full text of a published paper. Same behaviour when empty. |
+| `Institution:PrivacyPolicyUrl` | The institution's authoritative privacy policy. |
+
+## Running it
+
+Start the backend first, then:
 
 ```bash
-dotnet run
+dotnet run --launch-profile http
 ```
 
-After the application starts, open your web browser and navigate to the URL shown in the terminal, for example:
+The application listens on `http://localhost:5090` (or `https://localhost:7178` with the
+`https` profile) and opens on the public catalogue.
 
-```
-https://localhost:5001
-```
+To point it at a different API without editing files:
 
-or
-
-```
-http://localhost:5000
+```bash
+dotnet run --launch-profile http -- --Api:BaseUrl=https://your-api-host
 ```
 
-Append the following routes to the URL to access each screen.
+## What is wired up
 
----
+Each role's screens exist, but only some are connected to the API. The rest are laid-out views
+still waiting to be wired.
 
-# Available Screens
+| Area | State |
+| --- | --- |
+| Sign in, sign up, email verification, password recovery and reset | Connected |
+| Public catalogue and publication detail | Connected |
+| Student — publications, proposals, ethics, research paper, publication decision | Connected |
+| Profile and profile photo (all roles) | Connected |
+| Coordinator, Supervisor, Head of Department, External Committee Member, Admin | Views only |
 
-## User Management
+### The student's route through the system
 
-| Screen | URL |
-|---------|-----|
-| User List | `/Users` |
-| Create User | `/Users/Create` |
-| Edit User | `/Users/Edit` |
+A student may run several publications at once, each with its own proposals, ethics workflow and
+paper. Every pipeline route carries the publication's id and is guarded by both ownership and
+stage, so a URL cannot be edited into someone else's work or into a stage that has not opened.
 
----
+1. **Research proposals** — up to three, submitted together. A coordinator sends them to
+   supervisors, a supervisor picks one, and the coordinator assigns them.
+2. **Ethics approval** — a screening questionnaire followed by a declaration, then a supervisor
+   and a coordinator decide whether documentation is required.
+3. **Research paper** — drafted, uploaded and submitted, then reviewed by the supervisor and an
+   evaluation committee before the coordinator accepts it.
+4. **Publication decision** — once accepted, the author alone decides whether the paper appears
+   in the public catalogue.
 
-## Category Management
+Each publication carries an activity history: every action taken on it, by whom, in what
+capacity, and the comment that justified it.
 
-| Screen | URL |
-|---------|-----|
-| Category List | `/Categories` |
-| Create Category | `/Categories/Create` |
-| Edit Category | `/Categories/Edit` |
+### The public catalogue
 
----
+The catalogue is the site's front door and needs no account. It lists published papers with
+their abstracts and offers search by title or abstract, author, keyword and year, along with an
+APA 7th citation for each.
 
-## System Settings
+The full text is deliberately not downloadable from it: a reader asks the institution for a copy,
+and the API's download endpoint requires a signed-in user.
 
-| Screen | URL |
-|---------|-----|
-| System Settings | `/SystemSettings` |
+## Project layout
 
----
+```
+Controllers/          One per role, plus Auth, Profile, Public and Home
+Models/               View models, grouped by area
+Infrastructure/
+  Api/                Typed API clients, DTOs and the shared response envelope
+  Http/               Bearer-token attach, refresh and retry
+  Options/            Strongly-typed configuration
+Services/             Authentication cookie handling
+Common/               Role landing, role names, status display
+Views/                Razor views, grouped by controller
+wwwroot/              Site CSS and JavaScript, and vendored Tabler and Bootstrap
+```
 
-## Audit Log
+## Conventions
 
-| Screen | URL |
-|---------|-----|
-| Audit Log | `/AuditLogs` |
+- **British English** throughout the interface copy, and `en-GB` as the application's culture, so
+  dates read `30 Jul 2026` rather than `Jul 30, 2026`.
+- **Statuses** are humanised at the point of display (`InProgress` becomes `In Progress`) and
+  coloured from a single mapping in `Common/DisplayText.cs`, so the same status is the same
+  colour on every screen.
+- **Messages** — flash messages and validation errors alike — are rendered as toasts from one
+  shared template. A controller sets `TempData["SuccessMessage"]` or `TempData["ErrorMessage"]`,
+  or leaves `ModelState` invalid, and needs no markup of its own.
+- **Search and filter state** lives in the query string, so a filtered view can be linked to and
+  reloaded, and keeps working without JavaScript.
 
----
+## Technology
 
-## Dashboard
-
-| Screen | URL |
-|---------|-----|
-| Admin Dashboard | `/Admin/dashboard` |
-
----
-
-## Authentication
-
-| Screen | URL |
-|---------|-----|
-| Log In | `/Auth/home` |
-| Password Recovery | `/Auth/passwordrecovery` |
-| Password Reset | `/Auth/passwordreset` |
-| Sign Up | `/Auth/signup` |
-
----
-
-## Coordinator
-
-| Screen | URL |
-|---------|-----|
-| Assigning proposal for supervisor | `/Coordinator/assigning_proposal_forsupervisor` |
-| Committee Review | `/Coordinator/committee_review` |
-| Coordinator Dashboard | `/Coordinator/Coordinator_dashboard` |
-| Edit Staff Profile | `/Coordinator/Edit_staff_profile` |
-| Ethic review after supervisor | `/Coordinator/Ethic_review_aftersupervisor` |
-| Evaluation after committee | `/Coordinator/Evaluation_after_committee` |
-| Ethic review after head of department | `/Coordinator/Ethic_review_afters_headofdepartment` |
-| Select a proposal for student | `/Coordinator/select_a_proposal_forstudent` |
-| Staff Profile | `/Coordinator/staff_profile` |
-| Assign Committee Members | `/Coordinator/assigning_committee_members` |
-
-
----
-
-## ExternalSupervisor
-
-| Screen | URL |
-|---------|-----|
-| Committee Review | `/ExternalSupervisor/committee_review` |
-| Edit Staff Profile | `/ExternalSupervisor/Edit_staff_profile` |
-| External Supervisor Dashboard | `/ExternalSupervisor/External_Supervisor_Dashboard` |
-| Staff Profile | `/ExternalSupervisor/staff_profile` |
-
----
-
-## HeadOfDepartment
-
-| Screen | URL |
-|---------|-----|
-| All proposals from student | `/HeadOfDepartment/all_proposals_fromstudent` |
-| Committee Review | `/HeadOfDepartment/committee_review` |
-| Edit Staff Profile | `/HeadOfDepartment/Edit_staff_profile` |
-| Head Of Department Dashboard | `/HeadOfDepartment/Head_of_Department_dashboard` |
-| Head of Deaprtment Feedback | `/HeadOfDepartment/Headofdepartment_feedback` |
-| Staff Profile | `/HeadOfDepartment/staff_profile` |
-
----
-
-## Public
-
-| Screen | URL |
-|---------|-----|
-| Public Catalogue | `/Public/public_catalogue` |
-| Published Detail | `/Public/published_detail` |
-
----
-## Student
-
-| Screen | URL |
-|---------|-----|
-| Create Proposal | `/Student/Create_proposals` |
-| Create Publication | `/Student/Create_Publication` |
-| Edit Student Profile | `/Student/Edit_studentprofile` |
-| Ethic risk assessment | `/Student/Ethic_risk_assessment` |
-| Student Dashboard | `/Student/student_dashboard` |
-| Student Profile | `/Student/studentprofile` |
-| Upload ethic file | `/Student/Upload_Ethic_file` |
-
----
-## Supervisor
-
-| Screen | URL |
-|---------|-----|
-| Committee Review | `/Supervisor/committee_review` |
-| Edit Staff Profile | `/Supervisor/Edit_staff_profile` |
-| Ethic document review | `/Supervisor/Ethic_document_review` |
-| Proposal Review | `/Supervisor/proposal_review` |
-| Publication Review | `/Supervisor/publication_review` |
-| Review ethic assessment checklist | `/Supervisor/Review_Ethic_assessmentchecklist` |
-| Staff Profile | `/Supervisor/staff_profile` |
-| Supervisor Dashboard | `/Supervisor/SupervisorDashboard` |
-
----
-
-## Admin
-
-| Screen | URL |
-|---------|-----|
-| Admin Check Proposal details | `/Admin/Admin_check_proposaldetail` |
-| Assign Committee Members | `/Admin/assigning_committee_members` |
-
-
-## Current Progress
-
-Completed modules:
-
-- ✅ Dashboard
-- ✅ User Management
-- ✅ Category Management
-- ✅ System Settings
-- ✅ Audit Log
-
-Modules currently under development:
-
-- ⏳ Role Assignment
-- ⏳ Proposal Management
-- ⏳ Publication Management
-- ⏳ Workflow
-- ⏳ Reports
-
----
-
-## Technology Stack
-
-- ASP.NET Core MVC (.NET 8)
-- Razor Views
-- Entity Framework Core
-- ASP.NET Identity
-- SQL Server
-- Bootstrap 5
-- Tabler UI
-
----
-
-Lei Yee Wynn Thaung
-
+ASP.NET Core MVC (.NET 8) with Razor views, Tabler UI on Bootstrap 5, and jQuery Validation for
+client-side form validation. No ORM, no database driver and no Identity: persistence and identity
+belong to the backend.
