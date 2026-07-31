@@ -9,8 +9,4 @@
     <RollForward>LatestMajor</RollForward>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\Images\" />
-  </ItemGroup>
-
 </Project>
