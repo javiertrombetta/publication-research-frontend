@@ -1,301 +1,249 @@
+@model StudentDashboardViewModel
+@{
+    ViewData["Title"] = "My publications";
 
+    string StageLabel(int stage) => stage switch
+    {
+        1 => "Research proposals",
+        2 => "Ethics approval",
+        3 => "Research paper",
+        _ => "—"
+    };
 
-    <div class="page">
-        <!--Start page wrapper-->
-        <div class="page-wrapper">
-            <!--Start of page header-->
-            <div class="page-header d-print-none">
-                <div class="container-xl">
-                    <div class="row g-2 align-items-center">
-                        <div class="col">
-                            <div class="d-flex flex-column align-items-start gap-2">
-                                <h2 class="page-title">Student Dashboard</h2>
-                                <a href="#" class="btn btn-primary">
-                                    View Reports
-                                </a>
+    var sortOptions = new (string Value, string Label)[]
+    {
+        (PublicationSort.DateNewest, "Newest first"),
+        (PublicationSort.DateOldest, "Oldest first"),
+        (PublicationSort.Title,      "Title (A–Z)"),
+        (PublicationSort.Status,     "Status")
+    };
+}
+
+@* flex-wrap + gap so the action drops below the heading on narrow screens instead of
+   overflowing it. *@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h1 class="page-title mb-1">My publications</h1>
+        <div class="text-secondary">Each publication runs its own proposals, ethics and paper process.</div>
+    </div>
+    @if (!Model.LoadFailed)
+    {
+        <a asp-controller="Student" asp-action="CreateContainer" class="btn btn-primary">
+            Start a new publication
+        </a>
+    }
+</div>
+
+@if (Model.LoadFailed)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">We couldn't load your publications</h3>
+            <p class="text-secondary mb-4">
+                This is a temporary problem reaching the server — your work is safe. Try again in a moment.
+            </p>
+            <a asp-controller="Student" asp-action="student_dashboard" class="btn btn-primary">Retry</a>
+        </div>
+    </div>
+}
+else if (Model.TotalCount == 0)
+{
+    @* Nothing to search or sort yet — go straight to the empty state. *@
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">You haven't started yet</h3>
+            <p class="text-secondary mb-4">
+                Start a publication to begin submitting research proposals.
+            </p>
+            <a asp-controller="Student" asp-action="CreateContainer" class="btn btn-primary">
+                Start your first publication
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    @* Only worth showing once the list is long enough to be hard to scan — see ShowSearchTools. *@
+    @if (Model.ShowSearchTools)
+    {
+    <!-- Search and sort. GET so the current view stays in the URL and survives a reload. -->
+    <form method="get" asp-controller="Student" asp-action="student_dashboard" class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+
+                <div class="col-12 col-md">
+                    <label for="publication-search" class="form-label">Search</label>
+                    <input type="search"
+                           id="publication-search"
+                           name="q"
+                           value="@Model.Query"
+                           class="form-control"
+                           placeholder="Search by title, coordinator or supervisor" />
+                </div>
+
+                <div class="col-12 col-sm-auto">
+                    <label for="publication-sort" class="form-label">Sort by</label>
+                    <select id="publication-sort" name="sort" class="form-select">
+                        @foreach (var option in sortOptions)
+                        {
+                            <option value="@option.Value" selected="@(Model.Sort == option.Value)">@option.Label</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-12 col-sm-auto">
+                    <button type="submit" class="btn btn-primary w-100">Apply</button>
+                </div>
+
+                @if (Model.HasQuery)
+                {
+                    <div class="col-12 col-sm-auto">
+                        <a asp-controller="Student" asp-action="student_dashboard"
+                           asp-route-sort="@Model.Sort" class="btn btn-link text-secondary w-100">
+                            Clear
+                        </a>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </form>
+    }
+
+    @if (Model.HasQuery)
+    {
+        <div class="text-secondary mb-3">
+            Showing @Model.Publications.Count of @Model.TotalCount publications for &ldquo;@Model.Query&rdquo;.
+        </div>
+    }
+
+    @if (Model.Publications.Count == 0)
+    {
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <h3 class="mb-2">No publications match your search</h3>
+                <p class="text-secondary mb-4">Try a different term, or clear the search to see all @Model.TotalCount.</p>
+                <a asp-controller="Student" asp-action="student_dashboard" asp-route-sort="@Model.Sort" class="btn btn-primary">
+                    Clear search
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cards">
+            @foreach (var publication in Model.Publications)
+            {
+                var isDone = publication.Status == "Completed";
+                @* An accepted paper finishes the publication stage even though the container
+                   stays InProgress until its author makes the publication decision. *@
+                var stagesFinished = isDone || publication.IsPaperDecided;
+                <div class="col-12 col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body d-flex flex-column">
+
+                            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                <h3 class="m-0">@publication.DisplayTitle</h3>
+                                @* flex-shrink-0 keeps the status badge from being squeezed off the
+                                   card by a long title. *@
+                                <span class="badge flex-shrink-0 @StatusBadge(publication.DisplayStatus)">@Humanise(publication.DisplayStatus)</span>
                             </div>
+
+                            <div class="text-secondary mb-3">
+                                @* Local time, and the same format as the activity history, so the
+                                   "Started" here matches the container's first history entry. *@
+                                Started @publication.CreatedAt.ToLocalTime().ToString("dd MMM yyyy 'at' HH:mm")
+                                &middot; Coordinator: @publication.CoordinatorName
+                                @if (publication.AssignedSupervisorName is not null)
+                                {
+                                    <text>&middot; Supervisor: @publication.AssignedSupervisorName</text>
+                                }
+                            </div>
+
+                            <!-- Stage progress -->
+                            <div class="mb-3">
+                                <div class="d-flex gap-2">
+                                    @for (var stage = 1; stage <= 3; stage++)
+                                    {
+                                        var state = stagesFinished || publication.CurrentPipeline > stage ? "done"
+                                            : publication.CurrentPipeline == stage ? "current" : "todo";
+
+                                        @* The stage under way is coloured by the status shown on the
+                                           badge above, so the two never say different things. *@
+                                        var barClass = state switch
+                                        {
+                                            "done" => StatusBar("Completed"),
+                                            "current" => StatusBar(publication.DisplayStatus),
+                                            _ => ""
+                                        };
+
+                                        <div class="flex-fill">
+                                            <div class="rpms-stage-bar @barClass"></div>
+                                            <div class="small mt-1 @(state == "todo" ? "text-secondary" : "")">@StageLabel(stage)</div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="mt-auto d-flex gap-2">
+                                <a asp-controller="Student" asp-action="Publication" asp-route-id="@publication.Id"
+                                   class="btn btn-outline-primary flex-fill">
+                                    Open
+                                </a>
+                                @* Only while still empty — lets a student undo one created by mistake. *@
+                                @if (publication.CanBeDeleted)
+                                {
+                                    <button type="button" class="btn btn-outline-danger"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#delete-publication-modal"
+                                            data-publication-id="@publication.Id"
+                                            aria-label="Delete this publication">
+                                        Delete
+                                    </button>
+                                }
+                            </div>
+
                         </div>
                     </div>
                 </div>
-            </div>
-            <!--Start of page body-->
-            <div class="page-body">
-                <div class="container-xl">
-                    <div class="row row-cards">
+            }
+        </div>
+    }
 
-                        <!-- 1st card -->
-                        <div class="col-12 mb-4">
-                            <!-- Transparent Header Section -->
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <h3 class="m-0 text-secondary">Pending Proposal Review</h3>
-                                <span class="badge bg-blue-lt">3</span>
-                            </div>
-
-                            <!-- White card wrapper containing just the data grid -->
-                            <div class="card">
-                                <div class="table-responsive">
-                                    <table class="table card-table table-vcenter text-nowrap datatable">
-                                        <thead>
-                                            <!-- FIXED: Removed table-dark classes, added background color and white text. Stripped all vertical lines. -->
-                                            <tr style="background-color: #206bc4; color: #ffffff;">
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Proposal Title</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Date Submitted</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td>Oct 12, 2026</td>
-                                                <td>
-                                                    <span class="badge bg-success-lt">Approved</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Blockchain for Secure Academic Credentials</td>
-                                                <td>Nov 04, 2026</td>
-                                                <td>
-                                                    <span class="badge bg-warning-lt">Under Review</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>IoT-Based Campus Energy Optimization</td>
-                                                <td>Dec 19, 2026</td>
-                                                <td>
-                                                    <span class="badge bg-danger-lt">Rejected</span>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+    @* One shared modal for the whole list; the button that opened it supplies which publication. *@
+    @if (Model.Publications.Any(p => p.CanBeDeleted))
+    {
+        <div class="modal modal-blur fade" id="delete-publication-modal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-body text-center py-4">
+                        <h3>Delete this publication?</h3>
+                        <div class="text-secondary">
+                            It has no research proposals yet, so nothing is lost. This can't be undone,
+                            and once you add a proposal it can no longer be deleted.
                         </div>
-                        <!--End of 1st Card-->
-
-
-
-
-                        <!-- 2nd card: Selected Proposal -->
-                        <div class="col-12 mb-4">
-                            <!-- Transparent Header Section -->
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <h3 class="m-0 text-secondary">Your Selected Proposal</h3>
-                                <span class="badge bg-blue-lt">3</span>
-                            </div>
-
-                            <!-- White card wrapper -->
-                            <div class="card">
-                                <div class="table-responsive">
-                                    <table class="table card-table table-vcenter text-nowrap datatable">
-                                        <thead>
-                                            <tr style="background-color: #206bc4; color: #ffffff;">
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Supervisor name</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Proposal Title</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Last update</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Dr. John</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                <td>Oct 12, 2026</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Edit</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Prof. Alan Turing</td>
-                                                <td>Blockchain for Secure Academic Credentials</td>
-                                                <td>Oct 12, 2026</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Edit</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Dr. Elena Rostova</td>
-                                                <td>IoT-Based Campus Energy Optimization</td>
-                                                <td>Oct 12, 2026</td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Edit</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 3rd card: Submitted Proposals -->
-                        <div class="col-12 mb-4">
-                            <!-- Transparent Header Section -->
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <h3 class="m-0 text-secondary">Your Require Ethic Document Research</h3>
-                                <span class="badge bg-blue-lt">3</span>
-                            </div>
-
-                            <!-- White card wrapper containing just the data grid -->
-                            <div class="card">
-                                <div class="table-responsive">
-                                    <table class="table card-table table-vcenter text-nowrap datatable">
-                                        <thead>
-                                            <tr style="background-color: #206bc4; color: #ffffff;">
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Supervisor Name</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Proposal Title</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Last Update</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Status</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Dr. Sarah Jenkins</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                
-                                                <td>Oct 12, 2026</td>
-                                                <td><span class="badge bg-success-lt">New</span></td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Upload Ethic Files</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                 <td>Prof. Alan Turing</td>
-                                                <td>Blockchain for Secure Academic Credentials</td>
-                                               
-                                                <td>Nov 04, 2026</td>
-                                                <td><span class="badge bg-warning-lt">Need Change!!!</span></td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Upload Ethic Files</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Dr. Elena Rostova</td>
-                                                <td>IoT-Based Campus Energy Optimization</td>
-                                                
-                                                <td>Dec 19, 2026</td>
-                                                <td><span class="badge bg-danger-lt">Need Change!!!</span></td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Upload Ethic Files</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!--4th Card-->
-                    
-                        <div class="col-12 mb-4">
-                            <!-- Transparent Header Section -->
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <h3 class="m-0 text-secondary">Your Approved Ethical Research</h3>
-                                <span class="badge bg-blue-lt">3</span>
-                            </div>
-
-                            <!-- White card wrapper containing just the data grid -->
-                            <div class="card">
-                                <div class="table-responsive">
-                                    <table class="table card-table table-vcenter text-nowrap datatable">
-                                        <thead>
-                                            <tr style="background-color: #206bc4; color: #ffffff;">
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Supervisor Name</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Publication Titile</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Last Update</th>
-                                                <th
-                                                    style="background: inherit; color: inherit; border-left: none; border-right: none;">
-                                                    Status</th>
-                                                <th style="background: inherit; color: inherit; border-left: none; border-right: none;"
-                                                    class="w-1">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Dr. Sarah Jenkins</td>
-                                                <td>AI-Driven Adaptive Learning Platforms</td>
-                                                
-                                                <td>Oct 12, 2026</td>
-                                                <td><span class="badge bg-success-lt">Approved</span></td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Submit for publication</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Prof. Alan Turing</td>
-                                                <td>Blockchain for Secure Academic Credentials</td>
-                                                
-                                                <td>Nov 04, 2026</td>
-                                                <td><span class="badge bg-warning-lt">Approved</span></td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Submit for publication</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Dr. Elena Rostova</td>
-                                                <td>IoT-Based Campus Energy Optimization</td>
-                                                
-                                                <td>Dec 19, 2026</td>
-                                                <td><span class="badge bg-danger-lt">Approved</span></td>
-                                                <td>
-                                                    <div class="btn-list flex-nowrap">
-                                                        <a href="#" class="btn btn-sm btn-white">Submit for publication</a>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Cancel</button>
+                        <form id="delete-publication-form" method="post" class="m-0"
+                              asp-controller="Student" asp-action="DeletePublication">
+                            <button type="submit" class="btn btn-danger">Delete publication</button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
-        <!--End of page wrapper-->
-    </div>
 
+        @section Scripts {
+            <script>
+                // Point the shared modal's form at whichever publication was clicked.
+                document.getElementById('delete-publication-modal')
+                    .addEventListener('show.bs.modal', function (event) {
+                        var id = event.relatedTarget.getAttribute('data-publication-id');
+                        document.getElementById('delete-publication-form').action =
+                            '/Student/DeletePublication/' + encodeURIComponent(id);
+                    });
+            </script>
+        }
+    }
+}
