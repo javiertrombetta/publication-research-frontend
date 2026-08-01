@@ -36,10 +36,11 @@ namespace ResearchPublicationManagementSystem.Controllers
                 Descending = desc
             };
 
-            // Scoped to this coordinator: the endpoint would happily return every container in
-            // the institution, which is not what a coordinator's queue means.
+            // Scoped to this coordinator, and to work that is still moving. A publication that has
+            // been completed is a record rather than a task, and the question this screen answers
+            // is what is left to do; leaving them in pushed the live ones onto later pages.
             var containers = await containersApi.GetAllAsync(
-                coordinatorId: CurrentUserId(), page: page,
+                coordinatorId: CurrentUserId(), status: "InProgress", page: page,
                 sort: sort ?? "started", descending: desc);
             if (!containers.Success)
             {
@@ -63,6 +64,19 @@ namespace ResearchPublicationManagementSystem.Controllers
             // broken rather than as reserved.
             var awaitingAllocation = await proposalsApi.GetForCoordinatorAsync(page: 1, awaitingAllocation: true);
             model.SupervisorRepliesTotal = awaitingAllocation.Data?.TotalCount ?? 0;
+
+            // The two ethics queues, by size. The card here used to count publications, which is a
+            // figure that only grows and says nothing about what is waiting; a coordinator reading
+            // the top of this screen wants to know what is theirs to do.
+            var ethicsFirst = await containersApi.GetAllAsync(
+                coordinatorId: CurrentUserId(), ethicsSteps: EthicsSteps.CoordinatorFirstReview,
+                page: 1, pageSize: 1);
+            model.EthicsDecisionsTotal = ethicsFirst.Data?.TotalCount ?? 0;
+
+            var ethicsFinal = await containersApi.GetAllAsync(
+                coordinatorId: CurrentUserId(), ethicsSteps: EthicsSteps.CoordinatorFinalDecision,
+                page: 1, pageSize: 1);
+            model.FinalEthicsDecisionsTotal = ethicsFinal.Data?.TotalCount ?? 0;
 
             return View(model);
         }
