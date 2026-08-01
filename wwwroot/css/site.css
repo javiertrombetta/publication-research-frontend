@@ -946,7 +946,12 @@ aside {
 
 /* A heading that is also a control. It has to stay legible as a heading first: same weight, same
    case, same colour as the ones that are not sortable, so a table does not read as a row of
-   buttons. What marks it is the hover and the arrow on the column actually in use. */
+   buttons. What marks it is the hover and the arrow on the column actually in use.
+
+   Nothing here may change the width of a heading between its two states. A table sizes its columns
+   from their content, so a heading that grows when it becomes the sorted one drags every other
+   column along with it: click a heading and the whole table jumps, which reads as the page having
+   reloaded into something else. The colour is free, because colour has no width. */
 .rpms-sort {
     display: inline-flex;
     align-items: center;
@@ -960,16 +965,21 @@ aside {
         color: var(--rpms-primary);
     }
 
-    /* The column in use is named twice, by weight and by the arrow, because the arrow alone is
-       small and easy to miss on a wide table. */
+    /* Colour alone, deliberately. Bold marked the sorted column a third time and cost a few pixels
+       of text width doing it, which was enough to shift every column beside it. */
     .rpms-sort-active {
         color: var(--rpms-primary);
-        font-weight: 700;
     }
 
+/* Always in the layout, visible only on the column being sorted by. Rendering it only when active
+   would make the heading a whole icon wider at the moment it is clicked. */
 .rpms-sort-icon {
     flex: 0 0 auto;
 }
+
+    .rpms-sort-icon-idle {
+        visibility: hidden;
+    }
 
 /* A heading inside a card's own table, sorted in the browser. Same look as the queue headings so
    the two read as one idea, with the cursor saying it can be clicked. */
@@ -978,10 +988,39 @@ aside {
     user-select: none;
 }
 
+    /* Reserved, then revealed. Both arrows have the same advance width, so the heading measures the
+       same whether it is unsorted, ascending or descending. */
+    .rpms-sort-clickable::after {
+        content: " \2193";
+        visibility: hidden;
+    }
+
     .rpms-sort-clickable[data-rpms-sorted="asc"]::after {
         content: " \2191";
+        visibility: visible;
     }
 
     .rpms-sort-clickable[data-rpms-sorted="desc"]::after {
         content: " \2193";
+        visibility: visible;
+    }
+
+/* A table whose columns keep their widths whatever is in it.
+
+   The default is the opposite: a table sizes its columns from the content of the rows it is
+   currently showing. That is fine for a table that never changes, and wrong for a paged one, where
+   ten different rows arrive every time somebody sorts or turns a page. Sorting by student brought a
+   longer title onto the page, the Publication column grew to fit it, and every other column moved
+   to make room. Nothing about the table had changed except which ten rows were in it.
+
+   Fixed layout takes the widths from the first row instead, which is the colgroup, so they are
+   declared once and hold. Long values wrap rather than forcing the column open. */
+.rpms-table-stable {
+    table-layout: fixed;
+    width: 100%;
+}
+
+    .rpms-table-stable td,
+    .rpms-table-stable th {
+        overflow-wrap: anywhere;
     }

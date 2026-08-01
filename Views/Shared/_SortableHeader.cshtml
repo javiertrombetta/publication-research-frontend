@@ -10,20 +10,22 @@
             ? (Model.CurrentDescending ? $"Sorted by {Model.Label}, highest first. Click to reverse." : $"Sorted by {Model.Label}, lowest first. Click to reverse.")
             : $"Sort by {Model.Label}")">
     @Model.Label
-    @if (Model.IsActive)
-    {
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon rpms-sort-icon" width="16" height="16"
-             viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" fill="none"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            @if (Model.CurrentDescending)
-            {
-                <path d="M6 9l6 6l6 -6" />
-            }
-            else
-            {
-                <path d="M6 15l6 -6l6 6" />
-            }
-        </svg>
-    }
+
+    @* Always rendered, hidden until this is the column being sorted by. Drawn only when active it
+       would make the heading an icon wider the moment somebody clicked it, and a table sizes its
+       columns from their content, so every other column would shift to make room. *@
+    <svg xmlns="http://www.w3.org/2000/svg"
+         class="icon rpms-sort-icon @(Model.IsActive ? "" : "rpms-sort-icon-idle")"
+         width="16" height="16" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"
+         fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        @if (Model.IsActive && Model.CurrentDescending)
+        {
+            <path d="M6 9l6 6l6 -6" />
+        }
+        else
+        {
+            <path d="M6 15l6 -6l6 6" />
+        }
+    </svg>
 </a>
