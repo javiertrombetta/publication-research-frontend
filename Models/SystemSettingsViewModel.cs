@@ -27,7 +27,7 @@ namespace ResearchPublicationManagementSystem.Models
         public UploadSettingsDto Uploads { get; set; } = new(50, ".pdf,.doc,.docx,.zip");
 
         public StorageSettingsDto Storage { get; set; } =
-            new("local", "App_Data/uploads", null, null, null, null, false, false, "uploads", false);
+            new("local", "App_Data/uploads", null, null, null, null, false, false, "uploads", false, 0);
 
         /// <summary>What testing the destination said, when the administrator has just asked.</summary>
         public StorageCheckResultDto? StorageCheck { get; set; }

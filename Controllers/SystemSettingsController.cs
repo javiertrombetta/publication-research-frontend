@@ -225,7 +225,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         public async Task<IActionResult> SaveStorage(
             string provider, string? localPath, string? s3Bucket, string? s3Region, string? s3ServiceUrl,
             string? s3AccessKeyId, string? s3SecretKey, bool s3ForcePathStyle,
-            string? azureContainer, string? azureConnectionString)
+            string? azureContainer, string? azureConnectionString, bool copyExisting = false)
         {
             // Blank means "leave the stored secret alone". An administrator cannot read these back,
             // so an empty box has to mean unchanged rather than cleared.
@@ -235,8 +235,71 @@ namespace ResearchPublicationManagementSystem.Controllers
                 s3ForcePathStyle, azureContainer,
                 string.IsNullOrWhiteSpace(azureConnectionString) ? null : azureConnectionString));
 
-            return Done(result.Success, "storage", result.ErrorMessage,
+            if (!result.Success)
+            {
+                return Done(false, "storage", result.ErrorMessage, string.Empty);
+            }
+
+            // Only if asked. The default is what it has always been: the destination changes and
+            // the files already stored stay where they are, which costs nothing and breaks nothing.
+            if (copyExisting)
+            {
+                var moved = await settingsApi.MigrateStorageAsync();
+
+                TempData[moved.Success ? "SuccessMessage" : "ErrorMessage"] = moved.Success
+                    ? Describe(moved.Data)
+                    : moved.ErrorMessage ?? "Saved, but the existing files could not be copied.";
+
+                return RedirectToAction(nameof(Index), new { tab = "storage" });
+            }
+
+            return Done(true, "storage", null,
                 "Saved. New uploads go to the new destination; files already stored keep opening from where they are.");
+        }
+
+        /// <summary>
+        /// Copies whatever is still elsewhere. Its own button as well as a tick on the save form,
+        /// because a run is bounded and a large collection needs asking more than once.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CopyExistingFiles()
+        {
+            var result = await settingsApi.MigrateStorageAsync();
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? Describe(result.Data)
+                : result.ErrorMessage ?? "Could not copy the existing files.";
+
+            return RedirectToAction(nameof(Index), new { tab = "storage" });
+        }
+
+        /// <summary>
+        /// What the run did, in a sentence. The problems are named rather than counted: an
+        /// administrator who is told three files failed and not which ones cannot do anything.
+        /// </summary>
+        private static string Describe(StorageMigrationResultDto? result)
+        {
+            if (result is null) return "Nothing to copy.";
+
+            var said = result.Moved == 1 ? "One file copied." : $"{result.Moved} files copied.";
+
+            if (result.Remaining > 0)
+            {
+                said += $" {result.Remaining} still to go: run it again to continue.";
+            }
+            else if (result.Problems.Count == 0)
+            {
+                said += " Everything is now at the destination in force.";
+            }
+
+            if (result.Problems.Count > 0)
+            {
+                said += " Could not copy: " + string.Join("; ", result.Problems.Take(5));
+                if (result.Problems.Count > 5) said += $" and {result.Problems.Count - 5} more.";
+            }
+
+            return said + " The originals were left where they were.";
         }
 
         /// <summary>

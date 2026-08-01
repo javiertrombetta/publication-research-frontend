@@ -611,10 +611,52 @@
                                 </div>
                             </div>
 
+                            @* Off unless asked. Changing the destination has never touched what is
+                               already stored, and it should not start now: leaving them costs
+                               nothing, and copying hundreds of files is a decision rather than a
+                               side effect of pressing Save. *@
+                            <div class="mt-4 pt-3 border-top">
+                                <label class="form-check">
+                                    <input class="form-check-input" type="checkbox"
+                                           name="copyExisting" value="true" />
+                                    <span class="form-check-label">
+                                        Also copy the files already stored to the new destination
+                                    </span>
+                                </label>
+                                <small class="form-hint">
+                                    Their records are repointed as each one arrives, so nothing stops
+                                    working part way through. The originals are left where they are,
+                                    because reclaiming that space is a decision with no undo.
+                                </small>
+                            </div>
+
                             <div class="mt-4">
                                 <button type="submit" class="btn btn-primary">Save where files go</button>
                             </div>
                         </form>
+
+                        @if (Model.Storage.FilesElsewhere > 0)
+                        {
+                            @* Shown only when there is something to copy, and saying how much: a
+                               button offering to move nothing is a button that teaches somebody to
+                               ignore it. A run is bounded so the page answers, hence "again". *@
+                            <div class="alert alert-warning d-flex flex-wrap align-items-center gap-2 mt-4 mb-0"
+                                 role="status">
+                                <span class="me-auto">
+                                    <strong>@Model.Storage.FilesElsewhere</strong>
+                                    @(Model.Storage.FilesElsewhere == 1 ? "file is" : "files are") still stored
+                                    somewhere other than @Model.Storage.ProviderName.
+                                    @(Model.Storage.FilesElsewhere == 1 ? "It opens" : "They open") perfectly well
+                                    from where @(Model.Storage.FilesElsewhere == 1 ? "it is" : "they are").
+                                </span>
+                                <form asp-action="CopyExistingFiles" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-warning"
+                                            data-rpms-confirm="Copy the files stored elsewhere to the destination in force? The originals are left where they are.">
+                                        Copy them here
+                                    </button>
+                                </form>
+                            </div>
+                        }
                     </div>
                 </div>
             }

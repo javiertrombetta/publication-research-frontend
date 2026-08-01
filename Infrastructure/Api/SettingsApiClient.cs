@@ -92,6 +92,13 @@ public class SettingsApiClient(HttpClient httpClient) : ApiClientBase(httpClient
             $"api/settings/storage/check{(string.IsNullOrWhiteSpace(provider) ? "" : $"?provider={Uri.EscapeDataString(provider)}")}",
             null, ct);
 
+    /// <summary>
+    /// Copies files stored elsewhere to the destination in force. Bounded per run, so a result
+    /// with anything remaining means calling it again.
+    /// </summary>
+    public Task<ApiResult<StorageMigrationResultDto>> MigrateStorageAsync(CancellationToken ct = default) =>
+        PostJsonAsync<StorageMigrationResultDto>("api/settings/storage/migrate", null, ct);
+
     // ---------- The institution ----------
 
     /// <summary>Anonymous on the API, so the footer and sign-in page can use it signed out.</summary>
