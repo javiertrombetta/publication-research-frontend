@@ -118,7 +118,7 @@ namespace ResearchPublicationManagementSystem.Models
             Descending = Descending,
             RouteValues = RouteValues().Where(v => v.Key is not ("sort" or "desc"))
                 .ToDictionary(v => v.Key, v => v.Value),
-            Columns = [("started", "Date", true), ("student", "Student", false), ("status", "Status", false)]
+            Columns = [("started", "Date", true), ("student", "Student", false)]
         };
 
         public SortBarViewModel ProgressSortBar => new()
@@ -131,7 +131,7 @@ namespace ResearchPublicationManagementSystem.Models
             DescendingKey = "progressDesc",
             RouteValues = RouteValues().Where(v => v.Key is not ("progressSort" or "progressDesc"))
                 .ToDictionary(v => v.Key, v => v.Value),
-            Columns = [("started", "Date", true), ("student", "Student", false), ("stage", "Stage", false)]
+            Columns = [("started", "Date", true), ("student", "Student", false)]
         };
     }
 

@@ -108,17 +108,52 @@ else if (Model.Items.Count == 0)
 }
 else
 {
+    @* One control for the lot. A queue of thirty proposals, each with its abstract and its list of
+       replies, is a long scroll; shutting them all and opening the one being worked on turns it
+       back into a list. The counts are here rather than on the buttons because what a coordinator
+       needs to know first is how much is waiting, not that a control exists. *@
+    <div class="card mb-3">
+        <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
+            <span class="text-secondary me-auto">
+                @Model.TotalCount @(Model.TotalCount == 1 ? "proposal" : "proposals") waiting on you,
+                @Model.Items.Count on this page.
+            </span>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-rpms-expand-all="selection-cards">Expand all</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-rpms-collapse-all="selection-cards">Collapse all</button>
+        </div>
+    </div>
+
     @foreach (var item in Model.Items)
     {
         <div class="card mb-3">
-            <div class="card-header">
-                <div>
+            <div class="card-header d-flex align-items-center gap-2">
+                <button class="btn btn-icon btn-sm btn-ghost-secondary" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#selection-@item.Proposal.Id"
+                        aria-expanded="true" aria-controls="selection-@item.Proposal.Id"
+                        aria-label="Show or hide this proposal">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
+                         viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M6 9l6 6l6 -6" />
+                    </svg>
+                </button>
+
+                <div class="me-auto">
                     <h3 class="card-title m-0">@item.Proposal.Title</h3>
                     <div class="text-secondary small">@item.StudentName</div>
                 </div>
+
+                @* Readable with the card shut, because it is what decides whether to open it. *@
+                <span class="badge bg-primary-lt">
+                    @item.Willing.Count() willing
+                </span>
             </div>
 
-            <div class="card-body">
+            <div class="card-body collapse show" id="selection-@item.Proposal.Id"
+                 data-rpms-collapsible="selection-cards">
                 <p class="text-secondary">@item.Proposal.Abstract</p>
 
                 <h4 class="mt-3 mb-2">Willing to supervise</h4>
