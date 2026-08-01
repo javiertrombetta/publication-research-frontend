@@ -14,7 +14,10 @@
 
 <div class="mb-4">
     <h1 class="page-title mb-1">Coordinator dashboard</h1>
-    <div class="text-secondary">The publications you coordinate, and what each one is waiting on.</div>
+    <div class="text-secondary">
+        The publications you coordinate that are still moving, and what each one is waiting on.
+        Completed ones are left out: they are a record rather than something to do.
+    </div>
 </div>
 
 @if (Model.LoadFailed)
@@ -69,12 +72,39 @@ else
             </div>
         </div>
 
+        @{ var ethicsWaiting = Model.EthicsDecisionsTotal + Model.FinalEthicsDecisionsTotal; }
         <div class="col-12 col-md-4">
-            <div class="card h-100">
+            <div class="card h-100 @(ethicsWaiting > 0 ? "border-primary" : "")">
                 <div class="card-body">
-                    <div class="text-secondary mb-1">Publications</div>
-                    <div class="h1 m-0">@Model.PublicationsTotal</div>
-                    <div class="text-secondary">under your coordination</div>
+                    <div class="text-secondary mb-1">Ethics decisions</div>
+                    <div class="h1 m-0">@ethicsWaiting</div>
+
+                    @* Split, because they are two screens. A single figure would say there was
+                       work without saying which of the coordinator's two ethics decisions it was
+                       waiting on, and they are reached from different places. *@
+                    <div class="text-secondary">
+                        <span class="d-block">
+                            <strong>@Model.EthicsDecisionsTotal</strong>
+                            after a supervisor
+                        </span>
+                        <span class="d-block">
+                            <strong>@Model.FinalEthicsDecisionsTotal</strong>
+                            final @(Model.FinalEthicsDecisionsTotal == 1 ? "decision" : "decisions")
+                        </span>
+                    </div>
+
+                    <div class="btn-list mt-3">
+                        @if (Model.EthicsDecisionsTotal > 0)
+                        {
+                            <a asp-controller="Coordinator" asp-action="Ethic_review_aftersupervisor"
+                               class="btn btn-primary btn-sm">After a supervisor</a>
+                        }
+                        @if (Model.FinalEthicsDecisionsTotal > 0)
+                        {
+                            <a asp-controller="Coordinator" asp-action="Ethic_review_afters_headofdepartment"
+                               class="btn btn-outline-primary btn-sm">Final decision</a>
+                        }
+                    </div>
                 </div>
             </div>
         </div>
@@ -84,9 +114,10 @@ else
     {
         <div class="card">
             <div class="card-body text-center py-5">
-                <h3 class="mb-2">Nothing assigned to you yet</h3>
+                <h3 class="mb-2">Nothing in progress</h3>
                 <p class="text-secondary m-0">
-                    Publications appear here as students in your department start them.
+                    Publications appear here as students in your department start them, and drop off
+                    once they are complete.
                 </p>
             </div>
         </div>

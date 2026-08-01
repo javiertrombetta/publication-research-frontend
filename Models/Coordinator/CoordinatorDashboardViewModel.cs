@@ -19,8 +19,8 @@ namespace ResearchPublicationManagementSystem.Models
         public IReadOnlyList<ProposalWithInvitationsDto> ProposalsAwaitingDispatch { get; set; } = [];
 
         /// <summary>
-        /// How many there are in total, not how many are on this page. The dashboard states
-        /// figures, and a figure capped at the page size would simply be wrong.
+        /// How many are still moving, not how many exist and not how many are on this page. The
+        /// dashboard states figures, and a figure capped at the page size would simply be wrong.
         /// </summary>
         public int PublicationsTotal { get; set; }
         public int ProposalsAwaitingDispatchTotal { get; set; }
@@ -31,6 +31,14 @@ namespace ResearchPublicationManagementSystem.Models
         /// much is behind it.
         /// </summary>
         public int SupervisorRepliesTotal { get; set; }
+
+        /// <summary>
+        /// The coordinator's two ethics queues, by size. Both are stated because they are two
+        /// screens: a single "ethics" figure would tell somebody there was work without saying
+        /// which of the two decisions it was waiting on.
+        /// </summary>
+        public int EthicsDecisionsTotal { get; set; }
+        public int FinalEthicsDecisionsTotal { get; set; }
 
         public bool LoadFailed { get; set; }
 
