@@ -204,7 +204,8 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SendToSupervisors(Guid[] proposalIds, Guid[] supervisorIds, string? comments)
+        public async Task<IActionResult> SendToSupervisors(
+            Guid[] proposalIds, Guid[] supervisorIds, string? comments, DateTime? respondBy)
         {
             if (proposalIds.Length == 0 || supervisorIds.Length == 0)
             {
@@ -212,8 +213,18 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return RedirectToAction(nameof(assigning_proposal_forsupervisor));
             }
 
+            if (respondBy is { } by && by <= DateTime.Now)
+            {
+                TempData["ErrorMessage"] = "The date supervisors have to answer by has already passed.";
+                return RedirectToAction(nameof(assigning_proposal_forsupervisor));
+            }
+
+            // Sent as UTC, because that is what the API stores and compares against. The form is
+            // filled in and read back in the reader's own time, so the conversion belongs here,
+            // once, rather than in every screen that shows the date afterwards.
             var result = await proposalsApi.SendToSupervisorsAsync(
-                new SendToSupervisorsRequestDto(proposalIds, supervisorIds, comments ?? string.Empty));
+                new SendToSupervisorsRequestDto(proposalIds, supervisorIds, comments ?? string.Empty,
+                    respondBy?.ToUniversalTime()));
 
             if (!result.Success)
             {
@@ -221,9 +232,13 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return RedirectToAction(nameof(assigning_proposal_forsupervisor));
             }
 
-            TempData["SuccessMessage"] = supervisorIds.Length == 1
+            var sentTo = supervisorIds.Length == 1
                 ? "Sent to the supervisor."
                 : $"Sent to {supervisorIds.Length} supervisors.";
+
+            TempData["SuccessMessage"] = respondBy is { } deadline
+                ? sentTo + $" They have until {deadline:dddd d MMMM yyyy, HH:mm} to answer."
+                : sentTo;
 
             return RedirectToAction(nameof(assigning_proposal_forsupervisor));
         }
@@ -291,9 +306,10 @@ namespace ResearchPublicationManagementSystem.Controllers
         }
 
         /// <summary>
-        /// Refuses the offers made on a proposal and sends it back to Send proposals, so it can go
-        /// to different supervisors. Where that leaves the student with nobody willing to take on
-        /// any of their work, the rest goes back with it and the message says so.
+        /// Refuses the offers made on a proposal, so it stops being one the coordinator is
+        /// choosing between. Turning one down while the student's others are still live changes
+        /// nothing else. Only when nothing of theirs still has somebody willing does the whole set
+        /// go back to Send proposals, and the message says so.
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -319,7 +335,8 @@ namespace ResearchPublicationManagementSystem.Controllers
             TempData["SuccessMessage"] = outcome is { StudentHasNothingLeft: true }
                 ? $"Nobody was willing to take on {outcome.StudentName}'s work, so all "
                   + $"{outcome.ProposalsReturned} of their proposals are back in Send proposals."
-                : "Back in Send proposals, ready to go to different supervisors.";
+                : "Offers turned down. This student still has other proposals a supervisor is "
+                  + "willing to take on.";
 
             return RedirectToAction(nameof(select_a_proposal_forstudent));
         }

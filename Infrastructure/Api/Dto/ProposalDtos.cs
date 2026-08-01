@@ -6,7 +6,18 @@ public record ProposalDto(
     string Title,
     string Abstract,
     string Status,
-    DateTime? SubmittedAt);
+    DateTime? SubmittedAt,
+    /// <summary>
+    /// When the supervisor reading this has to have answered by. Only filled in on the listing of
+    /// proposals sent to a supervisor, which is the only place anybody is being held to it.
+    /// </summary>
+    DateTime? RespondBy = null)
+{
+    /// <summary>The date in the reader's own time, which is the only one worth showing them.</summary>
+    public DateTime? RespondByLocal => RespondBy?.ToLocalTime();
+
+    public bool RespondByHasPassed => RespondByLocal is { } by && by < DateTime.Now;
+}
 
 public record SaveProposalRequestDto(string Title, string Abstract);
 
@@ -14,7 +25,12 @@ public record SaveProposalRequestDto(string Title, string Abstract);
 public record SendToSupervisorsRequestDto(
     IReadOnlyList<Guid> ProposalIds,
     IReadOnlyList<Guid> SupervisorIds,
-    string Comments);
+    string Comments,
+    /// <summary>
+    /// When the supervisors have to answer by, or null for no date. Once it passes, students with
+    /// no proposal anybody offered to take on go back to the dispatch queue on their own.
+    /// </summary>
+    DateTime? RespondBy = null);
 
 public record AssignSupervisorRequestDto(Guid SupervisorId, string Comments);
 
@@ -29,7 +45,9 @@ public record SupervisorInvitationDto(
     bool IsSelected,
     string? Comments,
     DateTime InvitedAt,
-    DateTime? SelectedAt);
+    DateTime? SelectedAt,
+    /// <summary>When this round has to be answered by, and null where the coordinator set no date.</summary>
+    DateTime? RespondBy = null);
 
 /// <summary>Matches the backend's ProposalStatus enum values.</summary>
 public static class ProposalStatus
