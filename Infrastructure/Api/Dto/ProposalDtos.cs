@@ -27,8 +27,9 @@ public record SendToSupervisorsRequestDto(
     IReadOnlyList<Guid> SupervisorIds,
     string Comments,
     /// <summary>
-    /// When the supervisors have to answer by, or null for no date. Once it passes, students with
-    /// no proposal anybody offered to take on go back to the dispatch queue on their own.
+    /// When the supervisors have to answer by. The API requires it: a round with no date never
+    /// ends. Once it passes, students with no proposal anybody offered to take on go back to the
+    /// dispatch queue on their own.
     /// </summary>
     DateTime? RespondBy = null);
 
@@ -89,5 +90,12 @@ public record ProposalWithInvitationsDto(
 /// <summary>What discarding a set of offers actually did.</summary>
 public record DiscardSelectionsResultDto(string StudentName, int ProposalsReturned, bool StudentHasNothingLeft);
 
-/// <summary>How much of the dispatch queue is there for a second time, over the whole queue.</summary>
-public record ReturnedToDispatchSummaryDto(int Students, int Proposals);
+/// <summary>
+/// What the dispatch screen needs beyond its page of proposals: how much of the queue is there for
+/// the second time, and the answer-by date to offer for the next send.
+/// </summary>
+/// <param name="SuggestedRespondBy">
+/// Now plus the institution's expected supervisor response time, in UTC. A starting point the
+/// coordinator can move, not a rule.
+/// </param>
+public record ReturnedToDispatchSummaryDto(int Students, int Proposals, DateTime SuggestedRespondBy);
