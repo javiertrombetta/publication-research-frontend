@@ -21,7 +21,20 @@ namespace ResearchPublicationManagementSystem.Models
         /// </summary>
         public IReadOnlyList<ProposalWithInvitationsDto> Proposals { get; set; } = [];
 
+        /// <summary>The supervisors on this page of the chooser, and the pager under it.</summary>
         public IReadOnlyList<UserListItemDto> Supervisors { get; set; } = [];
+
+        /// <summary>How many are available altogether, which is what "all" means on the button.</summary>
+        public int SupervisorsTotal { get; set; }
+
+        /// <summary>
+        /// What was typed to narrow the chooser. The narrowing is the API's, because it knows who
+        /// is available; the paging under it is the browser's, because a page turn must not lose
+        /// a tick made on the page being left.
+        /// </summary>
+        public string? SupervisorSearch { get; set; }
+
+        public bool HasSupervisorSearch => !string.IsNullOrWhiteSpace(SupervisorSearch);
 
         public bool LoadFailed { get; set; }
 

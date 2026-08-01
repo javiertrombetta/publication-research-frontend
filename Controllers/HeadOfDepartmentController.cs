@@ -47,14 +47,16 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// one publication, so a link from the dashboard opens straight onto it.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> Headofdepartment_feedback(Guid? id, int page = 1)
+        public async Task<IActionResult> Headofdepartment_feedback(
+            Guid? id, int page = 1, string? sort = null, bool desc = false)
         {
-            var model = new HeadOfDepartmentEthicsViewModel();
+            var model = new HeadOfDepartmentEthicsViewModel { Sort = sort, Descending = desc };
 
             // This screen's own queue, by name, one page of it. Everything else the department has
             // in flight is somebody else's problem and no longer travels down the wire.
             var containers = await containersApi.GetInMyDepartmentAsync(
-                ethicsSteps: EthicsSteps.HeadOfDepartmentReview, page: page);
+                ethicsSteps: EthicsSteps.HeadOfDepartmentReview, page: page,
+                sort: sort, descending: desc);
             if (!containers.Success)
             {
                 TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your department's publications.";
@@ -76,8 +78,11 @@ namespace ResearchPublicationManagementSystem.Controllers
             }
 
             // Only the rows on this page are filled in: each costs two further requests.
+            var pagerValues = model.RouteValues();
+            if (id is not null) pagerValues["id"] = id.ToString();
+
             model.Pager = Paging.PagerFor(containers.Data, "HeadOfDepartment", nameof(Headofdepartment_feedback),
-                id is null ? null : new() { ["id"] = id.ToString() });
+                pagerValues);
 
             foreach (var container in candidates)
             {
@@ -124,14 +129,21 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// not part of the proposal workflow, but does need to see what their department is doing.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> all_proposals_fromstudent(int page = 1)
+        public async Task<IActionResult> all_proposals_fromstudent(
+            int page = 1, string? sort = null, bool desc = false, string? search = null)
         {
-            var model = new DepartmentProposalsViewModel();
+            var model = new DepartmentProposalsViewModel
+            {
+                Sort = sort,
+                Descending = desc,
+                Search = search
+            };
 
             // One paged request for the whole screen. Each proposal carries its author's name and
             // its publication's id, so there is no second call to find out who wrote what, and the
             // API decides how many rows come back rather than the size of the department.
-            var proposals = await proposalsApi.GetInMyDepartmentAsync(page);
+            var proposals = await proposalsApi.GetInMyDepartmentAsync(
+                page, sort: sort, descending: desc, search: search);
             if (!proposals.Success)
             {
                 TempData["ErrorMessage"] = proposals.ErrorMessage ?? "Could not load your department's proposals.";
@@ -150,7 +162,9 @@ namespace ResearchPublicationManagementSystem.Controllers
                         p.Id, p.PublicationContainerId, p.Title, p.Abstract, p.Status, p.SubmittedAt))]
                 })];
 
-            model.Pager = Paging.PagerFor(proposals.Data, "HeadOfDepartment", nameof(all_proposals_fromstudent));
+            model.TotalCount = proposals.Data?.TotalCount ?? 0;
+            model.Pager = Paging.PagerFor(proposals.Data, "HeadOfDepartment", nameof(all_proposals_fromstudent),
+                model.RouteValues());
 
             return View(model);
         }

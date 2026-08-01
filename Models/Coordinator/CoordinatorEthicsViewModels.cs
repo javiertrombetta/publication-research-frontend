@@ -6,8 +6,17 @@ namespace ResearchPublicationManagementSystem.Models
     /// The publications waiting on the coordinator at one point of the ethics workflow. Both of the
     /// coordinator's ethics screens use this. What differs is which decision each offers.
     /// </summary>
-    public class CoordinatorEthicsViewModel
+    public class CoordinatorEthicsViewModel : SortablePublicationQueue
     {
+        /// <summary>Which of the coordinator's two ethics queues this is, so the bar links back here.</summary>
+        protected override string SortController => "Coordinator";
+
+        // Matched on the name the controller's own enum produces, which is what Stage carries.
+        protected override string SortAction =>
+            Stage == "AfterHeadOfDepartment"
+                ? "Ethic_review_afters_headofdepartment"
+                : "Ethic_review_aftersupervisor";
+
 
         /// <summary>
         /// Which page of the queue this is. Null where everything fits on one, so the controls

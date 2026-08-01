@@ -1,10 +1,55 @@
+@using ResearchPublicationManagementSystem.Common
 @model ResearchPublicationManagementSystem.Infrastructure.Api.Dto.UserDetailDto
 @{
     ViewData["Title"] = "My account";
+
+    // Only where it means something. Every decision in the system that picks a person picks a
+    // member of staff, so a student marking themselves unavailable would change nothing and the
+    // control would be a promise the system does not keep.
+    var choosesWork = Model is not null && !Model.Roles.Contains(RoleNames.Student);
 }
 
 <div class="row justify-content-center">
     <div class="col-12 col-lg-8">
+
+        @if (choosesWork)
+        {
+            <div class="card mb-3">
+                <div class="card-body d-flex flex-wrap align-items-center gap-3">
+                    <div class="me-auto">
+                        <div class="d-flex align-items-center gap-2">
+                            <h3 class="m-0">Taking work on</h3>
+                            <span class="badge @(Model!.IsAvailable ? "bg-success-lt" : "bg-secondary-lt")">
+                                @(Model.IsAvailable ? "Available" : "Not available")
+                            </span>
+                        </div>
+                        <p class="text-secondary m-0 mt-1">
+                            @if (Model.IsAvailable)
+                            {
+                                <text>
+                                    You appear where the system chooses people: proposals sent to supervisors,
+                                    committee appointments, and the coordinator a new publication is allocated to.
+                                </text>
+                            }
+                            else
+                            {
+                                <text>
+                                    You are not being offered anything new. Everything already assigned to you is
+                                    still yours and still expects your decision.
+                                </text>
+                            }
+                        </p>
+                    </div>
+
+                    <form asp-controller="Profile" asp-action="SetAvailability" method="post" class="m-0">
+                        <input type="hidden" name="isAvailable" value="@((!Model.IsAvailable).ToString().ToLowerInvariant())" />
+                        <button type="submit" class="btn @(Model.IsAvailable ? "btn-outline-secondary" : "btn-primary")">
+                            @(Model.IsAvailable ? "Stop taking new work" : "Start taking work again")
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
 
         <div class="card">
             <div class="card-body">

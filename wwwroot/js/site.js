@@ -388,3 +388,50 @@ window.rpmsToast = (function () {
 
     refreshCounts();
 })();
+
+// Paging a list the browser already holds.
+//
+// For a chooser, where the rows are checkboxes and the whole point is that a selection adds up
+// across pages. Turning a page by reloading the screen would lose every tick made on the page being
+// left, and "select all" could only ever mean the ten on screen. Every row is in the document; a
+// page is which of them is shown.
+//
+// Declared in the markup: a container carries data-rpms-paged with a name and data-rpms-page-size,
+// and each row carries data-rpms-page-item. With this script absent nothing is hidden, so the list
+// is simply long, which is the right answer rather than a broken one.
+(function () {
+    document.querySelectorAll('[data-rpms-paged]').forEach(function (container) {
+        var items = Array.prototype.slice.call(container.querySelectorAll('[data-rpms-page-item]'));
+        var size = parseInt(container.getAttribute('data-rpms-page-size'), 10) || 10;
+        if (items.length <= size) return;
+
+        var pages = Math.ceil(items.length / size);
+        var page = 1;
+
+        var nav = document.createElement('div');
+        nav.className = 'd-flex align-items-center gap-2 mt-3';
+        nav.innerHTML =
+            '<button type="button" class="btn btn-sm btn-outline-secondary" data-rpms-prev>Previous</button>' +
+            '<span class="text-secondary small" data-rpms-page-label></span>' +
+            '<button type="button" class="btn btn-sm btn-outline-secondary" data-rpms-next>Next</button>';
+        container.parentNode.insertBefore(nav, container.nextSibling);
+
+        var label = nav.querySelector('[data-rpms-page-label]');
+        var previous = nav.querySelector('[data-rpms-prev]');
+        var next = nav.querySelector('[data-rpms-next]');
+
+        function show() {
+            items.forEach(function (item, i) {
+                item.hidden = Math.floor(i / size) + 1 !== page;
+            });
+            label.textContent = 'Page ' + page + ' of ' + pages;
+            previous.disabled = page === 1;
+            next.disabled = page === pages;
+        }
+
+        previous.addEventListener('click', function () { if (page > 1) { page--; show(); } });
+        next.addEventListener('click', function () { if (page < pages) { page++; show(); } });
+
+        show();
+    });
+})();

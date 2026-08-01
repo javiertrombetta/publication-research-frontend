@@ -24,8 +24,11 @@ namespace ResearchPublicationManagementSystem.Models
     }
 
     /// <summary>Ethics documentation awaiting the Head of Department's comments.</summary>
-    public class HeadOfDepartmentEthicsViewModel
+    public class HeadOfDepartmentEthicsViewModel : SortablePublicationQueue
     {
+        protected override string SortController => "HeadOfDepartment";
+        protected override string SortAction => "Headofdepartment_feedback";
+
 
         /// <summary>
         /// Which page of the queue this is. Null where everything fits on one, so the controls
@@ -49,6 +52,43 @@ namespace ResearchPublicationManagementSystem.Models
     /// <summary>Every proposal from students in the department, for oversight rather than action.</summary>
     public class DepartmentProposalsViewModel
     {
+        /// <summary>
+        /// The order and the search term, both applied by the API before the page is cut. A
+        /// department's oldest proposal is on its last page, so ordering what has already arrived
+        /// would never bring it into view.
+        /// </summary>
+        public string? Sort { get; set; }
+        public bool Descending { get; set; }
+        public string? Search { get; set; }
+        public int TotalCount { get; set; }
+
+        public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
+
+        public Dictionary<string, string?> RouteValues()
+        {
+            var values = new Dictionary<string, string?>();
+            if (HasSearch) values["search"] = Search;
+            if (!string.IsNullOrWhiteSpace(Sort)) values["sort"] = Sort;
+            if (Descending) values["desc"] = "true";
+            return values;
+        }
+
+        public SortBarViewModel SortBar => new()
+        {
+            Controller = "HeadOfDepartment",
+            Action = "all_proposals_fromstudent",
+            Sort = Sort,
+            Descending = Descending,
+            RouteValues = HasSearch ? new Dictionary<string, string?> { ["search"] = Search } : [],
+            Columns =
+            [
+                ("submitted", "Date", true),
+                ("student", "Student", false),
+                ("title", "Proposal", false),
+                ("status", "Status", false)
+            ]
+        };
+
 
         /// <summary>
         /// Which page of the queue this is. Null where everything fits on one, so the controls

@@ -33,6 +33,29 @@ namespace ResearchPublicationManagementSystem.Controllers
         }
 
         /// <summary>
+        /// The person saying whether they are taking work on.
+        ///
+        /// Theirs alone, and separate from the administrator enabling or disabling the account:
+        /// this governs what they are offered next, and leaves anything already assigned to them
+        /// exactly where it is. Nothing reads a student's, since no decision in the system chooses
+        /// a student, so the control is only shown to the roles it means something for.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SetAvailability(bool isAvailable)
+        {
+            var result = await usersApi.SetMyAvailabilityAsync(isAvailable);
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? (isAvailable
+                    ? "You are available for new work again."
+                    : "You will not be offered new work. Anything already assigned to you is unaffected.")
+                : result.ErrorMessage ?? "Could not change your availability.";
+
+            return RedirectToAction(nameof(Me));
+        }
+
+        /// <summary>
         /// Streams a user's photo to the browser. The API needs a bearer token that only lives
         /// server-side in the auth cookie, so the image cannot be linked directly and is proxied
         /// through here instead.

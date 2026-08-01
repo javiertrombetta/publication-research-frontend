@@ -55,9 +55,10 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// to. Proposals go out as a batch, because a supervisor is choosing between them.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> assigning_proposal_forsupervisor(int page = 1)
+        public async Task<IActionResult> assigning_proposal_forsupervisor(
+            int page = 1, string? supervisorSearch = null)
         {
-            var model = new AssignProposalsViewModel();
+            var model = new AssignProposalsViewModel { SupervisorSearch = supervisorSearch };
 
             var pending = await proposalsApi.GetPendingAsync(page);
             if (!pending.Success)
@@ -69,13 +70,29 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             model.Proposals = pending.Data?.Items ?? [];
 
-            var supervisors = await usersApi.GetSupervisorsAsync();
-            model.Supervisors = (supervisors.Data ?? [])
+            // The API narrows this to supervisors who are enabled and who have not marked
+            // themselves unavailable, so what arrives is already the people who can be asked.
+            var supervisors = await usersApi.GetSupervisorsAsync(search: supervisorSearch);
+            var available = (supervisors.Data ?? [])
                 .OrderBy(s => s.LastName)
                 .ThenBy(s => s.FirstName)
                 .ToList();
 
-            model.Pager = Paging.PagerFor(pending.Data, "Coordinator", nameof(assigning_proposal_forsupervisor));
+            // All of them, paged in the browser rather than here.
+            //
+            // A page turn that reloads the screen would lose every supervisor already ticked, and
+            // "select all" would only ever mean the ten on screen. The browser already holds the
+            // list, so turning a page is a matter of which rows it shows, and a tick made on page
+            // one is still a tick when the coordinator is looking at page three. Without
+            // JavaScript nothing is hidden and the list is simply long, which is correct, just
+            // less comfortable.
+            model.Supervisors = available;
+            model.SupervisorsTotal = available.Count;
+
+            model.Pager = Paging.PagerFor(pending.Data, "Coordinator", nameof(assigning_proposal_forsupervisor),
+                string.IsNullOrWhiteSpace(supervisorSearch)
+                    ? []
+                    : new Dictionary<string, string?> { ["supervisorSearch"] = supervisorSearch });
 
             return View(model);
         }
@@ -182,9 +199,10 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// needed, and reviewing the documents once a supervisor has accepted them.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> Ethic_review_aftersupervisor(Guid? id, int page = 1)
+        public async Task<IActionResult> Ethic_review_aftersupervisor(
+            Guid? id, int page = 1, string? sort = null, bool desc = false)
         {
-            var (model, redirect) = await LoadEthicsQueueAsync(id, EthicsStage.AfterSupervisor, page);
+            var (model, redirect) = await LoadEthicsQueueAsync(id, EthicsStage.AfterSupervisor, page, sort, desc);
             if (redirect is not null) return redirect;
 
             return View(model);
@@ -227,9 +245,10 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// commented. Approving it verifies the ethics stage and opens the research paper.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> Ethic_review_afters_headofdepartment(Guid? id, int page = 1)
+        public async Task<IActionResult> Ethic_review_afters_headofdepartment(
+            Guid? id, int page = 1, string? sort = null, bool desc = false)
         {
-            var (model, redirect) = await LoadEthicsQueueAsync(id, EthicsStage.AfterHeadOfDepartment, page);
+            var (model, redirect) = await LoadEthicsQueueAsync(id, EthicsStage.AfterHeadOfDepartment, page, sort, desc);
             if (redirect is not null) return redirect;
 
             return View(model);
@@ -327,15 +346,28 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         private enum EthicsStage { AfterSupervisor, AfterHeadOfDepartment }
 
+        /// <summary>Everything a pager link has to carry: the ordering, plus whatever else is set.</summary>
+        private static Dictionary<string, string?> Merge(
+            Dictionary<string, string?> values, (string Key, string? Value)? extra)
+        {
+            if (extra is { } pair && !string.IsNullOrWhiteSpace(pair.Value)) values[pair.Key] = pair.Value;
+            return values;
+        }
+
         /// <summary>
         /// The publications waiting on the coordinator at one point of the ethics workflow, with
         /// the approval and documents for each. An optional id narrows it to a single one, so a
         /// link from the dashboard opens straight onto that publication.
         /// </summary>
         private async Task<(CoordinatorEthicsViewModel Model, IActionResult? Redirect)> LoadEthicsQueueAsync(
-            Guid? containerId, EthicsStage stage, int page)
+            Guid? containerId, EthicsStage stage, int page, string? sort = null, bool descending = false)
         {
-            var model = new CoordinatorEthicsViewModel { Stage = stage.ToString() };
+            var model = new CoordinatorEthicsViewModel
+            {
+                Stage = stage.ToString(),
+                Sort = sort,
+                Descending = descending
+            };
 
             // The API is asked for this screen's queue, by name. Both of the coordinator's ethics
             // decisions answer "waiting on the Coordinator", so a role was never enough to tell
@@ -347,7 +379,8 @@ namespace ResearchPublicationManagementSystem.Controllers
                 : EthicsSteps.CoordinatorFirstReview;
 
             var containers = await containersApi.GetAllAsync(
-                coordinatorId: CurrentUserId(), ethicsSteps: steps, page: page);
+                coordinatorId: CurrentUserId(), ethicsSteps: steps, page: page,
+                sort: sort, descending: descending);
 
             if (!containers.Success)
             {
@@ -389,7 +422,8 @@ namespace ResearchPublicationManagementSystem.Controllers
                 stage == EthicsStage.AfterHeadOfDepartment
                     ? nameof(Ethic_review_afters_headofdepartment)
                     : nameof(Ethic_review_aftersupervisor),
-                containerId is null ? null : new() { ["id"] = containerId.ToString() });
+                // The ordering travels with the page number, or turning a page loses it.
+                Merge(model.RouteValues(), containerId is null ? null : ("id", containerId.ToString())));
 
             return (model, null);
         }
