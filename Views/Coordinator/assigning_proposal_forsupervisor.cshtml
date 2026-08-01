@@ -106,6 +106,20 @@ else
     <form id="supervisor-filter" method="get"
           asp-controller="Coordinator" asp-action="assigning_proposal_forsupervisor"></form>
 
+    @* The group forms live out here for the same reason: they post, and they sit inside the card
+       that the dispatch form owns. The name field and the chosen ids are filled in from the ticks
+       when Save is pressed, so what gets saved is what the coordinator is looking at. *@
+    <form id="group-create" asp-controller="Coordinator" asp-action="CreateSupervisorGroup" method="post">
+        <input type="hidden" name="name" />
+    </form>
+
+    @foreach (var group in Model.Groups)
+    {
+        <form id="group-delete-@group.Id" asp-controller="Coordinator" asp-action="DeleteSupervisorGroup" method="post">
+            <input type="hidden" name="groupId" value="@group.Id" />
+        </form>
+    }
+
     <form id="send-proposals-form" asp-controller="Coordinator" asp-action="SendToSupervisors" method="post">
 
         @* One line for the whole page, because the common case is sending everything waiting.
@@ -141,7 +155,8 @@ else
         @foreach (var group in Model.ByPublication)
         {
             <div class="card mb-3">
-                <div class="card-header d-flex align-items-center gap-2">
+                <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+                 data-rpms-header-toggle="#student-@group.Key">
                     <button class="btn btn-icon btn-sm btn-ghost-secondary" type="button"
                             data-bs-toggle="collapse" data-bs-target="#student-@group.Key"
                             aria-expanded="true" aria-controls="student-@group.Key"
@@ -195,6 +210,60 @@ else
                 @* Only supervisors who are available: enabled by an administrator, and not marked
                    unavailable by themselves. Sending a proposal to somebody who has said they
                    cannot take work on is asking a question nobody is there to answer. *@
+
+                @* Saved sets, above the chooser rather than in it.
+                   The same people get asked cycle after cycle, and rebuilding the same list of
+                   five by hand every time is where a name gets missed. A group ticks its members
+                   and nothing else: it is the form being filled in, not a rule about who may be
+                   asked, so a group whose members have since gone unavailable simply ticks fewer
+                   of them and says so. *@
+                <div class="mb-3 pb-3 border-bottom">
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <span class="text-secondary small me-1">Groups</span>
+
+                        @if (Model.Groups.Count == 0)
+                        {
+                            <span class="text-secondary small">
+                                None saved yet. Tick some supervisors and save them as one.
+                            </span>
+                        }
+                        else
+                        {
+                            @foreach (var group in Model.Groups)
+                            {
+                                <span class="btn-group btn-group-sm" role="group" aria-label="@group.Name">
+                                    <button type="button" class="btn btn-outline-primary"
+                                            data-rpms-group="@group.MemberIdList"
+                                            title="Tick the @group.MemberCount in this group">
+                                        @group.Name
+                                        <span class="badge bg-primary-lt ms-1">
+                                            @(group.AvailableCount == group.MemberCount
+                                                ? group.MemberCount.ToString()
+                                                : $"{group.AvailableCount} of {group.MemberCount}")
+                                        </span>
+                                    </button>
+                                    <button type="submit" form="group-delete-@group.Id"
+                                            class="btn btn-outline-secondary"
+                                            title="Delete the group @group.Name"
+                                            aria-label="Delete the group @group.Name">&times;</button>
+                                </span>
+                            }
+                        }
+                    </div>
+
+                    <div class="row g-2 mt-2">
+                        <div class="col-12 col-md-4">
+                            <input type="text" id="group-name" class="form-control form-control-sm"
+                                   maxlength="80" placeholder="Name for a new group"
+                                   aria-label="Name for a new group" />
+                        </div>
+                        <div class="col-auto">
+                            <button type="button" id="group-save" class="btn btn-sm btn-outline-primary">
+                                Save the ticked supervisors as a group
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
                 @* The narrowing is the API's, since it knows who is available. Its own form, and
                    not nested inside the dispatch form, because a form cannot contain another and
@@ -277,6 +346,69 @@ else
                 if (!proposals) problems.push('Choose at least one proposal to send.');
                 if (!supervisors) problems.push('Choose at least one supervisor to send it to.');
                 window.rpmsToast('error', problems);
+            });
+
+            // Picking a group ticks its members, on top of whatever is already ticked.
+            //
+            // Adding rather than replacing: a coordinator who wants two groups picks both, and one
+            // who wants a group plus one other name ticks the extra afterwards. Members who are no
+            // longer in the chooser, because they are unavailable or the search has narrowed it,
+            // cannot be ticked, so the count says what actually happened rather than what the
+            // group holds.
+            document.addEventListener('click', function (event) {
+                var button = event.target.closest('[data-rpms-group]');
+                if (!button) return;
+
+                var ids = button.getAttribute('data-rpms-group').split(',').filter(Boolean);
+                var ticked = 0;
+
+                ids.forEach(function (id) {
+                    var box = document.querySelector('input[name="supervisorIds"][value="' + id + '"]');
+                    if (!box) return;
+                    if (!box.checked) {
+                        box.checked = true;
+                        box.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    ticked++;
+                });
+
+                if (ticked < ids.length) {
+                    window.rpmsToast('error', [
+                        'Ticked ' + ticked + ' of ' + ids.length + '. The rest are not in the list right now, '
+                        + 'either because they are unavailable or because the search has narrowed it.'
+                    ]);
+                }
+            });
+
+            // Saving the current ticks under a name. The hidden fields are built here rather than
+            // sitting in the markup, because what is saved is whatever is ticked at the moment the
+            // button is pressed.
+            document.getElementById('group-save').addEventListener('click', function () {
+                var form = document.getElementById('group-create');
+                var name = document.getElementById('group-name').value.trim();
+                var chosen = document.querySelectorAll('input[name="supervisorIds"]:checked');
+
+                var problems = [];
+                if (!name) problems.push('Give the group a name.');
+                if (!chosen.length) problems.push('Tick the supervisors the group should hold.');
+                if (problems.length) { window.rpmsToast('error', problems); return; }
+
+                form.querySelector('input[name="name"]').value = name;
+
+                // Cleared first, so pressing Save twice does not send the first selection again.
+                form.querySelectorAll('input[name="groupSupervisorIds"]').forEach(function (old) {
+                    old.remove();
+                });
+
+                chosen.forEach(function (box) {
+                    var field = document.createElement('input');
+                    field.type = 'hidden';
+                    field.name = 'groupSupervisorIds';
+                    field.value = box.value;
+                    form.appendChild(field);
+                });
+
+                form.submit();
             });
         </script>
     }

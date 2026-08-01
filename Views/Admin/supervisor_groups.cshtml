@@ -1,0 +1,187 @@
+@model SupervisorGroupsViewModel
+@{
+    ViewData["Title"] = "Supervisor groups";
+}
+
+<div class="mb-4">
+    <h1 class="page-title mb-1">Supervisor groups</h1>
+    <div class="text-secondary">
+        The saved sets coordinators send proposals to. Rename one, change who is in it, or clear
+        out the ones nobody uses any more.
+    </div>
+</div>
+
+@if (!Model.LoadFailed && (Model.Groups.Count > 0 || Model.HasSearch))
+{
+    <div class="card mb-3">
+        <div class="card-body py-3">
+            <form method="get" asp-controller="Admin" asp-action="supervisor_groups"
+                  class="row g-2 align-items-center">
+                <div class="col-12 col-md">
+                    <input type="search" name="search" value="@Model.Search" class="form-control"
+                           placeholder="Search by group, coordinator or supervisor" aria-label="Search" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                <div class="col-auto">
+                    <a asp-controller="Admin" asp-action="supervisor_groups"
+                       class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@if (Model.LoadFailed)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">We couldn't load the groups</h3>
+            <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
+            <a asp-controller="Admin" asp-action="supervisor_groups" class="btn btn-primary">Retry</a>
+        </div>
+    </div>
+}
+else if (Model.Groups.Count == 0 && Model.HasSearch)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+            <p class="text-secondary mb-4">
+                No group has that name, that owner or that member.
+            </p>
+            <a asp-controller="Admin" asp-action="supervisor_groups" class="btn btn-primary">Show them all</a>
+        </div>
+    </div>
+}
+else if (Model.Groups.Count == 0)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">No groups yet</h3>
+            <p class="text-secondary m-0">
+                Groups appear here as coordinators save them on Send proposals.
+            </p>
+        </div>
+    </div>
+}
+else
+{
+    @* The delete form wraps the list, so the tickboxes in each header are its fields. Editing a
+       group is a form of its own inside each card, which is why those cannot be nested here: one
+       form per card, and this one holds only the ticks. *@
+    <form id="delete-groups" asp-controller="Admin" asp-action="DeleteSupervisorGroups" method="post">
+        <input type="hidden" name="search" value="@Model.Search" />
+    </form>
+
+    <div class="card mb-3">
+        <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
+            <span class="text-secondary me-auto">
+                <strong>@Model.Groups.Count</strong> @(Model.Groups.Count == 1 ? "group" : "groups")
+                across @Model.OwnerCount @(Model.OwnerCount == 1 ? "coordinator" : "coordinators").
+                @if (Model.EmptyInPractice > 0)
+                {
+                    <span class="text-warning">
+                        @Model.EmptyInPractice would tick nobody today.
+                    </span>
+                }
+            </span>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-rpms-expand-all="group-cards">Expand all</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-rpms-collapse-all="group-cards">Collapse all</button>
+            <button type="submit" form="delete-groups" class="btn btn-sm btn-outline-danger">
+                Delete the ticked
+            </button>
+            @* Its own button and its own field, so clearing the lot is asked for rather than
+               arrived at by ticking everything. *@
+            <button type="submit" form="delete-groups" name="all" value="true"
+                    class="btn btn-sm btn-danger"
+                    data-rpms-confirm="Delete every supervisor group in the institution? Coordinators will have to build theirs again.">
+                Delete all
+            </button>
+        </div>
+    </div>
+
+    @foreach (var group in Model.Groups)
+    {
+        <div class="card mb-3">
+            <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+                 data-rpms-header-toggle="#group-@group.Id">
+                <input class="form-check-input m-0" type="checkbox" form="delete-groups"
+                       name="groupIds" value="@group.Id"
+                       aria-label="Tick the group @group.Name for deletion" />
+
+                <button class="btn btn-icon btn-sm btn-ghost-secondary" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#group-@group.Id"
+                        aria-expanded="false" aria-controls="group-@group.Id"
+                        aria-label="Show or hide this group">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
+                         viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M6 9l6 6l6 -6" />
+                    </svg>
+                </button>
+
+                <div class="me-auto">
+                    <h3 class="card-title m-0">@group.Name</h3>
+                    <div class="text-secondary small">@group.OwnerName</div>
+                </div>
+
+                @* What the group would actually do if it were picked today, which is the figure
+                   this screen exists to surface. *@
+                <span class="badge @(group.AvailableCount == 0 ? "bg-warning-lt" : "bg-primary-lt")">
+                    @(group.AvailableCount == group.MemberCount
+                        ? $"{group.MemberCount} {(group.MemberCount == 1 ? "supervisor" : "supervisors")}"
+                        : $"{group.AvailableCount} of {group.MemberCount} available")
+                </span>
+            </div>
+
+            @* Shut to begin with. This is a list to scan and tidy, so thirty open cards of
+               tickboxes would be the problem rather than the screen. *@
+            <div class="card-body collapse" id="group-@group.Id" data-rpms-collapsible="group-cards">
+                <form asp-controller="Admin" asp-action="UpdateSupervisorGroup" method="post">
+                    <input type="hidden" name="groupId" value="@group.Id" />
+                    <input type="hidden" name="search" value="@Model.Search" />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="group-name-@group.Id">Name</label>
+                        <input type="text" id="group-name-@group.Id" name="name" value="@group.Name"
+                               maxlength="80" class="form-control" required />
+                    </div>
+
+                    <div class="mb-2 text-secondary small">
+                        Members. Unticking somebody removes them from this coordinator's group; it
+                        changes nothing about their account.
+                    </div>
+
+                    <div class="row g-2">
+                        @{
+                            var memberIds = group.Members.Select(m => m.SupervisorId).ToHashSet();
+                        }
+                        @foreach (var supervisor in Model.Supervisors)
+                        {
+                            <div class="col-12 col-md-6">
+                                <label class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="supervisorIds"
+                                           value="@supervisor.Id"
+                                           checked="@(memberIds.Contains(supervisor.Id))" />
+                                    <span class="form-check-label">
+                                        @supervisor.FullName
+                                        <span class="d-block text-secondary small">@supervisor.Email</span>
+                                    </span>
+                                </label>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="btn-list mt-3">
+                        <button type="submit" class="btn btn-primary">Save this group</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+}

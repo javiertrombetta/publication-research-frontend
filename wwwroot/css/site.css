@@ -1044,3 +1044,32 @@ aside {
     .rpms-table-stable th {
         overflow-wrap: anywhere;
     }
+
+/* ---------- A card header that opens the card ---------- */
+
+/* The chevron beside a student's name is a 20px target and the name beside it is what everybody
+   aims at, so the whole row is the handle. The chevron stays as the thing that says the card
+   opens, and as the control a keyboard reaches; this is about where a mouse can land. */
+.rpms-collapse-header {
+    cursor: pointer;
+    user-select: none;
+}
+
+    .rpms-collapse-header:hover {
+        background: rgba(0, 0, 0, .02);
+    }
+
+    /* Anything inside the header that does something of its own keeps its own cursor, so a link
+       or a button does not read as another way to open the card. */
+    .rpms-collapse-header a,
+    .rpms-collapse-header button,
+    .rpms-collapse-header input,
+    .rpms-collapse-header label,
+    .rpms-collapse-header select {
+        cursor: auto;
+    }
+
+    .rpms-collapse-header a,
+    .rpms-collapse-header button {
+        cursor: pointer;
+    }

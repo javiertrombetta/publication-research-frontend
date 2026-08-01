@@ -86,7 +86,8 @@ else
     @foreach (var item in Model.Items)
     {
         <div class="card mb-3">
-            <div class="card-header d-flex align-items-center gap-2">
+            <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+                 data-rpms-header-toggle="#ethics-@item.Container.Id">
                 <button class="btn btn-icon btn-sm btn-ghost-secondary" type="button"
                         data-bs-toggle="collapse" data-bs-target="#ethics-@item.Container.Id"
                         aria-expanded="true" aria-controls="ethics-@item.Container.Id"

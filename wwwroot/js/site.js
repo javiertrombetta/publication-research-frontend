@@ -545,4 +545,37 @@ window.rpmsToast = (function () {
 
         panels(name).forEach(function (panel) { set(panel, open); });
     });
+
+    // The whole header opens and closes the card, not just the chevron.
+    //
+    // The chevron is a 20px target, and the thing beside it that everybody actually aims at is the
+    // student's name. Making the header the target is the difference between hitting it and
+    // hunting for it, and the row already reads as the handle for what is under it.
+    //
+    // The chevron stays: it is what says the card opens, and it is the focusable control that
+    // keyboard users tab to. Clicks that land on it, or on anything else that does something of
+    // its own, are left alone, so nothing gets toggled twice or in place of following a link.
+    document.addEventListener('click', function (event) {
+        var header = event.target.closest('[data-rpms-header-toggle]');
+        if (!header) return;
+        if (event.target.closest('a, button, input, label, select, textarea')) return;
+
+        var panel = document.querySelector(header.getAttribute('data-rpms-header-toggle'));
+        if (panel) set(panel, !panel.classList.contains('show'));
+    });
 })();
+
+// One question before something that cannot be undone.
+//
+// Declared on the control itself, so the wording is written beside the thing it is asking about
+// rather than in a table of messages somewhere else. The default action is only stopped when the
+// answer is no, so a control without this attribute behaves exactly as it always did.
+document.addEventListener('click', function (event) {
+    var control = event.target.closest('[data-rpms-confirm]');
+    if (!control) return;
+
+    if (!window.confirm(control.getAttribute('data-rpms-confirm'))) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+});

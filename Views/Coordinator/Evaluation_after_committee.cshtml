@@ -33,10 +33,11 @@ else if (Model.IsEmpty)
 }
 else
 {
-    <h2 class="h3 mb-3">
-        Ready for your decision
-        <span class="badge bg-primary-lt ms-1">@Model.DecisionTotal</span>
-    </h2>
+    @* No heading over this list. The bar under the search already says how many are waiting, and
+       a title saying the same thing above it made this screen start differently from every other
+       queue in the application.
+
+       The second list keeps its heading, because that one marks where a different list begins. *@
 
     @* Its own search and its own order, with its own query keys, because the two lists on this
        screen are read independently: narrowing one must not narrow or reorder the other. Both are
@@ -104,7 +105,8 @@ else
     @foreach (var item in Model.ReadyForDecision)
     {
         <div class="card mb-3">
-            <div class="card-header d-flex align-items-center gap-2">
+            <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+                 data-rpms-header-toggle="#paper-@item.Paper.Id">
                 <button class="btn btn-icon btn-sm btn-ghost-secondary" type="button"
                         data-bs-toggle="collapse" data-bs-target="#paper-@item.Paper.Id"
                         aria-expanded="true" aria-controls="paper-@item.Paper.Id"

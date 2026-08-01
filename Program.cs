@@ -93,6 +93,7 @@ void ConfigureApiClient(IServiceProvider sp, HttpClient client) =>
 
 builder.Services.AddHttpClient<ContainersApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
 builder.Services.AddHttpClient<ProposalsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
+builder.Services.AddHttpClient<SupervisorGroupsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
 builder.Services.AddHttpClient<EthicsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
 builder.Services.AddHttpClient<PublicationsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
 builder.Services.AddHttpClient<DepartmentsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();

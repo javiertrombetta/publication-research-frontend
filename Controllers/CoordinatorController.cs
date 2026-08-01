@@ -19,7 +19,8 @@ namespace ResearchPublicationManagementSystem.Controllers
         ProposalsApiClient proposalsApi,
         EthicsApiClient ethicsApi,
         PublicationsApiClient publicationsApi,
-        UsersApiClient usersApi) : Controller
+        UsersApiClient usersApi,
+        SupervisorGroupsApiClient groupsApi) : Controller
     {
         // ---------- Overview ----------
 
@@ -120,11 +121,53 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.Supervisors = available;
             model.SupervisorsTotal = available.Count;
 
+            // The coordinator's own saved sets. Failing to load them is not failing to load the
+            // screen: the chooser still works one name at a time, which is what it did before
+            // groups existed.
+            var groups = await groupsApi.GetMineAsync();
+            model.Groups = groups.Data ?? [];
+
             model.TotalCount = pending.Data?.TotalCount ?? 0;
             model.Pager = Paging.PagerFor(pending.Data, "Coordinator", nameof(assigning_proposal_forsupervisor),
                 model.RouteValues());
 
             return View(model);
+        }
+
+        /// <summary>
+        /// Saves whoever is ticked at the moment as a named group, so the same set can be picked
+        /// by name next time instead of rebuilt by hand.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateSupervisorGroup(string? name, Guid[] groupSupervisorIds)
+        {
+            if (string.IsNullOrWhiteSpace(name) || groupSupervisorIds.Length == 0)
+            {
+                TempData["ErrorMessage"] = "Give the group a name and tick at least one supervisor first.";
+                return RedirectToAction(nameof(assigning_proposal_forsupervisor));
+            }
+
+            var result = await groupsApi.CreateAsync(name.Trim(), groupSupervisorIds);
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? $"Saved “{name.Trim()}” as a group of {groupSupervisorIds.Length}."
+                : result.ErrorMessage ?? "Could not save the group.";
+
+            return RedirectToAction(nameof(assigning_proposal_forsupervisor));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteSupervisorGroup(Guid groupId)
+        {
+            var result = await groupsApi.DeleteAsync(groupId);
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? "Group deleted."
+                : result.ErrorMessage ?? "Could not delete the group.";
+
+            return RedirectToAction(nameof(assigning_proposal_forsupervisor));
         }
 
         [HttpPost]
