@@ -155,8 +155,6 @@ else
                             No supervisor was interested in any proposal from
                             <strong>@Model.ReturnedStudents</strong>
                             @(Model.ReturnedStudents == 1 ? "student" : "students").
-                            <strong>@Model.ReturnedProposals</strong>
-                            @(Model.ReturnedProposals == 1 ? "proposal is" : "proposals are") back here.
                         </span>
                     }
                 </span>
@@ -208,16 +206,20 @@ else
 
                     <h3 class="card-title m-0 me-auto">@Model.StudentFor(group.Key)</h3>
 
-                    @{ var cameBack = group.Count(p => p.CameBack); }
-                    @if (cameBack > 0)
+                    @{ var cameBack = group.Any(p => p.CameBack); }
+                    @if (cameBack)
                     {
-                        @* Readable with the card shut, because it is what decides whether this
-                           student needs different supervisors or a different proposal. It says
-                           nobody was interested rather than nobody accepted: a supervisor saying
-                           they are willing is an offer, and accepting it is the coordinator's. *@
+                        @* One badge for the student, not a tally of proposals. A student is only
+                           here a second time when no supervisor was interested in any of their
+                           proposals, so the count would be the number they wrote rather than
+                           anything about the round, and marking each proposal as well would read
+                           as a verdict on that proposal on its own.
+
+                           Interested rather than accepted: a supervisor saying they are willing is
+                           an offer, and accepting it is the coordinator's. *@
                         <span class="badge bg-warning-lt"
                               title="No supervisor was interested in any of this student's proposals">
-                            @(cameBack == group.Count() ? "Nobody interested" : $"{cameBack} came back")
+                            Nobody interested
                         </span>
                     }
 
@@ -238,16 +240,12 @@ else
                                    data-rpms-returned="@proposal.CameBack.ToString().ToLowerInvariant()" />
                             <span class="form-check-label">
                                 <strong>@proposal.Title</strong>
-                                @if (proposal.CameBack)
-                                {
-                                    <span class="badge bg-warning-lt ms-1">No interest</span>
-                                }
                                 <span class="d-block text-secondary small mt-1">@proposal.Abstract</span>
                             </span>
                         </label>
                     }
 
-                    @if (cameBack > 0)
+                    @if (cameBack)
                     {
                         @* Two ways out of a round that found nobody, and the screen offers both.
                            Sending again is the button at the bottom of the page, with different
@@ -256,8 +254,7 @@ else
                         <div class="mt-3 pt-3 border-top">
                             <label class="form-label"
                                    for="new-proposals-comments-@group.Key">
-                                No supervisor was interested in
-                                @(cameBack == 1 ? "this student's proposal" : "any of this student's proposals")
+                                No supervisor was interested in any of this student's proposals
                             </label>
                             <div class="row g-2 align-items-start">
                                 <div class="col-12 col-md">
@@ -275,8 +272,8 @@ else
                                 </div>
                             </div>
                             <div class="text-secondary small mt-1">
-                                Or tick different supervisors below and send @(cameBack == 1 ? "it" : "them") again.
-                                Asking for new ones closes the @(cameBack == 1 ? "proposal" : "proposals") on record.
+                                Or tick different supervisors below and send them again. Asking for
+                                new ones closes the proposals on record.
                             </div>
                         </div>
                     }
