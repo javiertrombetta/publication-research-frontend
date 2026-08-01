@@ -57,6 +57,14 @@ namespace ResearchPublicationManagementSystem.Models
             return values;
         }
 
+        /// <summary>
+        /// Where Clear goes: this screen again, without the search term and with everything else
+        /// exactly as it is. Dropping the ordering as well would answer a question nobody asked,
+        /// and the reader would have to set it again to get back to the list they were reading.
+        /// </summary>
+        public Dictionary<string, string?> ClearSearchRoute() =>
+            RouteValues().Where(v => v.Key != "search").ToDictionary(v => v.Key, v => v.Value);
+
         public SortBarViewModel SortBar => new()
         {
             Controller = "Coordinator",
@@ -124,6 +132,10 @@ namespace ResearchPublicationManagementSystem.Models
             if (Descending) values["desc"] = "true";
             return values;
         }
+
+        /// <summary><inheritdoc cref="AssignProposalsViewModel.ClearSearchRoute" path="/summary"/></summary>
+        public Dictionary<string, string?> ClearSearchRoute() =>
+            RouteValues().Where(v => v.Key != "search").ToDictionary(v => v.Key, v => v.Value);
 
         public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
         {
