@@ -13,7 +13,11 @@ public record UserDetailDto(
     IReadOnlyList<string> Roles,
     DateTime CreatedAt,
     JsonElement? Profile,
-    bool HasProfilePhoto);
+    bool HasProfilePhoto,
+    bool IsAvailable = true);
+
+/// <summary>Whether this person is taking work on. Theirs to set, unlike Status.</summary>
+public record SetAvailabilityRequestDto(bool IsAvailable);
 
 public record StudentProfileSummaryDto(
     Guid Id,

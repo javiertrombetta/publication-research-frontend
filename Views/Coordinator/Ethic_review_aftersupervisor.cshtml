@@ -10,6 +10,14 @@
     </div>
 </div>
 
+@if (!Model.LoadFailed && Model.Items.Count > 0)
+{
+    @* The queue is drawn as cards, so the columns are named here rather than in a
+       header row. Ordering is the API's and covers the whole queue, not this page. *@
+    var sortBar = Model.SortBar;
+    <partial name="_SortBar" model="sortBar" />
+}
+
 @if (Model.LoadFailed)
 {
     <div class="card">

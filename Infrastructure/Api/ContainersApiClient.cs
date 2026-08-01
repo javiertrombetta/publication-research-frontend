@@ -32,7 +32,7 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
     public Task<ApiResult<PagedResultDto<PublicationContainerDto>>> GetAllAsync(
         Guid? studentId = null, Guid? coordinatorId = null, string? status = null,
         string? ethicsSteps = null, int page = 1, int pageSize = Paging.DefaultPageSize,
-        CancellationToken ct = default)
+        string? sort = null, bool descending = false, CancellationToken ct = default)
     {
         var parameters = new Dictionary<string, string?>
         {
@@ -45,6 +45,13 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
         };
 
         foreach (var (key, value) in Page(page, pageSize)) parameters[key] = value;
+
+        // Left off when nothing is chosen, so the endpoint keeps its own default order.
+        if (!string.IsNullOrWhiteSpace(sort))
+        {
+            parameters["sortBy"] = sort;
+            parameters["sortDescending"] = descending.ToString().ToLowerInvariant();
+        }
 
         var url = QueryHelpers.AddQueryString("api/containers",
             parameters.Where(p => !string.IsNullOrWhiteSpace(p.Value)));
@@ -61,18 +68,32 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
 
     /// <summary>The publications this supervisor has been assigned to, newest first.</summary>
     public Task<ApiResult<PagedResultDto<PublicationContainerDto>>> GetSupervisingAsync(
-        string? ethicsSteps = null, int page = 1, int pageSize = Paging.DefaultPageSize, CancellationToken ct = default) =>
-        GetAsync<PagedResultDto<PublicationContainerDto>>(WithSteps("api/containers/supervising", ethicsSteps, page, pageSize), ct);
+        string? ethicsSteps = null, int page = 1, int pageSize = Paging.DefaultPageSize,
+        string? sort = null, bool descending = false, CancellationToken ct = default) =>
+        GetAsync<PagedResultDto<PublicationContainerDto>>(
+            WithSteps("api/containers/supervising", ethicsSteps, page, pageSize, sort, descending), ct);
 
     /// <summary>Publications by students in this Head of Department's department.</summary>
     public Task<ApiResult<PagedResultDto<PublicationContainerDto>>> GetInMyDepartmentAsync(
-        string? ethicsSteps = null, int page = 1, int pageSize = Paging.DefaultPageSize, CancellationToken ct = default) =>
-        GetAsync<PagedResultDto<PublicationContainerDto>>(WithSteps("api/containers/in-my-department", ethicsSteps, page, pageSize), ct);
+        string? ethicsSteps = null, int page = 1, int pageSize = Paging.DefaultPageSize,
+        string? sort = null, bool descending = false, CancellationToken ct = default) =>
+        GetAsync<PagedResultDto<PublicationContainerDto>>(
+            WithSteps("api/containers/in-my-department", ethicsSteps, page, pageSize, sort, descending), ct);
 
-    private static string WithSteps(string path, string? ethicsSteps, int page, int pageSize)
+    private static string WithSteps(string path, string? ethicsSteps, int page, int pageSize,
+        string? sort = null, bool descending = false)
     {
         var parameters = Page(page, pageSize);
         parameters["ethicsSteps"] = ethicsSteps;
+
+        // Left off entirely when nothing is chosen, so the endpoint applies its own default order
+        // rather than being told to sort by an empty column.
+        if (!string.IsNullOrWhiteSpace(sort))
+        {
+            parameters["sortBy"] = sort;
+            parameters["sortDescending"] = descending.ToString().ToLowerInvariant();
+        }
+
         return QueryHelpers.AddQueryString(path, parameters.Where(p => !string.IsNullOrWhiteSpace(p.Value)));
     }
 }

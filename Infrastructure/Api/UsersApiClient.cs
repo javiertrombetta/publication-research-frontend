@@ -9,6 +9,14 @@ public class UsersApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
     public Task<ApiResult<UserDetailDto>> GetMeAsync(CancellationToken ct = default) =>
         GetAsync<UserDetailDto>("api/users/me", ct);
 
+    /// <summary>
+    /// Says whether this person is taking work on. Not the same as an administrator enabling or
+    /// disabling the account: this only governs what they are offered next, and leaves anything
+    /// already assigned to them alone.
+    /// </summary>
+    public Task<ApiResult<object?>> SetMyAvailabilityAsync(bool isAvailable, CancellationToken ct = default) =>
+        PutJsonAsync<object?>("api/users/me/availability", new SetAvailabilityRequestDto(isAvailable), ct);
+
     public Task<ApiResult<UserDetailDto>> UpdateMeAsync(UpdateMyProfileRequestDto request, CancellationToken ct = default) =>
         PutJsonAsync<UserDetailDto>("api/users/me", request, ct);
 
@@ -23,8 +31,11 @@ public class UsersApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
         GetBytesAsync($"api/users/{userId}/photo", ct);
 
     /// <summary>Enabled supervisors, for a Coordinator choosing who to send proposals to.</summary>
-    public Task<ApiResult<IReadOnlyList<UserListItemDto>>> GetSupervisorsAsync(CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<UserListItemDto>>("api/users/supervisors", ct);
+    public Task<ApiResult<IReadOnlyList<UserListItemDto>>> GetSupervisorsAsync(
+        string? search = null, CancellationToken ct = default) =>
+        GetAsync<IReadOnlyList<UserListItemDto>>(
+            "api/users/supervisors"
+            + (string.IsNullOrWhiteSpace(search) ? "" : $"?search={Uri.EscapeDataString(search.Trim())}"), ct);
 
     // ---------- Administration ----------
 

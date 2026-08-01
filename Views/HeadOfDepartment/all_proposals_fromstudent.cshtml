@@ -11,6 +11,46 @@
     </div>
 </div>
 
+@if (!Model.LoadFailed && (Model.Items.Count > 0 || Model.HasSearch))
+{
+    <div class="card mb-3">
+        <div class="card-body py-3">
+            <form method="get" asp-controller="HeadOfDepartment" asp-action="all_proposals_fromstudent"
+                  class="row g-2 align-items-center">
+
+                @* Ordering survives a search, so narrowing does not silently reorder. *@
+                <input type="hidden" name="sort" value="@Model.Sort" />
+                <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+
+                <div class="col-12 col-md">
+                    <input type="search" name="search" value="@Model.Search" class="form-control"
+                           placeholder="Search by student, proposal or supervisor" aria-label="Search" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                @if (Model.HasSearch)
+                {
+                    <div class="col-auto">
+                        <a asp-controller="HeadOfDepartment" asp-action="all_proposals_fromstudent"
+                           class="btn btn-link text-secondary text-decoration-none">Clear</a>
+                    </div>
+                }
+            </form>
+
+            @if (Model.HasSearch)
+            {
+                <div class="text-secondary small mt-2">
+                    @Model.TotalCount @(Model.TotalCount == 1 ? "proposal matches" : "proposals match") &ldquo;@Model.Search&rdquo;.
+                </div>
+            }
+        </div>
+    </div>
+
+    var proposalSortBar = Model.SortBar;
+    <partial name="_SortBar" model="proposalSortBar" />
+}
+
 @if (Model.LoadFailed)
 {
     <div class="card">

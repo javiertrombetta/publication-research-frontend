@@ -47,6 +47,11 @@ else if (Model.Supervisors.Count == 0)
 }
 else
 {
+    @* Outside the dispatch form, and referenced by the search box through form=. HTML has no
+       nested forms, and this one only narrows the chooser. *@
+    <form id="supervisor-filter" method="get"
+          asp-controller="Coordinator" asp-action="assigning_proposal_forsupervisor"></form>
+
     <form id="send-proposals-form" asp-controller="Coordinator" asp-action="SendToSupervisors" method="post">
 
         @* One line for the whole page, because the common case is sending everything waiting.
@@ -117,10 +122,10 @@ else
             <div class="card-header d-flex flex-wrap align-items-center gap-2">
                 <h3 class="card-title m-0 me-auto">Send to</h3>
                 <span class="text-secondary small">
-                    <strong data-rpms-count="supervisorIds">0</strong> of @Model.Supervisors.Count selected
+                    <strong data-rpms-count="supervisorIds">0</strong> of @Model.SupervisorsTotal available selected
                 </span>
                 <button type="button" class="btn btn-sm btn-outline-secondary"
-                        data-rpms-check-all="supervisorIds" data-rpms-scope="#send-to">Select all</button>
+                        data-rpms-check-all="supervisorIds" data-rpms-scope="#send-to">Select all on this page</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary"
                         data-rpms-check-none="supervisorIds" data-rpms-scope="#send-to">Clear</button>
             </div>
@@ -128,10 +133,36 @@ else
                 @* Only supervisors who are available: enabled by an administrator, and not marked
                    unavailable by themselves. Sending a proposal to somebody who has said they
                    cannot take work on is asking a question nobody is there to answer. *@
-                <div class="row g-2">
+
+                @* The narrowing is the API's, since it knows who is available. Its own form, and
+                   not nested inside the dispatch form, because a form cannot contain another and
+                   pressing Enter in this box must narrow the list rather than send the proposals. *@
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md">
+                        <input type="search" form="supervisor-filter" name="supervisorSearch"
+                               value="@Model.SupervisorSearch" class="form-control"
+                               placeholder="Find a supervisor by name or email" aria-label="Find a supervisor" />
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" form="supervisor-filter" class="btn btn-outline-secondary">Find</button>
+                    </div>
+                    @if (Model.HasSupervisorSearch)
+                    {
+                        <div class="col-auto">
+                            <a asp-controller="Coordinator" asp-action="assigning_proposal_forsupervisor"
+                               class="btn btn-link text-secondary text-decoration-none">Show all</a>
+                        </div>
+                    }
+                </div>
+
+                @* Paged in the browser, ten at a time. Every available supervisor is in the page,
+                   so a tick made on one page is still a tick on another and "select all" means all
+                   of them, not the ten on screen. With JavaScript off nothing is hidden: the list
+                   is longer, which is the right answer rather than a broken one. *@
+                <div class="row g-2" data-rpms-paged="supervisors" data-rpms-page-size="10">
                     @foreach (var supervisor in Model.Supervisors)
                     {
-                        <div class="col-12 col-md-6">
+                        <div class="col-12 col-md-6" data-rpms-page-item>
                             <label class="form-check">
                                 <input class="form-check-input" type="checkbox" name="supervisorIds" value="@supervisor.Id" />
                                 <span class="form-check-label">
@@ -142,6 +173,15 @@ else
                         </div>
                     }
                 </div>
+
+                @if (Model.Supervisors.Count == 0)
+                {
+                    <p class="text-secondary m-0">
+                        @(Model.HasSupervisorSearch
+                            ? "No available supervisor matches that."
+                            : "Nobody is available to take proposals on at the moment.")
+                    </p>
+                }
 
                 <div class="mt-3">
                     <label for="dispatch-comments" class="form-label">Message to the supervisors</label>
