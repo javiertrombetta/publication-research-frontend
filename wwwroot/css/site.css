@@ -939,3 +939,34 @@ aside {
 .rpms-no-transitions .rpms-sidebar-inner {
     transition: none !important;
 }
+
+/* ==========================================================
+   Sortable column headings
+   ========================================================== */
+
+/* A heading that is also a control. It has to stay legible as a heading first: same weight, same
+   case, same colour as the ones that are not sortable, so a table does not read as a row of
+   buttons. What marks it is the hover and the arrow on the column actually in use. */
+.rpms-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    color: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+    .rpms-sort:hover {
+        color: var(--rpms-primary);
+    }
+
+    /* The column in use is named twice, by weight and by the arrow, because the arrow alone is
+       small and easy to miss on a wide table. */
+    .rpms-sort-active {
+        color: var(--rpms-primary);
+        font-weight: 700;
+    }
+
+.rpms-sort-icon {
+    flex: 0 0 auto;
+}

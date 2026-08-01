@@ -47,16 +47,57 @@ else if (Model.Supervisors.Count == 0)
 }
 else
 {
-    <form asp-controller="Coordinator" asp-action="SendToSupervisors" method="post">
+    <form id="send-proposals-form" asp-controller="Coordinator" asp-action="SendToSupervisors" method="post">
 
-        @* Grouped by student, because a supervisor chooses between one student's proposals. *@
+        @* One line for the whole page, because the common case is sending everything waiting.
+           Counting rather than saying "all": a coordinator needs to know how much is about to go
+           out, and a page is not the whole queue. *@
+        <div class="card mb-3">
+            <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
+                <span class="text-secondary me-auto">
+                    <strong data-rpms-count="proposalIds">0</strong> of @Model.Proposals.Count
+                    @(Model.Proposals.Count == 1 ? "proposal" : "proposals") on this page selected.
+                </span>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-rpms-check-all="proposalIds">Select all</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-rpms-check-none="proposalIds">Clear</button>
+            </div>
+        </div>
+
+        @* Grouped by student, because a supervisor chooses between one student's proposals.
+
+           Each group opens and closes, and starts open with everything ticked, which is the common
+           case. A coordinator sending only some of one student's proposals can collapse the rest
+           out of the way and work on the one group, rather than scrolling a flat list of every
+           proposal in the department looking for the two that belong together. *@
         @foreach (var group in Model.ByPublication)
         {
             <div class="card mb-3">
-                <div class="card-header">
-                    <h3 class="card-title m-0">@Model.StudentFor(group.Key)</h3>
+                <div class="card-header d-flex align-items-center gap-2">
+                    <button class="btn btn-icon btn-sm btn-ghost-secondary" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#student-@group.Key"
+                            aria-expanded="true" aria-controls="student-@group.Key"
+                            aria-label="Show or hide this student's proposals">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
+                             viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M6 9l6 6l6 -6" />
+                        </svg>
+                    </button>
+
+                    <h3 class="card-title m-0 me-auto">@Model.StudentFor(group.Key)</h3>
+
+                    <span class="text-secondary small">
+                        @group.Count() @(group.Count() == 1 ? "proposal" : "proposals")
+                    </span>
+                    <button type="button" class="btn btn-sm btn-ghost-secondary"
+                            data-rpms-check-all="proposalIds" data-rpms-scope="#student-@group.Key">All</button>
+                    <button type="button" class="btn btn-sm btn-ghost-secondary"
+                            data-rpms-check-none="proposalIds" data-rpms-scope="#student-@group.Key">None</button>
                 </div>
-                <div class="card-body">
+                <div class="card-body collapse show" id="student-@group.Key">
                     @foreach (var proposal in group)
                     {
                         <label class="form-check">
@@ -73,10 +114,20 @@ else
         }
 
         <div class="card mb-3">
-            <div class="card-header">
-                <h3 class="card-title m-0">Send to</h3>
+            <div class="card-header d-flex flex-wrap align-items-center gap-2">
+                <h3 class="card-title m-0 me-auto">Send to</h3>
+                <span class="text-secondary small">
+                    <strong data-rpms-count="supervisorIds">0</strong> of @Model.Supervisors.Count selected
+                </span>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-rpms-check-all="supervisorIds" data-rpms-scope="#send-to">Select all</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-rpms-check-none="supervisorIds" data-rpms-scope="#send-to">Clear</button>
             </div>
-            <div class="card-body">
+            <div class="card-body" id="send-to">
+                @* Only supervisors who are available: enabled by an administrator, and not marked
+                   unavailable by themselves. Sending a proposal to somebody who has said they
+                   cannot take work on is asking a question nobody is there to answer. *@
                 <div class="row g-2">
                     @foreach (var supervisor in Model.Supervisors)
                     {
@@ -108,7 +159,12 @@ else
     @section Scripts {
         <script>
             // The backend rejects an empty selection; say so here rather than after a round trip.
-            document.querySelector('form').addEventListener('submit', function (event) {
+            //
+            // By id, not document.querySelector('form'). That returns the FIRST form in the
+            // document, which is the logout form in the top bar, so this check was being attached
+            // to it: signing out from this page refused with "Choose at least one supervisor",
+            // and the real form had no check at all.
+            document.getElementById('send-proposals-form').addEventListener('submit', function (event) {
                 var proposals = document.querySelectorAll('input[name="proposalIds"]:checked').length;
                 var supervisors = document.querySelectorAll('input[name="supervisorIds"]:checked').length;
                 if (proposals && supervisors) return;

@@ -339,3 +339,52 @@ window.rpmsToast = (function () {
         if (pending.indexOf(message) === -1) pending.push(message);
     }, true);   // capture: `invalid` doesn't bubble
 })();
+
+// Select-all controls for a set of checkboxes.
+//
+// Declared in the markup rather than wired per screen: a button says which group of checkboxes it
+// acts on (data-rpms-check-all="name") and optionally which part of the page to stay inside
+// (data-rpms-scope="#some-id"). The scope is what lets one page have both a button for everything
+// and a button per group without them fighting over the same name.
+//
+// The counter next to them (data-rpms-count="name") is the reason this is worth having at all: on
+// a screen where everything starts ticked, the useful thing to tell somebody is not that a
+// "select all" button exists but how much is about to go out.
+(function () {
+    function boxes(name, scope) {
+        var root = scope ? document.querySelector(scope) : document;
+        return root ? root.querySelectorAll('input[type="checkbox"][name="' + name + '"]') : [];
+    }
+
+    function refreshCounts() {
+        document.querySelectorAll('[data-rpms-count]').forEach(function (label) {
+            var name = label.getAttribute('data-rpms-count');
+            var all = boxes(name, null);
+            var checked = 0;
+            Array.prototype.forEach.call(all, function (b) { if (b.checked) checked++; });
+            label.textContent = String(checked);
+        });
+    }
+
+    document.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-rpms-check-all], [data-rpms-check-none]');
+        if (!button) return;
+
+        var checkAll = button.hasAttribute('data-rpms-check-all');
+        var name = button.getAttribute(checkAll ? 'data-rpms-check-all' : 'data-rpms-check-none');
+
+        Array.prototype.forEach.call(boxes(name, button.getAttribute('data-rpms-scope')), function (box) {
+            box.checked = checkAll;
+        });
+
+        refreshCounts();
+    });
+
+    // Any individual tick has to move the counter too, or it goes stale the moment somebody
+    // adjusts the selection by hand after using a button.
+    document.addEventListener('change', function (event) {
+        if (event.target.matches('input[type="checkbox"][name]')) refreshCounts();
+    });
+
+    refreshCounts();
+})();

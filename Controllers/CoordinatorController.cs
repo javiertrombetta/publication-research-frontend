@@ -75,11 +75,6 @@ namespace ResearchPublicationManagementSystem.Controllers
                 .ThenBy(s => s.FirstName)
                 .ToList();
 
-            // A proposal doesn't carry its student's name, so the coordinator's containers are
-            // fetched once and matched up rather than one request per proposal.
-            var containers = await containersApi.GetAllAsync(coordinatorId: CurrentUserId());
-            model.Containers = containers.Data?.Items ?? [];
-
             model.Pager = Paging.PagerFor(pending.Data, "Coordinator", nameof(assigning_proposal_forsupervisor));
 
             return View(model);
@@ -116,14 +111,25 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// assignment official.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> select_a_proposal_forstudent(int page = 1)
+        public async Task<IActionResult> select_a_proposal_forstudent(
+            int page = 1, string? sort = null, bool desc = false, string? search = null)
         {
-            var model = new SupervisorSelectionsViewModel();
+            var model = new SupervisorSelectionsViewModel
+            {
+                Sort = sort,
+                Descending = desc,
+                Search = search
+            };
 
             // One request for the whole screen. The proposals carry their student's name and the
             // supervisors' answers, and the API returns only the ones with an offer to allocate, so
             // this no longer fetches every publication in the department to find a handful.
-            var proposals = await proposalsApi.GetForCoordinatorAsync(page, awaitingAllocation: true);
+            //
+            // The search and the sort go with it rather than being applied to what comes back: the
+            // row somebody is looking for is usually not on the page they are already holding.
+            var proposals = await proposalsApi.GetForCoordinatorAsync(
+                page, awaitingAllocation: true, sort: sort, descending: desc, search: search);
+
             if (!proposals.Success)
             {
                 TempData["ErrorMessage"] = proposals.ErrorMessage ?? "Could not load the proposals waiting on you.";
@@ -138,7 +144,9 @@ namespace ResearchPublicationManagementSystem.Controllers
                 Invitations = p.Invitations
             })];
 
-            model.Pager = Paging.PagerFor(proposals.Data, "Coordinator", nameof(select_a_proposal_forstudent));
+            model.TotalCount = proposals.Data?.TotalCount ?? 0;
+            model.Pager = Paging.PagerFor(proposals.Data, "Coordinator", nameof(select_a_proposal_forstudent),
+                model.RouteValues());
 
             return View(model);
         }

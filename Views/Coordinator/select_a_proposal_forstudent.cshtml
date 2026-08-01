@@ -11,6 +11,63 @@
     </div>
 </div>
 
+@* Search and order are applied by the API, so they cover the whole queue rather than the page in
+   hand, and both live in the query string so a filtered view can be linked to and reloaded.
+
+   One box for three names. Somebody looking for a row remembers the student, or the proposal, or
+   the supervisor who offered, and separate boxes would make them decide which of those they were
+   remembering before they could start typing. *@
+@if (!Model.LoadFailed && (Model.Items.Count > 0 || Model.HasSearch))
+{
+    <div class="card mb-3">
+        <div class="card-body py-3">
+            <form method="get" asp-controller="Coordinator" asp-action="select_a_proposal_forstudent"
+                  class="row g-2 align-items-center">
+
+                @* The order survives a search, so narrowing the list does not silently reorder it. *@
+                <input type="hidden" name="sort" value="@Model.Sort" />
+                <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+
+                <div class="col-12 col-md">
+                    <input type="search" name="search" value="@Model.Search" class="form-control"
+                           placeholder="Search by student, proposal or supervisor" aria-label="Search" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                @if (Model.HasSearch)
+                {
+                    <div class="col-auto">
+                        <a asp-controller="Coordinator" asp-action="select_a_proposal_forstudent"
+                           class="btn btn-link text-secondary text-decoration-none">Clear</a>
+                    </div>
+                }
+
+                @{
+                    // Built here rather than inline: a tag helper's model attribute is delimited by
+                    // double quotes, so a call with string arguments cannot be written inside one.
+                    var byDate = Model.Column("submitted", "Date", descendingFirst: true);
+                    var byStudent = Model.Column("student", "Student");
+                    var byTitle = Model.Column("title", "Proposal");
+                }
+                <div class="col-12 col-md-auto ms-md-auto d-flex align-items-center gap-3">
+                    <span class="text-secondary small">Sort by</span>
+                    <partial name="_SortableHeader" model="byDate" />
+                    <partial name="_SortableHeader" model="byStudent" />
+                    <partial name="_SortableHeader" model="byTitle" />
+                </div>
+            </form>
+
+            @if (Model.HasSearch)
+            {
+                <div class="text-secondary small mt-2">
+                    @Model.TotalCount @(Model.TotalCount == 1 ? "proposal matches" : "proposals match") &ldquo;@Model.Search&rdquo;.
+                </div>
+            }
+        </div>
+    </div>
+}
+
 @if (Model.LoadFailed)
 {
     <div class="card">
@@ -18,6 +75,22 @@
             <h3 class="mb-2">We couldn't load the selections</h3>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="Coordinator" asp-action="select_a_proposal_forstudent" class="btn btn-primary">Retry</a>
+        </div>
+    </div>
+}
+else if (Model.Items.Count == 0 && Model.HasSearch)
+{
+    @* A search that found nothing is a different thing from an empty queue, and offering "back to
+       dashboard" here would be answering a question nobody asked. *@
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+            <p class="text-secondary mb-4">
+                No proposal waiting on you has that student, title or supervisor.
+            </p>
+            <a asp-controller="Coordinator" asp-action="select_a_proposal_forstudent" class="btn btn-primary">
+                Show them all
+            </a>
         </div>
     </div>
 }
