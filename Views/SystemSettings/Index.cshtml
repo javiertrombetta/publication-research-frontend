@@ -670,6 +670,17 @@
                                        placeholder="https://www.ais.ac.nz/privacy-policy" />
                             </div>
                             <div class="col-12 col-sm-6">
+                                <label class="form-label" for="website-url">Institution website</label>
+                                <input id="website-url" name="websiteUrl" type="url"
+                                       value="@Model.Institution.WebsiteUrl" class="form-control"
+                                       placeholder="https://www.ais.ac.nz" />
+                                <small class="form-hint">
+                                    Where a member of the public is sent for contact details when no
+                                    research enquiries address has been published.
+                                </small>
+                            </div>
+
+                            <div class="col-12 col-sm-6">
                                 <label class="form-label" for="academic-cycle">Current academic cycle</label>
                                 <input id="academic-cycle" name="currentAcademicCycle"
                                        value="@Model.Institution.CurrentAcademicCycle" class="form-control"
