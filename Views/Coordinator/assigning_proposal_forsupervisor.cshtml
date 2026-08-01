@@ -407,18 +407,19 @@ else
                 </div>
 
                 @* A date the round runs out on, and what happens when it does.
-                   Optional: a coordinator with a cycle to keep to sets one, and one chasing
-                   replies by hand does not have to. Once it passes, students nobody offered to
-                   supervise come back here on their own, which is the same thing the coordinator
-                   would have done after noticing, minus the noticing. *@
+
+                   Required, and filled in already. A round with no date never ends: the proposals
+                   sit there waiting on supervisors who may never reply, and the coordinator has to
+                   notice for themselves. The institution has already said how long it expects a
+                   supervisor to take, so the field starts there rather than asking a coordinator to
+                   restate that policy on every send. They can move it. *@
                 <div class="mt-3">
-                    <label for="respond-by" class="form-label">
-                        Answer by <span class="text-secondary fw-normal">(optional)</span>
-                    </label>
+                    <label for="respond-by" class="form-label required">Answer by</label>
                     <div class="row g-2 align-items-center">
                         <div class="col-12 col-md-auto">
-                            <input type="datetime-local" id="respond-by" name="respondBy"
-                                   class="form-control" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
+                            <input type="datetime-local" id="respond-by" name="respondBy" required
+                                   class="form-control" value="@Model.SuggestedRespondByValue"
+                                   min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
                         </div>
                         <div class="col text-secondary small">
                             After this, any student with no proposal a supervisor offered to take on

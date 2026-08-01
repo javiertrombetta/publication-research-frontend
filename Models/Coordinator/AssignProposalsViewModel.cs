@@ -49,6 +49,17 @@ namespace ResearchPublicationManagementSystem.Models
         public bool HasReturned => ReturnedStudents > 0;
 
         /// <summary>
+        /// What the answer-by field starts on: now plus the institution's expected supervisor
+        /// response time, in the reader's own time. The date is required, and the institution has
+        /// already decided how long it expects a supervisor to take, so making a coordinator work
+        /// it out on every send would be asking them to restate a policy that already exists.
+        /// </summary>
+        public DateTime SuggestedRespondBy { get; set; } = DateTime.Now.AddDays(14);
+
+        /// <summary>Formatted for a datetime-local input, which takes no offset or seconds.</summary>
+        public string SuggestedRespondByValue => SuggestedRespondBy.ToString("yyyy-MM-ddTHH:mm");
+
+        /// <summary>
         /// What was typed to narrow the chooser. The narrowing is the API's, because it knows who
         /// is available; the paging under it is the browser's, because a page turn must not lose
         /// a tick made on the page being left.

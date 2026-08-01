@@ -133,6 +133,13 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.ReturnedStudents = returned.Data?.Students ?? 0;
             model.ReturnedProposals = returned.Data?.Proposals ?? 0;
 
+            // The same call carries the date to start the answer-by field on. Shown in the
+            // reader's own time, because that is the only one they think in.
+            if (returned.Data is { } dispatch)
+            {
+                model.SuggestedRespondBy = dispatch.SuggestedRespondBy.ToLocalTime();
+            }
+
             model.TotalCount = pending.Data?.TotalCount ?? 0;
             model.Pager = Paging.PagerFor(pending.Data, "Coordinator", nameof(assigning_proposal_forsupervisor),
                 model.RouteValues());
@@ -213,7 +220,13 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return RedirectToAction(nameof(assigning_proposal_forsupervisor));
             }
 
-            if (respondBy is { } by && by <= DateTime.Now)
+            if (respondBy is null)
+            {
+                TempData["ErrorMessage"] = "Say when the supervisors have to answer by.";
+                return RedirectToAction(nameof(assigning_proposal_forsupervisor));
+            }
+
+            if (respondBy <= DateTime.Now)
             {
                 TempData["ErrorMessage"] = "The date supervisors have to answer by has already passed.";
                 return RedirectToAction(nameof(assigning_proposal_forsupervisor));
