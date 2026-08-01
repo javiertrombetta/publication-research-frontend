@@ -36,6 +36,9 @@
                            class="btn btn-link text-secondary text-decoration-none">Clear</a>
                     </div>
                 }
+
+                @{ var departmentSort = Model.SortBar; }
+                <partial name="_SortInline" model="departmentSort" />
             </form>
 
             @if (Model.HasSearch)
@@ -47,8 +50,6 @@
         </div>
     </div>
 
-    var proposalSortBar = Model.SortBar;
-    <partial name="_SortBar" model="proposalSortBar" />
 }
 
 @if (Model.LoadFailed)

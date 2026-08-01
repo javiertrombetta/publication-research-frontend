@@ -469,7 +469,10 @@ window.rpmsToast = (function () {
 
         table.querySelectorAll('[data-rpms-sort-column]').forEach(function (heading) {
             var index = parseInt(heading.getAttribute('data-rpms-sort-column'), 10);
-            heading.classList.add('rpms-sort', 'rpms-sort-clickable');
+            // Only the clickable class. .rpms-sort is display: inline-flex, and putting that on a
+            // <th> stops it being a table cell: the headings left their columns and bunched up at
+            // the left of the row while the body below stayed where it was.
+            heading.classList.add('rpms-sort-clickable');
             heading.setAttribute('role', 'button');
             heading.setAttribute('tabindex', '0');
 
@@ -478,11 +481,9 @@ window.rpmsToast = (function () {
 
                 table.querySelectorAll('[data-rpms-sort-column]').forEach(function (other) {
                     other.removeAttribute('data-rpms-sorted');
-                    other.classList.remove('rpms-sort-active');
                 });
 
                 heading.setAttribute('data-rpms-sorted', descending ? 'desc' : 'asc');
-                heading.classList.add('rpms-sort-active');
 
                 Array.prototype.slice.call(body.rows)
                     .sort(function (a, b) {

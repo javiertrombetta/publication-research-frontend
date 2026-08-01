@@ -36,9 +36,8 @@ namespace ResearchPublicationManagementSystem.Models
             RouteValues = HasSearch ? new Dictionary<string, string?> { ["search"] = Search } : [],
             Columns =
             [
-                ("started", "Date started", true),
-                ("student", "Student", false),
-                ("stage", "Stage", false)
+                ("started", "Date", true),
+                ("student", "Student", false)
             ]
         };
     }

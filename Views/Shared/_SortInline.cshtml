@@ -1,0 +1,18 @@
+@model SortBarViewModel
+
+@* The ordering, on the right of the search box rather than in a band of its own.
+
+   It belongs beside the search because the two are one thought: narrow the list, then order what
+   is left. A separate card underneath read as a second, unrelated control and pushed the list
+   itself further down the page. Rendered inside the search form, so the hidden sort fields the
+   form already carries and these links stay in step. *@
+@if (Model.Columns.Count > 0)
+{
+    <div class="col-12 col-md-auto ms-md-auto d-flex align-items-center gap-3">
+        <span class="text-secondary small">Sort by</span>
+        @foreach (var column in Model.Build())
+        {
+            <partial name="_SortableHeader" model="column" />
+        }
+    </div>
+}

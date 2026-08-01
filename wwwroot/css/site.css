@@ -982,11 +982,24 @@ aside {
     }
 
 /* A heading inside a card's own table, sorted in the browser. Same look as the queue headings so
-   the two read as one idea, with the cursor saying it can be clicked. */
+   the two read as one idea, with the cursor saying it can be clicked.
+
+   Deliberately no display of its own. This class lands on a <th>, and a <th> that is told to be
+   inline-flex stops being a table cell: it leaves its column and the whole header row collapses to
+   the left while the body below stays put. Everything here is safe to add to a table cell. */
 .rpms-sort-clickable {
     cursor: pointer;
     user-select: none;
+    white-space: nowrap;
 }
+
+    .rpms-sort-clickable:hover {
+        color: var(--rpms-primary);
+    }
+
+    .rpms-sort-clickable[data-rpms-sorted] {
+        color: var(--rpms-primary);
+    }
 
     /* Reserved, then revealed. Both arrows have the same advance width, so the heading measures the
        same whether it is unsorted, ascending or descending. */

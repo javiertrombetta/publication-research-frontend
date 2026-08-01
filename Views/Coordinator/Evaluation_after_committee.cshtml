@@ -58,12 +58,13 @@ else
                 <div class="col-auto">
                     <button type="submit" class="btn btn-primary">Search</button>
                 </div>
+
+                @{ var decisionSort = Model.DecisionSortBar; }
+                <partial name="_SortInline" model="decisionSort" />
             </form>
         </div>
     </div>
 
-    var decisionSortBar = Model.DecisionSortBar;
-    <partial name="_SortBar" model="decisionSortBar" />
 
     @if (Model.ReadyForDecision.Count == 0)
     {
@@ -168,12 +169,13 @@ else
                     <div class="col-auto">
                         <button type="submit" class="btn btn-outline-secondary">Search</button>
                     </div>
+
+                    @{ var progressSort = Model.ProgressSortBar; }
+                    <partial name="_SortInline" model="progressSort" />
                 </form>
             </div>
         </div>
 
-        var progressSortBar = Model.ProgressSortBar;
-        <partial name="_SortBar" model="progressSortBar" />
 
         <div class="card">
             <div class="table-responsive">

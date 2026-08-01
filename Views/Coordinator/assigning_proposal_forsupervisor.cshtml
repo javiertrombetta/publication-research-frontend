@@ -85,6 +85,9 @@ else
                            class="btn btn-link text-secondary text-decoration-none">Clear</a>
                     </div>
                 }
+
+                @{ var dispatchSort = Model.SortBar; }
+                <partial name="_SortInline" model="dispatchSort" />
             </form>
 
             @if (Model.HasSearch)
@@ -95,9 +98,6 @@ else
             }
         </div>
     </div>
-
-    var dispatchSortBar = Model.SortBar;
-    <partial name="_SortBar" model="dispatchSortBar" />
 
     @* Outside the dispatch form, and referenced by the search box through form=. HTML has no
        nested forms, and this one only narrows the chooser. *@
