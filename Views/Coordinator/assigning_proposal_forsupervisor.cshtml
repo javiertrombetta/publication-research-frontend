@@ -156,18 +156,21 @@ else
         {
             <div class="card mb-3">
                 <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
-                 data-rpms-header-toggle="#student-@group.Key">
-                    <button class="btn btn-icon btn-sm btn-ghost-secondary" type="button"
-                            data-bs-toggle="collapse" data-bs-target="#student-@group.Key"
-                            aria-expanded="true" aria-controls="student-@group.Key"
-                            aria-label="Show or hide this student's proposals">
+                 data-rpms-header-toggle="#student-@group.Key"
+                 role="button" tabindex="0"
+                 aria-expanded="true" aria-controls="student-@group.Key">
+                @* Part of the header rather than a control of its own. As a button it
+                   took focus and stayed looking pressed after a click, which read as a
+                   selected icon sitting in the middle of a row. The header carries the
+                   role and the keyboard handling now, so this is only the arrow. *@
+                <span class="rpms-collapse-icon" aria-hidden="true">
                         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
                              viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                              stroke-linecap="round" stroke-linejoin="round">
                             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                             <path d="M6 9l6 6l6 -6" />
                         </svg>
-                    </button>
+                </span>
 
                     <h3 class="card-title m-0 me-auto">@Model.StudentFor(group.Key)</h3>
 

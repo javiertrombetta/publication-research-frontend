@@ -531,9 +531,13 @@ window.rpmsToast = (function () {
             panel.classList.toggle('show', open);
         }
 
-        // The header button's arrow is driven off aria-expanded, so it has to be told as well.
-        var toggle = document.querySelector('[data-bs-target="#' + panel.id + '"]');
-        if (toggle) toggle.setAttribute('aria-expanded', String(open));
+        // The arrow is drawn off the header's aria-expanded, so the header has to be told as well.
+        // Both spellings, because a panel may be driven by a header or by a control of its own.
+        var toggles = document.querySelectorAll(
+            '[data-rpms-header-toggle="#' + panel.id + '"], [data-bs-target="#' + panel.id + '"]');
+        Array.prototype.forEach.call(toggles, function (toggle) {
+            toggle.setAttribute('aria-expanded', String(open));
+        });
     }
 
     document.addEventListener('click', function (event) {
@@ -546,22 +550,38 @@ window.rpmsToast = (function () {
         panels(name).forEach(function (panel) { set(panel, open); });
     });
 
-    // The whole header opens and closes the card, not just the chevron.
+    // The header is the control, all of it.
     //
     // The chevron is a 20px target, and the thing beside it that everybody actually aims at is the
-    // student's name. Making the header the target is the difference between hitting it and
-    // hunting for it, and the row already reads as the handle for what is under it.
+    // student's name. It used to be a button of its own, which made it the only way in and left it
+    // sitting there focused and pressed-looking after a click. Now it is only an arrow, drawn
+    // inside a header that carries the role, the focus and the keyboard handling.
     //
-    // The chevron stays: it is what says the card opens, and it is the focusable control that
-    // keyboard users tab to. Clicks that land on it, or on anything else that does something of
-    // its own, are left alone, so nothing gets toggled twice or in place of following a link.
+    // Anything in the header that does something else keeps doing it: a tickbox, a link, a button.
+    // Clicks landing on those are left alone rather than also opening the card.
+    function toggleFrom(header) {
+        var panel = document.querySelector(header.getAttribute('data-rpms-header-toggle'));
+        if (panel) set(panel, !panel.classList.contains('show'));
+    }
+
     document.addEventListener('click', function (event) {
         var header = event.target.closest('[data-rpms-header-toggle]');
         if (!header) return;
         if (event.target.closest('a, button, input, label, select, textarea')) return;
 
-        var panel = document.querySelector(header.getAttribute('data-rpms-header-toggle'));
-        if (panel) set(panel, !panel.classList.contains('show'));
+        toggleFrom(header);
+    });
+
+    // What a real button would have given for free. Space scrolls the page by default, so it is
+    // the one that has to be stopped.
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return;
+
+        var header = event.target.closest('[data-rpms-header-toggle]');
+        if (!header || header !== event.target) return;
+
+        event.preventDefault();
+        toggleFrom(header);
     });
 })();
 
