@@ -26,6 +26,12 @@ namespace ResearchPublicationManagementSystem.Models
 
         public UploadSettingsDto Uploads { get; set; } = new(50, ".pdf,.doc,.docx,.zip");
 
+        public StorageSettingsDto Storage { get; set; } =
+            new("local", "App_Data/uploads", null, null, null, null, false, false, "uploads", false);
+
+        /// <summary>What testing the destination said, when the administrator has just asked.</summary>
+        public StorageCheckResultDto? StorageCheck { get; set; }
+
         public InstitutionSettingsDto Institution { get; set; } =
             new("Auckland Institute of Studies", "@aisstudent.ac.nz", "@ais.ac.nz", null, null, null, null);
 

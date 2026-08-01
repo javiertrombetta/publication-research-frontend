@@ -51,6 +51,9 @@
                     <a class="@TabClass("uploads")" asp-action="Index" asp-route-tab="uploads">Uploads</a>
                 </li>
                 <li class="nav-item">
+                    <a class="@TabClass("storage")" asp-action="Index" asp-route-tab="storage">File storage</a>
+                </li>
+                <li class="nav-item">
                     <a class="@TabClass("passwords")" asp-action="Index" asp-route-tab="passwords">Passwords</a>
                 </li>
                 <li class="nav-item">
@@ -456,6 +459,160 @@
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Save upload rules</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            if (Model.ActiveTab == "storage")
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h3 mb-2">Where uploaded files are kept</h2>
+                        <p class="text-secondary">
+                            Ethics documents, research paper versions and profile photos. Changing
+                            this points the next upload somewhere else and nothing more: every file
+                            already stored remembers where it was written and keeps opening from
+                            there, so there is no migration to run and no moment when downloads stop
+                            working.
+                        </p>
+
+                        <div class="alert alert-info d-flex flex-wrap align-items-center gap-2" role="status">
+                            <span class="me-auto">
+                                New uploads go to <strong>@Model.Storage.ProviderName</strong>.
+                            </span>
+                            @* Its own form so testing never saves anything: an administrator can
+                               check what is in force without committing to a change they are still
+                               typing. *@
+                            <form asp-action="CheckStorage" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-primary">Test this destination</button>
+                            </form>
+                        </div>
+
+                        <form asp-action="SaveStorage" method="post">
+                            <div class="mb-4">
+                                <label class="form-label" for="storage-provider">Destination</label>
+                                <select id="storage-provider" name="provider" class="form-select"
+                                        data-rpms-storage-provider>
+                                    <option value="local" selected="@Model.Storage.IsLocal">
+                                        A directory on the server, or a network share
+                                    </option>
+                                    <option value="database" selected="@Model.Storage.IsDatabase">
+                                        The database
+                                    </option>
+                                    <option value="s3" selected="@Model.Storage.IsS3">
+                                        S3, or anything compatible with it
+                                    </option>
+                                    <option value="azure-blob" selected="@Model.Storage.IsAzure">
+                                        Azure Blob Storage
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div data-rpms-storage-panel="local">
+                                <div class="mb-3">
+                                    <label class="form-label" for="storage-local-path">Directory</label>
+                                    <input id="storage-local-path" name="localPath" class="form-control"
+                                           value="@Model.Storage.LocalPath" />
+                                    <small class="form-hint">
+                                        Absolute, or relative to the application. A network share is
+                                        this pointed at a mounted path or a UNC path, which is the
+                                        whole of the difference: whatever mounts it has to be there
+                                        before the application starts.
+                                    </small>
+                                </div>
+                            </div>
+
+                            <div data-rpms-storage-panel="database">
+                                <p class="text-secondary">
+                                    Nothing to configure. Files become rows in the same database as
+                                    everything else, so one backup covers both and there is no share
+                                    to mount or key to rotate. It grows the database with every
+                                    upload, which suits a department rather than an archive.
+                                </p>
+                            </div>
+
+                            <div data-rpms-storage-panel="s3">
+                                <div class="row g-3">
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label" for="s3-bucket">Bucket</label>
+                                        <input id="s3-bucket" name="s3Bucket" class="form-control"
+                                               value="@Model.Storage.S3Bucket" />
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label" for="s3-region">Region</label>
+                                        <input id="s3-region" name="s3Region" class="form-control"
+                                               placeholder="ap-southeast-2" value="@Model.Storage.S3Region" />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label" for="s3-service-url">Service URL</label>
+                                        <input id="s3-service-url" name="s3ServiceUrl" class="form-control"
+                                               placeholder="Leave empty for Amazon" value="@Model.Storage.S3ServiceUrl" />
+                                        <small class="form-hint">
+                                            Set this to reach anything else that speaks S3: MinIO,
+                                            Wasabi, Backblaze, DigitalOcean Spaces.
+                                        </small>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label" for="s3-access-key">Access key ID</label>
+                                        <input id="s3-access-key" name="s3AccessKeyId" class="form-control"
+                                               value="@Model.Storage.S3AccessKeyId" />
+                                        <small class="form-hint">
+                                            Leave both key boxes empty to use the machine's own
+                                            credentials, which is how a deployment inside AWS should
+                                            be set up.
+                                        </small>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label" for="s3-secret-key">Secret key</label>
+                                        <input id="s3-secret-key" name="s3SecretKey" type="password"
+                                               class="form-control" autocomplete="new-password"
+                                               placeholder="@(Model.Storage.S3SecretKeySet ? "Stored. Leave empty to keep it." : "Not set")" />
+                                        <small class="form-hint">
+                                            Never shown again once saved. An empty box leaves the
+                                            stored one alone.
+                                        </small>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="s3ForcePathStyle"
+                                                   value="true" checked="@Model.Storage.S3ForcePathStyle" />
+                                            <span class="form-check-label">
+                                                Put the bucket in the path rather than the hostname
+                                            </span>
+                                        </label>
+                                        <small class="form-hint">
+                                            Needed by most S3-compatible services that are not
+                                            Amazon. Harmless on Amazon.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div data-rpms-storage-panel="azure-blob">
+                                <div class="row g-3">
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label" for="azure-container">Container</label>
+                                        <input id="azure-container" name="azureContainer" class="form-control"
+                                               value="@Model.Storage.AzureContainer" />
+                                        <small class="form-hint">Created private if it is not there already.</small>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label" for="azure-connection">Connection string</label>
+                                        <input id="azure-connection" name="azureConnectionString" type="password"
+                                               class="form-control" autocomplete="new-password"
+                                               placeholder="@(Model.Storage.AzureConnectionStringSet ? "Stored. Leave empty to keep it." : "Not set")" />
+                                        <small class="form-hint">
+                                            Carries its own key, so it is never shown again once
+                                            saved. An empty box leaves the stored one alone.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">Save where files go</button>
                             </div>
                         </form>
                     </div>

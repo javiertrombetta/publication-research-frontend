@@ -632,3 +632,27 @@ document.addEventListener('submit', function (event) {
     var into = event.target.querySelector('input[name="comments"]');
     if (from && into) into.value = from.value;
 });
+
+// Only the chosen storage destination's own settings.
+//
+// The four destinations want different things and only one of them is in use, so showing all four
+// sets at once would be four times the form for no reason, and a bucket name sitting next to a
+// directory path invites somebody to fill in both and wonder which won.
+//
+// Without JavaScript every panel stays visible, which is the honest fallback: the form still works
+// and only the fields belonging to the chosen destination are read on the server.
+(function () {
+    var chooser = document.querySelector('[data-rpms-storage-provider]');
+    if (!chooser) return;
+
+    var panels = document.querySelectorAll('[data-rpms-storage-panel]');
+
+    function show() {
+        Array.prototype.forEach.call(panels, function (panel) {
+            panel.hidden = panel.getAttribute('data-rpms-storage-panel') !== chooser.value;
+        });
+    }
+
+    chooser.addEventListener('change', show);
+    show();
+})();

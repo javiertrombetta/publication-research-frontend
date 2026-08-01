@@ -33,16 +33,19 @@ namespace ResearchPublicationManagementSystem.Controllers
             var uploads = await settingsApi.GetUploadsAsync();
             var institution = await settingsApi.GetInstitutionAsync();
             var deadlines = await settingsApi.GetDeadlinesAsync();
+            var storage = await settingsApi.GetStorageAsync();
 
             // One failure fails the screen: showing three groups and a blank fourth would invite
             // someone to "correct" values that are only blank because they did not load.
             if (!committees.Success || !passwords.Success || !notifications.Success || !ethicsDocuments.Success
-                || !access.Success || !uploads.Success || !institution.Success || !deadlines.Success)
+                || !access.Success || !uploads.Success || !institution.Success || !deadlines.Success
+                || !storage.Success)
             {
                 TempData["ErrorMessage"] =
                     committees.ErrorMessage ?? passwords.ErrorMessage ?? notifications.ErrorMessage
                     ?? ethicsDocuments.ErrorMessage ?? access.ErrorMessage ?? uploads.ErrorMessage
-                    ?? institution.ErrorMessage ?? deadlines.ErrorMessage ?? "Could not load the system settings.";
+                    ?? institution.ErrorMessage ?? deadlines.ErrorMessage ?? storage.ErrorMessage
+                    ?? "Could not load the system settings.";
                 model.LoadFailed = true;
                 return View(model);
             }
@@ -55,6 +58,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.Uploads = uploads.Data!;
             model.Institution = institution.Data!;
             model.Deadlines = deadlines.Data!;
+            model.Storage = storage.Data!;
 
             // Asked of this process rather than of the API: the frontend and the API run in the
             // same environment, and hiding a choice the API would refuse is better than offering
@@ -214,6 +218,43 @@ namespace ResearchPublicationManagementSystem.Controllers
                 "Saved. Applies to the next file anyone uploads; files already stored are untouched.");
         }
 
+        // ---------- Where uploaded files are kept ----------
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveStorage(
+            string provider, string? localPath, string? s3Bucket, string? s3Region, string? s3ServiceUrl,
+            string? s3AccessKeyId, string? s3SecretKey, bool s3ForcePathStyle,
+            string? azureContainer, string? azureConnectionString)
+        {
+            // Blank means "leave the stored secret alone". An administrator cannot read these back,
+            // so an empty box has to mean unchanged rather than cleared.
+            var result = await settingsApi.UpdateStorageAsync(new UpdateStorageSettingsRequestDto(
+                provider, localPath, s3Bucket, s3Region, s3ServiceUrl, s3AccessKeyId,
+                string.IsNullOrWhiteSpace(s3SecretKey) ? null : s3SecretKey,
+                s3ForcePathStyle, azureContainer,
+                string.IsNullOrWhiteSpace(azureConnectionString) ? null : azureConnectionString));
+
+            return Done(result.Success, "storage", result.ErrorMessage,
+                "Saved. New uploads go to the new destination; files already stored keep opening from where they are.");
+        }
+
+        /// <summary>
+        /// Tries the destination and reports back on the same screen, so an administrator finds out
+        /// that a bucket name is wrong here rather than when a student uploads.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CheckStorage(string? provider)
+        {
+            var result = await settingsApi.CheckStorageAsync(provider);
+
+            TempData[result.Data is { Reachable: true } ? "SuccessMessage" : "ErrorMessage"] =
+                result.Data?.Message ?? result.ErrorMessage ?? "Could not test the destination.";
+
+            return RedirectToAction(nameof(Index), new { tab = "storage" });
+        }
+
         // ---------- The institution ----------
 
         [HttpPost]
@@ -261,7 +302,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         private static string NormaliseTab(string? tab) => tab switch
         {
             "ethics" or "passwords" or "notifications" or "access" or "uploads"
-                or "institution" or "deadlines" => tab,
+                or "institution" or "deadlines" or "storage" => tab,
             _ => "committees"
         };
     }
