@@ -58,8 +58,8 @@ else
                     <div class="h1 m-0">@Model.SupervisorRepliesTotal</div>
                     <div class="text-secondary">
                         @(Model.SupervisorRepliesTotal == 1
-                            ? "proposal a supervisor has accepted"
-                            : "proposals a supervisor has accepted")
+                            ? "proposal a supervisor is interested in"
+                            : "proposals a supervisor is interested in")
                     </div>
                     <a asp-controller="Coordinator" asp-action="select_a_proposal_forstudent"
                        class="btn @(Model.SupervisorRepliesTotal > 0 ? "btn-primary" : "btn-outline-primary") btn-sm mt-3">
