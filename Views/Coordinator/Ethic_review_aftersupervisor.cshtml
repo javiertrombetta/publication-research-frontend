@@ -10,6 +10,35 @@
     </div>
 </div>
 
+@if (!Model.LoadFailed && (Model.Items.Count > 0 || Model.HasSearch))
+{
+    @* Applied by the API, so it covers the whole queue and not the page in hand. *@
+    <div class="card mb-3">
+        <div class="card-body py-3">
+            <form method="get" asp-controller="Coordinator" asp-action="Ethic_review_aftersupervisor"
+                  class="row g-2 align-items-center">
+                <input type="hidden" name="sort" value="@Model.Sort" />
+                <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+
+                <div class="col-12 col-md">
+                    <input type="search" name="search" value="@Model.Search" class="form-control"
+                           placeholder="Search by student or proposal" aria-label="Search" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                @if (Model.HasSearch)
+                {
+                    <div class="col-auto">
+                        <a asp-controller="Coordinator" asp-action="Ethic_review_aftersupervisor"
+                           class="btn btn-link text-secondary text-decoration-none">Clear</a>
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+}
+
 @if (!Model.LoadFailed && Model.Items.Count > 0)
 {
     @* The queue is drawn as cards, so the columns are named here rather than in a
@@ -97,9 +126,9 @@ else
                     @if (item.Documents.Count > 0)
                     {
                         <div class="table-responsive mb-3">
-                            <table class="table card-table table-vcenter">
+                            <table class="table card-table table-vcenter" data-rpms-sortable-table>
                                 <thead>
-                                    <tr><th>Document</th><th>File</th><th>Status</th><th></th></tr>
+                                    <tr><th data-rpms-sort-column="0">Document</th><th data-rpms-sort-column="1">File</th><th data-rpms-sort-column="2">Status</th><th></th></tr>
                                 </thead>
                                 <tbody>
                                     @foreach (var document in item.Documents)

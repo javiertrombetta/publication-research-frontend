@@ -70,6 +70,69 @@ namespace ResearchPublicationManagementSystem.Models
         public bool LoadFailed { get; set; }
 
         public bool IsEmpty => ReadyForDecision.Count == 0 && InProgress.Count == 0;
+
+        /// <summary>
+        /// Two lists, each its own page.
+        ///
+        /// They used to be one request split in the controller, which meant neither could be paged:
+        /// a page of publications holds any number of rows for either list, or none, so "page 2"
+        /// answered nothing. The API is asked for each list separately now, by whose turn it is, so
+        /// a page of either is a stable page of that list. Different query keys for the same
+        /// reason: turning one must not turn the other.
+        /// </summary>
+        public PagerViewModel? DecisionPager { get; set; }
+        public PagerViewModel? ProgressPager { get; set; }
+
+        public int DecisionTotal { get; set; }
+        public int ProgressTotal { get; set; }
+
+        public string? Sort { get; set; }
+        public bool Descending { get; set; }
+        public string? Search { get; set; }
+
+        public string? ProgressSort { get; set; }
+        public bool ProgressDescending { get; set; }
+        public string? ProgressSearch { get; set; }
+
+        public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
+        public bool HasProgressSearch => !string.IsNullOrWhiteSpace(ProgressSearch);
+
+        /// <summary>Everything both lists' links have to carry, or one resets the other.</summary>
+        public Dictionary<string, string?> RouteValues(bool includeDecisionPage = true, bool includeProgressPage = true)
+        {
+            var values = new Dictionary<string, string?>();
+            if (!string.IsNullOrWhiteSpace(Sort)) values["sort"] = Sort;
+            if (Descending) values["desc"] = "true";
+            if (HasSearch) values["search"] = Search;
+            if (!string.IsNullOrWhiteSpace(ProgressSort)) values["progressSort"] = ProgressSort;
+            if (ProgressDescending) values["progressDesc"] = "true";
+            if (HasProgressSearch) values["progressSearch"] = ProgressSearch;
+            return values;
+        }
+
+        public SortBarViewModel DecisionSortBar => new()
+        {
+            Controller = "Coordinator",
+            Action = "Evaluation_after_committee",
+            Sort = Sort,
+            Descending = Descending,
+            RouteValues = RouteValues().Where(v => v.Key is not ("sort" or "desc"))
+                .ToDictionary(v => v.Key, v => v.Value),
+            Columns = [("started", "Date", true), ("student", "Student", false), ("status", "Status", false)]
+        };
+
+        public SortBarViewModel ProgressSortBar => new()
+        {
+            Controller = "Coordinator",
+            Action = "Evaluation_after_committee",
+            Sort = ProgressSort,
+            Descending = ProgressDescending,
+            SortKey = "progressSort",
+            DescendingKey = "progressDesc",
+            RouteValues = RouteValues().Where(v => v.Key is not ("progressSort" or "progressDesc"))
+                .ToDictionary(v => v.Key, v => v.Value),
+            Columns = [("started", "Date", true), ("student", "Student", false), ("stage", "Stage", false)]
+        };
     }
 
     /// <summary>

@@ -435,3 +435,112 @@ window.rpmsToast = (function () {
         show();
     });
 })();
+
+// Sorting a small table that is entirely on the page.
+//
+// For the lists nested inside a card: the ethics documents on a publication, the reviews on a
+// paper. They are short, complete, and never paged, so the rows to sort are the rows there are and
+// a round trip would buy nothing. This is the opposite case from a queue, where the row somebody
+// wants is on another page and only the database can order it.
+//
+// Declared in the markup: a table carries data-rpms-sortable-table, and each heading that can be
+// sorted by carries data-rpms-sort-column with the cell index. Headings become buttons; a second
+// click reverses. Without this script the table is a table, which is what it was before.
+(function () {
+    function cellText(row, index) {
+        var cell = row.children[index];
+        return cell ? cell.textContent.trim() : '';
+    }
+
+    // Dates and numbers should not sort as text: "9" after "10", "1 Feb" before "1 Jan".
+    function comparable(text) {
+        var date = Date.parse(text);
+        if (!isNaN(date)) return date;
+
+        var number = parseFloat(text.replace(/[^0-9.-]/g, ''));
+        if (text !== '' && !isNaN(number) && /^[^a-zA-Z]*$/.test(text)) return number;
+
+        return text.toLowerCase();
+    }
+
+    document.querySelectorAll('[data-rpms-sortable-table]').forEach(function (table) {
+        var body = table.tBodies[0];
+        if (!body || body.rows.length < 2) return;
+
+        table.querySelectorAll('[data-rpms-sort-column]').forEach(function (heading) {
+            var index = parseInt(heading.getAttribute('data-rpms-sort-column'), 10);
+            heading.classList.add('rpms-sort', 'rpms-sort-clickable');
+            heading.setAttribute('role', 'button');
+            heading.setAttribute('tabindex', '0');
+
+            function sort() {
+                var descending = heading.getAttribute('data-rpms-sorted') === 'asc';
+
+                table.querySelectorAll('[data-rpms-sort-column]').forEach(function (other) {
+                    other.removeAttribute('data-rpms-sorted');
+                    other.classList.remove('rpms-sort-active');
+                });
+
+                heading.setAttribute('data-rpms-sorted', descending ? 'desc' : 'asc');
+                heading.classList.add('rpms-sort-active');
+
+                Array.prototype.slice.call(body.rows)
+                    .sort(function (a, b) {
+                        var left = comparable(cellText(a, index));
+                        var right = comparable(cellText(b, index));
+                        if (left < right) return descending ? 1 : -1;
+                        if (left > right) return descending ? -1 : 1;
+                        return 0;
+                    })
+                    .forEach(function (row) { body.appendChild(row); });
+            }
+
+            heading.addEventListener('click', sort);
+            heading.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); sort(); }
+            });
+        });
+    });
+})();
+
+// Opening and closing every group at once.
+//
+// A queue grouped by student is comfortable when there are three groups and a scroll when there
+// are thirty. One control for the lot lets somebody shut everything and open only what they are
+// working on. Declared in the markup: the panels carry data-rpms-collapsible with a group name,
+// the buttons carry data-rpms-expand-all or data-rpms-collapse-all with the same name.
+//
+// Driven through Bootstrap's own Collapse where it is available, so the per-group toggles and
+// these buttons agree about what is open. Falling back to the class directly keeps it working if
+// the bundle ever stops exposing the API, which it has done before.
+(function () {
+    function panels(name) {
+        return document.querySelectorAll('[data-rpms-collapsible="' + name + '"]');
+    }
+
+    function set(panel, open) {
+        var api = window.bootstrap && window.bootstrap.Collapse
+            ? window.bootstrap.Collapse.getOrCreateInstance(panel, { toggle: false })
+            : null;
+
+        if (api) {
+            if (open) api.show(); else api.hide();
+        } else {
+            panel.classList.toggle('show', open);
+        }
+
+        // The header button's arrow is driven off aria-expanded, so it has to be told as well.
+        var toggle = document.querySelector('[data-bs-target="#' + panel.id + '"]');
+        if (toggle) toggle.setAttribute('aria-expanded', String(open));
+    }
+
+    document.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-rpms-expand-all], [data-rpms-collapse-all]');
+        if (!button) return;
+
+        var open = button.hasAttribute('data-rpms-expand-all');
+        var name = button.getAttribute(open ? 'data-rpms-expand-all' : 'data-rpms-collapse-all');
+
+        panels(name).forEach(function (panel) { set(panel, open); });
+    });
+})();

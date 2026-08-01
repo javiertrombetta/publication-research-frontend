@@ -56,11 +56,24 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> assigning_proposal_forsupervisor(
-            int page = 1, string? supervisorSearch = null)
+            int page = 1, string? supervisorSearch = null,
+            string? sort = null, bool desc = false, string? search = null)
         {
-            var model = new AssignProposalsViewModel { SupervisorSearch = supervisorSearch };
+            var model = new AssignProposalsViewModel
+            {
+                SupervisorSearch = supervisorSearch,
+                // The default, not null: the bar has to show which column the list is ordered by,
+                // and "none of them" would be a lie about a list that is ordered.
+                Sort = sort ?? "submitted",
+                Descending = desc,
+                Search = search
+            };
 
-            var pending = await proposalsApi.GetPendingAsync(page);
+            // Oldest first unless asked otherwise. A dispatch queue is worked from the front, and
+            // the student who has been waiting longest should be nearest the top rather than
+            // buried under everything submitted since.
+            var pending = await proposalsApi.GetPendingAsync(
+                page, sort: sort ?? "submitted", descending: desc, search: search);
             if (!pending.Success)
             {
                 TempData["ErrorMessage"] = pending.ErrorMessage ?? "Could not load the proposals waiting to be sent.";
@@ -89,10 +102,9 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.Supervisors = available;
             model.SupervisorsTotal = available.Count;
 
+            model.TotalCount = pending.Data?.TotalCount ?? 0;
             model.Pager = Paging.PagerFor(pending.Data, "Coordinator", nameof(assigning_proposal_forsupervisor),
-                string.IsNullOrWhiteSpace(supervisorSearch)
-                    ? []
-                    : new Dictionary<string, string?> { ["supervisorSearch"] = supervisorSearch });
+                model.RouteValues());
 
             return View(model);
         }
@@ -133,7 +145,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         {
             var model = new SupervisorSelectionsViewModel
             {
-                Sort = sort,
+                Sort = sort ?? "submitted",
                 Descending = desc,
                 Search = search
             };
@@ -144,8 +156,11 @@ namespace ResearchPublicationManagementSystem.Controllers
             //
             // The search and the sort go with it rather than being applied to what comes back: the
             // row somebody is looking for is usually not on the page they are already holding.
+            // Oldest first unless asked otherwise, like the dispatch queue: the student who has
+            // been waiting longest for a supervisor belongs at the top, not buried under every
+            // offer that has come in since.
             var proposals = await proposalsApi.GetForCoordinatorAsync(
-                page, awaitingAllocation: true, sort: sort, descending: desc, search: search);
+                page, awaitingAllocation: true, sort: sort ?? "submitted", descending: desc, search: search);
 
             if (!proposals.Success)
             {
@@ -200,9 +215,9 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> Ethic_review_aftersupervisor(
-            Guid? id, int page = 1, string? sort = null, bool desc = false)
+            Guid? id, int page = 1, string? sort = null, bool desc = false, string? search = null)
         {
-            var (model, redirect) = await LoadEthicsQueueAsync(id, EthicsStage.AfterSupervisor, page, sort, desc);
+            var (model, redirect) = await LoadEthicsQueueAsync(id, EthicsStage.AfterSupervisor, page, sort, desc, search);
             if (redirect is not null) return redirect;
 
             return View(model);
@@ -246,9 +261,9 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> Ethic_review_afters_headofdepartment(
-            Guid? id, int page = 1, string? sort = null, bool desc = false)
+            Guid? id, int page = 1, string? sort = null, bool desc = false, string? search = null)
         {
-            var (model, redirect) = await LoadEthicsQueueAsync(id, EthicsStage.AfterHeadOfDepartment, page, sort, desc);
+            var (model, redirect) = await LoadEthicsQueueAsync(id, EthicsStage.AfterHeadOfDepartment, page, sort, desc, search);
             if (redirect is not null) return redirect;
 
             return View(model);
@@ -274,38 +289,41 @@ namespace ResearchPublicationManagementSystem.Controllers
         // ---------- Pipeline 3: the final decision on the paper ----------
 
         [HttpGet]
-        public async Task<IActionResult> Evaluation_after_committee()
+        public async Task<IActionResult> Evaluation_after_committee(
+            int page = 1, string? sort = null, bool desc = false, string? search = null,
+            int progressPage = 1, string? progressSort = null, bool progressDesc = false,
+            string? progressSearch = null)
         {
-            var model = new CoordinatorPapersViewModel();
-
-            var containers = await containersApi.GetAllAsync(coordinatorId: CurrentUserId());
-            if (!containers.Success)
+            var model = new CoordinatorPapersViewModel
             {
-                TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your publications right now.";
+                Sort = sort ?? "started",
+                Descending = desc,
+                Search = search,
+                ProgressSort = progressSort ?? "started",
+                ProgressDescending = progressDesc,
+                ProgressSearch = progressSearch
+            };
+
+            // Two requests, one per list, rather than one split here. Whose turn it is decides which
+            // list a row belongs to, and that is a question the database can answer, so each list
+            // is now a page of its own. Split in the controller, neither could be paged: a page of
+            // publications holds any number of rows for either list, or none.
+            //
+            // Oldest first by default on both, like every other queue.
+            var ready = await containersApi.GetAllAsync(
+                coordinatorId: CurrentUserId(), page: page,
+                sort: sort ?? "started", descending: desc, search: search,
+                paperAwaiting: RoleNames.Coordinator);
+
+            if (!ready.Success)
+            {
+                TempData["ErrorMessage"] = ready.ErrorMessage ?? "Could not load your publications right now.";
                 model.LoadFailed = true;
                 return View(model);
             }
 
-            // Split on whose turn it is rather than on the paper's status. UnderReview covers the
-            // supervisor still reading it, an admin appointing a committee, the committee voting
-            // and this decision, so filtering on the status alone put a decision form in front of
-            // the coordinator on three papers out of four that the API would then refuse.
-            var papers = (containers.Data?.Items ?? [])
-                .Where(c => c.PaperStatus is PublicationStatus.UnderReview
-                                         or PublicationStatus.Resubmitted
-                                         or PublicationStatus.RevisionsRequested)
-                .ToList();
-
-            foreach (var container in papers)
+            foreach (var container in ready.Data?.Items ?? [])
             {
-                if (container.PaperAwaitingRole != RoleNames.Coordinator)
-                {
-                    // Everything this row shows is already on the containers listing, so a paper
-                    // nobody can act on here costs no further requests.
-                    model.InProgress.Add(new CoordinatorPaperInProgress { Container = container });
-                    continue;
-                }
-
                 var paper = await publicationsApi.GetByContainerAsync(container.Id);
                 if (paper.Data is null) continue;
 
@@ -318,6 +336,36 @@ namespace ResearchPublicationManagementSystem.Controllers
                     Reviews = reviews.Data ?? []
                 });
             }
+
+            model.DecisionTotal = ready.Data?.TotalCount ?? 0;
+            model.DecisionPager = Paging.PagerFor(ready.Data, "Coordinator", nameof(Evaluation_after_committee),
+                model.RouteValues().Where(v => v.Key != "page").ToDictionary(v => v.Key, v => v.Value));
+
+            // The other list: papers under way that this coordinator is only watching. Everything
+            // it shows is on the containers listing already, so a row nobody can act on here costs
+            // no further requests.
+            var moving = await containersApi.GetAllAsync(
+                coordinatorId: CurrentUserId(), page: progressPage,
+                sort: progressSort ?? "started", descending: progressDesc, search: progressSearch,
+                paperAwaiting: "!" + RoleNames.Coordinator);
+
+            model.InProgress = [.. (moving.Data?.Items ?? [])
+                .Where(c => c.PaperStatus is PublicationStatus.UnderReview
+                                         or PublicationStatus.Resubmitted
+                                         or PublicationStatus.RevisionsRequested)
+                .Select(c => new CoordinatorPaperInProgress { Container = c })];
+
+            model.ProgressTotal = moving.Data?.TotalCount ?? 0;
+            model.ProgressPager = new PagerViewModel
+            {
+                Controller = "Coordinator",
+                Action = nameof(Evaluation_after_committee),
+                Page = moving.Data?.Page ?? 1,
+                TotalPages = moving.Data?.TotalPages ?? 1,
+                PageKey = "progressPage",
+                RouteValues = model.RouteValues().Where(v => v.Key != "progressPage")
+                    .ToDictionary(v => v.Key, v => v.Value)
+            };
 
             return View(model);
         }
@@ -360,13 +408,15 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// link from the dashboard opens straight onto that publication.
         /// </summary>
         private async Task<(CoordinatorEthicsViewModel Model, IActionResult? Redirect)> LoadEthicsQueueAsync(
-            Guid? containerId, EthicsStage stage, int page, string? sort = null, bool descending = false)
+            Guid? containerId, EthicsStage stage, int page,
+            string? sort = null, bool descending = false, string? search = null)
         {
             var model = new CoordinatorEthicsViewModel
             {
                 Stage = stage.ToString(),
-                Sort = sort,
-                Descending = descending
+                Sort = sort ?? "started",
+                Descending = descending,
+                Search = search
             };
 
             // The API is asked for this screen's queue, by name. Both of the coordinator's ethics
@@ -378,9 +428,11 @@ namespace ResearchPublicationManagementSystem.Controllers
                 ? EthicsSteps.CoordinatorFinalDecision
                 : EthicsSteps.CoordinatorFirstReview;
 
+            // Oldest first by default. An ethics queue is worked from the front, and a publication
+            // that has been waiting a fortnight matters more than one that arrived this morning.
             var containers = await containersApi.GetAllAsync(
                 coordinatorId: CurrentUserId(), ethicsSteps: steps, page: page,
-                sort: sort, descending: descending);
+                sort: sort ?? "started", descending: descending, search: search);
 
             if (!containers.Success)
             {
