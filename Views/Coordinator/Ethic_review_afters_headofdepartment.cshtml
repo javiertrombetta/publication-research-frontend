@@ -157,7 +157,7 @@ else
                     <div class="table-responsive mb-3">
                         <table class="table card-table table-vcenter" data-rpms-sortable-table>
                             <thead>
-                                <tr><th data-rpms-sort-column="0">Document</th><th data-rpms-sort-column="1">File</th><th data-rpms-sort-column="2">Status</th></tr>
+                                <tr><th data-rpms-sort-column="0">Document</th><th data-rpms-sort-column="1">File</th><th data-rpms-sort-column="2">Status</th><th></th></tr>
                             </thead>
                             <tbody>
                                 @foreach (var document in item.Documents)
@@ -166,6 +166,16 @@ else
                                         <td>@Humanise(document.DocumentType)</td>
                                         <td>@document.FileName</td>
                                         <td><span class="badge @StatusBadge(document.Status)">@Humanise(document.Status)</span></td>
+                                        <td class="text-end">
+                                            @* The same as on the first ethics screen, and for the
+                                               same reason: this is the decision that verifies the
+                                               ethics stage, and approving documents you cannot read
+                                               is not a review. *@
+                                            <a class="btn btn-sm btn-outline-primary"
+                                               asp-controller="Downloads" asp-action="EthicsDocument"
+                                               asp-route-containerId="@item.Container.Id"
+                                               asp-route-documentId="@document.Id">Download</a>
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
