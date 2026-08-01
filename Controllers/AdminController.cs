@@ -18,8 +18,85 @@ namespace ResearchPublicationManagementSystem.Controllers
         PublicationsApiClient publicationsApi,
         CommitteesApiClient committeesApi,
         UsersApiClient usersApi,
-        SettingsApiClient settingsApi) : Controller
+        SettingsApiClient settingsApi,
+        SupervisorGroupsApiClient groupsApi) : Controller
     {
+        // ---------- Coordinators' saved supervisor groups ----------
+
+        /// <summary>
+        /// Every coordinator's groups, with the controls to rename one, change who is in it, or
+        /// throw it away. Somebody has to be able to clear out lists left behind by people who
+        /// have moved on, and the coordinator who owns one is not always still here to do it.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> supervisor_groups(string? search = null)
+        {
+            var model = new SupervisorGroupsViewModel { Search = search };
+
+            var groups = await groupsApi.GetAllAsync(search);
+            if (!groups.Success)
+            {
+                TempData["ErrorMessage"] = groups.ErrorMessage ?? "Could not load the groups right now.";
+                model.LoadFailed = true;
+                return View(model);
+            }
+
+            model.Groups = groups.Data ?? [];
+
+            // Every supervisor account, not only the available ones. This screen edits lists kept
+            // over months, and leaving somebody out because they are away this week would quietly
+            // drop them from any group saved while they were.
+            var supervisors = await usersApi.GetAllAsync(role: RoleNames.Supervisor);
+            model.Supervisors = [.. (supervisors.Data ?? [])
+                .OrderBy(s => s.LastName)
+                .ThenBy(s => s.FirstName)];
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateSupervisorGroup(
+            Guid groupId, string? name, Guid[] supervisorIds, string? search)
+        {
+            if (string.IsNullOrWhiteSpace(name) || supervisorIds.Length == 0)
+            {
+                TempData["ErrorMessage"] = "A group needs a name and at least one supervisor.";
+                return RedirectToAction(nameof(supervisor_groups), new { search });
+            }
+
+            var result = await groupsApi.UpdateAnyAsync(groupId, name.Trim(), supervisorIds);
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? "Group saved."
+                : result.ErrorMessage ?? "Could not save the group.";
+
+            return RedirectToAction(nameof(supervisor_groups), new { search });
+        }
+
+        /// <summary>
+        /// Discards the groups ticked, or every group in the institution when the request says so.
+        /// Two ways in rather than one, because "none ticked" must not be able to mean "all".
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteSupervisorGroups(Guid[] groupIds, bool all, string? search)
+        {
+            if (!all && groupIds.Length == 0)
+            {
+                TempData["ErrorMessage"] = "Tick the groups to delete, or use Delete all.";
+                return RedirectToAction(nameof(supervisor_groups), new { search });
+            }
+
+            var result = await groupsApi.DeleteManyAsync(groupIds, all);
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? result.Data == 1 ? "One group deleted." : $"{result.Data} groups deleted."
+                : result.ErrorMessage ?? "Could not delete the groups.";
+
+            return RedirectToAction(nameof(supervisor_groups), new { search = all ? null : search });
+        }
+
         [HttpGet]
         public async Task<IActionResult> Dashboard()
         {

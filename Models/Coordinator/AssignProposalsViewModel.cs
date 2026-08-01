@@ -28,6 +28,12 @@ namespace ResearchPublicationManagementSystem.Models
         public int SupervisorsTotal { get; set; }
 
         /// <summary>
+        /// The coordinator's own saved sets of supervisors. Ticking a group's members is the same
+        /// as ticking them one at a time: a group fills in the form and grants nothing.
+        /// </summary>
+        public IReadOnlyList<SupervisorGroupDto> Groups { get; set; } = [];
+
+        /// <summary>
         /// What was typed to narrow the chooser. The narrowing is the API's, because it knows who
         /// is available; the paging under it is the browser's, because a page turn must not lose
         /// a tick made on the page being left.
