@@ -221,11 +221,11 @@ namespace ResearchPublicationManagementSystem.Controllers
         public async Task<IActionResult> SaveInstitution(
             string name, string studentEmailDomain, string staffEmailDomain,
             string? itSupportEmail, string? researchEnquiriesEmail, string? privacyPolicyUrl,
-            string? currentAcademicCycle)
+            string? currentAcademicCycle, string? websiteUrl)
         {
             var result = await settingsApi.UpdateInstitutionAsync(new UpdateInstitutionSettingsRequestDto(
                 name, studentEmailDomain, staffEmailDomain, itSupportEmail, researchEnquiriesEmail,
-                privacyPolicyUrl, currentAcademicCycle));
+                privacyPolicyUrl, currentAcademicCycle, websiteUrl));
 
             return Done(result.Success, "institution", result.ErrorMessage, "Saved.");
         }

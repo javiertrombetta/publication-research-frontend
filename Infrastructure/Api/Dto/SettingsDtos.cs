@@ -118,6 +118,11 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         string? PrivacyPolicyUrl,
         string? CurrentAcademicCycle,
         /// <summary>
+        /// The institution's own website, where somebody who cannot be given an enquiries address
+        /// can find how to get in touch.
+        /// </summary>
+        string? WebsiteUrl = null,
+        /// <summary>
         /// Whether anyone may sign themselves up. Set under access settings and read-only here;
         /// it travels on this group because this is the one settings endpoint a signed-out
         /// visitor can call, and the sign-up page needs it.
@@ -136,7 +141,8 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         string? ItSupportEmail,
         string? ResearchEnquiriesEmail,
         string? PrivacyPolicyUrl,
-        string? CurrentAcademicCycle);
+        string? CurrentAcademicCycle,
+        string? WebsiteUrl = null);
 
     /// <summary>How long each stage should take. Zero means nothing is ever reported late.</summary>
     public record DeadlineSettingsDto(int SupervisorResponseDays, int EthicsReviewDays, int CommitteeReviewDays);

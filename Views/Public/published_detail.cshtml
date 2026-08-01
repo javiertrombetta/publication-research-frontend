@@ -107,11 +107,25 @@
                 @if (string.IsNullOrWhiteSpace(enquiriesEmail))
                 {
                     @* No address configured yet, so say so rather than offer a link to nowhere.
-                       Deliberately no telephone number: one hardcoded here would outlive its
-                       accuracy, and the address is a setting precisely so it can be corrected. *@
+
+                       Where somebody is sent instead is a setting, not a sentence written here.
+                       "Through the usual channels" is not an answer to a member of the public who
+                       does not already know what those are, and a telephone number hardcoded in a
+                       view would outlive its accuracy. An administrator maintains the address. *@
                     <p class="text-secondary m-0">
                         An email address for research enquiries hasn't been published yet.
-                        Please contact @institutionName through the usual channels.
+                        @if (!string.IsNullOrWhiteSpace(institution.WebsiteUrl))
+                        {
+                            <text>
+                                Visit the
+                                <a href="@institution.WebsiteUrl" rel="noopener" target="_blank">@institutionName website</a>
+                                for their contact details.
+                            </text>
+                        }
+                        else
+                        {
+                            <text>Visit the @institutionName website for their contact details.</text>
+                        }
                     </p>
                 }
                 else

@@ -349,10 +349,10 @@ namespace ResearchPublicationManagementSystem.Controllers
                 sort: progressSort ?? "started", descending: progressDesc, search: progressSearch,
                 paperAwaiting: "!" + RoleNames.Coordinator);
 
+            // No filtering here. The API returns papers in flight that are somebody else's turn,
+            // which is exactly this list, and filtering again after the page was cut would leave
+            // the pager reporting a total it is not showing.
             model.InProgress = [.. (moving.Data?.Items ?? [])
-                .Where(c => c.PaperStatus is PublicationStatus.UnderReview
-                                         or PublicationStatus.Resubmitted
-                                         or PublicationStatus.RevisionsRequested)
                 .Select(c => new CoordinatorPaperInProgress { Container = c })];
 
             model.ProgressTotal = moving.Data?.TotalCount ?? 0;
