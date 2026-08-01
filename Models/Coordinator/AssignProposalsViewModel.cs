@@ -34,6 +34,17 @@ namespace ResearchPublicationManagementSystem.Models
         public IReadOnlyList<SupervisorGroupDto> Groups { get; set; } = [];
 
         /// <summary>
+        /// How many students, and how many proposals of theirs, are in this queue for a second time
+        /// after a round that found nobody willing. Counted over the whole queue rather than this
+        /// page: it is the figure that decides whether to send another batch or ask those students
+        /// for new work, and a page is not the queue.
+        /// </summary>
+        public int ReturnedStudents { get; set; }
+        public int ReturnedProposals { get; set; }
+
+        public bool HasReturned => ReturnedProposals > 0;
+
+        /// <summary>
         /// What was typed to narrow the chooser. The narrowing is the API's, because it knows who
         /// is available; the paging under it is the browser's, because a page turn must not lose
         /// a tick made on the page being left.

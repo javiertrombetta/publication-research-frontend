@@ -120,6 +120,15 @@ else
         </form>
     }
 
+    @* One per student whose proposals came back, out here for the same reason: the box and the
+       button that belong to it sit inside the card the dispatch form owns. *@
+    @foreach (var publication in Model.ByPublication.Where(g => g.Any(p => p.CameBack)))
+    {
+        <form id="ask-new-@publication.Key" asp-controller="Coordinator" asp-action="AskForNewProposals" method="post">
+            <input type="hidden" name="containerId" value="@publication.Key" />
+        </form>
+    }
+
     <form id="send-proposals-form" asp-controller="Coordinator" asp-action="SendToSupervisors" method="post">
 
         @* One line for the whole page, because the common case is sending everything waiting.
@@ -130,9 +139,28 @@ else
                 <span class="text-secondary me-auto">
                     <strong data-rpms-count="proposalIds">0</strong> of @Model.Proposals.Count
                     @(Model.Proposals.Count == 1 ? "proposal" : "proposals") on this page selected.
+
+                    @* The second figure on this line, because it changes what a coordinator does
+                       next. A queue of twenty where twelve have already been out once and found
+                       nobody is not the same job as a queue of twenty nobody has seen. Counted
+                       over the whole queue, not this page. *@
+                    @if (Model.HasReturned)
+                    {
+                        <span class="d-block text-warning">
+                            <strong>@Model.ReturnedStudents</strong>
+                            @(Model.ReturnedStudents == 1 ? "student came" : "students came") back with
+                            <strong>@Model.ReturnedProposals</strong>
+                            @(Model.ReturnedProposals == 1 ? "proposal" : "proposals") nobody took.
+                        </span>
+                    }
                 </span>
                 <button type="button" class="btn btn-sm btn-outline-secondary"
                         data-rpms-check-all="proposalIds">Select all</button>
+                @if (Model.HasReturned)
+                {
+                    <button type="button" class="btn btn-sm btn-outline-warning"
+                            data-rpms-check-returned="proposalIds">Select the returned</button>
+                }
                 <button type="button" class="btn btn-sm btn-outline-secondary"
                         data-rpms-check-none="proposalIds">Select none</button>
 
@@ -174,6 +202,16 @@ else
 
                     <h3 class="card-title m-0 me-auto">@Model.StudentFor(group.Key)</h3>
 
+                    @{ var cameBack = group.Count(p => p.CameBack); }
+                    @if (cameBack > 0)
+                    {
+                        @* Readable with the card shut, because it is what decides whether this
+                           student needs different supervisors or a different proposal. *@
+                        <span class="badge bg-warning-lt">
+                            @(cameBack == group.Count() ? "Came back" : $"{cameBack} came back")
+                        </span>
+                    }
+
                     <span class="text-secondary small">
                         @group.Count() @(group.Count() == 1 ? "proposal" : "proposals")
                     </span>
@@ -187,12 +225,49 @@ else
                     {
                         <label class="form-check">
                             <input class="form-check-input" type="checkbox" name="proposalIds"
-                                   value="@proposal.Id" checked />
+                                   value="@proposal.Id" checked
+                                   data-rpms-returned="@proposal.CameBack.ToString().ToLowerInvariant()" />
                             <span class="form-check-label">
                                 <strong>@proposal.Title</strong>
+                                @if (proposal.CameBack)
+                                {
+                                    <span class="badge bg-warning-lt ms-1">Nobody took it</span>
+                                }
                                 <span class="d-block text-secondary small mt-1">@proposal.Abstract</span>
                             </span>
                         </label>
+                    }
+
+                    @if (cameBack > 0)
+                    {
+                        @* Two ways out of a round that found nobody, and the screen offers both.
+                           Sending again is the button at the bottom of the page, with different
+                           supervisors ticked. This is the other one: the proposals themselves were
+                           the problem, so ask for new ones. *@
+                        <div class="mt-3 pt-3 border-top">
+                            <label class="form-label"
+                                   for="new-proposals-comments-@group.Key">
+                                Nobody would take @(cameBack == 1 ? "this one" : "these") on
+                            </label>
+                            <div class="row g-2 align-items-start">
+                                <div class="col-12 col-md">
+                                    <input type="text" id="new-proposals-comments-@group.Key"
+                                           class="form-control"
+                                           placeholder="What the student should change, in a sentence"
+                                           form="ask-new-@group.Key" name="comments" />
+                                </div>
+                                <div class="col-auto">
+                                    <button type="submit" form="ask-new-@group.Key"
+                                            class="btn btn-outline-warning"
+                                            data-rpms-confirm="Ask for a new set of proposals? The ones on record are closed and the student writes fresh ones.">
+                                        Ask for new proposals
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="text-secondary small mt-1">
+                                Or tick different supervisors below and send @(cameBack == 1 ? "it" : "them") again.
+                            </div>
+                        </div>
                     }
                 </div>
             </div>

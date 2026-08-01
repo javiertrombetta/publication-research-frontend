@@ -48,10 +48,19 @@ public class ProposalsApiClient(HttpClient httpClient) : ApiClientBase(httpClien
 
     public Task<ApiResult<PagedResultDto<ProposalWithInvitationsDto>>> GetPendingAsync(
         int page = 1, int pageSize = Paging.DefaultPageSize,
-        string? sort = null, bool descending = false, string? search = null, CancellationToken ct = default) =>
+        string? sort = null, bool descending = false, string? search = null, bool returnedOnly = false,
+        CancellationToken ct = default) =>
         GetAsync<PagedResultDto<ProposalWithInvitationsDto>>(
             $"api/proposals/pending?page={Math.Max(1, page)}&pageSize={pageSize}"
-            + $"{Sorting(sort, descending)}{Search(search)}", ct);
+            + $"{Sorting(sort, descending)}{Search(search)}"
+            + (returnedOnly ? "&returnedOnly=true" : ""), ct);
+
+    /// <summary>
+    /// How many students, and how many proposals of theirs, are in the dispatch queue for a second
+    /// time. Its own request because it counts the whole queue rather than the page in hand.
+    /// </summary>
+    public Task<ApiResult<ReturnedToDispatchSummaryDto>> GetReturnedToDispatchAsync(CancellationToken ct = default) =>
+        GetAsync<ReturnedToDispatchSummaryDto>("api/proposals/pending/returned", ct);
 
     /// <summary>
     /// The sort, as the API names it. Left off entirely when nothing is chosen, so the endpoint
@@ -74,6 +83,14 @@ public class ProposalsApiClient(HttpClient httpClient) : ApiClientBase(httpClien
 
     public Task<ApiResult<object?>> AssignSupervisorAsync(Guid proposalId, AssignSupervisorRequestDto request, CancellationToken ct = default) =>
         PostJsonAsync<object?>($"api/proposals/{proposalId}/assign-supervisor", request, ct);
+
+    /// <summary>
+    /// Refuses the offers made on a proposal and puts it back in the dispatch queue. Takes the rest
+    /// of the student's proposals with it when nothing of theirs still has somebody willing.
+    /// </summary>
+    public Task<ApiResult<DiscardSelectionsResultDto>> DiscardSelectionsAsync(
+        Guid proposalId, CommentsRequestDto request, CancellationToken ct = default) =>
+        PostJsonAsync<DiscardSelectionsResultDto>($"api/proposals/{proposalId}/discard-selections", request, ct);
 
     public Task<ApiResult<object?>> RequestResubmissionAsync(Guid containerId, CommentsRequestDto request, CancellationToken ct = default) =>
         PostJsonAsync<object?>($"api/containers/{containerId}/proposals/request-resubmission", request, ct);

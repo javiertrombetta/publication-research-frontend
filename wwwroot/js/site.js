@@ -381,6 +381,25 @@ window.rpmsToast = (function () {
         refreshCounts();
     });
 
+    // Ticking only what has already been out once and come back.
+    //
+    // Its own button rather than a filter on the list, because the two are worked on together: a
+    // coordinator who has just read that eight proposals found nobody wants those eight ticked and
+    // sent to different supervisors, without hunting for them among the ones nobody has seen yet.
+    // Everything else is untucked, so what is about to go out is exactly what the button says.
+    document.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-rpms-check-returned]');
+        if (!button) return;
+
+        var name = button.getAttribute('data-rpms-check-returned');
+
+        Array.prototype.forEach.call(boxes(name, button.getAttribute('data-rpms-scope')), function (box) {
+            box.checked = box.getAttribute('data-rpms-returned') === 'true';
+        });
+
+        refreshCounts();
+    });
+
     // Any individual tick has to move the counter too, or it goes stale the moment somebody
     // adjusts the selection by hand after using a button.
     document.addEventListener('change', function (event) {
@@ -598,4 +617,18 @@ document.addEventListener('click', function (event) {
         event.preventDefault();
         event.stopPropagation();
     }
+});
+
+// A form that borrows the reason typed into a box belonging to another one.
+//
+// Two buttons, one decision, one place to write down why. The assign form owns the comments box
+// because that is where it reads; the form behind the other button copies the value across as it
+// goes, rather than making somebody type the same sentence into a second box to say no.
+document.addEventListener('submit', function (event) {
+    var source = event.target.getAttribute && event.target.getAttribute('data-rpms-comments-from');
+    if (!source) return;
+
+    var from = document.querySelector(source);
+    var into = event.target.querySelector('input[name="comments"]');
+    if (from && into) into.value = from.value;
 });

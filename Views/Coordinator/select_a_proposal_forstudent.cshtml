@@ -185,10 +185,32 @@ else
                     <div class="mt-3">
                         <label class="form-label" for="assign-comments-@item.Proposal.Id">Comments</label>
                         <textarea id="assign-comments-@item.Proposal.Id" name="comments" rows="2"
-                                  class="form-control" placeholder="Why this supervisor"></textarea>
+                                  class="form-control"
+                                  placeholder="Why this supervisor, or why none of them"></textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-primary mt-3">Assign this supervisor</button>
+                    <div class="btn-list mt-3">
+                        <button type="submit" class="btn btn-primary">Assign this supervisor</button>
+
+                        @* Belongs to the form below rather than this one, so the radio this form
+                           requires does not stand in the way of turning every offer down. One
+                           comments box serves both: the coordinator is writing down a decision,
+                           and which decision it was is what the button says. *@
+                        <button type="submit" form="discard-@item.Proposal.Id"
+                                class="btn btn-outline-danger"
+                                data-rpms-confirm="Turn down every offer on this proposal? It goes back to Send proposals, and the supervisors who replied lose it from their list.">
+                            Discard these offers
+                        </button>
+                    </div>
+                </form>
+
+                @* Its own form, a sibling rather than a child: HTML has no nested forms, and this
+                   one carries no radio, so it can be submitted when none is chosen. *@
+                <form id="discard-@item.Proposal.Id" class="d-none"
+                      asp-controller="Coordinator" asp-action="DiscardSelections" method="post"
+                      data-rpms-comments-from="#assign-comments-@item.Proposal.Id">
+                    <input type="hidden" name="proposalId" value="@item.Proposal.Id" />
+                    <input type="hidden" name="comments" />
                 </form>
 
                 @* Shown so the coordinator can see who has not replied before assigning. *@
