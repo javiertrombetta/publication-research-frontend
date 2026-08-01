@@ -1,19 +1,23 @@
 @model CreatePublicationViewModel
+@using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
+@{ ViewData["Title"] = "Research paper"; }
 
             <main class="page-body m-0 py-4">
                 <div class="container-xl">
 
-                    @if (!ViewData.ModelState.IsValid)
-                    {
-                        <div class="row justify-content-center">
-                            <div class="col-12 col-md-10 col-lg-8 col-xl-7">
-                            </div>
-                        </div>
-                    }
-
                     <!-- Centred responsive layout wrapper -->
                     <div class="row justify-content-center">
                         <div class="col-12 col-md-10 col-lg-8 col-xl-7">
+
+                            @* Back to the publication this paper belongs to. Reached from there, and
+                               with the sidebar showing the list rather than the one publication,
+                               it is the only way back that does not go via the whole list. *@
+                            <div class="mb-2 px-2">
+                                <a asp-controller="Student" asp-action="Publication" asp-route-id="@Model.ContainerId"
+                                   class="text-secondary text-decoration-none small">
+                                    &larr; Back to this publication
+                                </a>
+                            </div>
 
                             <!-- Header Area -->
                             <div class="mb-4 px-2 d-flex justify-content-between align-items-center">
@@ -23,6 +27,89 @@
                                     <span class="badge @StatusBadge(Model.Status)">@Humanise(Model.Status)</span>
                                 }
                             </div>
+
+@if (!Model.IsEditable)
+{
+    @* Submitted and beyond: the paper is with somebody, or the outcome is already recorded. It is
+       shown rather than offered for editing — and shown in full, with the file, because "accepted"
+       said about a paper you cannot open is not seeing it. *@
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h3 class="card-title fs-3 fw-bold text-primary">Your Research Info</h3>
+        </div>
+        <div class="card-body p-4">
+
+            <div class="mb-3">
+                <div class="text-secondary small fw-bold">Research Title</div>
+                <div class="fs-3">@(string.IsNullOrWhiteSpace(Model.Title) ? "—" : Model.Title)</div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-8">
+                    <div class="text-secondary small fw-bold">Publication Type</div>
+                    <div>@(string.IsNullOrWhiteSpace(Model.PublicationType) ? "—" : Model.PublicationType)</div>
+                </div>
+                <div class="col-4">
+                    <div class="text-secondary small fw-bold">Year</div>
+                    <div>@(Model.PublicationYear?.ToString() ?? "—")</div>
+                </div>
+            </div>
+
+            @{
+                var keywords = (Model.KeywordsCsv ?? "")
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            }
+            @if (keywords.Length > 0)
+            {
+                <div class="mb-3">
+                    <div class="text-secondary small fw-bold mb-1">Keywords</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var keyword in keywords)
+                        {
+                            <span class="badge bg-blue-lt px-2 py-1 fs-4">@keyword</span>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="mb-3">
+                <div class="text-secondary small fw-bold">Abstract</div>
+                @* Preserves the paragraphing the student typed; Razor still encodes the text. *@
+                <div style="white-space: pre-wrap">@(string.IsNullOrWhiteSpace(Model.Abstract) ? "—" : Model.Abstract)</div>
+            </div>
+
+            <div>
+                <div class="text-secondary small fw-bold mb-1">Manuscript</div>
+                @if (Model.LatestVersionId is { } versionId)
+                {
+                    <a class="btn btn-outline-primary"
+                       asp-controller="Downloads" asp-action="Paper"
+                       asp-route-publicationId="@Model.PublicationId" asp-route-versionId="@versionId">
+                        Download version @Model.LatestVersionNumber
+                    </a>
+                }
+                else
+                {
+                    <span class="text-secondary">No file on record.</span>
+                }
+            </div>
+
+        </div>
+
+        <div class="card-footer bg-light border-top d-flex justify-content-between align-items-center py-3 px-4">
+            <span class="text-secondary">
+                @(Model.Status == PublicationStatus.Accepted
+                    ? "This paper has been accepted, so it can no longer be changed."
+                    : "This paper is being reviewed, so it can no longer be changed.")
+            </span>
+            <a asp-controller="Student" asp-action="Publication" asp-route-id="@Model.ContainerId" class="btn btn-outline-secondary">
+                Back to this publication
+            </a>
+        </div>
+    </div>
+}
+else
+{
 
                             <!-- MAIN SUBMISSION FORM -->
                             <form id="publicationForm" asp-controller="Student" asp-action="Create_Publication" method="post" enctype="multipart/form-data" class="card shadow-sm mb-4">
@@ -126,6 +213,7 @@
                                     </button>
                                 </div>
                             </form>
+}
 
                         </div>
                     </div>
@@ -133,8 +221,8 @@
                 </div>
             </main>
 
-
-
+@if (Model.IsEditable)
+{
     <script>
         const MAX_WORDS = 2000;
         const abstractInput = document.getElementById('abstractInput');
@@ -215,3 +303,4 @@
         handleWordCount(abstractInput, abstractCountEl);
         handleWordCount(noteInput, noteCountEl);
     </script>
+}

@@ -1,3 +1,4 @@
+@{ ViewData["Title"] = "Ethics screening"; }
 
 @model EthicsDeclarationPageViewModel
 
@@ -8,6 +9,15 @@
                     <form id="riskAssessmentForm" asp-controller="Student" asp-action="Ethic_risk_assessment" method="post" class="row justify-content-center">
                         <input type="hidden" asp-for="ContainerId" />
                         <div class="col-12 col-md-10 col-lg-8 col-xl-7">
+
+                            @* Same back link as the other stage screens: this one is twenty questions
+                               long, so the form's Cancel button is a long way down. *@
+                            <div class="mb-2 px-2">
+                                <a asp-controller="Student" asp-action="Publication" asp-route-id="@Model.ContainerId"
+                                   class="text-secondary text-decoration-none small">
+                                    &larr; Back to this publication
+                                </a>
+                            </div>
 
                             <!-- Minimal Text-Only Header with Context -->
                             <div class="mb-4 px-2">

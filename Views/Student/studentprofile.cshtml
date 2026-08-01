@@ -1,4 +1,5 @@
 @model StudentProfileViewModel
+@{ ViewData["Title"] = "My profile"; }
 
             <main class="page-body m-0 py-4">
                 <div class="container-xl">
@@ -48,19 +49,10 @@
                                                 }
                                             </div>
                                         </div>
-                                        @* From sm up the two stack, and stretch makes them share the column's
-                                           width — set by whichever is wider — so their edges line up. *@
-                                        <div class="col-12 col-sm-auto d-flex flex-sm-column gap-2 align-items-start align-items-sm-stretch justify-content-between">
+                                        @* The photo is the only thing on this page a student changes, so the
+                                           status badge is all that sits beside it now. *@
+                                        <div class="col-12 col-sm-auto d-flex align-items-start align-items-sm-center">
                                             <span class="badge bg-success-lt fs-4 px-3 py-2 fw-bold justify-content-center">@Humanise(Model.Status)</span>
-
-                                            <a asp-controller="Student" asp-action="Edit_studentprofile" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center justify-content-center mt-sm-1">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-pencil me-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                                    <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
-                                                    <path d="M13.5 6.5l4 4" />
-                                                </svg>
-                                                Edit Profile
-                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -73,46 +65,47 @@
                                 </div>
 
                                 <div class="card-body py-4 px-4">
+
+                                    @* These are the institution's record of a student, not a description the
+                                       student writes of themselves: the student ID, the department, the
+                                       programme and the cohort are what their work is filed and assessed
+                                       under. An administrator maintains them, and the page says so rather
+                                       than leaving a reader to work out why nothing here can be typed in. *@
+                                    <p class="text-secondary mb-4">
+                                        These details are held by the institution. Ask an administrator if any of
+                                        them is wrong. Your photo is yours to change, above.
+                                    </p>
+
                                     <div class="row g-4">
 
-                                        <div class="col-6">
+                                        <div class="col-12 col-sm-6">
                                             <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">First Name</div>
                                             <div class="fs-2 fw-medium text-dark">@Model.FirstName</div>
                                         </div>
 
-                                        <div class="col-6">
+                                        <div class="col-12 col-sm-6">
                                             <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">Surname</div>
                                             <div class="fs-2 fw-medium text-dark">@Model.LastName</div>
                                         </div>
 
-                                        <div class="col-6">
+                                        <div class="col-12 col-sm-6">
                                             <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">Student ID</div>
                                             <div class="fs-2 fw-medium text-primary fw-bold">@(Model.StudentIdNumber ?? "—")</div>
                                         </div>
 
-                                        <div class="col-6">
+                                        <div class="col-12 col-sm-6">
                                             <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">Cohort</div>
                                             <div class="fs-2 fw-medium text-dark">@(Model.Cohort ?? "—")</div>
                                         </div>
 
-                                        <div class="col-6">
+                                        <div class="col-12 col-sm-6">
                                             <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">Programme / Course</div>
                                             <div class="fs-2 fw-medium text-dark">@(Model.Programme ?? "—")</div>
                                         </div>
 
-                                        <div class="col-6">
+                                        <div class="col-12 col-sm-6">
                                             <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">Department</div>
                                             <div class="fs-2 fw-medium text-dark">@(Model.DepartmentName ?? "—")</div>
-                                        </div>
-
-                                        <div class="col-6">
-                                            <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">ORCID</div>
-                                            <div class="fs-2 fw-medium text-dark">@(Model.Orcid ?? "—")</div>
-                                        </div>
-
-                                        <div class="col-6">
-                                            <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">Research areas</div>
-                                            <div class="fs-2 fw-medium text-dark">@(Model.ResearchAreas.Count > 0 ? string.Join(", ", Model.ResearchAreas) : "—")</div>
                                         </div>
 
                                     </div>

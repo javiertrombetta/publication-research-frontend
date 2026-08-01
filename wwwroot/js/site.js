@@ -42,6 +42,13 @@
         return;
     }
 
+    // Kept in step with the same query in site.css and in the pre-paint script in _Layout.
+    var narrow = window.matchMedia('(max-width: 767.98px)');
+
+    function isNarrow() {
+        return narrow.matches;
+    }
+
     function apply(collapsed) {
         sidebar.classList.toggle('rpms-sidebar-collapsed', collapsed);
         // Also drives the burger's morph into an X (see .rpms-burger-* in site.css).
@@ -56,15 +63,134 @@
 
     allowTransitions();
 
-    toggle.addEventListener('click', function () {
-        var nowCollapsed = !sidebar.classList.contains('rpms-sidebar-collapsed');
+    function setCollapsed(nowCollapsed) {
         apply(nowCollapsed);
+
+        // Only the desktop choice is remembered. On a phone the panel covers the page, so
+        // "leave it open" is not a preference anyone holds across navigations.
+        if (isNarrow()) return;
 
         try {
             localStorage.setItem(STORAGE_KEY, String(nowCollapsed));
         } catch (e) {
             // Private browsing: the choice just won't survive the next navigation.
         }
+    }
+
+    toggle.addEventListener('click', function () {
+        setCollapsed(!sidebar.classList.contains('rpms-sidebar-collapsed'));
+    });
+
+    // Crossing the breakpoint — a rotation, or a window being dragged narrower — changes what the
+    // sidebar is. Going narrow it becomes a panel over the content, and an open one would be
+    // covering a page the reader was in the middle of, so it shuts. Coming back to a wide screen
+    // it is a column again, and the remembered preference applies.
+    function onBreakpointChange() {
+        if (isNarrow()) {
+            apply(true);
+            return;
+        }
+
+        var remembered = false;
+        try {
+            remembered = localStorage.getItem(STORAGE_KEY) === 'true';
+        } catch (e) { /* as above */ }
+
+        apply(remembered);
+    }
+
+    if (narrow.addEventListener) {
+        narrow.addEventListener('change', onBreakpointChange);
+    } else if (narrow.addListener) {
+        narrow.addListener(onBreakpointChange);      // Safari before 14
+    }
+
+    // On a narrow screen the panel sits over the page, so anything outside it is a request to get
+    // back to the page. On a wide screen the sidebar takes space of its own and closing it on any
+    // stray click would be closing a menu nobody opened.
+    document.addEventListener('click', function (event) {
+        if (!isNarrow()) return;
+        if (sidebar.classList.contains('rpms-sidebar-collapsed')) return;
+        if (sidebar.contains(event.target) || toggle.contains(event.target)) return;
+
+        apply(true);
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+        if (!isNarrow() || sidebar.classList.contains('rpms-sidebar-collapsed')) return;
+
+        apply(true);
+        toggle.focus();
+    });
+})();
+
+// The black pill behind the open sidebar item.
+//
+// It exists because a background painted on the active link can only appear and disappear: click
+// another item and the old fill vanishes, then nothing is marked until the next page has loaded
+// and painted. One element for the whole list can travel instead — it sets off the moment the
+// click lands, so the menu has already answered by the time the page arrives.
+(function () {
+    var nav = document.querySelector('.rpms-nav');
+    if (!nav) return;
+
+    var marker = nav.querySelector('.rpms-nav-marker');
+    var links = nav.querySelectorAll('.nav-link');
+    if (!marker || !links.length) return;
+
+    // Which item the marker is on. Starts as the one the server marked, and moves to whatever is
+    // clicked next — the click is the answer, not the navigation that follows it.
+    var current = nav.querySelector('.nav-link.active') || null;
+
+    function place(link, instant) {
+        if (!link) {
+            marker.classList.remove('rpms-nav-marker-visible');
+            return;
+        }
+
+        if (instant) marker.classList.add('rpms-nav-marker-instant');
+
+        marker.style.height = link.offsetHeight + 'px';
+        marker.style.transform = 'translateY(' + link.offsetTop + 'px)';
+        marker.classList.add('rpms-nav-marker-visible');
+
+        if (instant) {
+            // Forces the placement to be committed before transitions come back, so the first
+            // real move animates from where the marker is rather than from the top of the list.
+            void marker.offsetHeight;
+            marker.classList.remove('rpms-nav-marker-instant');
+        }
+    }
+
+    // Only once the marker is actually placed does the outline fallback come off.
+    place(current, true);
+    nav.classList.add('rpms-nav-marker-ready');
+
+    Array.prototype.forEach.call(links, function (link) {
+        link.addEventListener('click', function () {
+            if (link === current) return;
+
+            // The label under the marker turns white as the marker arrives, and the one it is
+            // leaving goes back to grey. Both have to happen here rather than waiting for the new
+            // page: the marker is already moving, so an item left with its white text would be
+            // white on white for as long as the next page takes to arrive. `active` goes too — it
+            // is the server's answer to the same question, and it is now out of date.
+            if (current) current.classList.remove('rpms-nav-link-selected', 'active');
+            link.classList.add('rpms-nav-link-selected');
+
+            current = link;
+            place(link, false);
+        });
+    });
+
+    // The list can change height without the page reloading — the sidebar opening on a phone, or
+    // a label wrapping as the window narrows. The marker is placed in pixels, so it has to be
+    // measured again, and this is not a movement anyone made.
+    var reflow;
+    window.addEventListener('resize', function () {
+        window.clearTimeout(reflow);
+        reflow = window.setTimeout(function () { place(current, true); }, 120);
     });
 })();
 

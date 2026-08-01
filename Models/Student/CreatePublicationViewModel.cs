@@ -30,5 +30,21 @@ namespace ResearchPublicationManagementSystem.Models
         public bool HasUploadedVersion { get; set; }
 
         public int LatestVersionNumber { get; set; }
+
+        public Guid? LatestVersionId { get; set; }
+
+        /// <summary>
+        /// Whether this paper is still the student's to change.
+        ///
+        /// A draft is, and so is one sent back for revisions — that is what being sent back means.
+        /// Anything else is with somebody: a supervisor reading it, a committee evaluating it, a
+        /// coordinator deciding on it, or an outcome already recorded. Editing then would mean
+        /// people reviewing a paper that is no longer the one in front of them. The API refuses it
+        /// either way; this is so the screen does not offer what will be refused.
+        /// </summary>
+        public bool IsEditable =>
+            Status is null
+            or Infrastructure.Api.Dto.PublicationStatus.Draft
+            or Infrastructure.Api.Dto.PublicationStatus.RevisionsRequested;
     }
 }

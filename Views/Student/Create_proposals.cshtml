@@ -1,4 +1,5 @@
 @model CreateProposalsViewModel
+@{ ViewData["Title"] = "Research proposals"; }
 
             <main class="page-body m-0 py-4">
                 <div class="container-xl">
@@ -15,6 +16,13 @@
                     <form asp-controller="Student" asp-action="Create_proposals" method="post" class="row justify-content-center">
                         <input type="hidden" asp-for="ContainerId" />
                         <div class="col-12 col-md-10 col-lg-8 col-xl-7">
+
+                            <div class="mb-2 px-2">
+                                <a asp-controller="Student" asp-action="Publication" asp-route-id="@Model.ContainerId"
+                                   class="text-secondary text-decoration-none small">
+                                    &larr; Back to this publication
+                                </a>
+                            </div>
 
                             <!-- Minimal Text-Only Header with Limit Context -->
                             <div class="d-flex justify-content-between align-items-end mb-3 px-2">

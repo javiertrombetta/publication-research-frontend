@@ -240,11 +240,19 @@
 <div class="mb-4">
     <div class="d-flex align-items-center justify-content-between mb-2">
         <h3 class="m-0 text-secondary">Research Paper</h3>
-        @* Nothing left to continue once the publication decision has closed the process. *@
-        @if (container.CurrentPipeline >= 3 && !isDone)
+        @if (container.CurrentPipeline >= 3)
         {
-            <a asp-controller="Student" asp-action="Create_Publication" asp-route-id="@container.Id" class="btn btn-sm btn-primary">
-                @(Model.Publication is null ? "Get started" : "Continue")
+            @* "Continue" only while there is something to continue. Once the paper has been
+               submitted it is with a supervisor, a committee or the coordinator, and once it has
+               been accepted the work is finished — inviting the student to carry on with a paper
+               nobody can change any more says the wrong thing about where they are. What they
+               want then is to read it, which is what the same screen does. *@
+            var paperIsOpen = Model.Publication is null
+                || Model.Publication.Status is PublicationStatus.Draft or PublicationStatus.RevisionsRequested;
+
+            <a asp-controller="Student" asp-action="Create_Publication" asp-route-id="@container.Id"
+               class="btn btn-sm @(paperIsOpen ? "btn-primary" : "btn-outline-primary")">
+                @(Model.Publication is null ? "Get started" : paperIsOpen ? "Continue" : "View paper")
             </a>
         }
     </div>
