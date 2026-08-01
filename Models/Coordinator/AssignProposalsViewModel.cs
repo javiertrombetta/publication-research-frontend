@@ -34,15 +34,19 @@ namespace ResearchPublicationManagementSystem.Models
         public IReadOnlyList<SupervisorGroupDto> Groups { get; set; } = [];
 
         /// <summary>
-        /// How many students, and how many proposals of theirs, are in this queue for a second time
-        /// after a round that found nobody willing. Counted over the whole queue rather than this
-        /// page: it is the figure that decides whether to send another batch or ask those students
-        /// for new work, and a page is not the queue.
+        /// How many students are in this queue for a second time after a round no supervisor was
+        /// interested in, and how many proposals of theirs that comes to. Counted over the whole
+        /// queue rather than this page: it is the figure that decides whether to send another batch
+        /// or ask those students for new work, and a page is not the queue.
+        ///
+        /// The student is the figure the screen states. A student only comes back when nothing of
+        /// theirs interested anybody, so the proposal count is the number they happened to write
+        /// rather than anything about the round.
         /// </summary>
         public int ReturnedStudents { get; set; }
         public int ReturnedProposals { get; set; }
 
-        public bool HasReturned => ReturnedProposals > 0;
+        public bool HasReturned => ReturnedStudents > 0;
 
         /// <summary>
         /// What was typed to narrow the chooser. The narrowing is the API's, because it knows who
