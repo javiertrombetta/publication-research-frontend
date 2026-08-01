@@ -56,6 +56,13 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.ProposalsAwaitingDispatch = pending.Data?.Items ?? [];
             model.ProposalsAwaitingDispatchTotal = pending.Data?.TotalCount ?? 0;
 
+            // The same queue Supervisor selections works from, asked only for its size. The card
+            // for it used to show a dash, which said the figure was unavailable when it was one
+            // request away, and a dashboard that states two figures and withholds a third reads as
+            // broken rather than as reserved.
+            var awaitingAllocation = await proposalsApi.GetForCoordinatorAsync(page: 1, awaitingAllocation: true);
+            model.SupervisorRepliesTotal = awaitingAllocation.Data?.TotalCount ?? 0;
+
             return View(model);
         }
 
@@ -451,6 +458,10 @@ namespace ResearchPublicationManagementSystem.Controllers
                 model.LoadFailed = true;
                 return (model, null);
             }
+
+            // The whole queue, not this page of it: the count above the list is what tells a
+            // coordinator how much is waiting, and a figure capped at the page size would be wrong.
+            model.TotalCount = containers.Data?.TotalCount ?? 0;
 
             var candidates = (containers.Data?.Items ?? []).ToList();
 

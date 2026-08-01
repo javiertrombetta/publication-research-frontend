@@ -125,12 +125,17 @@
     });
 })();
 
-// The black pill behind the open sidebar item.
+// The pill sliding between sidebar items.
 //
-// It exists because a background painted on the active link can only appear and disappear: click
-// another item and the old fill vanishes, then nothing is marked until the next page has loaded and
-// painted. One element for the whole list can travel instead. It sets off the moment the click
-// lands, so the menu has already answered by the time the page arrives.
+// The resting state is not this script's job. CSS paints the open item from the first frame, using
+// the class the server already put there, so a page that has just loaded looks right before any
+// JavaScript runs. This used to draw that state as well, which meant the sidebar wore one look
+// until the script had measured it and another afterwards; every click here is a page load, so
+// every click flickered.
+//
+// What is left is the part CSS cannot do: when somebody clicks a different item, the fill travels
+// there rather than vanishing from one place and reappearing in another once the next page has
+// arrived. The pill is invisible and idle until then.
 (function () {
     var nav = document.querySelector('.rpms-nav');
     if (!nav) return;
@@ -139,58 +144,54 @@
     var links = nav.querySelectorAll('.nav-link');
     if (!marker || !links.length) return;
 
-    // Which item the marker is on. Starts as the one the server marked, and moves to whatever is
-    // clicked next. The click is the answer, not the navigation that follows it.
+    // Which item is open. The server's answer to start with, and whatever is clicked after that.
     var current = nav.querySelector('.nav-link.active') || null;
 
-    function place(link, instant) {
-        if (!link) {
-            marker.classList.remove('rpms-nav-marker-visible');
-            return;
-        }
-
+    function moveTo(link, instant) {
         if (instant) marker.classList.add('rpms-nav-marker-instant');
 
         marker.style.height = link.offsetHeight + 'px';
         marker.style.transform = 'translateY(' + link.offsetTop + 'px)';
-        marker.classList.add('rpms-nav-marker-visible');
 
         if (instant) {
-            // Forces the placement to be committed before transitions come back, so the first
-            // real move animates from where the marker is rather than from the top of the list.
+            // Commits the placement before transitions come back, so the journey starts from where
+            // the marker is rather than from the top of the list.
             void marker.offsetHeight;
             marker.classList.remove('rpms-nav-marker-instant');
         }
     }
 
-    // Only once the marker is actually placed does the outline fallback come off.
-    place(current, true);
-    nav.classList.add('rpms-nav-marker-ready');
-
     Array.prototype.forEach.call(links, function (link) {
         link.addEventListener('click', function () {
-            if (link === current) return;
+            if (link === current || !current) return;
 
-            // The label under the marker turns white as the marker arrives, and the one it is
-            // leaving goes back to grey. Both have to happen here rather than waiting for the new
-            // page: the marker is already moving, so an item left with its white text would be
-            // white on white for as long as the next page takes to arrive. `active` goes too. It is
-            // the server's answer to the same question, and it is now out of date.
-            if (current) current.classList.remove('rpms-nav-link-selected', 'active');
+            // Hand the fill over to the marker: put it exactly where the open item's own background
+            // is, with no animation, make it visible, and only then let the links drop theirs. Done
+            // in that order there is nothing to see at the swap.
+            moveTo(current, true);
+            marker.classList.add('rpms-nav-marker-visible');
+            nav.classList.add('rpms-nav-travelling');
+
+            // The label the marker is arriving at turns white, the one it is leaving goes back to
+            // grey. Both now rather than on the next page: the marker is already moving, and an
+            // item left white would be white on white until the page arrived. `active` goes with
+            // it, being the server's answer to a question that has just changed.
+            current.classList.remove('rpms-nav-link-selected', 'active');
             link.classList.add('rpms-nav-link-selected');
 
             current = link;
-            place(link, false);
+            moveTo(link, false);
         });
     });
 
     // The list can change height without the page reloading: the sidebar opening on a phone, or a
-    // label wrapping as the window narrows. The marker is placed in pixels, so it has to be
-    // measured again, and this is not a movement anyone made.
+    // label wrapping as the window narrows. Only worth re-measuring while the marker is on screen,
+    // which is to say mid-journey.
     var reflow;
     window.addEventListener('resize', function () {
+        if (!nav.classList.contains('rpms-nav-travelling')) return;
         window.clearTimeout(reflow);
-        reflow = window.setTimeout(function () { place(current, true); }, 120);
+        reflow = window.setTimeout(function () { moveTo(current, true); }, 120);
     });
 })();
 

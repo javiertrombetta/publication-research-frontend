@@ -52,13 +52,19 @@ else
         </div>
 
         <div class="col-12 col-md-4">
-            <div class="card h-100">
+            <div class="card h-100 @(Model.SupervisorRepliesTotal > 0 ? "border-primary" : "")">
                 <div class="card-body">
                     <div class="text-secondary mb-1">Supervisor replies</div>
-                    <div class="h1 m-0">&mdash;</div>
-                    <div class="text-secondary">proposals a supervisor has accepted</div>
+                    <div class="h1 m-0">@Model.SupervisorRepliesTotal</div>
+                    <div class="text-secondary">
+                        @(Model.SupervisorRepliesTotal == 1
+                            ? "proposal a supervisor has accepted"
+                            : "proposals a supervisor has accepted")
+                    </div>
                     <a asp-controller="Coordinator" asp-action="select_a_proposal_forstudent"
-                       class="btn btn-outline-primary btn-sm mt-3">Review selections</a>
+                       class="btn @(Model.SupervisorRepliesTotal > 0 ? "btn-primary" : "btn-outline-primary") btn-sm mt-3">
+                        Review selections
+                    </a>
                 </div>
             </div>
         </div>
@@ -96,6 +102,9 @@ else
                     var byStarted = Model.Column("started", "Publication", descendingFirst: true);
                     var byStage = Model.Column("stage", "Stage");
                     var byStatus = Model.Column("status", "Status");
+                    // Ascending brings the publications that need the coordinator to the top,
+                    // which is the question this column answers.
+                    var byWaiting = Model.Column("waiting", "Waiting on you");
                 }
                 <table class="table card-table table-vcenter rpms-table-stable">
                     @* Declared once so the columns do not resize themselves around whichever ten
@@ -113,7 +122,7 @@ else
                             <th><partial name="_SortableHeader" model="byStarted" /></th>
                             <th><partial name="_SortableHeader" model="byStage" /></th>
                             <th><partial name="_SortableHeader" model="byStatus" /></th>
-                            <th>Waiting on you</th>
+                            <th><partial name="_SortableHeader" model="byWaiting" /></th>
                         </tr>
                     </thead>
                     <tbody>

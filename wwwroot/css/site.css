@@ -32,12 +32,15 @@
     --rpms-navbar-height: 56px;
     /* ---------- Navigation ---------- */
 
-    /* The one filled grey in the chrome. Two controls wear it, the burger when the sidebar is
-       shut and the marker behind the open menu item, and they sit a few centimetres apart on the
-       same screen. Two hand-picked greys read as a mistake rather than as two shades, so both
-       take it from here and cannot drift apart again. */
-    --rpms-nav-fill: #6c757d;
-    --rpms-nav-fill-hover: #5a6268;
+    /* The one fill in the chrome. Two controls wear it, the burger when the sidebar is shut and
+       the open menu item, and they sit a few centimetres apart on the same screen, so both take
+       it from here and cannot drift apart again.
+
+       It is the brand red, the same one the primary buttons wear: the open item and the way back
+       to the menu are the two things on the page worth pointing at, and giving them their own
+       colour would have said they belonged to something else. */
+    --rpms-nav-fill: var(--rpms-primary);
+    --rpms-nav-fill-hover: var(--rpms-primary-dark);
     /* ---------- Border Radius ---------- */
 
     --rpms-radius: 10px;
@@ -287,22 +290,26 @@ aside {
         color: var(--rpms-primary);
     }
 
-    /* The open item. Its background is the marker below, not this rule. The fill has to be able
-       to move between items, and a background painted on the link itself can only appear and
-       disappear. Everything that stays with the label is here. */
+    /* The open item, painted by CSS from the very first frame.
+
+       It used to be drawn by the marker below, which meant JavaScript had to measure the item
+       before the sidebar could look right. Until then the item wore a different style, and every
+       click in this application is a page load, so every click showed the sidebar in one state and
+       then flipped it to another. That flicker was the whole page appearing to reload itself. The
+       server already marks which item is open; the browser can paint it without being told twice. */
     .rpms-sidebar-inner .nav-link.active,
     .rpms-sidebar-inner .nav-link.rpms-nav-link-selected {
-        background: transparent;
+        background: var(--rpms-nav-fill);
         color: #ffffff;
         font-weight: 600;
     }
 
-    /* Before site.js has measured anything there is no pill, so the outline marks the open item
-       and the label keeps its normal colour. This is also the whole of the state for a reader
-       without JavaScript, which is why it is the default rather than a fallback bolted on. */
-    .rpms-nav:not(.rpms-nav-marker-ready) .nav-link.active {
-        color: #495057;
-        border-color: #adb5bd;
+    /* While the marker is travelling between two items it is the only fill, so the links give up
+       their own for the length of the journey. Added on click and never present at rest, which is
+       what keeps the resting state a matter of CSS alone. */
+    .rpms-nav-travelling .nav-link.active,
+    .rpms-nav-travelling .nav-link.rpms-nav-link-selected {
+        background: transparent;
     }
 
 /* ---------- The moving marker ---------- */
@@ -499,8 +506,8 @@ aside {
    sidebar itself already had. */
 :root.rpms-sidebar-is-collapsed #sidebar-toggle,
 #sidebar-toggle[aria-expanded="false"] {
-    /* Grey rather than black: it marks the closed state without turning the top bar's lightest
-       corner into its heaviest. White bars still clear the contrast threshold on this tone. */
+    /* The shared nav fill, so the closed burger and the open menu item are the same red rather
+       than two reds a few centimetres apart. */
     background-color: var(--rpms-nav-fill);
     color: #ffffff;
     border-color: var(--rpms-nav-fill);
