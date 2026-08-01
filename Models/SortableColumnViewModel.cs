@@ -33,6 +33,17 @@ namespace ResearchPublicationManagementSystem.Models
         /// <summary>The rest of the screen's state, so sorting does not drop the search or filter.</summary>
         public Dictionary<string, string?> RouteValues { get; init; } = [];
 
+        /// <summary>
+        /// The query keys this column writes. "sort" and "desc" for the one list a screen usually
+        /// has; a screen with two lists gives the second its own pair, or ordering one would
+        /// reorder the other.
+        /// </summary>
+        public string SortKey { get; init; } = "sort";
+        public string DescendingKey { get; init; } = "desc";
+
+        /// <summary>The page key to drop when the order changes, for the same reason.</summary>
+        public string PageKey { get; init; } = "page";
+
         public bool IsActive =>
             string.Equals(CurrentSort, Column, StringComparison.OrdinalIgnoreCase);
 
@@ -47,16 +58,16 @@ namespace ResearchPublicationManagementSystem.Models
         {
             var values = new Dictionary<string, string?>(RouteValues)
             {
-                ["sort"] = Column
+                [SortKey] = Column
             };
 
-            if (NextDescending) values["desc"] = "true";
-            else values.Remove("desc");
+            if (NextDescending) values[DescendingKey] = "true";
+            else values.Remove(DescendingKey);
 
             // Back to the first page: the rows that were on page three under the old order are not
             // the rows on page three under the new one, so keeping the number would land the reader
             // somewhere arbitrary.
-            values.Remove("page");
+            values.Remove(PageKey);
 
             return values;
         }

@@ -34,6 +34,46 @@ namespace ResearchPublicationManagementSystem.Models
         /// </summary>
         public string? SupervisorSearch { get; set; }
 
+        /// <summary>
+        /// The order and the search over the proposals themselves, both applied by the API. The
+        /// default is oldest first, and it stays that way rather than being left to the endpoint's
+        /// own preference: a dispatch queue is worked from the front, and the proposal a student
+        /// has been waiting longest on is the one that should be nearest the top.
+        /// </summary>
+        public string? Sort { get; set; }
+        public bool Descending { get; set; }
+        public string? Search { get; set; }
+        public int TotalCount { get; set; }
+
+        public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
+
+        public Dictionary<string, string?> RouteValues()
+        {
+            var values = new Dictionary<string, string?>();
+            if (HasSearch) values["search"] = Search;
+            if (!string.IsNullOrWhiteSpace(Sort)) values["sort"] = Sort;
+            if (Descending) values["desc"] = "true";
+            if (!string.IsNullOrWhiteSpace(SupervisorSearch)) values["supervisorSearch"] = SupervisorSearch;
+            return values;
+        }
+
+        public SortBarViewModel SortBar => new()
+        {
+            Controller = "Coordinator",
+            Action = "assigning_proposal_forsupervisor",
+            Sort = Sort,
+            Descending = Descending,
+            RouteValues = RouteValues()
+                .Where(v => v.Key != "sort" && v.Key != "desc")
+                .ToDictionary(v => v.Key, v => v.Value),
+            Columns =
+            [
+                ("submitted", "Date", true),
+                ("student", "Student", false),
+                ("title", "Proposal", false)
+            ]
+        };
+
         public bool HasSupervisorSearch => !string.IsNullOrWhiteSpace(SupervisorSearch);
 
         public bool LoadFailed { get; set; }

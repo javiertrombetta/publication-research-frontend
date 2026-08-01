@@ -35,8 +35,35 @@ else
 {
     <h2 class="h3 mb-3">
         Ready for your decision
-        <span class="badge bg-primary-lt ms-1">@Model.ReadyForDecision.Count</span>
+        <span class="badge bg-primary-lt ms-1">@Model.DecisionTotal</span>
     </h2>
+
+    @* Its own search and its own order, with its own query keys, because the two lists on this
+       screen are read independently: narrowing one must not narrow or reorder the other. Both are
+       applied by the API, so they cover the whole list rather than the page in hand. *@
+    <div class="card mb-3">
+        <div class="card-body py-3">
+            <form method="get" asp-controller="Coordinator" asp-action="Evaluation_after_committee"
+                  class="row g-2 align-items-center">
+                <input type="hidden" name="sort" value="@Model.Sort" />
+                <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+                <input type="hidden" name="progressSort" value="@Model.ProgressSort" />
+                <input type="hidden" name="progressDesc" value="@Model.ProgressDescending.ToString().ToLowerInvariant()" />
+                <input type="hidden" name="progressSearch" value="@Model.ProgressSearch" />
+
+                <div class="col-12 col-md">
+                    <input type="search" name="search" value="@Model.Search" class="form-control"
+                           placeholder="Search by student, paper or abstract" aria-label="Search papers ready for decision" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    var decisionSortBar = Model.DecisionSortBar;
+    <partial name="_SortBar" model="decisionSortBar" />
 
     @if (Model.ReadyForDecision.Count == 0)
     {
@@ -73,9 +100,9 @@ else
                 else
                 {
                     <div class="table-responsive mb-3">
-                        <table class="table card-table table-vcenter">
+                        <table class="table card-table table-vcenter" data-rpms-sortable-table>
                             <thead>
-                                <tr><th>Reviewer</th><th>Role</th><th>Decision</th><th>Comments</th></tr>
+                                <tr><th data-rpms-sort-column="0">Reviewer</th><th data-rpms-sort-column="1">Role</th><th data-rpms-sort-column="2">Decision</th><th data-rpms-sort-column="3">Comments</th></tr>
                             </thead>
                             <tbody>
                                 @foreach (var review in item.Reviews)
@@ -108,19 +135,51 @@ else
         </div>
     }
 
-    @if (Model.InProgress.Count > 0)
+    @if (Model.DecisionPager is not null)
     {
-        <h2 class="h3 mt-4 mb-1">Still in progress</h2>
+        <partial name="_Pager" model="Model.DecisionPager" />
+    }
+
+    @if (Model.InProgress.Count > 0 || Model.HasProgressSearch)
+    {
+        <h2 class="h3 mt-4 mb-1">
+            Still in progress
+            <span class="badge bg-secondary-lt ms-1">@Model.ProgressTotal</span>
+        </h2>
         <p class="text-secondary mb-3">
             Not yours to decide yet. Shown so you can see where each one has got to, and chase
             anything that has stopped moving.
         </p>
 
+        <div class="card mb-3">
+            <div class="card-body py-3">
+                <form method="get" asp-controller="Coordinator" asp-action="Evaluation_after_committee"
+                      class="row g-2 align-items-center">
+                    <input type="hidden" name="sort" value="@Model.Sort" />
+                    <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+                    <input type="hidden" name="search" value="@Model.Search" />
+                    <input type="hidden" name="progressSort" value="@Model.ProgressSort" />
+                    <input type="hidden" name="progressDesc" value="@Model.ProgressDescending.ToString().ToLowerInvariant()" />
+
+                    <div class="col-12 col-md">
+                        <input type="search" name="progressSearch" value="@Model.ProgressSearch" class="form-control"
+                               placeholder="Search by student or paper" aria-label="Search papers in progress" />
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-outline-secondary">Search</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        var progressSortBar = Model.ProgressSortBar;
+        <partial name="_SortBar" model="progressSortBar" />
+
         <div class="card">
             <div class="table-responsive">
-                <table class="table card-table table-vcenter">
+                <table class="table card-table table-vcenter" data-rpms-sortable-table>
                     <thead>
-                        <tr><th>Paper</th><th>Author</th><th>Waiting on</th></tr>
+                        <tr><th data-rpms-sort-column="0">Paper</th><th data-rpms-sort-column="1">Author</th><th data-rpms-sort-column="2">Waiting on</th></tr>
                     </thead>
                     <tbody>
                         @foreach (var item in Model.InProgress)
@@ -135,5 +194,10 @@ else
                 </table>
             </div>
         </div>
+
+        @if (Model.ProgressPager is not null)
+        {
+            <partial name="_Pager" model="Model.ProgressPager" />
+        }
     }
 }

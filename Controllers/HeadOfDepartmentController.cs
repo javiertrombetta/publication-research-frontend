@@ -50,13 +50,15 @@ namespace ResearchPublicationManagementSystem.Controllers
         public async Task<IActionResult> Headofdepartment_feedback(
             Guid? id, int page = 1, string? sort = null, bool desc = false)
         {
-            var model = new HeadOfDepartmentEthicsViewModel { Sort = sort, Descending = desc };
+            var model = new HeadOfDepartmentEthicsViewModel { Sort = sort ?? "started", Descending = desc };
 
             // This screen's own queue, by name, one page of it. Everything else the department has
             // in flight is somebody else's problem and no longer travels down the wire.
+            // Oldest first by default, as on every other queue: the longest wait is the one that
+            // needs looking at.
             var containers = await containersApi.GetInMyDepartmentAsync(
                 ethicsSteps: EthicsSteps.HeadOfDepartmentReview, page: page,
-                sort: sort, descending: desc);
+                sort: sort ?? "started", descending: desc);
             if (!containers.Success)
             {
                 TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your department's publications.";
@@ -134,7 +136,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         {
             var model = new DepartmentProposalsViewModel
             {
-                Sort = sort,
+                Sort = sort ?? "submitted",
                 Descending = desc,
                 Search = search
             };
@@ -143,7 +145,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             // its publication's id, so there is no second call to find out who wrote what, and the
             // API decides how many rows come back rather than the size of the department.
             var proposals = await proposalsApi.GetInMyDepartmentAsync(
-                page, sort: sort, descending: desc, search: search);
+                page, sort: sort ?? "submitted", descending: desc, search: search);
             if (!proposals.Success)
             {
                 TempData["ErrorMessage"] = proposals.ErrorMessage ?? "Could not load your department's proposals.";

@@ -970,3 +970,18 @@ aside {
 .rpms-sort-icon {
     flex: 0 0 auto;
 }
+
+/* A heading inside a card's own table, sorted in the browser. Same look as the queue headings so
+   the two read as one idea, with the cursor saying it can be clicked. */
+.rpms-sort-clickable {
+    cursor: pointer;
+    user-select: none;
+}
+
+    .rpms-sort-clickable[data-rpms-sorted="asc"]::after {
+        content: " \2191";
+    }
+
+    .rpms-sort-clickable[data-rpms-sorted="desc"]::after {
+        content: " \2193";
+    }

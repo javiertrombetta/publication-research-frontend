@@ -10,6 +10,10 @@ namespace ResearchPublicationManagementSystem.Models
     {
         public string? Sort { get; set; }
         public bool Descending { get; set; }
+        public string? Search { get; set; }
+        public int TotalCount { get; set; }
+
+        public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
 
         protected abstract string SortController { get; }
         protected abstract string SortAction { get; }
@@ -19,6 +23,7 @@ namespace ResearchPublicationManagementSystem.Models
             var values = new Dictionary<string, string?>();
             if (!string.IsNullOrWhiteSpace(Sort)) values["sort"] = Sort;
             if (Descending) values["desc"] = "true";
+            if (HasSearch) values["search"] = Search;
             return values;
         }
 
@@ -28,6 +33,7 @@ namespace ResearchPublicationManagementSystem.Models
             Action = SortAction,
             Sort = Sort,
             Descending = Descending,
+            RouteValues = HasSearch ? new Dictionary<string, string?> { ["search"] = Search } : [],
             Columns =
             [
                 ("started", "Date started", true),
@@ -60,6 +66,11 @@ namespace ResearchPublicationManagementSystem.Models
         /// <summary>Column name as the API knows it, the label to show, and its natural direction.</summary>
         public List<(string Column, string Label, bool DescendingFirst)> Columns { get; init; } = [];
 
+        /// <summary>Which query keys this bar writes, for a screen that has two lists.</summary>
+        public string SortKey { get; init; } = "sort";
+        public string DescendingKey { get; init; } = "desc";
+        public string PageKey { get; init; } = "page";
+
         public IEnumerable<SortableColumnViewModel> Build() =>
             Columns.Select(c => new SortableColumnViewModel
             {
@@ -70,7 +81,10 @@ namespace ResearchPublicationManagementSystem.Models
                 CurrentSort = Sort,
                 CurrentDescending = Descending,
                 DescendingFirst = c.DescendingFirst,
-                RouteValues = RouteValues
+                RouteValues = RouteValues,
+                SortKey = SortKey,
+                DescendingKey = DescendingKey,
+                PageKey = PageKey
             });
     }
 }

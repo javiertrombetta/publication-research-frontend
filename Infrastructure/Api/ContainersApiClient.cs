@@ -32,7 +32,8 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
     public Task<ApiResult<PagedResultDto<PublicationContainerDto>>> GetAllAsync(
         Guid? studentId = null, Guid? coordinatorId = null, string? status = null,
         string? ethicsSteps = null, int page = 1, int pageSize = Paging.DefaultPageSize,
-        string? sort = null, bool descending = false, CancellationToken ct = default)
+        string? sort = null, bool descending = false, string? search = null,
+        string? paperAwaiting = null, CancellationToken ct = default)
     {
         var parameters = new Dictionary<string, string?>
         {
@@ -41,7 +42,13 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
             ["status"] = status,
             // Which ethics decision the screen is about. Sent so the API returns that screen's
             // queue rather than everything, which is what makes a page of it a stable page.
-            ["ethicsSteps"] = ethicsSteps
+            ["ethicsSteps"] = ethicsSteps,
+            // One term across the student, the title and the abstract, applied by the API so it
+            // covers the whole queue rather than the page already in hand.
+            ["search"] = search,
+            // Whose turn it is on the paper, so a screen showing two lists can ask for each of
+            // them separately and page both.
+            ["paperAwaiting"] = paperAwaiting
         };
 
         foreach (var (key, value) in Page(page, pageSize)) parameters[key] = value;

@@ -21,6 +21,20 @@
         </div>
     </div>
 }
+else if (Model.Proposals.Count == 0 && Model.HasSearch)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+            <p class="text-secondary mb-4">
+                No proposal waiting to go out has that student, title or abstract.
+            </p>
+            <a asp-controller="Coordinator" asp-action="assigning_proposal_forsupervisor" class="btn btn-primary">
+                Show them all
+            </a>
+        </div>
+    </div>
+}
 else if (Model.Proposals.Count == 0)
 {
     <div class="card">
@@ -47,6 +61,44 @@ else if (Model.Supervisors.Count == 0)
 }
 else
 {
+    <div class="card mb-3">
+        <div class="card-body py-3">
+            <form method="get" asp-controller="Coordinator" asp-action="assigning_proposal_forsupervisor"
+                  class="row g-2 align-items-center">
+
+                @* The ordering and the supervisor filter survive a proposal search. *@
+                <input type="hidden" name="sort" value="@Model.Sort" />
+                <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+                <input type="hidden" name="supervisorSearch" value="@Model.SupervisorSearch" />
+
+                <div class="col-12 col-md">
+                    <input type="search" name="search" value="@Model.Search" class="form-control"
+                           placeholder="Search by student, proposal or abstract" aria-label="Search proposals" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                @if (Model.HasSearch)
+                {
+                    <div class="col-auto">
+                        <a asp-controller="Coordinator" asp-action="assigning_proposal_forsupervisor"
+                           class="btn btn-link text-secondary text-decoration-none">Clear</a>
+                    </div>
+                }
+            </form>
+
+            @if (Model.HasSearch)
+            {
+                <div class="text-secondary small mt-2">
+                    @Model.TotalCount @(Model.TotalCount == 1 ? "proposal matches" : "proposals match") &ldquo;@Model.Search&rdquo;.
+                </div>
+            }
+        </div>
+    </div>
+
+    var dispatchSortBar = Model.SortBar;
+    <partial name="_SortBar" model="dispatchSortBar" />
+
     @* Outside the dispatch form, and referenced by the search box through form=. HTML has no
        nested forms, and this one only narrows the chooser. *@
     <form id="supervisor-filter" method="get"
@@ -67,6 +119,14 @@ else
                         data-rpms-check-all="proposalIds">Select all</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary"
                         data-rpms-check-none="proposalIds">Clear</button>
+
+                @* One control for every group, so a coordinator scanning a long queue can shut the
+                   lot and open only what they are working on. *@
+                <span class="border-start ps-2 ms-1"></span>
+                <button type="button" class="btn btn-sm btn-ghost-secondary"
+                        data-rpms-expand-all="student-groups">Expand all</button>
+                <button type="button" class="btn btn-sm btn-ghost-secondary"
+                        data-rpms-collapse-all="student-groups">Collapse all</button>
             </div>
         </div>
 
@@ -102,7 +162,7 @@ else
                     <button type="button" class="btn btn-sm btn-ghost-secondary"
                             data-rpms-check-none="proposalIds" data-rpms-scope="#student-@group.Key">None</button>
                 </div>
-                <div class="card-body collapse show" id="student-@group.Key">
+                <div class="card-body collapse show" id="student-@group.Key" data-rpms-collapsible="student-groups">
                     @foreach (var proposal in group)
                     {
                         <label class="form-check">
