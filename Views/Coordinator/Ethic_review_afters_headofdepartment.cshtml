@@ -71,17 +71,48 @@ else if (Model.Items.Count == 0)
 }
 else
 {
+    @* The same control as on the first ethics screen, so the two read alike. *@
+    <div class="card mb-3">
+        <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
+            <span class="text-secondary me-auto">
+                <strong>@Model.TotalCount</strong> @(Model.TotalCount == 1 ? "publication" : "publications") waiting on you,
+                @Model.Items.Count on this page.
+            </span>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-rpms-expand-all="ethics-final-cards">Expand all</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-rpms-collapse-all="ethics-final-cards">Collapse all</button>
+        </div>
+    </div>
+
     @foreach (var item in Model.Items)
     {
         <div class="card mb-3">
-            <div class="card-header">
-                <div>
+            <div class="card-header d-flex align-items-center gap-2">
+                <button class="btn btn-icon btn-sm btn-ghost-secondary" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#ethics-final-@item.Container.Id"
+                        aria-expanded="true" aria-controls="ethics-final-@item.Container.Id"
+                        aria-label="Show or hide this publication">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
+                         viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M6 9l6 6l6 -6" />
+                    </svg>
+                </button>
+
+                <div class="me-auto">
                     <h3 class="card-title m-0">@item.Container.DisplayTitle</h3>
                     <div class="text-secondary small">@item.Container.StudentName</div>
                 </div>
+
+                <span class="badge bg-primary-lt">
+                    @item.Documents.Count @(item.Documents.Count == 1 ? "document" : "documents")
+                </span>
             </div>
 
-            <div class="card-body">
+            <div class="card-body collapse show" id="ethics-final-@item.Container.Id"
+                 data-rpms-collapsible="ethics-final-cards">
 
                 @if (!string.IsNullOrWhiteSpace(item.Approval.HeadOfDepartmentComments))
                 {

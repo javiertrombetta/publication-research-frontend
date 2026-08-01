@@ -83,17 +83,54 @@ else
         </div>
     }
 
+    @if (Model.ReadyForDecision.Count > 0)
+    {
+        @* One control for the lot, as on Supervisor selections. Each paper carries its abstract and
+           every review recorded against it, so a queue of them is a long scroll. *@
+        <div class="card mb-3">
+            <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
+                <span class="text-secondary me-auto">
+                    <strong>@Model.DecisionTotal</strong> @(Model.DecisionTotal == 1 ? "paper" : "papers") waiting on you,
+                    @Model.ReadyForDecision.Count on this page.
+                </span>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-rpms-expand-all="paper-cards">Expand all</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-rpms-collapse-all="paper-cards">Collapse all</button>
+            </div>
+        </div>
+    }
+
     @foreach (var item in Model.ReadyForDecision)
     {
         <div class="card mb-3">
-            <div class="card-header">
-                <div>
+            <div class="card-header d-flex align-items-center gap-2">
+                <button class="btn btn-icon btn-sm btn-ghost-secondary" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#paper-@item.Paper.Id"
+                        aria-expanded="true" aria-controls="paper-@item.Paper.Id"
+                        aria-label="Show or hide this paper">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
+                         viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M6 9l6 6l6 -6" />
+                    </svg>
+                </button>
+
+                <div class="me-auto">
                     <h3 class="card-title m-0">@item.Paper.Title</h3>
                     <div class="text-secondary small">@item.Container.StudentName</div>
                 </div>
+
+                @* Readable with the card shut, because it is what decides whether to open it: a
+                   paper with no reviews on record is not one the coordinator can rule on. *@
+                <span class="badge bg-primary-lt">
+                    @item.Reviews.Count @(item.Reviews.Count == 1 ? "review" : "reviews")
+                </span>
             </div>
 
-            <div class="card-body">
+            <div class="card-body collapse show" id="paper-@item.Paper.Id"
+                 data-rpms-collapsible="paper-cards">
                 <p class="text-secondary rpms-preserve-lines">@item.Paper.Abstract</p>
 
                 <h4 class="mt-3 mb-2">Reviews so far</h4>

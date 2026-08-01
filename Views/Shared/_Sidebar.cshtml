@@ -46,12 +46,10 @@
 
         <nav class="nav flex-column rpms-nav">
 
-            @* The black pill behind whichever item is open. One element for the whole list rather
-               than a background on each link, because it has to travel: click another item and it
-               slides there while the page is still loading, so the menu answers the click instead
-               of sitting still until the next paint. site.js places it; until then it is invisible,
-               which is also what a reader without JavaScript gets. The active item is still
-               marked, by the outline that .rpms-nav-marker-ready turns off. *@
+            @* The pill that travels between items on a click, so the menu answers before the next
+               page arrives. It is invisible and idle the rest of the time: the open item's own
+               background is painted by CSS from the first frame, which is what a reader without
+               JavaScript gets and what stops the sidebar changing appearance on every load. *@
             <span class="rpms-nav-marker" aria-hidden="true"></span>
 
             @* Label matches the heading of the page it opens. *@

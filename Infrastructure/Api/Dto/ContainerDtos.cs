@@ -44,7 +44,13 @@ public record PublicationContainerDto(
     /// current settings govern those.
     /// </summary>
     int? RequiredInternalCommitteeMembers = null,
-    int? RequiredExternalCommitteeMembers = null)
+    int? RequiredExternalCommitteeMembers = null,
+    /// <summary>
+    /// Which ethics decision this is waiting for, by name. Finer than EthicsAwaitingRole, and the
+    /// difference matters: two of the steps are the coordinator's and they are separate screens,
+    /// so a role alone cannot say which one to send somebody to.
+    /// </summary>
+    string? EthicsAwaitingStep = null)
 {
     /// <summary>
     /// True once the paper has cleared review, whether or not its author has yet decided to put

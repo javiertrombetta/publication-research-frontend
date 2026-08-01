@@ -25,6 +25,13 @@ namespace ResearchPublicationManagementSystem.Models
         public int PublicationsTotal { get; set; }
         public int ProposalsAwaitingDispatchTotal { get; set; }
 
+        /// <summary>
+        /// Proposals a supervisor has offered to take on and nobody has been assigned to yet. The
+        /// size of the Supervisor selections queue, so the card that points at that screen says how
+        /// much is behind it.
+        /// </summary>
+        public int SupervisorRepliesTotal { get; set; }
+
         public bool LoadFailed { get; set; }
 
         /// <summary>
@@ -72,15 +79,27 @@ namespace ResearchPublicationManagementSystem.Models
         {
             if (publication.Status == "Completed") return null;
 
-            // Which ethics step it is comes from the backend's own reading of the workflow.
-            // EthicsStatus alone cannot tell the coordinator's two turns apart.
-            if (publication.EthicsAwaitingRole == RoleNames.Coordinator)
+            // Which ethics step it is comes from the backend's own reading of the workflow, and it
+            // has to be the step rather than the role: the coordinator has two turns in ethics and
+            // they are two different screens. Sending both to the first one meant a publication
+            // waiting on the final decision offered a button that landed on an empty queue.
+            if (publication.EthicsAwaitingStep is { } step
+                && step is EthicsSteps.CoordinatorConfirmation
+                        or EthicsSteps.CoordinatorDocumentReview
+                        or EthicsSteps.CoordinatorFinalDecision)
             {
-                return new CoordinatorAction("Ethics decision", "Ethic_review_aftersupervisor",
+                return new CoordinatorAction("Ethics decision",
+                    step == EthicsSteps.CoordinatorFinalDecision
+                        ? "Ethic_review_afters_headofdepartment"
+                        : "Ethic_review_aftersupervisor",
                     SearchTermFor(publication));
             }
 
-            if (publication.PaperStatus == PublicationStatus.UnderReview)
+            // The paper's own wait, not its status. UnderReview covers four of them: the supervisor
+            // reading it, an admin appointing a committee, the committee voting, and only then the
+            // coordinator. Offering the decision on all four was offering work that was not theirs
+            // yet, and the screen that carries it out lists none of those first three.
+            if (publication.PaperAwaitingRole == RoleNames.Coordinator)
             {
                 return new CoordinatorAction("Decide on the research paper", "Evaluation_after_committee",
                     SearchTermFor(publication));

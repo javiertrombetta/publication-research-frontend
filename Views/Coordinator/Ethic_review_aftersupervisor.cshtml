@@ -67,17 +67,54 @@ else if (Model.Items.Count == 0)
 }
 else
 {
+    @* One control for the lot, as on Supervisor selections. Each publication carries its
+       documents and a decision form, so a queue of them is a long scroll; shutting them all and
+       opening the one being worked on turns it back into a list. *@
+    <div class="card mb-3">
+        <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
+            <span class="text-secondary me-auto">
+                <strong>@Model.TotalCount</strong> @(Model.TotalCount == 1 ? "publication" : "publications") waiting on you,
+                @Model.Items.Count on this page.
+            </span>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-rpms-expand-all="ethics-cards">Expand all</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-rpms-collapse-all="ethics-cards">Collapse all</button>
+        </div>
+    </div>
+
     @foreach (var item in Model.Items)
     {
         <div class="card mb-3">
-            <div class="card-header">
-                <div>
+            <div class="card-header d-flex align-items-center gap-2">
+                <button class="btn btn-icon btn-sm btn-ghost-secondary" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#ethics-@item.Container.Id"
+                        aria-expanded="true" aria-controls="ethics-@item.Container.Id"
+                        aria-label="Show or hide this publication">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
+                         viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M6 9l6 6l6 -6" />
+                    </svg>
+                </button>
+
+                <div class="me-auto">
                     <h3 class="card-title m-0">@item.Container.DisplayTitle</h3>
                     <div class="text-secondary small">@item.Container.StudentName</div>
                 </div>
+
+                @* Readable with the card shut, because it is what decides whether to open it: a
+                   confirmation with nothing to read is a different job from a set of documents. *@
+                <span class="badge bg-primary-lt">
+                    @(item.IsNotRequiredConfirmation
+                        ? "No documentation"
+                        : $"{item.Documents.Count} {(item.Documents.Count == 1 ? "document" : "documents")}")
+                </span>
             </div>
 
-            <div class="card-body">
+            <div class="card-body collapse show" id="ethics-@item.Container.Id"
+                 data-rpms-collapsible="ethics-cards">
 
                 @if (!string.IsNullOrWhiteSpace(item.Approval.SupervisorDecisionComments))
                 {
