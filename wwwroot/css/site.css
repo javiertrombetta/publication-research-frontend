@@ -1048,11 +1048,45 @@ aside {
 /* ---------- A card header that opens the card ---------- */
 
 /* The chevron beside a student's name is a 20px target and the name beside it is what everybody
-   aims at, so the whole row is the handle. The chevron stays as the thing that says the card
-   opens, and as the control a keyboard reaches; this is about where a mouse can land. */
+   aims at, so the whole row is the handle. The header is the control: it takes the focus, it
+   answers the keyboard, and the arrow inside it is only an arrow. */
 .rpms-collapse-header {
     cursor: pointer;
     user-select: none;
+}
+
+    /* No ring on a click, one on a tab. Left as it was, the header kept a box around it after
+       every click, which is the look this was meant to be rid of. */
+    .rpms-collapse-header:focus {
+        outline: none;
+    }
+
+    .rpms-collapse-header:focus-visible {
+        outline: 2px solid var(--rpms-primary);
+        outline-offset: -2px;
+    }
+
+/* The arrow. Sized like the button it replaces so the row keeps its rhythm, and pointing at the
+   card when it is open and along the row when it is shut. */
+.rpms-collapse-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 1.75rem;
+    height: 1.75rem;
+    color: #6c757d;
+    transition: transform .2s ease;
+}
+
+.rpms-collapse-header[aria-expanded="false"] .rpms-collapse-icon {
+    transform: rotate(-90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rpms-collapse-icon {
+        transition: none;
+    }
 }
 
     .rpms-collapse-header:hover {
