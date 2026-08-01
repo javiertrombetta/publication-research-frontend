@@ -38,6 +38,25 @@ else
         <div class="card mb-3">
             <div class="card-body">
                 <h3 class="mb-2">@proposal.Title</h3>
+
+                @* The date the coordinator asked for an answer by. It decides whether to read this
+                   now or later, so it belongs above the abstract rather than under the button. *@
+                @if (proposal.RespondByLocal is { } by)
+                {
+                    <div class="mb-2">
+                        <span class="badge @(proposal.RespondByHasPassed ? "bg-warning-lt" : "bg-secondary-lt")">
+                            @if (proposal.RespondByHasPassed)
+                            {
+                                <text>Answer was due @by.ToString("dddd d MMMM, HH:mm")</text>
+                            }
+                            else
+                            {
+                                <text>Answer by @by.ToString("dddd d MMMM, HH:mm")</text>
+                            }
+                        </span>
+                    </div>
+                }
+
                 <p class="text-secondary">@proposal.Abstract</p>
 
                 <form asp-controller="Supervisor" asp-action="AcceptProposal" method="post">

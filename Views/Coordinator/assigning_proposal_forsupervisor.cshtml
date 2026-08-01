@@ -397,6 +397,28 @@ else
                     <textarea id="dispatch-comments" name="comments" rows="3" class="form-control"
                               placeholder="Anything they should know before deciding"></textarea>
                 </div>
+
+                @* A date the round runs out on, and what happens when it does.
+                   Optional: a coordinator with a cycle to keep to sets one, and one chasing
+                   replies by hand does not have to. Once it passes, students nobody offered to
+                   supervise come back here on their own, which is the same thing the coordinator
+                   would have done after noticing, minus the noticing. *@
+                <div class="mt-3">
+                    <label for="respond-by" class="form-label">
+                        Answer by <span class="text-secondary fw-normal">(optional)</span>
+                    </label>
+                    <div class="row g-2 align-items-center">
+                        <div class="col-12 col-md-auto">
+                            <input type="datetime-local" id="respond-by" name="respondBy"
+                                   class="form-control" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
+                        </div>
+                        <div class="col text-secondary small">
+                            After this, any student with no proposal a supervisor offered to take on
+                            comes back to this screen, ready to go out again or to be asked for new
+                            proposals.
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="card-footer d-flex justify-content-end">
                 <button type="submit" class="btn btn-primary">Send proposals</button>

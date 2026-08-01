@@ -156,6 +156,15 @@ else
                 </div>
 
                 @* Readable with the card shut, because it is what decides whether to open it. *@
+                @if (item.RespondBy is { } by)
+                {
+                    <span class="badge @(item.RespondByHasPassed ? "bg-warning-lt" : "bg-secondary-lt")"
+                          title="@(item.RespondByHasPassed
+                                   ? "The date supervisors had to answer by has passed"
+                                   : "Supervisors have until this date to answer")">
+                        @(item.RespondByHasPassed ? "Was due" : "Due") @by.ToString("d MMM, HH:mm")
+                    </span>
+                }
                 <span class="badge bg-primary-lt">
                     @item.Willing.Count() willing
                 </span>

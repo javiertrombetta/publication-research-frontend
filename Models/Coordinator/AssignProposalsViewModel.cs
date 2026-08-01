@@ -180,5 +180,18 @@ namespace ResearchPublicationManagementSystem.Models
         public IEnumerable<SupervisorInvitationDto> Willing => Invitations.Where(i => i.IsSelected);
 
         public IEnumerable<SupervisorInvitationDto> AwaitingReply => Invitations.Where(i => !i.IsSelected);
+
+        /// <summary>
+        /// When this round runs out, in the reader's own time, and null where the coordinator set
+        /// no date. Read off the invitations because that is where it lives: every invitation in
+        /// one send carries the same date, so the earliest is the round's.
+        /// </summary>
+        public DateTime? RespondBy => Invitations
+            .Where(i => i.RespondBy is not null)
+            .Select(i => i.RespondBy!.Value.ToLocalTime())
+            .DefaultIfEmpty()
+            .Min() is var earliest && earliest == default ? null : earliest;
+
+        public bool RespondByHasPassed => RespondBy is { } by && by < DateTime.Now;
     }
 }
