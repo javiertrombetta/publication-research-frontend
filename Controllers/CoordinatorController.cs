@@ -543,9 +543,9 @@ namespace ResearchPublicationManagementSystem.Controllers
             return RedirectToAction(nameof(Evaluation_after_committee));
         }
 
-
-        [HttpGet]
-        public IActionResult assigning_committee_members() => View();
+        // Left over from the scaffold: an action that returned a view nobody ever wrote, so the
+        // only thing it could do was throw. Appointing an evaluation committee is the
+        // administrator's step and lives on AdminController, and nothing here linked to this.
 
         // ---------- Helpers ----------
 
@@ -601,6 +601,17 @@ namespace ResearchPublicationManagementSystem.Controllers
             // The whole queue, not this page of it: the count above the list is what tells a
             // coordinator how much is waiting, and a figure capped at the page size would be wrong.
             model.TotalCount = containers.Data?.TotalCount ?? 0;
+
+            // And how much is waiting on the other ethics screen. Asked for by size alone, because
+            // the menu has one Ethics decisions entry for two queues and work in the other one
+            // would otherwise sit unseen until somebody happened to look at the dashboard.
+            var otherSteps = stage == EthicsStage.AfterHeadOfDepartment
+                ? EthicsSteps.CoordinatorFirstReview
+                : EthicsSteps.CoordinatorFinalDecision;
+
+            var other = await containersApi.GetAllAsync(
+                coordinatorId: CurrentUserId(), ethicsSteps: otherSteps, page: 1, pageSize: 1);
+            model.OtherQueueCount = other.Data?.TotalCount ?? 0;
 
             var candidates = (containers.Data?.Items ?? []).ToList();
 

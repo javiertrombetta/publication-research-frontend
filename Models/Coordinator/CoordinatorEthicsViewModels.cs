@@ -28,6 +28,23 @@ namespace ResearchPublicationManagementSystem.Models
         /// <summary>Which of the coordinator's two ethics steps this screen is showing.</summary>
         public string Stage { get; set; } = string.Empty;
 
+        public bool IsFinalDecision => Stage == "AfterHeadOfDepartment";
+
+        /// <summary>
+        /// How much is waiting on the coordinator's other ethics screen.
+        ///
+        /// The menu has one Ethics decisions entry and the coordinator has two ethics queues, so
+        /// work sitting in the other one could go unseen for as long as nobody thought to look at
+        /// the dashboard. Each screen says when the other has something on it.
+        /// </summary>
+        public int OtherQueueCount { get; set; }
+
+        public string OtherQueueAction =>
+            IsFinalDecision ? "Ethic_review_aftersupervisor" : "Ethic_review_afters_headofdepartment";
+
+        public string OtherQueueName =>
+            IsFinalDecision ? "Ethics awaiting you" : "Final ethics decision";
+
         public bool LoadFailed { get; set; }
     }
 
