@@ -118,7 +118,8 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         bool S3SecretKeySet,
         bool S3ForcePathStyle,
         string AzureContainer,
-        bool AzureConnectionStringSet)
+        bool AzureConnectionStringSet,
+        int FilesElsewhere = 0)
     {
         public bool IsLocal => Provider == "local";
         public bool IsDatabase => Provider == "database";
@@ -148,6 +149,9 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         string? AzureConnectionString);
 
     public record StorageCheckResultDto(bool Reachable, string Message);
+
+    /// <summary>What one run of the copy did. Remaining above zero means run it again.</summary>
+    public record StorageMigrationResultDto(int Moved, int Remaining, IReadOnlyList<string> Problems);
 
     public record UpdateUploadSettingsRequestDto(int MaxMegabytes, string AllowedExtensions);
 
