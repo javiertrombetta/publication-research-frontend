@@ -31,20 +31,39 @@ public class ProposalsApiClient(HttpClient httpClient) : ApiClientBase(httpClien
     /// </param>
     public Task<ApiResult<PagedResultDto<ProposalWithInvitationsDto>>> GetForCoordinatorAsync(
         int page = 1, bool awaitingAllocation = false, int pageSize = Paging.DefaultPageSize,
+        string? sort = null, bool descending = false, string? search = null,
         CancellationToken ct = default) =>
         GetAsync<PagedResultDto<ProposalWithInvitationsDto>>(
-            $"api/proposals/for-coordinator?page={Math.Max(1, page)}&pageSize={pageSize}&awaitingAllocation={awaitingAllocation}", ct);
+            $"api/proposals/for-coordinator?page={Math.Max(1, page)}&pageSize={pageSize}"
+            + $"&awaitingAllocation={awaitingAllocation}{Sorting(sort, descending)}{Search(search)}", ct);
 
     /// <summary>Every proposal from the students of the department this person heads.</summary>
     public Task<ApiResult<PagedResultDto<ProposalWithInvitationsDto>>> GetInMyDepartmentAsync(
-        int page = 1, int pageSize = Paging.DefaultPageSize, CancellationToken ct = default) =>
+        int page = 1, int pageSize = Paging.DefaultPageSize,
+        string? sort = null, bool descending = false, string? search = null,
+        CancellationToken ct = default) =>
         GetAsync<PagedResultDto<ProposalWithInvitationsDto>>(
-            $"api/proposals/in-my-department?page={Math.Max(1, page)}&pageSize={pageSize}", ct);
+            $"api/proposals/in-my-department?page={Math.Max(1, page)}&pageSize={pageSize}"
+            + $"{Sorting(sort, descending)}{Search(search)}", ct);
 
-    public Task<ApiResult<PagedResultDto<ProposalDto>>> GetPendingAsync(
-        int page = 1, int pageSize = Paging.DefaultPageSize, CancellationToken ct = default) =>
-        GetAsync<PagedResultDto<ProposalDto>>(
-            $"api/proposals/pending?page={Math.Max(1, page)}&pageSize={pageSize}", ct);
+    public Task<ApiResult<PagedResultDto<ProposalWithInvitationsDto>>> GetPendingAsync(
+        int page = 1, int pageSize = Paging.DefaultPageSize,
+        string? sort = null, bool descending = false, string? search = null, CancellationToken ct = default) =>
+        GetAsync<PagedResultDto<ProposalWithInvitationsDto>>(
+            $"api/proposals/pending?page={Math.Max(1, page)}&pageSize={pageSize}"
+            + $"{Sorting(sort, descending)}{Search(search)}", ct);
+
+    /// <summary>
+    /// The sort, as the API names it. Left off entirely when nothing is chosen, so the endpoint
+    /// applies its own default rather than being told to sort by an empty column.
+    /// </summary>
+    private static string Sorting(string? sort, bool descending) =>
+        string.IsNullOrWhiteSpace(sort)
+            ? string.Empty
+            : $"&sortBy={Uri.EscapeDataString(sort)}&sortDescending={descending.ToString().ToLowerInvariant()}";
+
+    private static string Search(string? search) =>
+        string.IsNullOrWhiteSpace(search) ? string.Empty : $"&search={Uri.EscapeDataString(search.Trim())}";
 
     public Task<ApiResult<object?>> SendToSupervisorsAsync(SendToSupervisorsRequestDto request, CancellationToken ct = default) =>
         PostJsonAsync<object?>("api/proposals/send-to-supervisors", request, ct);

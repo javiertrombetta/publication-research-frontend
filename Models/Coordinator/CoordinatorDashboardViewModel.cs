@@ -16,7 +16,7 @@ namespace ResearchPublicationManagementSystem.Models
         /// Submitted proposals no supervisor has been invited to yet. These are the coordinator's
         /// most immediate task: nothing else in the pipeline moves until they go out.
         /// </summary>
-        public IReadOnlyList<ProposalDto> ProposalsAwaitingDispatch { get; set; } = [];
+        public IReadOnlyList<ProposalWithInvitationsDto> ProposalsAwaitingDispatch { get; set; } = [];
 
         /// <summary>
         /// How many there are in total, not how many are on this page. The dashboard states

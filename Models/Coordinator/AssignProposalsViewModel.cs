@@ -14,23 +14,23 @@ namespace ResearchPublicationManagementSystem.Models
         /// only appear when there is somewhere to go.
         /// </summary>
         public PagerViewModel? Pager { get; set; }
-        public IReadOnlyList<ProposalDto> Proposals { get; set; } = [];
+        /// <summary>
+        /// Each proposal carries its student's name, so the screen needs nothing else to head a
+        /// group. It used to be matched against a separate page of the coordinator's publications,
+        /// which meant any student past the first page of that lookup was headed "Unknown student".
+        /// </summary>
+        public IReadOnlyList<ProposalWithInvitationsDto> Proposals { get; set; } = [];
 
         public IReadOnlyList<UserListItemDto> Supervisors { get; set; } = [];
-
-        /// <summary>
-        /// The coordinator's publications, used only to put a student's name against a proposal. A
-        /// ProposalDto carries its container's id and nothing about who wrote it.
-        /// </summary>
-        public IReadOnlyList<PublicationContainerDto> Containers { get; set; } = [];
 
         public bool LoadFailed { get; set; }
 
         public string StudentFor(Guid containerId) =>
-            Containers.FirstOrDefault(c => c.Id == containerId)?.StudentName ?? "Unknown student";
+            Proposals.FirstOrDefault(p => p.PublicationContainerId == containerId)?.StudentName
+            ?? "Unknown student";
 
         /// <summary>Proposals grouped by student, since they are sent out per student.</summary>
-        public IEnumerable<IGrouping<Guid, ProposalDto>> ByPublication =>
+        public IEnumerable<IGrouping<Guid, ProposalWithInvitationsDto>> ByPublication =>
             Proposals.GroupBy(p => p.PublicationContainerId);
     }
 
@@ -46,6 +46,43 @@ namespace ResearchPublicationManagementSystem.Models
         public List<SupervisorSelectionItem> Items { get; set; } = [];
 
         public bool LoadFailed { get; set; }
+
+        /// <summary>
+        /// What the coordinator typed, and how the list is ordered. Both travel in the query string
+        /// and both are applied by the API, before the page is cut. Searching or sorting the ten
+        /// rows already fetched would answer a different question from the one being asked: the
+        /// proposal somebody is looking for is usually the one not on this page.
+        /// </summary>
+        public string? Search { get; set; }
+        public string? Sort { get; set; }
+        public bool Descending { get; set; }
+
+        /// <summary>How many matched altogether, which is what a search result is judged by.</summary>
+        public int TotalCount { get; set; }
+
+        public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
+
+        /// <summary>The state every sort link and page link has to carry, or it drops the search.</summary>
+        public Dictionary<string, string?> RouteValues()
+        {
+            var values = new Dictionary<string, string?>();
+            if (HasSearch) values["search"] = Search;
+            if (!string.IsNullOrWhiteSpace(Sort)) values["sort"] = Sort;
+            if (Descending) values["desc"] = "true";
+            return values;
+        }
+
+        public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
+        {
+            Controller = "Coordinator",
+            Action = "select_a_proposal_forstudent",
+            Column = column,
+            Label = label,
+            CurrentSort = Sort,
+            CurrentDescending = Descending,
+            DescendingFirst = descendingFirst,
+            RouteValues = HasSearch ? new Dictionary<string, string?> { ["search"] = Search } : []
+        };
     }
 
     public class SupervisorSelectionItem
