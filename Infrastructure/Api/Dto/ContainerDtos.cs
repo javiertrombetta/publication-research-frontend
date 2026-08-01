@@ -33,8 +33,8 @@ public record PublicationContainerDto(
     string? EthicsAwaitingRole = null,
     /// <summary>
     /// Whose turn it is on the research paper, or null when nothing is pending. UnderReview covers
-    /// four separate waits — the supervisor reading it, an admin appointing a committee, the
-    /// committee voting, the coordinator deciding — so the status alone cannot say. Carries
+    /// four separate waits: the supervisor reading it, an admin appointing a committee, the
+    /// committee voting, the coordinator deciding, so the status alone cannot say. Carries
     /// RoleNames.EvaluationCommittee where the wait belongs to the committee rather than one role.
     /// </summary>
     string? PaperAwaitingRole = null,
@@ -63,8 +63,8 @@ public record PublicationContainerDto(
 
     /// <summary>
     /// Mirrors the backend rule in ContainerService.DeleteOwnAsync: a publication can only be
-    /// discarded while it is still empty, so a student can undo one created by mistake.
-    /// The backend enforces this independently — this only decides whether to offer the action.
+    /// discarded while it is still empty, so a student can undo one created by mistake. The backend
+    /// enforces this independently. This only decides whether to offer the action.
     /// </summary>
     public bool CanBeDeleted => ProposalCount == 0 && CurrentPipeline == PipelineStage.ResearchProposals;
 
@@ -83,7 +83,7 @@ public record PublicationContainerDto(
 public record ActivityHistoryEntryDto(
     Guid Id,
     string ActorName,
-    /// <summary>The capacity the actor acted in — Coordinator, Supervisor, and so on.</summary>
+    /// <summary>The capacity the actor acted in: Coordinator, Supervisor, and so on.</summary>
     string? ActorRole,
     string? OnBehalfOfName,
     string Action,

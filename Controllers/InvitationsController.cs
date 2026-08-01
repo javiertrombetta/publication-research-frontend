@@ -9,8 +9,8 @@ namespace ResearchPublicationManagementSystem.Controllers
 {
     /// <summary>
     /// Invitations: how someone gets an account when self-registration is closed, and the only
-    /// route that ever existed for external committee members — they have no institutional
-    /// address, so no email domain could say what they are.
+    /// route that ever existed for external committee members. They have no institutional address,
+    /// so no email domain could say what they are.
     ///
     /// Sending and withdrawing are an administrator's. Accepting is deliberately anonymous: the
     /// person doing it has no account yet, which is the point.
@@ -85,8 +85,8 @@ namespace ResearchPublicationManagementSystem.Controllers
         // ---------- What the invited person sees ----------
 
         /// <summary>
-        /// Anonymous by necessity — this person has no account yet. The token in the link is the
-        /// only credential, and it is unguessable, single-use and time-limited.
+        /// Anonymous by necessity, since this person has no account yet. The token in the link is
+        /// the only credential, and it is unguessable, single-use and time-limited.
         /// </summary>
         [HttpGet("/accept-invitation")]
         [AllowAnonymous]

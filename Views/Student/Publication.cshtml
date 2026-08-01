@@ -1,5 +1,5 @@
 @model PublicationDetailViewModel
-@* For the EthicsStatus constants — imported here rather than in _ViewImports so the DTO
+@* For the EthicsStatus constants, imported here rather than in _ViewImports so the DTO
    namespace doesn't shadow anything in the other ~90 views. *@
 @using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 @{
@@ -40,7 +40,7 @@
             </div>
         </div>
 
-        @* Only offered while the publication is still empty — see PublicationContainerDto.CanBeDeleted. *@
+        @* Only offered while the publication is still empty, see PublicationContainerDto.CanBeDeleted. *@
         @if (container.CanBeDeleted)
         {
             <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#delete-publication-modal">
@@ -131,8 +131,13 @@
         <h3 class="m-0 text-secondary">Research Proposals</h3>
         @if (container.CurrentPipeline == 1)
         {
-            <a asp-controller="Student" asp-action="Create_proposals" asp-route-id="@container.Id" class="btn btn-sm btn-primary">
-                @(Model.Proposals.Count > 0 ? "Continue" : "Get started")
+            @* Once the proposals have been submitted they are locked and with the coordinator, so
+               there is nothing to carry on with. Inviting the student to continue something they
+               have finished and cannot change says the wrong thing about where they are. *@
+            <a asp-controller="Student" asp-action="Create_proposals" asp-route-id="@container.Id"
+               class="btn btn-sm @(Model.ProposalsAreSubmitted ? "btn-outline-primary" : "btn-primary")">
+                @(Model.ProposalsAreSubmitted ? "View proposals"
+                    : Model.Proposals.Count > 0 ? "Continue" : "Get started")
             </a>
         }
     </div>
@@ -182,7 +187,8 @@
                         Start declaration
                     </a>
                 }
-                else if (Model.EthicsApproval.Status == EthicsStatus.PendingUpload)
+                else if (Model.EthicsApproval.Status == EthicsStatus.PendingUpload
+                         && !Model.EthicsDocumentsAreComplete)
                 {
                     <a asp-controller="Student" asp-action="Upload_Ethic_file" asp-route-id="@container.Id" class="btn btn-sm btn-primary">
                         Upload documents
@@ -190,8 +196,13 @@
                 }
                 else if (Model.EthicsApproval.Status != EthicsStatus.PendingSupervisorDecision)
                 {
-                    @* Nothing to view while the declaration is still with the supervisor —
-                       no documents have been asked for yet. *@
+                    @* Nothing to view while the declaration is still with the supervisor, because
+                       no documents have been asked for yet.
+
+                       Everything else lands here, including a publication still marked as awaiting
+                       uploads whose documents have all arrived. The status stays that way until a
+                       reviewer looks at them, but the student has nothing left to send, so asking
+                       them to upload would be asking for work that is already done. *@
                     <a asp-controller="Student" asp-action="Upload_Ethic_file" asp-route-id="@container.Id" class="btn btn-sm btn-outline-primary">
                         View documents
                     </a>
@@ -244,7 +255,7 @@
         {
             @* "Continue" only while there is something to continue. Once the paper has been
                submitted it is with a supervisor, a committee or the coordinator, and once it has
-               been accepted the work is finished — inviting the student to carry on with a paper
+               been accepted the work is finished, and inviting the student to carry on with a paper
                nobody can change any more says the wrong thing about where they are. What they
                want then is to read it, which is what the same screen does. *@
             var paperIsOpen = Model.Publication is null
@@ -275,7 +286,7 @@
                 <span class="badge @StatusBadge(Model.Publication.Status) mt-1">@Humanise(Model.Publication.Status)</span>
 
                 @* Only worth saying once the decision has been made, and worded as the outcome
-                   rather than repeated as a status — the badge above already says "Published". *@
+                   rather than repeated as a status, since the badge above already says "Published". *@
                 @if (Model.Publication.IsPublished)
                 {
                     <p class="text-secondary mt-2 mb-0">
@@ -296,8 +307,8 @@
 @* The final step, and the student's alone: an accepted paper only reaches the public catalogue
    if its author says so.
 
-   !isDone is what makes this a one-off. Declining leaves the paper Accepted and unpublished —
-   the same shape as "not decided yet" — so the container's own Completed status is the only
+   !isDone is what makes this a one-off. Declining leaves the paper Accepted and unpublished,
+   the same shape as "not decided yet", so the container's own Completed status is the only
    thing that records that the question was already answered. *@
 @if (!isDone && Model.Publication is { Status: PublicationStatus.Accepted, IsPublished: false })
 {
@@ -306,7 +317,7 @@
             <h3 class="mb-1">Your paper has been accepted</h3>
             <p class="text-secondary">
                 You decide whether it appears in the public catalogue, where anyone can find and
-                read it. Keeping it out does not affect its acceptance — the paper stays on your
+                read it. Keeping it out does not affect its acceptance. The paper stays on your
                 record either way. This decision closes the publication, so make it when you're ready.
             </p>
 
@@ -329,7 +340,7 @@
                     <h3 class="mb-2">Publish to the public catalogue?</h3>
                     <div class="text-secondary">
                         Your paper and its abstract become publicly readable, and this can't be
-                        undone from here — only an Administrator can remove a published paper.
+                        undone from here. Only an Administrator can remove a published paper.
                     </div>
                 </div>
                 <div class="modal-footer">

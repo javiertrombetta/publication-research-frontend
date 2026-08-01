@@ -22,7 +22,7 @@
                             <!-- Minimal Text-Only Header with Context -->
                             <div class="mb-4 px-2">
                                 <h1 class="h1 m-0 fw-bold text-dark">Ethics screening</h1>
-                                <p class="text-secondary small m-0 mt-1">Work through all 20 questions before declaring — they are there to help you judge whether your research needs ethics approval. Your answers to them are not recorded; only the declaration at the bottom is.</p>
+                                <p class="text-secondary small m-0 mt-1">Work through all 20 questions before declaring. They are there to help you judge whether your research needs ethics approval. Your answers to them are not recorded; only the declaration at the bottom is.</p>
                             </div>
 
                             <!-- Interactive Screening Assessment Container -->
@@ -444,7 +444,7 @@
                                         </label>
                                         <label class="form-selectgroup-item flex-fill">
                                             <input type="radio" asp-for="Response" value="Unsure" class="form-selectgroup-input">
-                                            <div class="form-selectgroup-label d-flex align-items-center p-2">I'm not sure — show me guidance</div>
+                                            <div class="form-selectgroup-label d-flex align-items-center p-2">I'm not sure, show me guidance</div>
                                         </label>
                                     </div>
                                     <span asp-validation-for="Response" class="text-danger d-block mt-2"></span>
@@ -517,7 +517,7 @@
 
                 var problems = [];
                 if (missing.length) {
-                    problems.push('Answer all ' + QUESTION_COUNT + ' screening questions — ' +
+                    problems.push('Answer all ' + QUESTION_COUNT + ' screening questions: ' +
                         missing.length + (missing.length === 1 ? ' is' : ' are') + ' still unanswered.');
                 }
                 if (!declared) {

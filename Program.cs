@@ -37,10 +37,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     });
 
-// Secure by default: every endpoint requires an authenticated user unless it explicitly opts
-// out with [AllowAnonymous]. Without this, a controller that simply forgets [Authorize] is
-// wide open — which is how the admin, users, settings and audit-log pages were reachable
-// anonymously. New controllers are now locked down until someone deliberately opens them.
+// Secure by default: every endpoint requires an authenticated user unless it explicitly opts out
+// with [AllowAnonymous]. Without this, a controller that simply forgets [Authorize] is wide open,
+// which is how the admin, users, settings and audit-log pages were reachable anonymously. New
+// controllers are now locked down until someone deliberately opens them.
 builder.Services.AddAuthorization(options =>
 {
     options.FallbackPolicy = new AuthorizationPolicyBuilder()
@@ -48,18 +48,18 @@ builder.Services.AddAuthorization(options =>
         .Build();
 });
 
-// Behind a TLS-terminating proxy — which is every PaaS, Render included — the request reaches
-// Kestrel over plain HTTP. Without this the app believes it is being served insecurely, and
+// Behind a TLS-terminating proxy, which is every PaaS, Render included. The request reaches Kestrel
+// over plain HTTP. Without this the app believes it is being served insecurely, and
 // UseHttpsRedirection below sends the browser to https, which the proxy forwards back as http,
 // forever. It also keeps the auth cookie's SameAsRequest secure policy from downgrading.
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
 
-    // The platform's edge is the only path into the container and its proxy address is not known
-    // in advance, so the headers are trusted whatever their source — the usual PaaS pattern.
-    // KnownNetworks rather than KnownIPNetworks: this project targets net8.0, where the
-    // newer property does not exist yet.
+    // The platform's edge is the only path into the container and its proxy address is not known in
+    // advance, so the headers are trusted whatever their source, the usual PaaS pattern.
+    // KnownNetworks rather than KnownIPNetworks: this project targets net8.0, where the newer
+    // property does not exist yet.
     options.KnownNetworks.Clear();
     options.KnownProxies.Clear();
 });
@@ -79,9 +79,9 @@ builder.Services.AddScoped<ForceReauthFilter>();
 builder.Services.AddScoped<ApiUnavailableFilter>();
 
 // AuthApiClient deliberately carries no BearerTokenHandler: that handler depends on
-// IAuthCookieService, which depends on AuthApiClient for token refresh — attaching the handler
-// here would be a DI cycle. Its one authenticated endpoint (change-password) takes the token
-// as an explicit parameter instead.
+// IAuthCookieService, which depends on AuthApiClient for token refresh, and attaching the handler
+// here would be a DI cycle. Its one authenticated endpoint (change-password) takes the token as an
+// explicit parameter instead.
 builder.Services.AddHttpClient<AuthApiClient>((sp, client) =>
 {
     client.BaseAddress = new Uri(sp.GetRequiredService<IOptions<ApiOptions>>().Value.BaseUrl);
@@ -102,7 +102,7 @@ builder.Services.AddHttpClient<AdminApiClient>(ConfigureApiClient).AddHttpMessag
 builder.Services.AddHttpClient<SettingsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
 
 // The handler is needed for the administrator's calls, which the API restricts to Admin. It is
-// harmless on the two anonymous ones — an invited person has no token, so nothing is attached and
+// harmless on the two anonymous ones. An invited person has no token, so nothing is attached and
 // nothing is refreshed.
 builder.Services.AddHttpClient<InvitationsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
 builder.Services.AddHttpClient<NotificationsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
@@ -130,14 +130,14 @@ if (app.Environment.IsDevelopment())
     // visible on the next navigation.
     //
     // Deliberately not applied to css/js. It was, and it made every navigation re-download the
-    // whole stylesheet — half a megabyte of Tabler — so the browser painted unstyled HTML and
-    // everything jumped into place once it arrived. Assets are already versioned by
-    // asp-append-version, whose query string changes the moment a file does, so caching them
-    // cannot serve anything stale.
+    // whole stylesheet, half a megabyte of Tabler, so the browser painted unstyled HTML and
+    // everything jumped into place once it arrived. Assets are already versioned by asp-append-
+    // version, whose query string changes the moment a file does, so caching them cannot serve
+    // anything stale.
     app.Use(async (context, next) =>
     {
-        // Set on response start so it wins over headers added later (e.g. by UseStaticFiles),
-        // and so the content type is known — which is what tells a page from an asset.
+        // Set on response start so it wins over headers added later (e.g. by UseStaticFiles), and
+        // so the content type is known, which is what tells a page from an asset.
         context.Response.OnStarting(() =>
         {
             var isDocument = context.Response.ContentType?.Contains("text/html", StringComparison.OrdinalIgnoreCase) == true;

@@ -3,9 +3,9 @@ using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
 namespace ResearchPublicationManagementSystem.Infrastructure.Api;
 
 /// <summary>
-/// Invitations. Sending, listing and withdrawing are an administrator's; previewing and
-/// accepting are what the invited person does, and are anonymous — by definition they have no
-/// account yet, so those two calls carry no bearer token.
+/// Invitations. Sending, listing and withdrawing are an administrator's; previewing and accepting
+/// are what the invited person does, and are anonymous, because by definition they have no account
+/// yet, so those two calls carry no bearer token.
 /// </summary>
 public class InvitationsApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
 {

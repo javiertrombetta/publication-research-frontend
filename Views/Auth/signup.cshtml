@@ -49,7 +49,7 @@
                         <label asp-for="Email" class="form-label mb-2">Email address</label>
                         <input asp-for="Email" id="signup-email" class="form-control" placeholder="john.doe@aisstudent.ac.nz" />
                         <span asp-validation-for="Email" class="text-danger"></span>
-                        <small class="text-secondary d-block mt-1">Use your @@aisstudent.ac.nz or @@ais.ac.nz address — your role is assigned from the domain.</small>
+                        <small class="text-secondary d-block mt-1">Use your @@aisstudent.ac.nz or @@ais.ac.nz address. Your role is assigned from the domain.</small>
                     </div>
 
                     <div id="student-fields" class="d-none">
@@ -111,8 +111,8 @@
 
 @section Scripts {
     <script>
-        // Purely a UX affordance — the backend derives the role from the email domain
-        // server-side regardless of what's shown/hidden here.
+        // Purely a UX affordance. The backend derives the role from the email domain server-side
+        // regardless of what's shown/hidden here.
         (function () {
             var emailInput = document.getElementById('signup-email');
             var studentFields = document.getElementById('student-fields');

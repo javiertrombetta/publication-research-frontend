@@ -3,8 +3,8 @@ using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
 namespace ResearchPublicationManagementSystem.Models
 {
     /// <summary>
-    /// The publications waiting on the coordinator at one point of the ethics workflow. Both of
-    /// the coordinator's ethics screens use this — what differs is which decision each offers.
+    /// The publications waiting on the coordinator at one point of the ethics workflow. Both of the
+    /// coordinator's ethics screens use this. What differs is which decision each offers.
     /// </summary>
     public class CoordinatorEthicsViewModel
     {
@@ -44,11 +44,11 @@ namespace ResearchPublicationManagementSystem.Models
     ///
     /// Papers they can act on are separated from papers that are merely moving, because those are
     /// different things to a person and the screen used to treat them as one. It listed everything
-    /// whose paper was under review and offered the same decision form on each — but the API
-    /// refuses that decision until the evaluation committee has finished, so most of the buttons
-    /// returned an error. Hiding the rest would be worse: a paper stuck for three weeks with a
-    /// committee that has not voted is precisely the one a coordinator needs to see, and it is
-    /// theirs to chase. So both are shown, and only one of them has a form.
+    /// whose paper was under review and offered the same decision form on each, but the API refuses
+    /// that decision until the evaluation committee has finished, so most of the buttons returned
+    /// an error. Hiding the rest would be worse: a paper stuck for three weeks with a committee
+    /// that has not voted is precisely the one a coordinator needs to see, and it is theirs to
+    /// chase. So both are shown, and only one of them has a form.
     /// </summary>
     public class CoordinatorPapersViewModel
     {
@@ -91,7 +91,7 @@ namespace ResearchPublicationManagementSystem.Models
 
         public PublicationDto Paper { get; set; } = null!;
 
-        /// <summary>Every review recorded so far — the supervisor's and the committee's.</summary>
+        /// <summary>Every review recorded so far: the supervisor's and the committee's.</summary>
         public IReadOnlyList<ReviewDto> Reviews { get; set; } = [];
     }
 }

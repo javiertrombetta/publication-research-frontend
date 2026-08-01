@@ -6,10 +6,10 @@ namespace ResearchPublicationManagementSystem.Models
     /// The ethics documents this publication has been asked for.
     ///
     /// The list is not fixed. It used to be three named fields, but an administrator now decides
-    /// what the ethics stage asks for, and each publication keeps the list it was given — so a
-    /// student halfway through is never asked for a document that did not exist when they
-    /// started. The form is therefore built from <see cref="Required"/> rather than from
-    /// properties known at compile time.
+    /// what the ethics stage asks for, and each publication keeps the list it was given, so a
+    /// student halfway through is never asked for a document that did not exist when they started.
+    /// The form is therefore built from <see cref="Required"/> rather than from properties known at
+    /// compile time.
     /// </summary>
     public class UploadEthicsDocumentsViewModel
     {

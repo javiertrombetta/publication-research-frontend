@@ -1,4 +1,4 @@
-# Research Publication Management System — Frontend
+# Research Publication Management System: Frontend
 
 The web application for Auckland Institute of Studies' research publication process: students
 submit research proposals, work through ethics approval, and submit a research paper, which
@@ -22,8 +22,8 @@ role claims. A `DelegatingHandler` attaches the bearer token to every outgoing A
 refreshes it shortly before it expires, and retries once on a `401`.
 
 Authorisation is deny-by-default: a global fallback policy requires an authenticated user, and
-anything reachable without an account — the public catalogue, sign-in, sign-up, password
-recovery, invitation acceptance, the privacy policy — says so explicitly with `[AllowAnonymous]`.
+anything reachable without an account, whether the public catalogue, sign-in, sign-up, password
+recovery, invitation acceptance or the privacy policy, says so explicitly with `[AllowAnonymous]`.
 
 ```
 Browser ──cookie──▶ ASP.NET Core MVC (this repo) ──Bearer JWT──▶ REST API ──▶ MySQL
@@ -43,8 +43,8 @@ Browser ──cookie──▶ ASP.NET Core MVC (this repo) ──Bearer JWT─�
 | `Api:BaseUrl` | Where the backend API lives. The only setting that has to be right for the application to work at all. |
 | `Institution:*` | Fallback only. The institution's name, contact addresses and privacy policy are administrator-editable settings held by the API; these values are used solely while the API is unreachable, so the footer degrades rather than disappearing. |
 
-Everything else an administrator would want to change — committee sizes, ethics documents,
-password rules, deadlines, upload limits, registration policy, SMTP — lives in the API and is
+Everything else an administrator would want to change, from committee sizes and ethics documents to
+password rules, deadlines, upload limits, registration policy and SMTP, lives in the API and is
 edited from **System settings** in the interface, not from a configuration file.
 
 ## Running it
@@ -68,7 +68,7 @@ dotnet run --launch-profile http -- --Api:BaseUrl=https://your-api-host
 
 A development or shared testing API comes up with a demonstration dataset already in it: an account
 for every role, and publications parked at every point in the three pipelines where somebody has to
-act. Every account uses the password `DevTest123!` — `student.test@aisstudent.ac.nz`,
+act. Every account uses the password `DevTest123!`: `student.test@aisstudent.ac.nz`,
 `supervisor.test@ais.ac.nz`, `coordinator.test@ais.ac.nz`, `hod.test@ais.ac.nz`,
 `internal.test@ais.ac.nz`, `external.test@ais.ac.nz`, `admin.test@ais.ac.nz`. The API's README lists
 the rest and says what each one has waiting.
@@ -85,14 +85,14 @@ All six operational roles are connected to the API end to end.
 | Sign in, sign up, email verification, password recovery and reset | Connected |
 | Change password (every role), with the account lockout the API enforces | Connected |
 | Public catalogue and publication detail | Connected |
-| Student — publications, proposals, ethics, research paper, publication decision | Connected |
-| Coordinator — proposal dispatch, supervisor selections, both ethics reviews, paper decision | Connected |
-| Supervisor — proposals, ethics decision and document checks, paper review | Connected |
-| Head of Department — department oversight and ethics review | Connected |
-| Committee members, internal and external — assignments and evaluation | Connected |
-| Admin — dashboard, users, committee assignment, audit log | Connected |
-| Admin — system settings and invitations | Connected |
-| Notifications — the top bar's bell, the list, and marking as read | Connected |
+| Student: publications, proposals, ethics, research paper, publication decision | Connected |
+| Coordinator: proposal dispatch, supervisor selections, both ethics reviews, paper decision | Connected |
+| Supervisor: proposals, ethics decision and document checks, paper review | Connected |
+| Head of Department: department oversight and ethics review | Connected |
+| Committee members, internal and external: assignments and evaluation | Connected |
+| Admin: dashboard, users, committee assignment, audit log | Connected |
+| Admin: system settings and invitations | Connected |
+| Notifications: the top bar's bell, the list, and marking as read | Connected |
 | Profile and profile photo, all roles | Connected |
 
 Nothing is left as a laid-out screen with sample data in it. Every controller here reaches the API,
@@ -102,11 +102,11 @@ and the three that could not were removed rather than left to look finished:
   role had a dashboard of its own. Every one of their screens now exists, with real data, in the
   place its role actually starts from.
 - **`CategoriesController`** had nothing behind it. Publication categories were a table no endpoint
-  exposed and nothing ever wrote to, doing a job `ResearchArea` already does end to end — on a
+  exposed and nothing ever wrote to, doing a job `ResearchArea` already does end to end, on a
   student's profile, on a paper's metadata, and as a filter in the public catalogue. The table has
   been dropped as well, so the question does not outlive the screen.
 - **`committee_review` on Coordinator, Supervisor and Head of Department** were three copies of a
-  screen that belongs to committee members, and none of them had a view — reaching one produced an
+  screen that belongs to committee members, and none of them had a view. Reaching one produced an
   error, not an empty page. The real one is under `ExternalSupervisor`, which serves both committee
   roles.
 
@@ -116,14 +116,14 @@ A student may run several publications at once, each with its own proposals, eth
 paper. Every pipeline route carries the publication's id and is guarded by both ownership and
 stage, so a URL cannot be edited into someone else's work, or into a stage that has not opened.
 
-1. **Research proposals** — up to three, submitted together. A coordinator sends them to
+1. **Research proposals**: up to three, submitted together. A coordinator sends them to
    supervisors, a supervisor picks one, and the coordinator assigns them.
-2. **Ethics approval** — a screening questionnaire followed by a declaration, then a supervisor
+2. **Ethics approval**: a screening questionnaire followed by a declaration, then a supervisor
    and a coordinator decide whether documentation is required. Which documents a student is asked
    for is configured by an administrator, and each publication keeps the list it was given.
-3. **Research paper** — drafted, uploaded and submitted, then reviewed by the supervisor and an
+3. **Research paper**: drafted, uploaded and submitted, then reviewed by the supervisor and an
    evaluation committee before the coordinator accepts it.
-4. **Publication decision** — once accepted, the author alone decides whether the paper appears
+4. **Publication decision**: once accepted, the author alone decides whether the paper appears
    in the public catalogue.
 
 Each publication carries an activity history: every action taken on it, by whom, in what
@@ -172,7 +172,7 @@ wwwroot/              Site CSS and JavaScript, and vendored Tabler and Bootstrap
 
 ## Conventions
 
-- **Statuses** are humanised at the point of display — `InProgress` becomes `In Progress` — and
+- **Statuses** are humanised at the point of display, so `InProgress` becomes `In Progress`, and
   coloured from a single mapping in `Common/DisplayText.cs`, so the same status is the same
   colour on every screen.
 - **Messages**, both flash messages and validation errors, are rendered as toasts from one shared
@@ -184,7 +184,7 @@ wwwroot/              Site CSS and JavaScript, and vendored Tabler and Bootstrap
 - **No Bootstrap JavaScript.** Tabler's `tabler.min.js` does not bundle it, so `data-bs-toggle`
   does nothing here. Tabs are server-rendered links, and confirmations are inline panels toggled
   by a few lines of plain JavaScript. Anything relying on Bootstrap's modal or tab components
-  fails silently — reach for the existing patterns instead.
+  fails silently. Reach for the existing patterns instead.
 - **Rules an administrator controls are not restated here.** Password length and complexity,
   upload size and permitted file types all come from the API, so a form that duplicated them
   would go stale the first time they changed, and would reject input the server would have

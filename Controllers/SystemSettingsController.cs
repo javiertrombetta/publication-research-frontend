@@ -11,8 +11,8 @@ namespace ResearchPublicationManagementSystem.Controllers
     /// The rules the whole system runs by: committee composition, the documents the ethics stage
     /// asks for, what counts as an acceptable password, and where notifications are sent.
     ///
-    /// Each group saves on its own and returns to its own tab. The alternative — one Save for the
-    /// page — would mean a rejected mail server silently discarding an unrelated edit.
+    /// Each group saves on its own and returns to its own tab. The alternative, one Save for the
+    /// whole page, would mean a rejected mail server silently discarding an unrelated edit.
     /// </summary>
     [Authorize(Roles = RoleNames.Admin)]
     public class SystemSettingsController(

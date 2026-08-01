@@ -9,10 +9,9 @@ using ResearchPublicationManagementSystem.Models;
 namespace ResearchPublicationManagementSystem.Controllers
 {
     /// <summary>
-    /// Evaluation committee members. Internal and external members do exactly the same thing —
-    /// the backend gives both the same two endpoints — so one controller serves both rather than
-    /// a duplicate for each. (The name is the team's original; it now covers internal members
-    /// too.)
+    /// Evaluation committee members. Internal and external members do exactly the same thing. The
+    /// backend gives both the same two endpoints, so one controller serves both rather than a
+    /// duplicate for each. (The name is the team's original; it now covers internal members too.)
     ///
     /// A member reads the paper and records one decision. They cannot see other members' votes
     /// before deciding, which is the point of an evaluation committee.

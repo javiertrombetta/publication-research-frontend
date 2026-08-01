@@ -8,8 +8,8 @@ using ResearchPublicationManagementSystem.Models;
 namespace ResearchPublicationManagementSystem.Controllers
 {
     /// <summary>
-    /// The user directory. An administrator grants operational roles — an account signs itself up
-    /// and waits here until someone decides what it is allowed to do — and enables, disables or
+    /// The user directory. An administrator grants operational roles. An account signs itself up
+    /// and waits here until someone decides what it is allowed to do, and enables, disables or
     /// triggers a password reset.
     /// </summary>
     [Authorize(Roles = RoleNames.Admin)]
@@ -84,7 +84,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         }
 
         /// <summary>
-        /// Sends the account a password-reset email. No password is set here — an administrator
+        /// Sends the account a password-reset email. No password is set here. An administrator
         /// never chooses someone else's password.
         /// </summary>
         [HttpPost]
@@ -151,12 +151,12 @@ namespace ResearchPublicationManagementSystem.Controllers
         // ---------- Deleting an account ----------
 
         /// <summary>
-        /// Administrators only, and a reason is required — it is what the audit trail will carry.
-        /// What the backend does is strip the account of personal data and lock it out rather
-        /// than remove the row: every reference to a user is a Restrict foreign key, so a real
-        /// row delete would either be refused or would have to detach a publication from its
-        /// author. The person can no longer sign in and is no longer identifiable; what they did
-        /// remains attributable.
+        /// Administrators only, and a reason is required. It is what the audit trail will carry.
+        /// What the backend does is strip the account of personal data and lock it out rather than
+        /// remove the row: every reference to a user is a Restrict foreign key, so a real row
+        /// delete would either be refused or would have to detach a publication from its author.
+        /// The person can no longer sign in and is no longer identifiable; what they did remains
+        /// attributable.
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]

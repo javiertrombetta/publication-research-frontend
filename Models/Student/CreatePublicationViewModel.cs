@@ -36,7 +36,7 @@ namespace ResearchPublicationManagementSystem.Models
         /// <summary>
         /// Whether this paper is still the student's to change.
         ///
-        /// A draft is, and so is one sent back for revisions — that is what being sent back means.
+        /// A draft is, and so is one sent back for revisions, which is what being sent back means.
         /// Anything else is with somebody: a supervisor reading it, a committee evaluating it, a
         /// coordinator deciding on it, or an outcome already recorded. Editing then would mean
         /// people reviewing a paper that is no longer the one in front of them. The API refuses it

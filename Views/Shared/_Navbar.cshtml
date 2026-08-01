@@ -12,7 +12,7 @@
 
     var (homeController, homeAction) = RoleLanding.For(User);
 
-    // Set by pages rendered without a sidebar — the burger would toggle nothing there.
+    // Set by pages rendered without a sidebar, where the burger would toggle nothing.
     var hasSidebar = ViewData["HideSidebar"] as bool? != true;
 }
 
@@ -34,7 +34,7 @@
                         aria-expanded="true">
 
                     @* Three bars in both states. Only the button behind them changes: filled when
-                       the sidebar is closed, transparent when it is open — see #sidebar-toggle
+                       the sidebar is closed, transparent when it is open, see #sidebar-toggle
                        in site.css. *@
                     <svg xmlns="http://www.w3.org/2000/svg"
                          class="icon rpms-burger"

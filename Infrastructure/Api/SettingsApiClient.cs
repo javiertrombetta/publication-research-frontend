@@ -3,9 +3,9 @@ using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
 namespace ResearchPublicationManagementSystem.Infrastructure.Api;
 
 /// <summary>
-/// System-wide settings. Administrators only, and grouped rather than key-by-key: the API
-/// validates each group as a whole, so a combination that is individually plausible but jointly
-/// impossible — more approvals than committee members — is rejected before it is stored.
+/// System-wide settings. Administrators only, and grouped rather than key-by-key: the API validates
+/// each group as a whole, so a combination that is individually plausible but jointly impossible,
+/// such as more approvals than committee members, is rejected before it is stored.
 /// </summary>
 public class SettingsApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
 {

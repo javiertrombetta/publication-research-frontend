@@ -5,7 +5,7 @@ namespace ResearchPublicationManagementSystem.Models
     /// <summary>Listing of every publication the student has started. A student may run several at once.</summary>
     public class StudentDashboardViewModel
     {
-        /// <summary>The publications actually shown — after the search and sort below.</summary>
+        /// <summary>The publications actually shown, after the search and sort below.</summary>
         public IReadOnlyList<PublicationContainerDto> Publications { get; set; } = [];
 
         /// <summary>How many the student has in total, so the view can say "3 of 7" when filtering.</summary>
@@ -27,13 +27,13 @@ namespace ResearchPublicationManagementSystem.Models
 
         /// <summary>
         /// Hidden for short lists to keep the page clean, but always shown while a search is
-        /// active — otherwise a query that filters down to a couple of results would remove
-        /// the very control needed to clear it.
+        /// active. Otherwise a query that filters down to a couple of results would remove the very
+        /// control needed to clear it.
         /// </summary>
         public bool ShowSearchTools => HasQuery || TotalCount > SearchToolsThreshold;
 
         /// <summary>
-        /// True when the list could not be loaded (backend unreachable, expired session) — as
+        /// True when the list could not be loaded (backend unreachable, expired session), as
         /// opposed to the student genuinely not having started any yet. Keeps the view from
         /// inviting them to create a publication they may already have.
         /// </summary>

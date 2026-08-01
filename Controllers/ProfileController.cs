@@ -9,9 +9,8 @@ using ResearchPublicationManagementSystem.Services;
 namespace ResearchPublicationManagementSystem.Controllers
 {
     /// <summary>
-    /// The signed-in person's own account: their profile, their photo, their password.
-    /// Deliberately not on StudentController — every role has these, and that controller is
-    /// Student-only.
+    /// The signed-in person's own account: their profile, their photo, their password. Deliberately
+    /// not on StudentController. Every role has these, and that controller is Student-only.
     /// </summary>
     [Authorize]
     public class ProfileController(
@@ -150,8 +149,8 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             if (!result.Success)
             {
-                // Covers a wrong current password, a new one the rules reject, and the lockout
-                // that follows too many wrong attempts — each with the API's own wording.
+                // Covers a wrong current password, a new one the rules reject, and the lockout that
+                // follows too many wrong attempts, each with the API's own wording.
                 ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Could not change your password.");
                 return View(model);
             }

@@ -8,7 +8,7 @@ namespace ResearchPublicationManagementSystem.ViewComponents
     ///
     /// A view component rather than something every controller has to remember to populate: the
     /// bell is on every page, and a count that only a few controllers set would be silently wrong
-    /// on the rest — which is worse than not showing one at all.
+    /// on the rest, which is worse than not showing one at all.
     /// </summary>
     public class NotificationBellViewComponent(NotificationsApiClient notificationsApi) : ViewComponent
     {

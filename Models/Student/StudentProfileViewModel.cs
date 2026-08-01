@@ -5,7 +5,7 @@ namespace ResearchPublicationManagementSystem.Models
     /// institution's record of them, and their work is filed and assessed against it. An
     /// administrator maintains it.
     ///
-    /// The one thing a student changes is their photo, and that is not a field here — it goes
+    /// The one thing a student changes is their photo, and that is not a field here. It goes
     /// through ProfileController, and only <see cref="HasProfilePhoto"/> says whether there is one
     /// to show. Nothing on this page is ever posted back, so there is nothing to validate.
     /// </summary>

@@ -222,7 +222,7 @@
                     <div class="card-body">
                         <h2 class="h3 mb-2">Passwords</h2>
                         <p class="text-secondary">
-                            Applies to everyone. The rules take effect the next time a password is set —
+                            Applies to everyone. The rules take effect the next time a password is set,
                             tightening them does not invalidate passwords already in use.
                         </p>
 
@@ -341,7 +341,7 @@
                                         @if (Model.Notifications.HasPassword)
                                         {
                                             <span>
-                                                A password is stored. It is never shown again — leave this
+                                                A password is stored. It is never shown again, so leave this
                                                 blank unless you are changing it.
                                             </span>
                                         }
@@ -385,7 +385,7 @@
                     <div class="card-body">
                         <h2 class="h3 mb-2">Stage deadlines</h2>
                         <p class="text-secondary">
-                            How long each stage is expected to take. These mark work as overdue —
+                            How long each stage is expected to take. These mark work as overdue,
                             they never stop it being done late, because a deadline that blocked a
                             supervisor from responding would only strand the student waiting.
                             Use 0 where nothing should ever be reported late.
@@ -434,7 +434,7 @@
                         <h2 class="h3 mb-2">Uploads</h2>
                         <p class="text-secondary">
                             Applies to research papers and ethics documents. Profile photos have
-                            their own limits — widening this does not let someone upload an image
+                            their own limits, and widening this does not let someone upload an image
                             as a research paper.
                         </p>
 
@@ -452,7 +452,7 @@
                                 <label class="form-label" for="allowed-extensions">File types allowed</label>
                                 <input id="allowed-extensions" name="allowedExtensions"
                                        value="@Model.Uploads.AllowedExtensions" class="form-control" required />
-                                <small class="form-hint">Separated by commas. The full stops are optional — "pdf, docx" is fine.</small>
+                                <small class="form-hint">Separated by commas. The full stops are optional, so "pdf, docx" is fine.</small>
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Save upload rules</button>
@@ -500,7 +500,7 @@
                                             {
                                                 <span>
                                                     Available because this is a development environment. A production
-                                                    deployment cannot use it — it would hand out accounts to anyone who
+                                                    deployment cannot use it. It would hand out accounts to anyone who
                                                     guessed the email domain.
                                                 </span>
                                             }
@@ -537,7 +537,7 @@
                                         sign-in page, and the catalogue is not served to anyone without an account.
                                     </span>
                                 }
-                                Signed in, everyone keeps the catalogue either way — this governs what the world
+                                Signed in, everyone keeps the catalogue either way. This governs what the world
                                 sees, not what the institution can see of its own published work. Full texts are
                                 never public, whatever this is set to.
                             </p>
@@ -608,7 +608,7 @@
                     <div class="card-body">
                         <h2 class="h3 mb-2">Invitations</h2>
                         <p class="text-secondary">
-                            Invite anyone, to any role — including people with no institutional
+                            Invite anyone, to any role, including people with no institutional
                             address, which is the only way an external committee member can ever
                             get in.
                         </p>
@@ -658,7 +658,7 @@
                                 <input id="enquiries-email" name="researchEnquiriesEmail" type="email"
                                        value="@Model.Institution.ResearchEnquiriesEmail" class="form-control" />
                                 <small class="form-hint">
-                                    Where the public writes for a paper's full text — research is not
+                                    Where the public writes for a paper's full text. Research is not
                                     downloadable from the catalogue, so this is the whole of that route.
                                 </small>
                             </div>

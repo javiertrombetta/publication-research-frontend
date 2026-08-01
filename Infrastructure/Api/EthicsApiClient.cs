@@ -78,7 +78,7 @@ public class EthicsApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
 
     /// <summary>
     /// The Head of Department's comments on a student's ethics documentation. This is a review
-    /// rather than a decision — the coordinator closes the stage afterwards.
+    /// rather than a decision. The coordinator closes the stage afterwards.
     /// </summary>
     public Task<ApiResult<object?>> HeadOfDepartmentReviewAsync(
         Guid containerId, HeadOfDepartmentReviewRequestDto request, CancellationToken ct = default) =>

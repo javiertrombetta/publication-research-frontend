@@ -55,8 +55,8 @@
         toggle.setAttribute('aria-expanded', String(!collapsed));
     }
 
-    // Hand the state over from <html> to the sidebar. Both selectors collapse it, so this swap
-    // is invisible — but from here on the element owns its own state.
+    // Hand the state over from <html> to the sidebar. Both selectors collapse it, so this swap is
+    // invisible, but from here on the element owns its own state.
     var collapsed = root.classList.contains(PREPAINT_CLASS);
     apply(collapsed);
     root.classList.remove(PREPAINT_CLASS);
@@ -81,10 +81,10 @@
         setCollapsed(!sidebar.classList.contains('rpms-sidebar-collapsed'));
     });
 
-    // Crossing the breakpoint — a rotation, or a window being dragged narrower — changes what the
+    // Crossing the breakpoint, a rotation or a window being dragged narrower, changes what the
     // sidebar is. Going narrow it becomes a panel over the content, and an open one would be
-    // covering a page the reader was in the middle of, so it shuts. Coming back to a wide screen
-    // it is a column again, and the remembered preference applies.
+    // covering a page the reader was in the middle of, so it shuts. Coming back to a wide screen it
+    // is a column again, and the remembered preference applies.
     function onBreakpointChange() {
         if (isNarrow()) {
             apply(true);
@@ -128,9 +128,9 @@
 // The black pill behind the open sidebar item.
 //
 // It exists because a background painted on the active link can only appear and disappear: click
-// another item and the old fill vanishes, then nothing is marked until the next page has loaded
-// and painted. One element for the whole list can travel instead — it sets off the moment the
-// click lands, so the menu has already answered by the time the page arrives.
+// another item and the old fill vanishes, then nothing is marked until the next page has loaded and
+// painted. One element for the whole list can travel instead. It sets off the moment the click
+// lands, so the menu has already answered by the time the page arrives.
 (function () {
     var nav = document.querySelector('.rpms-nav');
     if (!nav) return;
@@ -140,7 +140,7 @@
     if (!marker || !links.length) return;
 
     // Which item the marker is on. Starts as the one the server marked, and moves to whatever is
-    // clicked next — the click is the answer, not the navigation that follows it.
+    // clicked next. The click is the answer, not the navigation that follows it.
     var current = nav.querySelector('.nav-link.active') || null;
 
     function place(link, instant) {
@@ -174,8 +174,8 @@
             // The label under the marker turns white as the marker arrives, and the one it is
             // leaving goes back to grey. Both have to happen here rather than waiting for the new
             // page: the marker is already moving, so an item left with its white text would be
-            // white on white for as long as the next page takes to arrive. `active` goes too — it
-            // is the server's answer to the same question, and it is now out of date.
+            // white on white for as long as the next page takes to arrive. `active` goes too. It is
+            // the server's answer to the same question, and it is now out of date.
             if (current) current.classList.remove('rpms-nav-link-selected', 'active');
             link.classList.add('rpms-nav-link-selected');
 
@@ -184,8 +184,8 @@
         });
     });
 
-    // The list can change height without the page reloading — the sidebar opening on a phone, or
-    // a label wrapping as the window narrows. The marker is placed in pixels, so it has to be
+    // The list can change height without the page reloading: the sidebar opening on a phone, or a
+    // label wrapping as the window narrows. The marker is placed in pixels, so it has to be
     // measured again, and this is not a movement anyone made.
     var reflow;
     window.addEventListener('resize', function () {
@@ -217,13 +217,13 @@ window.rpmsToast = (function () {
         if (toast.dataset.toastReady) return;
         toast.dataset.toastReady = 'true';
 
-        // Appearing is CSS's job (see .rpms-toast) — this only schedules the exit.
+        // Appearing is CSS's job (see .rpms-toast). This only schedules the exit.
         var delay = parseInt(toast.dataset.toastDelay, 10) || DEFAULT_DELAY;
         var timer = null;
 
         function startTimer() {
-            // If the page opened in a background tab, hold the message until it's actually
-            // on screen — otherwise it would time out unseen.
+            // If the page opened in a background tab, hold the message until it's actually on
+            // screen. Otherwise it would time out unseen.
             if (document.hidden) return;
             timer = window.setTimeout(function () { dismiss(toast); }, delay);
         }

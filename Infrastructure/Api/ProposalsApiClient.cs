@@ -25,9 +25,9 @@ public class ProposalsApiClient(HttpClient httpClient) : ApiClientBase(httpClien
     /// Replaces walking the publications and asking per proposal, which cost a request a row.
     /// </summary>
     /// <param name="awaitingAllocation">
-    /// Only the proposals a supervisor has offered to take on and nobody has been allocated to —
-    /// what the selection screen can act on. Filtered by the API so a page of it is a page of that
-    /// screen rather than of everything.
+    /// Only the proposals a supervisor has offered to take on and nobody has been allocated to,
+    /// which is what the selection screen can act on. Filtered by the API so a page of it is a page
+    /// of that screen rather than of everything.
     /// </param>
     public Task<ApiResult<PagedResultDto<ProposalWithInvitationsDto>>> GetForCoordinatorAsync(
         int page = 1, bool awaitingAllocation = false, int pageSize = Paging.DefaultPageSize,

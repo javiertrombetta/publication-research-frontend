@@ -16,8 +16,8 @@ public class AuthCookieService(AuthApiClient authApiClient) : IAuthCookieService
 
         // SignInAsync only issues the cookie; the browser sends it back on the *next* request, so
         // without this the rest of this one still runs as an anonymous visitor. Anything acting
-        // straight after signing in — the outgoing API calls read their bearer token from these
-        // claims — would find no token and quietly do nothing.
+        // straight after signing in, and the outgoing API calls read their bearer token from these
+        // claims, would find no token and quietly do nothing.
         httpContext.User = principal;
     }
 

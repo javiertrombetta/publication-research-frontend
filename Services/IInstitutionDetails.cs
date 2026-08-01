@@ -3,12 +3,12 @@ using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
 namespace ResearchPublicationManagementSystem.Services;
 
 /// <summary>
-/// The institution's own details — its name, the addresses people write to, its privacy policy.
+/// The institution's own details: its name, the addresses people write to, its privacy policy.
 ///
-/// These used to live in appsettings, which meant correcting an address was a deployment. They
-/// are administrator-editable settings now, and this is what views read them through: the footer
-/// appears on every page and three separate views need them, so a per-request cache keeps one
-/// page from asking the API three times.
+/// These used to live in appsettings, which meant correcting an address was a deployment. They are
+/// administrator-editable settings now, and this is what views read them through: the footer
+/// appears on every page and three separate views need them, so a per-request cache keeps one page
+/// from asking the API three times.
 /// </summary>
 public interface IInstitutionDetails
 {
@@ -24,7 +24,7 @@ public interface IInstitutionDetails
     ///
     /// Needed because one of these values decides the landing page. An administrator switching the
     /// public catalogue off and being sent straight back to it would conclude the setting had not
-    /// saved — a minute is a long time to watch a page contradict you.
+    /// saved. A minute is a long time to watch a page contradict you.
     /// </summary>
     void Invalidate();
 }

@@ -33,7 +33,7 @@ public record EthicsGuidanceDto(string Title, string Content);
 /// <summary>Matches the backend's EthicsStatus enum values (as returned in EthicsApprovalDto.Status).</summary>
 public static class EthicsStatus
 {
-    /// <summary>Declaration made, nobody has ruled on it yet — the state an approval starts in.</summary>
+    /// <summary>Declaration made, nobody has ruled on it yet, the state an approval starts in.</summary>
     public const string PendingSupervisorDecision = "PendingSupervisorDecision";
     public const string NotRequired = "NotRequired";
     public const string PendingUpload = "PendingUpload";
@@ -76,7 +76,7 @@ public record HeadOfDepartmentReviewRequestDto(string Comments);
 
 /// <summary>
 /// One document this publication has been asked for, and whether it has arrived. Carries the
-/// requirement's id because that is what an upload is addressed to — names can be edited.
+/// requirement's id because that is what an upload is addressed to, and names can be edited.
 /// </summary>
 public record RequiredEthicsDocumentDto(
     Guid RequirementId,

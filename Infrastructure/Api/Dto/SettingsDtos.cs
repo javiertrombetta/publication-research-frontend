@@ -34,8 +34,8 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         int LockoutMinutes);
 
     /// <summary>
-    /// The mail server, and whether notifications are emailed at all. The stored SMTP password
-    /// is never sent back — <see cref="HasPassword"/> only says whether one exists.
+    /// The mail server, and whether notifications are emailed at all. The stored SMTP password is
+    /// never sent back. <see cref="HasPassword"/> only says whether one exists.
     /// </summary>
     public record NotificationSettingsDto(
         bool EmailEnabled,
@@ -79,9 +79,9 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
     /// Who may get an account, and how long a session lasts.
     ///
     /// <see cref="IsEnvironmentDefault"/> means nobody has chosen and the mode is coming from the
-    /// hosting environment — open in development, invite-only anywhere else.
-    /// <see cref="AzureSsoConfigured"/> is a fact about the server, not a setting: it says
-    /// whether a Microsoft Entra tenant exists to sign in against.
+    /// hosting environment, open in development and invite-only anywhere else. <see
+    /// cref="AzureSsoConfigured"/> is a fact about the server, not a setting: it says whether a
+    /// Microsoft Entra tenant exists to sign in against.
     /// </summary>
     public record AccessSettingsDto(
         string RegistrationMode,

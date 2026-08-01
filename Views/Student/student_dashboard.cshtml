@@ -40,7 +40,7 @@
         <div class="card-body text-center py-5">
             <h3 class="mb-2">We couldn't load your publications</h3>
             <p class="text-secondary mb-4">
-                This is a temporary problem reaching the server — your work is safe. Try again in a moment.
+                This is a temporary problem reaching the server. Your work is safe. Try again in a moment.
             </p>
             <a asp-controller="Student" asp-action="student_dashboard" class="btn btn-primary">Retry</a>
         </div>
@@ -48,7 +48,7 @@
 }
 else if (Model.TotalCount == 0)
 {
-    @* Nothing to search or sort yet — go straight to the empty state. *@
+    @* Nothing to search or sort yet, so go straight to the empty state. *@
     <div class="card">
         <div class="card-body text-center py-5">
             <h3 class="mb-2">You haven't started yet</h3>
@@ -63,7 +63,7 @@ else if (Model.TotalCount == 0)
 }
 else
 {
-    @* Only worth showing once the list is long enough to be hard to scan — see ShowSearchTools. *@
+    @* Only worth showing once the list is long enough to be hard to scan, see ShowSearchTools. *@
     @if (Model.ShowSearchTools)
     {
     <!-- Search and sort. GET so the current view stays in the URL and survives a reload. -->
@@ -190,7 +190,7 @@ else
                                    class="btn btn-outline-primary flex-fill">
                                     Open
                                 </a>
-                                @* Only while still empty — lets a student undo one created by mistake. *@
+                                @* Only while still empty, which lets a student undo one created by mistake. *@
                                 @if (publication.CanBeDeleted)
                                 {
                                     <button type="button" class="btn btn-outline-danger"

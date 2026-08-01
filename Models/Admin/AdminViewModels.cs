@@ -8,7 +8,7 @@ namespace ResearchPublicationManagementSystem.Models
     {
         public DashboardSummaryDto? Summary { get; set; }
 
-        /// <summary>Papers under review with no evaluation committee — nothing moves until one exists.</summary>
+        /// <summary>Papers under review with no evaluation committee. Nothing moves until one exists.</summary>
         public int PapersAwaitingCommittee { get; set; }
 
         public bool LoadFailed { get; set; }
@@ -24,7 +24,7 @@ namespace ResearchPublicationManagementSystem.Models
 
         /// <summary>
         /// The composition currently configured. Used only for publications that predate the
-        /// figures being recorded per publication — everything else states its own requirement.
+        /// figures being recorded per publication. Everything else states its own requirement.
         /// </summary>
         public CommitteeSettingsDto? CurrentRules { get; set; }
 

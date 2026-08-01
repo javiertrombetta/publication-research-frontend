@@ -14,7 +14,7 @@ public class CatalogueApiClient(HttpClient httpClient) : ApiClientBase(httpClien
     public Task<ApiResult<PagedResultDto<CatalogueEntryDto>>> SearchAsync(
         CatalogueSearchQuery query, CancellationToken ct = default)
     {
-        // Only send the filters that are actually set — an empty string is a filter the backend
+        // Only send the filters that are actually set. An empty string is a filter the backend
         // would honour, and it would match nothing.
         var parameters = new Dictionary<string, string?>
         {

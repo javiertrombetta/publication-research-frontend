@@ -9,7 +9,7 @@ namespace ResearchPublicationManagementSystem.Controllers
 {
     /// <summary>
     /// The administrator's own screens: the institution-wide picture, the one workflow step that
-    /// belongs to them — putting an evaluation committee on a submitted paper — and the committee
+    /// belongs to them, putting an evaluation committee on a submitted paper, and the committee
     /// defaults. User management lives in UsersController and the trail in AuditLogsController.
     /// </summary>
     [Authorize(Roles = RoleNames.Admin)]
@@ -45,7 +45,7 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         /// <summary>
         /// Papers a supervisor has accepted that still have no evaluation committee. Nothing moves
-        /// until one is assigned — the coordinator's final decision is blocked on it.
+        /// until one is assigned, because the coordinator's final decision is blocked on it.
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> assigning_committee_members()
@@ -56,7 +56,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.Items = items;
 
             // Anyone who works here can sit on a committee, so this is the whole enabled directory
-            // less the students — a committee judges a student's work, so it cannot be drawn from
+            // less the students. A committee judges a student's work, so it cannot be drawn from
             // the people whose work is being judged. One request rather than one per role, and it
             // no longer hides a supervisor or a coordinator the administrator wanted to appoint.
             var people = await usersApi.GetAllAsync(status: "Enabled");
@@ -129,13 +129,14 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// <summary>
         /// A paper needs a committee when it is under review and has none. There is no endpoint
         /// that asks that directly, so it is assembled from the container listing (which carries
-        /// the paper's status) plus a committee lookup per candidate — a short list in practice,
-        /// since only papers between the supervisor's review and the coordinator's decision qualify.
+        /// the paper's status) plus a committee lookup per candidate, a short list in practice,
+        /// since only papers between the supervisor's review and the coordinator's decision
+        /// qualify.
         /// </summary>
         /// <summary>
         /// The API answers this in one request. It used to be reconstructed here by walking every
-        /// container and asking after each one's paper and committee — two further requests per
-        /// publication — and it still came out wrong: nothing in those responses says whether the
+        /// container and asking after each one's paper and committee, two further requests per
+        /// publication, and it still came out wrong: nothing in those responses says whether the
         /// supervisor has approved, so papers they had not yet looked at were offered for a
         /// committee and the assignment was then refused.
         /// </summary>

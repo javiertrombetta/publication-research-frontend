@@ -119,6 +119,15 @@ namespace ResearchPublicationManagementSystem.Controllers
             {
                 var ethicsResult = await ethicsApi.GetApprovalAsync(id);
                 if (ethicsResult.Success) model.EthicsApproval = ethicsResult.Data;
+
+                // Only worth asking once documents have actually been requested. It is what tells
+                // the page whether the student still has uploading to do, which is the difference
+                // between offering them the form and offering them what they already sent.
+                if (model.EthicsApproval?.Status == EthicsStatus.PendingUpload)
+                {
+                    var requiredResult = await ethicsApi.GetRequiredDocumentsAsync(id);
+                    model.RequiredEthicsDocuments = requiredResult.Data ?? [];
+                }
             }
 
             if (container.CurrentPipeline >= PipelineStage.ResearchPaper)
@@ -157,8 +166,8 @@ namespace ResearchPublicationManagementSystem.Controllers
         }
 
         /// <summary>
-        /// Discards a publication the student created by mistake. Only possible while it still
-        /// has no proposals — the backend enforces that rule and is the authority here.
+        /// Discards a publication the student created by mistake. Only possible while it still has
+        /// no proposals. The backend enforces that rule and is the authority here.
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -180,8 +189,8 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         /// <summary>
         /// The last step: once the paper has been accepted, its author decides whether it appears
-        /// in the public catalogue. Either answer closes the publication — declining is a real
-        /// choice, not a postponement — so the view asks for confirmation before posting here.
+        /// in the public catalogue. Either answer closes the publication. Declining is a real
+        /// choice, not a postponement, so the view asks for confirmation before posting here.
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -416,7 +425,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             if (!draftResult.Success || draftResult.Data is null)
             {
                 TempData["ErrorMessage"] = draftResult.ErrorMessage
-                    ?? "The research paper stage isn't available yet — finish the ethics process first.";
+                    ?? "The research paper stage is not available yet. Finish the ethics process first.";
                 return RedirectToAction(nameof(Publication), new { id });
             }
 
@@ -453,11 +462,11 @@ namespace ResearchPublicationManagementSystem.Controllers
             if (redirect is not null) return redirect;
 
             // The status comes back from the form, so it is the student's word for what their paper
-            // was — good enough to stop the screen offering a save it cannot make, not to authorise
+            // was. Good enough to stop the screen offering a save it cannot make, not to authorise
             // one. The API is what actually refuses editing a paper under review.
             if (!model.IsEditable)
             {
-                TempData["ErrorMessage"] = "This paper is no longer yours to change — it has been submitted.";
+                TempData["ErrorMessage"] = "This paper is no longer yours to change. It has been submitted.";
                 return RedirectToAction(nameof(Publication), new { id = model.ContainerId });
             }
 
@@ -509,10 +518,11 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         /// <summary>
         /// Read-only, and the photo is the exception rather than the first of several editable
-        /// things. What is on this page — the student ID, the department, the programme, the cohort
-        /// — is the institution's record of who this student is, and their work is filed and marked
-        /// against it. Letting them retype it means a proposal can be assessed against a department
-        /// nobody assigned. An administrator maintains it; the photo is theirs (ProfileController).
+        /// things. What is on this page, the student ID and the department and the programme and
+        /// the cohort, is the institution's record of who this student is, and their work is filed
+        /// and marked against it. Letting them retype it means a proposal can be assessed against a
+        /// department nobody assigned. An administrator maintains it; the photo is theirs
+        /// (ProfileController).
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> studentprofile()

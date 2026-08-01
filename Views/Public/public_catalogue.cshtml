@@ -116,10 +116,10 @@ else
                         </h3>
 
                         @{
-                            // Author and year only, matching what the detail page publishes —
-                            // supervisor and department are not shown to the public.
-                            // Joined in C# rather than as separate Razor blocks: Razor eats the
-                            // whitespace between them, which ran the separators into the text.
+                            // Author and year only, matching what the detail page publishes.
+                            // Supervisor and department are not shown to the public. Joined in C#
+                            // rather than as separate Razor blocks: Razor eats the whitespace
+                            // between them, which ran the separators into the text.
                             var meta = new List<string> { entry.AuthorName };
                             if (entry.PublicationYear is not null) meta.Add(entry.PublicationYear.ToString()!);
                         }
