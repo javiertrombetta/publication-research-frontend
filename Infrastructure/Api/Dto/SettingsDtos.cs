@@ -103,6 +103,52 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 
     public record UploadSettingsDto(int MaxMegabytes, string AllowedExtensions);
 
+    /// <summary>
+    /// Where uploaded files are kept. Changing it points new uploads somewhere else and nothing
+    /// more: every stored file records the destination that wrote it, so what is already there
+    /// keeps opening from where it is.
+    /// </summary>
+    public record StorageSettingsDto(
+        string Provider,
+        string LocalPath,
+        string? S3Bucket,
+        string? S3Region,
+        string? S3ServiceUrl,
+        string? S3AccessKeyId,
+        bool S3SecretKeySet,
+        bool S3ForcePathStyle,
+        string AzureContainer,
+        bool AzureConnectionStringSet)
+    {
+        public bool IsLocal => Provider == "local";
+        public bool IsDatabase => Provider == "database";
+        public bool IsS3 => Provider == "s3";
+        public bool IsAzure => Provider == "azure-blob";
+
+        public string ProviderName => Provider switch
+        {
+            "database" => "The database",
+            "s3" => "S3 or compatible object storage",
+            "azure-blob" => "Azure Blob Storage",
+            _ => "A directory on the server"
+        };
+    }
+
+    /// <summary>The secrets are null to keep whatever is stored, which is what the form sends unless one is retyped.</summary>
+    public record UpdateStorageSettingsRequestDto(
+        string Provider,
+        string? LocalPath,
+        string? S3Bucket,
+        string? S3Region,
+        string? S3ServiceUrl,
+        string? S3AccessKeyId,
+        string? S3SecretKey,
+        bool S3ForcePathStyle,
+        string? AzureContainer,
+        string? AzureConnectionString);
+
+    public record StorageCheckResultDto(bool Reachable, string Message);
+
     public record UpdateUploadSettingsRequestDto(int MaxMegabytes, string AllowedExtensions);
 
     /// <summary>

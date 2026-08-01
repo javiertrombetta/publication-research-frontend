@@ -76,6 +76,22 @@ public class SettingsApiClient(HttpClient httpClient) : ApiClientBase(httpClient
         UpdateUploadSettingsRequestDto request, CancellationToken ct = default) =>
         PutJsonAsync<UploadSettingsDto>("api/settings/uploads", request, ct);
 
+    // ---------- Where uploaded files are kept ----------
+
+    public Task<ApiResult<StorageSettingsDto>> GetStorageAsync(CancellationToken ct = default) =>
+        GetAsync<StorageSettingsDto>("api/settings/storage", ct);
+
+    public Task<ApiResult<StorageSettingsDto>> UpdateStorageAsync(
+        UpdateStorageSettingsRequestDto request, CancellationToken ct = default) =>
+        PutJsonAsync<StorageSettingsDto>("api/settings/storage", request, ct);
+
+    /// <summary>Tries a destination and reports back. A failure is an answer, not an error.</summary>
+    public Task<ApiResult<StorageCheckResultDto>> CheckStorageAsync(
+        string? provider = null, CancellationToken ct = default) =>
+        PostJsonAsync<StorageCheckResultDto>(
+            $"api/settings/storage/check{(string.IsNullOrWhiteSpace(provider) ? "" : $"?provider={Uri.EscapeDataString(provider)}")}",
+            null, ct);
+
     // ---------- The institution ----------
 
     /// <summary>Anonymous on the API, so the footer and sign-in page can use it signed out.</summary>
