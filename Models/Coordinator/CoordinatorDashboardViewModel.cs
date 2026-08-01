@@ -27,6 +27,38 @@ namespace ResearchPublicationManagementSystem.Models
 
         public bool LoadFailed { get; set; }
 
+        /// <summary>
+        /// Which page of the publications table this is, and how it is ordered. Both applied by
+        /// the API: a coordinator with two hundred publications was being handed all of them, and
+        /// ordering the ten on screen would not have been ordering the table.
+        /// </summary>
+        public PagerViewModel? Pager { get; set; }
+        public string? Sort { get; set; }
+        public bool Descending { get; set; }
+
+        public Dictionary<string, string?> RouteValues()
+        {
+            var values = new Dictionary<string, string?>();
+            if (!string.IsNullOrWhiteSpace(Sort)) values["sort"] = Sort;
+            if (Descending) values["desc"] = "true";
+            return values;
+        }
+
+        /// <summary>
+        /// One clickable heading. Built per column rather than through the shared bar, because
+        /// this listing is a real table and its headings are where a reader expects to click.
+        /// </summary>
+        public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
+        {
+            Controller = "Coordinator",
+            Action = "Coordinator_dashboard",
+            Column = column,
+            Label = label,
+            CurrentSort = Sort,
+            CurrentDescending = Descending,
+            DescendingFirst = descendingFirst
+        };
+
         public int ActionsWaiting =>
             (ProposalsAwaitingDispatchTotal > 0 ? 1 : 0) +
             Publications.Count(p => ActionFor(p) is not null);
@@ -44,18 +76,35 @@ namespace ResearchPublicationManagementSystem.Models
             // EthicsStatus alone cannot tell the coordinator's two turns apart.
             if (publication.EthicsAwaitingRole == RoleNames.Coordinator)
             {
-                return new CoordinatorAction("Ethics decision", "Ethic_review_aftersupervisor");
+                return new CoordinatorAction("Ethics decision", "Ethic_review_aftersupervisor",
+                    SearchTermFor(publication));
             }
 
             if (publication.PaperStatus == PublicationStatus.UnderReview)
             {
-                return new CoordinatorAction("Decide on the research paper", "Evaluation_after_committee");
+                return new CoordinatorAction("Decide on the research paper", "Evaluation_after_committee",
+                    SearchTermFor(publication));
             }
 
             return null;
         }
+
+        /// <summary>
+        /// What to put in the target screen's search box so the row the coordinator just clicked is
+        /// the one in front of them when they arrive.
+        ///
+        /// The title, when there is one. A publication with no title yet displays as "Untitled
+        /// publication", which is a label this screen writes rather than anything the search could
+        /// match, so searching for it would land somebody on an empty list. The student's name is
+        /// the next best thing: always present, and it narrows the queue to their work.
+        /// </summary>
+        private static string SearchTermFor(PublicationContainerDto publication) =>
+            string.IsNullOrWhiteSpace(publication.Title) ? publication.StudentName : publication.Title!;
     }
 
-    /// <summary>A task waiting on the coordinator, and the screen that carries it out.</summary>
-    public record CoordinatorAction(string Label, string Action);
+    /// <summary>
+    /// A task waiting on the coordinator, the screen that carries it out, and the term that screen
+    /// should arrive already searching for.
+    /// </summary>
+    public record CoordinatorAction(string Label, string Action, string Search);
 }

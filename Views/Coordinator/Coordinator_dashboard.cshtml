@@ -89,13 +89,21 @@ else
     {
         <div class="card">
             <div class="table-responsive">
+                @{
+                    // A real table, so the headings are where a reader expects to click. Ordering
+                    // is the API's and covers every publication, not the ten on this page.
+                    var byStudent = Model.Column("student", "Student");
+                    var byStarted = Model.Column("started", "Publication", descendingFirst: true);
+                    var byStage = Model.Column("stage", "Stage");
+                    var byStatus = Model.Column("status", "Status");
+                }
                 <table class="table card-table table-vcenter">
                     <thead>
                         <tr>
-                            <th>Student</th>
-                            <th>Publication</th>
-                            <th>Stage</th>
-                            <th>Status</th>
+                            <th><partial name="_SortableHeader" model="byStudent" /></th>
+                            <th><partial name="_SortableHeader" model="byStarted" /></th>
+                            <th><partial name="_SortableHeader" model="byStage" /></th>
+                            <th><partial name="_SortableHeader" model="byStatus" /></th>
                             <th>Waiting on you</th>
                         </tr>
                     </thead>
@@ -119,7 +127,11 @@ else
                                     }
                                     else
                                     {
+                                        @* Arrives at the target screen already searching for this
+                                           row, so the coordinator is looking at the publication
+                                           they clicked rather than hunting for it in a queue. *@
                                         <a asp-controller="Coordinator" asp-action="@action.Action"
+                                           asp-route-search="@action.Search"
                                            class="btn btn-sm btn-primary">@action.Label</a>
                                     }
                                 </td>
@@ -129,5 +141,10 @@ else
                 </table>
             </div>
         </div>
+
+        @if (Model.Pager is not null)
+        {
+            <partial name="_Pager" model="Model.Pager" />
+        }
     }
 }

@@ -24,13 +24,22 @@ namespace ResearchPublicationManagementSystem.Controllers
         // ---------- Overview ----------
 
         [HttpGet]
-        public async Task<IActionResult> Coordinator_dashboard()
+        public async Task<IActionResult> Coordinator_dashboard(
+            int page = 1, string? sort = null, bool desc = false)
         {
-            var model = new CoordinatorDashboardViewModel();
+            var model = new CoordinatorDashboardViewModel
+            {
+                // The default, spelled out rather than left null, so the heading in force is the
+                // one marked as active. Oldest first, as on every other queue.
+                Sort = sort ?? "started",
+                Descending = desc
+            };
 
             // Scoped to this coordinator: the endpoint would happily return every container in
             // the institution, which is not what a coordinator's queue means.
-            var containers = await containersApi.GetAllAsync(coordinatorId: CurrentUserId());
+            var containers = await containersApi.GetAllAsync(
+                coordinatorId: CurrentUserId(), page: page,
+                sort: sort ?? "started", descending: desc);
             if (!containers.Success)
             {
                 TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your publications right now.";
@@ -40,6 +49,8 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             model.Publications = containers.Data?.Items ?? [];
             model.PublicationsTotal = containers.Data?.TotalCount ?? 0;
+            model.Pager = Paging.PagerFor(containers.Data, "Coordinator", nameof(Coordinator_dashboard),
+                model.RouteValues());
 
             var pending = await proposalsApi.GetPendingAsync();
             model.ProposalsAwaitingDispatch = pending.Data?.Items ?? [];
