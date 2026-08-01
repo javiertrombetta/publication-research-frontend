@@ -73,6 +73,13 @@ namespace ResearchPublicationManagementSystem.Models
             return values;
         }
 
+        /// <summary>
+        /// Where Clear goes: this list again, without the search term and still in the order the
+        /// reader had chosen.
+        /// </summary>
+        public Dictionary<string, string?> ClearSearchRoute() =>
+            RouteValues().Where(v => v.Key != "search").ToDictionary(v => v.Key, v => v.Value);
+
         public SortBarViewModel SortBar => new()
         {
             Controller = "HeadOfDepartment",

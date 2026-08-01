@@ -27,13 +27,15 @@
                 <div class="col-auto">
                     <button type="submit" class="btn btn-primary">Search</button>
                 </div>
-                @if (Model.HasSearch)
-                {
-                    <div class="col-auto">
-                        <a asp-controller="Coordinator" asp-action="Ethic_review_aftersupervisor"
-                           class="btn btn-link text-secondary text-decoration-none">Clear</a>
-                    </div>
-                }
+                <div class="col-auto">
+                    @* Beside Search, always, so the way back to the whole list is where somebody
+                       looks for it rather than appearing only once they have searched. It carries
+                       the ordering with it: clearing a search should widen the list, not reorder
+                       what is left. *@
+                    <a asp-controller="Coordinator" asp-action="Ethic_review_aftersupervisor"
+                       asp-all-route-data="Model.ClearSearchRoute()"
+                       class="btn btn-outline-secondary">Clear</a>
+                </div>
 
                 @{ var inlineSort = Model.SortBar; }
                 <partial name="_SortInline" model="inlineSort" />

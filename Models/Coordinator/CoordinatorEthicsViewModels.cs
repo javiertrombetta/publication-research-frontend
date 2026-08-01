@@ -110,6 +110,17 @@ namespace ResearchPublicationManagementSystem.Models
             return values;
         }
 
+        /// <summary>
+        /// Where each list's Clear goes. Only that list's own term is dropped: the two are read
+        /// independently, so clearing one must leave the other narrowed as it was, and both keep
+        /// the order they were in.
+        /// </summary>
+        public Dictionary<string, string?> ClearDecisionSearchRoute() =>
+            RouteValues().Where(v => v.Key != "search").ToDictionary(v => v.Key, v => v.Value);
+
+        public Dictionary<string, string?> ClearProgressSearchRoute() =>
+            RouteValues().Where(v => v.Key != "progressSearch").ToDictionary(v => v.Key, v => v.Value);
+
         public SortBarViewModel DecisionSortBar => new()
         {
             Controller = "Coordinator",

@@ -78,13 +78,15 @@ else
                 <div class="col-auto">
                     <button type="submit" class="btn btn-primary">Search</button>
                 </div>
-                @if (Model.HasSearch)
-                {
-                    <div class="col-auto">
-                        <a asp-controller="Coordinator" asp-action="assigning_proposal_forsupervisor"
-                           class="btn btn-link text-secondary text-decoration-none">Clear</a>
-                    </div>
-                }
+                <div class="col-auto">
+                    @* Beside Search, always, so the way back to the whole list is where somebody
+                       looks for it rather than appearing only once they have searched. It carries
+                       the ordering with it: clearing a search should widen the list, not reorder
+                       what is left. *@
+                    <a asp-controller="Coordinator" asp-action="assigning_proposal_forsupervisor"
+                       asp-all-route-data="Model.ClearSearchRoute()"
+                       class="btn btn-outline-secondary">Clear</a>
+                </div>
 
                 @{ var dispatchSort = Model.SortBar; }
                 <partial name="_SortInline" model="dispatchSort" />
@@ -118,7 +120,7 @@ else
                 <button type="button" class="btn btn-sm btn-outline-secondary"
                         data-rpms-check-all="proposalIds">Select all</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary"
-                        data-rpms-check-none="proposalIds">Clear</button>
+                        data-rpms-check-none="proposalIds">Select none</button>
 
                 @* One control for every group, so a coordinator scanning a long queue can shut the
                    lot and open only what they are working on. *@
@@ -187,7 +189,7 @@ else
                 <button type="button" class="btn btn-sm btn-outline-secondary"
                         data-rpms-check-all="supervisorIds" data-rpms-scope="#send-to">Select all on this page</button>
                 <button type="button" class="btn btn-sm btn-outline-secondary"
-                        data-rpms-check-none="supervisorIds" data-rpms-scope="#send-to">Clear</button>
+                        data-rpms-check-none="supervisorIds" data-rpms-scope="#send-to">Select none on this page</button>
             </div>
             <div class="card-body" id="send-to">
                 @* Only supervisors who are available: enabled by an administrator, and not marked

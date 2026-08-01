@@ -58,6 +58,14 @@ else
                 <div class="col-auto">
                     <button type="submit" class="btn btn-primary">Search</button>
                 </div>
+                <div class="col-auto">
+                    @* Clears this list's term only. The two lists are read independently, so
+                       widening one must leave the other narrowed as it was, and both keep the
+                       order they were in. *@
+                    <a asp-controller="Coordinator" asp-action="Evaluation_after_committee"
+                       asp-all-route-data="Model.ClearDecisionSearchRoute()"
+                       class="btn btn-outline-secondary">Clear</a>
+                </div>
 
                 @{ var decisionSort = Model.DecisionSortBar; }
                 <partial name="_SortInline" model="decisionSort" />
@@ -168,6 +176,11 @@ else
                     </div>
                     <div class="col-auto">
                         <button type="submit" class="btn btn-outline-secondary">Search</button>
+                    </div>
+                    <div class="col-auto">
+                        <a asp-controller="Coordinator" asp-action="Evaluation_after_committee"
+                           asp-all-route-data="Model.ClearProgressSearchRoute()"
+                           class="btn btn-outline-secondary">Clear</a>
                     </div>
 
                     @{ var progressSort = Model.ProgressSortBar; }
