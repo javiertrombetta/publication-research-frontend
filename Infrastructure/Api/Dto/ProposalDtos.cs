@@ -57,4 +57,19 @@ public record ProposalWithInvitationsDto(
     string Abstract,
     string Status,
     DateTime? SubmittedAt,
-    IReadOnlyList<SupervisorInvitationDto> Invitations);
+    IReadOnlyList<SupervisorInvitationDto> Invitations,
+    /// <summary>
+    /// When this proposal was last put back in the dispatch queue after a round that found nobody
+    /// willing, and null if it has never been. A proposal waiting its first turn and one that has
+    /// already had one are different things to decide about.
+    /// </summary>
+    DateTime? ReturnedToDispatchAt = null)
+{
+    public bool CameBack => ReturnedToDispatchAt is not null;
+}
+
+/// <summary>What discarding a set of offers actually did.</summary>
+public record DiscardSelectionsResultDto(string StudentName, int ProposalsReturned, bool StudentHasNothingLeft);
+
+/// <summary>How much of the dispatch queue is there for a second time, over the whole queue.</summary>
+public record ReturnedToDispatchSummaryDto(int Students, int Proposals);

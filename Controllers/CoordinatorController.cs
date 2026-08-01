@@ -127,6 +127,12 @@ namespace ResearchPublicationManagementSystem.Controllers
             var groups = await groupsApi.GetMineAsync();
             model.Groups = groups.Data ?? [];
 
+            // Counted over the whole queue rather than this page, because it is the figure that
+            // decides what to do next: send a second batch, or ask those students for new work.
+            var returned = await proposalsApi.GetReturnedToDispatchAsync();
+            model.ReturnedStudents = returned.Data?.Students ?? 0;
+            model.ReturnedProposals = returned.Data?.Proposals ?? 0;
+
             model.TotalCount = pending.Data?.TotalCount ?? 0;
             model.Pager = Paging.PagerFor(pending.Data, "Coordinator", nameof(assigning_proposal_forsupervisor),
                 model.RouteValues());
@@ -166,6 +172,32 @@ namespace ResearchPublicationManagementSystem.Controllers
             TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
                 ? "Group deleted."
                 : result.ErrorMessage ?? "Could not delete the group.";
+
+            return RedirectToAction(nameof(assigning_proposal_forsupervisor));
+        }
+
+        /// <summary>
+        /// Asks the student for a fresh set of proposals, because the ones they wrote found nobody
+        /// willing to supervise them. The other way out of that is to send the same proposals to
+        /// different supervisors, which is the ordinary send.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AskForNewProposals(Guid containerId, string? comments)
+        {
+            if (string.IsNullOrWhiteSpace(comments))
+            {
+                TempData["ErrorMessage"] =
+                    "Say why you are asking for new proposals. The student sees this and has nothing else to go on.";
+                return RedirectToAction(nameof(assigning_proposal_forsupervisor));
+            }
+
+            var result = await proposalsApi.RequestResubmissionAsync(
+                containerId, new CommentsRequestDto(comments.Trim()));
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? "Asked for a new set of proposals. The student has been notified."
+                : result.ErrorMessage ?? "Could not ask for new proposals.";
 
             return RedirectToAction(nameof(assigning_proposal_forsupervisor));
         }
@@ -254,6 +286,40 @@ namespace ResearchPublicationManagementSystem.Controllers
             TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
                 ? "Supervisor assigned. The student can now start their ethics declaration."
                 : result.ErrorMessage ?? "Could not assign the supervisor.";
+
+            return RedirectToAction(nameof(select_a_proposal_forstudent));
+        }
+
+        /// <summary>
+        /// Refuses the offers made on a proposal and sends it back to Send proposals, so it can go
+        /// to different supervisors. Where that leaves the student with nobody willing to take on
+        /// any of their work, the rest goes back with it and the message says so.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DiscardSelections(Guid proposalId, string? comments)
+        {
+            if (string.IsNullOrWhiteSpace(comments))
+            {
+                TempData["ErrorMessage"] =
+                    "Say why you are turning these offers down. It is the only record of the decision.";
+                return RedirectToAction(nameof(select_a_proposal_forstudent));
+            }
+
+            var result = await proposalsApi.DiscardSelectionsAsync(
+                proposalId, new CommentsRequestDto(comments.Trim()));
+
+            if (!result.Success)
+            {
+                TempData["ErrorMessage"] = result.ErrorMessage ?? "Could not discard the offers.";
+                return RedirectToAction(nameof(select_a_proposal_forstudent));
+            }
+
+            var outcome = result.Data;
+            TempData["SuccessMessage"] = outcome is { StudentHasNothingLeft: true }
+                ? $"Nobody was willing to take on {outcome.StudentName}'s work, so all "
+                  + $"{outcome.ProposalsReturned} of their proposals are back in Send proposals."
+                : "Back in Send proposals, ready to go to different supervisors.";
 
             return RedirectToAction(nameof(select_a_proposal_forstudent));
         }
