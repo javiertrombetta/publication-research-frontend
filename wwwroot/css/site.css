@@ -96,6 +96,21 @@ body {
     flex-direction: column;
 }
 
+/* The content column, as a flex item beside the sidebar.
+
+   A flex item will not shrink below the intrinsic width of its content unless told to: that is
+   what `min-width: auto` means, and it is the default. So a table wider than the screen made the
+   whole column wider than the screen, and the page scrolled sideways — the heading, the cards and
+   the footer all dragged along with it — even though the table sits in a .table-responsive that
+   exists precisely to scroll on its own. The wrapper never got the chance: nothing had told the
+   column it was allowed to be narrower than the table.
+
+   It shows up on a phone because that is where a five-column table first exceeds the width, but
+   the rule is not a mobile fix — the same thing happens on a desktop to a table wide enough. */
+.rpms-shell main {
+    min-width: 0;
+}
+
 /* ---------- Footer ---------- */
 
 /* Tabler's .footer ships 2rem of vertical padding, which makes the bar far taller than the
@@ -259,41 +274,139 @@ aside {
 
     /* Not on the open item: it has its own treatment, and lighting it red on the way past would
        say "you could go here" about the page already being looked at. */
-    .rpms-sidebar-inner .nav-link:not(.active):hover {
+    .rpms-sidebar-inner .nav-link:not(.active):not(.rpms-nav-link-selected):hover {
         background: #fbeceb;
         color: var(--rpms-primary);
     }
 
-    /* The open item: an outline rather than a fill, so it reads as "you are here" instead of
-       competing with the brand colour the hover uses. The border breathes slowly to keep it
-       alive without pulling the eye away from the content. */
-    .rpms-sidebar-inner .nav-link.active {
+    /* The open item. Its background is the marker below, not this rule — the fill has to be able
+       to move between items, and a background painted on the link itself can only appear and
+       disappear. Everything that stays with the label is here. */
+    .rpms-sidebar-inner .nav-link.active,
+    .rpms-sidebar-inner .nav-link.rpms-nav-link-selected {
         background: transparent;
-        /* The same grey as every other item: the outline is what marks it, not a change of
-           colour. Only the weight lifts, so it reads as current without shouting. */
-        color: #495057;
+        color: #ffffff;
         font-weight: 600;
+    }
+
+    /* Before site.js has measured anything there is no pill, so the outline marks the open item
+       and the label keeps its normal colour. This is also the whole of the state for a reader
+       without JavaScript, which is why it is the default rather than a fallback bolted on. */
+    .rpms-nav:not(.rpms-nav-marker-ready) .nav-link.active {
+        color: #495057;
         border-color: #adb5bd;
-        animation: rpms-nav-active-breathe 2.8s ease-in-out infinite;
     }
 
-@keyframes rpms-nav-active-breathe {
-    0%, 100% {
-        border-color: rgba(173, 181, 189, 1);
-        box-shadow: 0 0 0 0 rgba(173, 181, 189, .35);
+/* ---------- The moving marker ---------- */
+
+.rpms-nav {
+    position: relative;
+}
+
+/* Sits behind the labels; they are lifted above it rather than it being pushed below, so a
+   stacking context on an ancestor cannot drop it out of view. */
+.rpms-sidebar-inner .nav-link {
+    position: relative;
+    z-index: 1;
+}
+
+.rpms-nav-marker {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 0;
+    border-radius: 8px;
+    background: #000000;
+    z-index: 0;
+    /* Nothing to show until it has been measured and placed. */
+    opacity: 0;
+    /* Height and opacity settle faster than the travel, so a marker arriving at an item of a
+       different size looks like one shape moving rather than one growing as it goes. */
+    transition: transform .28s cubic-bezier(.4, 0, .2, 1), height .18s ease, opacity .15s ease;
+    pointer-events: none;
+}
+
+    .rpms-nav-marker.rpms-nav-marker-visible {
+        opacity: 1;
     }
 
-    50% {
-        border-color: rgba(173, 181, 189, .4);
-        box-shadow: 0 0 0 3px rgba(173, 181, 189, 0);
+/* Placing the marker on load is a starting condition, not a movement, so it must not animate —
+   the same reasoning as the sidebar's own restored width. site.js adds this for one frame. */
+.rpms-nav-marker.rpms-nav-marker-instant {
+    transition: none;
+}
+
+/* The travel is the point of the marker, so without it the marker is the wrong idea entirely:
+   it goes back to appearing on the item that is open, which is all the outline ever did. */
+@media (prefers-reduced-motion: reduce) {
+    .rpms-nav-marker {
+        transition: opacity .15s ease;
     }
 }
 
-/* Some people are made unwell by looping motion, and this one never stops while the page is
-   open. The outline still marks the item; only the movement goes. */
-@media (prefers-reduced-motion: reduce) {
-    .rpms-sidebar-inner .nav-link.active {
-        animation: none;
+/* ---------- The sidebar on a narrow screen ---------- */
+
+/* Beside the content, the sidebar is 260px the content cannot have. On a phone that is most of
+   the screen, and collapsing it to nothing only trades one problem for another: the content
+   jumps sideways every time the nav is opened, which is the width changing under the reader
+   rather than a menu appearing.
+
+   So below this width it stops being a column and becomes a panel: fixed under the top bar,
+   full width, dropping down over the page and sliding back up behind the bar. The content keeps
+   the whole width at all times and never moves. */
+@media (max-width: 767.98px) {
+
+    .rpms-sidebar {
+        position: fixed;
+        top: var(--rpms-navbar-height);
+        left: 0;
+        right: 0;
+        width: auto;
+        /* Above the page, below the bar it comes out of. */
+        z-index: 1020;
+        max-height: calc(100vh - var(--rpms-navbar-height));
+        overflow-y: auto;
+        border-right: 0;
+        border-bottom: 1px solid #e9ecef;
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .1);
+        transition: transform .25s ease;
+    }
+
+        /* Slid up behind the top bar rather than shrunk: width is what the desktop state animates,
+           and animating it here is what moved the content. Visibility follows the same asymmetry
+           as the desktop panel — hidden only once it has finished travelling, so it is watchable
+           on the way out, and shown at once on the way in so there is something to watch. */
+        .rpms-sidebar-is-collapsed .rpms-sidebar,
+        .rpms-sidebar.rpms-sidebar-collapsed {
+            width: auto;
+            border-right-width: 0;
+            transform: translateY(-100%);
+            transition: transform .25s ease, visibility 0s linear .25s;
+        }
+
+    /* The fixed 260px exists to stop the nav reflowing while the desktop panel animates its
+       width. Nothing animates width here, and 260px on a 360px screen is a menu with a margin
+       down one side for no reason. */
+    .rpms-sidebar-inner {
+        width: 100%;
+        padding: 1rem !important;
+    }
+
+    /* The panel comes out from under the bar, so the bar has to be the thing in front. */
+    .rpms-navbar {
+        position: relative;
+        z-index: 1030;
+    }
+}
+
+/* A pointer that cannot hover — a touch screen. There is no "on the way past" there: the first
+   touch is the click, so a hover fill would appear at the same moment the page starts changing
+   and read as the wrong item being chosen. */
+@media (hover: none) {
+    .rpms-sidebar-inner .nav-link:not(.active):not(.rpms-nav-link-selected):hover {
+        background: transparent;
+        color: #495057;
     }
 }
 

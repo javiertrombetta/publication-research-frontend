@@ -33,13 +33,23 @@
     <script>
         (function () {
             var root = document.documentElement;
+
+            // On a narrow screen the sidebar is a panel over the page, so it starts shut whatever
+            // was remembered. The remembered state is about how wide someone likes their desktop
+            // nav; carrying it onto a phone would open a menu across the content of a page nobody
+            // asked to leave. Kept in step with the same query in site.css.
+            var isNarrow = window.matchMedia('(max-width: 767.98px)').matches;
+
             try {
-                if (localStorage.getItem('rpms.sidebar.collapsed') === 'true') {
+                if (isNarrow || localStorage.getItem('rpms.sidebar.collapsed') === 'true') {
                     root.classList.add('rpms-sidebar-is-collapsed');
                 }
             } catch (e) {
                 // Private browsing can refuse localStorage. An expanded sidebar is the sane
                 // fallback, and the burger still works.
+                if (isNarrow) {
+                    root.classList.add('rpms-sidebar-is-collapsed');
+                }
             }
 
             // Suppressed until the first paint is done, so restoring the state is instant while

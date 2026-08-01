@@ -423,6 +423,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             var pub = draftResult.Data;
             var versionsResult = await publicationsApi.GetVersionsAsync(pub.Id);
             var versions = versionsResult.Data ?? [];
+            var latestVersion = versions.OrderByDescending(v => v.VersionNumber).FirstOrDefault();
 
             return View(new CreatePublicationViewModel
             {
@@ -435,7 +436,10 @@ namespace ResearchPublicationManagementSystem.Controllers
                 PublicationYear = pub.PublicationYear,
                 KeywordsCsv = string.Join(",", pub.Keywords),
                 HasUploadedVersion = versions.Count > 0,
-                LatestVersionNumber = versions.Count > 0 ? versions.Max(v => v.VersionNumber) : 0
+                LatestVersionNumber = latestVersion?.VersionNumber ?? 0,
+                // So a paper past editing can still be read: the file is the paper, and being told
+                // it was accepted without being able to open it is not seeing it.
+                LatestVersionId = latestVersion?.Id
             });
         }
 
@@ -447,6 +451,15 @@ namespace ResearchPublicationManagementSystem.Controllers
         {
             var (_, redirect) = await GetOwnedContainerAsync(model.ContainerId, PipelineStage.ResearchPaper);
             if (redirect is not null) return redirect;
+
+            // The status comes back from the form, so it is the student's word for what their paper
+            // was — good enough to stop the screen offering a save it cannot make, not to authorise
+            // one. The API is what actually refuses editing a paper under review.
+            if (!model.IsEditable)
+            {
+                TempData["ErrorMessage"] = "This paper is no longer yours to change — it has been submitted.";
+                return RedirectToAction(nameof(Publication), new { id = model.ContainerId });
+            }
 
             if (!ModelState.IsValid)
             {
@@ -494,41 +507,18 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         // ---------- Profile ----------
 
+        /// <summary>
+        /// Read-only, and the photo is the exception rather than the first of several editable
+        /// things. What is on this page — the student ID, the department, the programme, the cohort
+        /// — is the institution's record of who this student is, and their work is filed and marked
+        /// against it. Letting them retype it means a proposal can be assessed against a department
+        /// nobody assigned. An administrator maintains it; the photo is theirs (ProfileController).
+        /// </summary>
         [HttpGet]
         public async Task<IActionResult> studentprofile()
         {
             var model = await BuildProfileViewModelAsync();
             return model is null ? RedirectToAction(nameof(student_dashboard)) : View(model);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Edit_studentprofile()
-        {
-            var model = await BuildProfileViewModelAsync();
-            return model is null ? RedirectToAction(nameof(student_dashboard)) : View(model);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit_studentprofile(StudentProfileViewModel model)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-            var request = new UpdateMyProfileRequestDto(
-                model.FirstName, model.LastName, model.Programme, model.Cohort, null, model.Orcid, null, null, null);
-
-            var result = await usersApi.UpdateMeAsync(request);
-            if (!result.Success)
-            {
-                AddApiErrors(result, "Could not update your profile.");
-                return View(model);
-            }
-
-            TempData["SuccessMessage"] = "Profile updated.";
-            return RedirectToAction(nameof(studentprofile));
         }
 
         // ---------- Helpers ----------
@@ -620,8 +610,6 @@ namespace ResearchPublicationManagementSystem.Controllers
                 model.DepartmentName = studentProfile.DepartmentName;
                 model.Programme = studentProfile.Programme;
                 model.Cohort = studentProfile.Cohort;
-                model.Orcid = studentProfile.Orcid;
-                model.ResearchAreas = studentProfile.ResearchAreas;
             }
 
             return model;

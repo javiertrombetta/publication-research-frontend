@@ -1,4 +1,5 @@
 @model UploadEthicsDocumentsViewModel
+@{ ViewData["Title"] = "Ethics documentation"; }
 
             <main class="page-body m-0 py-4">
                 <div class="container-xl">
@@ -14,6 +15,18 @@
                     <!-- Centred responsive layout wrapper -->
                     <div class="row justify-content-center">
                         <div class="col-12 col-md-10 col-lg-8 col-xl-7">
+
+                            @* The only way back was the form's Cancel button, which sits below the
+                               documents and the table of what has already been submitted — off the
+                               bottom of a long page, and labelled as abandoning something rather
+                               than as leaving. This is at the top, where a back link belongs, and
+                               names where it goes. *@
+                            <div class="mb-2 px-2">
+                                <a asp-controller="Student" asp-action="Publication" asp-route-id="@Model.ContainerId"
+                                   class="text-secondary text-decoration-none small">
+                                    &larr; Back to this publication
+                                </a>
+                            </div>
 
                             <!-- Header Area -->
                             <div class="mb-4 px-2">
