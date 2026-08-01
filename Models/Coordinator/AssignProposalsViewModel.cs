@@ -19,8 +19,8 @@ namespace ResearchPublicationManagementSystem.Models
         public IReadOnlyList<UserListItemDto> Supervisors { get; set; } = [];
 
         /// <summary>
-        /// The coordinator's publications, used only to put a student's name against a proposal —
-        /// a ProposalDto carries its container's id and nothing about who wrote it.
+        /// The coordinator's publications, used only to put a student's name against a proposal. A
+        /// ProposalDto carries its container's id and nothing about who wrote it.
         /// </summary>
         public IReadOnlyList<PublicationContainerDto> Containers { get; set; } = [];
 
@@ -57,7 +57,7 @@ namespace ResearchPublicationManagementSystem.Models
 
         public IReadOnlyList<SupervisorInvitationDto> Invitations { get; set; } = [];
 
-        /// <summary>The supervisors who said yes — the only ones who can actually be assigned.</summary>
+        /// <summary>The supervisors who said yes, the only ones who can actually be assigned.</summary>
         public IEnumerable<SupervisorInvitationDto> Willing => Invitations.Where(i => i.IsSelected);
 
         public IEnumerable<SupervisorInvitationDto> AwaitingReply => Invitations.Where(i => !i.IsSelected);

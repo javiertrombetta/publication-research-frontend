@@ -10,7 +10,7 @@ namespace ResearchPublicationManagementSystem.Controllers
     /// <summary>
     /// The Head of Department oversees a department rather than individual publications, and has
     /// exactly one step in the workflow: commenting on a student's ethics documentation after the
-    /// coordinator has approved it. They comment rather than decide — the coordinator closes the
+    /// coordinator has approved it. They comment rather than decide. The coordinator closes the
     /// ethics stage afterwards, with these comments in front of them.
     /// </summary>
     [Authorize(Roles = RoleNames.HeadOfDepartment)]

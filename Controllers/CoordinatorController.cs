@@ -121,8 +121,8 @@ namespace ResearchPublicationManagementSystem.Controllers
             var model = new SupervisorSelectionsViewModel();
 
             // One request for the whole screen. The proposals carry their student's name and the
-            // supervisors' answers, and the API returns only the ones with an offer to allocate —
-            // so this no longer fetches every publication in the department to find a handful.
+            // supervisors' answers, and the API returns only the ones with an offer to allocate, so
+            // this no longer fetches every publication in the department to find a handful.
             var proposals = await proposalsApi.GetForCoordinatorAsync(page, awaitingAllocation: true);
             if (!proposals.Success)
             {
@@ -261,7 +261,7 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             // Split on whose turn it is rather than on the paper's status. UnderReview covers the
             // supervisor still reading it, an admin appointing a committee, the committee voting
-            // and this decision — so filtering on the status alone put a decision form in front of
+            // and this decision, so filtering on the status alone put a decision form in front of
             // the coordinator on three papers out of four that the API would then refuse.
             var papers = (containers.Data?.Items ?? [])
                 .Where(c => c.PaperStatus is PublicationStatus.UnderReview
@@ -331,7 +331,7 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             // The API is asked for this screen's queue, by name. Both of the coordinator's ethics
             // decisions answer "waiting on the Coordinator", so a role was never enough to tell
-            // them apart — the screens used to fetch every publication and read each approval's
+            // them apart. The screens used to fetch every publication and read each approval's
             // timestamps to work it out, which meant a page of publications could hold any number
             // of rows for either screen, or none.
             var steps = stage == EthicsStage.AfterHeadOfDepartment

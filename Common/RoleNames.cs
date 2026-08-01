@@ -1,6 +1,6 @@
 namespace ResearchPublicationManagementSystem.Common;
 
-/// <summary>Mirrors the backend's Common/RoleNames.cs — the canonical role name strings issued as JWT/cookie role claims.</summary>
+/// <summary>Mirrors the backend's Common/RoleNames.cs: the canonical role name strings issued as JWT/cookie role claims.</summary>
 public static class RoleNames
 {
     public const string Admin = "Admin";

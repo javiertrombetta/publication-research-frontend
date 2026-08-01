@@ -7,9 +7,9 @@ namespace ResearchPublicationManagementSystem.Controllers
     /// Serves the files a reviewer has to read before deciding anything.
     ///
     /// A proxy rather than a link straight to the API: the browser holds an encrypted cookie and
-    /// never sees the bearer token, so it cannot fetch a protected file itself. These actions do
-    /// it server-side and stream the result back. Who may read what is decided by the API, which
-    /// checks access against the publication — nothing here grants anything.
+    /// never sees the bearer token, so it cannot fetch a protected file itself. These actions do it
+    /// server-side and stream the result back. Who may read what is decided by the API, which
+    /// checks access against the publication. Nothing here grants anything.
     /// </summary>
     public class DownloadsController(
         PublicationsApiClient publicationsApi,
@@ -20,7 +20,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// evaluating it, the coordinator deciding on it, and the head of that department.
         ///
         /// The version is resolved here rather than carried in the listing, so a page showing
-        /// twenty papers costs nothing extra — only the one somebody actually opens does.
+        /// twenty papers costs nothing extra. Only the one somebody actually opens does.
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> Paper(Guid publicationId, Guid? versionId, CancellationToken cancellationToken)

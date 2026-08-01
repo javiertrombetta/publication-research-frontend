@@ -30,6 +30,14 @@
 
     --rpms-sidebar-width: 260px;
     --rpms-navbar-height: 56px;
+    /* ---------- Navigation ---------- */
+
+    /* The one filled grey in the chrome. Two controls wear it, the burger when the sidebar is
+       shut and the marker behind the open menu item, and they sit a few centimetres apart on the
+       same screen. Two hand-picked greys read as a mistake rather than as two shades, so both
+       take it from here and cannot drift apart again. */
+    --rpms-nav-fill: #6c757d;
+    --rpms-nav-fill-hover: #5a6268;
     /* ---------- Border Radius ---------- */
 
     --rpms-radius: 10px;
@@ -42,7 +50,7 @@
 /* Tabler reserves the scrollbar width as a LEFT margin on :root
    (`@media (min-width:992px){ :root{ margin-left: calc(100vw - 100%) } }`) so content doesn't
    shift between a page that scrolls and one that doesn't. The side effect is a visible gap
-   down the left edge of every scrolling page — header, body and footer all move inward,
+   down the left edge of every scrolling page, so header, body and footer all move inward,
    which is why the catalogue looked inset and the (non-scrolling) dashboard did not.
    Undone here: the scrollbar sits on the right as usual and the page stays flush. */
 :root {
@@ -59,7 +67,7 @@ html {
 
        Without this, the width of the content depends on whether it happens to overflow: a page
        that scrolls is 15px narrower than one that doesn't, so every navigation between the two
-       shifts the whole layout sideways. Worse within a single page — the browser paints before
+       shifts the whole layout sideways. Worse within a single page. The browser paints before
        it knows the final height, so text lands, the scrollbar appears, and everything jumps left
        and settles. That is the flicker.
 
@@ -100,13 +108,13 @@ body {
 
    A flex item will not shrink below the intrinsic width of its content unless told to: that is
    what `min-width: auto` means, and it is the default. So a table wider than the screen made the
-   whole column wider than the screen, and the page scrolled sideways — the heading, the cards and
-   the footer all dragged along with it — even though the table sits in a .table-responsive that
+   whole column wider than the screen, and the page scrolled sideways with the heading, the cards
+   and the footer all dragged along with it, even though the table sits in a .table-responsive that
    exists precisely to scroll on its own. The wrapper never got the chance: nothing had told the
    column it was allowed to be narrower than the table.
 
    It shows up on a phone because that is where a five-column table first exceeds the width, but
-   the rule is not a mobile fix — the same thing happens on a desktop to a table wide enough. */
+   the rule is not a mobile fix. The same thing happens on a desktop to a table wide enough. */
 .rpms-shell main {
     min-width: 0;
 }
@@ -153,7 +161,7 @@ body {
 
 /* Most views were authored as standalone fragments and re-declare the wrappers _Layout
    already provides. Neutralise the nested copies so their padding/margins don't stack and
-   inset the page — cheaper and safer than editing ~37 views, and harmless once a view is
+   inset the page, cheaper and safer than editing ~37 views, and harmless once a view is
    rewritten without them. */
 .container-xl .container-xl,
 .container-fluid .container-xl,
@@ -171,7 +179,7 @@ body {
 }
 
 /* Those same views also centre themselves in a narrow reading column
-   (`row justify-content-center > col-lg-8`). Only the PAGE-LEVEL wrapper is widened —
+   (`row justify-content-center > col-lg-8`). Only the PAGE-LEVEL wrapper is widened,
    the selector requires the row to be a direct child of the view's own container, so
    grids nested deeper inside cards keep their intended column widths. */
 .container-xl .container-xl > .row.justify-content-center > [class*="col-"] {
@@ -216,7 +224,7 @@ aside {
 
    Opening and closing take the same time and the same easing. The border is in the list too:
    left out, it snapped back the instant the panel started opening, which read as the sidebar
-   jumping open and then sliding — the two halves of the movement disagreeing. */
+   jumping open and then sliding, the two halves of the movement disagreeing. */
 .rpms-sidebar {
     flex: 0 0 auto;
     overflow: hidden;
@@ -250,7 +258,7 @@ aside {
     max-width: 170px;
 }
 
-/* Navigation — scoped to the sidebar on purpose.
+/* Navigation, scoped to the sidebar on purpose.
 
    These were written for the sidebar (solid brand fill, white label on the active item), but
    an unscoped `.nav-link` also matches Bootstrap tabs and the navbar user menu. On tabs the
@@ -279,7 +287,7 @@ aside {
         color: var(--rpms-primary);
     }
 
-    /* The open item. Its background is the marker below, not this rule — the fill has to be able
+    /* The open item. Its background is the marker below, not this rule. The fill has to be able
        to move between items, and a background painted on the link itself can only appear and
        disappear. Everything that stays with the label is here. */
     .rpms-sidebar-inner .nav-link.active,
@@ -317,7 +325,7 @@ aside {
     top: 0;
     height: 0;
     border-radius: 8px;
-    background: #000000;
+    background: var(--rpms-nav-fill);
     z-index: 0;
     /* Nothing to show until it has been measured and placed. */
     opacity: 0;
@@ -331,7 +339,7 @@ aside {
         opacity: 1;
     }
 
-/* Placing the marker on load is a starting condition, not a movement, so it must not animate —
+/* Placing the marker on load is a starting condition, not a movement, so it must not animate,
    the same reasoning as the sidebar's own restored width. site.js adds this for one frame. */
 .rpms-nav-marker.rpms-nav-marker-instant {
     transition: none;
@@ -375,7 +383,7 @@ aside {
 
         /* Slid up behind the top bar rather than shrunk: width is what the desktop state animates,
            and animating it here is what moved the content. Visibility follows the same asymmetry
-           as the desktop panel — hidden only once it has finished travelling, so it is watchable
+           as the desktop panel: hidden only once it has finished travelling, so it is watchable
            on the way out, and shown at once on the way in so there is something to watch. */
         .rpms-sidebar-is-collapsed .rpms-sidebar,
         .rpms-sidebar.rpms-sidebar-collapsed {
@@ -400,7 +408,7 @@ aside {
     }
 }
 
-/* A pointer that cannot hover — a touch screen. There is no "on the way past" there: the first
+/* A pointer that cannot hover, meaning a touch screen. There is no "on the way past" there: the first
    touch is the click, so a hover fill would appear at the same moment the page starts changing
    and read as the wrong item being chosen. */
 @media (hover: none) {
@@ -429,9 +437,9 @@ aside {
    RPMS Navbar
    ========================================================== */
 
-/* The bar is exactly this tall in every state. What sits inside it changes — a Sign in button
+/* The bar is exactly this tall in every state. What sits inside it changes: a Sign in button
    when signed out, nothing but the logo on the auth screens, the notification and user menu
-   when signed in — and none of those may be what decides its height, or the header would jump
+   when signed in, and none of those may be what decides its height, or the header would jump
    as you sign in and out. Hence a fixed height rather than a minimum. */
 .rpms-navbar {
     height: var(--rpms-navbar-height);
@@ -465,9 +473,9 @@ aside {
 /* ---------- Burger animation ---------- */
 
 /* Driven off the button's own aria-expanded, which site.js already keeps in sync with the
-   sidebar — no extra state to maintain. Open sidebar shows an X (click to close), collapsed
+   sidebar, with no extra state to maintain. Open sidebar shows an X (click to close), collapsed
    shows the three bars. Duration matches the sidebar's width transition so they move together. */
-/* The burger keeps its three bars in both states — it is the control that opens and closes the
+/* The burger keeps its three bars in both states. It is the control that opens and closes the
    sidebar, and it says so the same way either way. What changes is the button behind them. */
 
 /* Sidebar open: the button recedes, because the thing it opens is already on screen. */
@@ -486,23 +494,23 @@ aside {
 /* Sidebar closed: filled, so the way back is obvious once the nav is out of sight.
 
    Keyed off the pre-paint class as well as the ARIA state. The class is on <html> before the
-   page renders, whereas aria-expanded is corrected by site.js a moment later — without the
-   first selector the button would flash the wrong style on every load, which is the problem
-   the sidebar itself already had. */
+   page renders, whereas aria-expanded is corrected by site.js a moment later. Without the first
+   selector the button would flash the wrong style on every load, which is the problem the
+   sidebar itself already had. */
 :root.rpms-sidebar-is-collapsed #sidebar-toggle,
 #sidebar-toggle[aria-expanded="false"] {
     /* Grey rather than black: it marks the closed state without turning the top bar's lightest
        corner into its heaviest. White bars still clear the contrast threshold on this tone. */
-    background-color: #6c757d;
+    background-color: var(--rpms-nav-fill);
     color: #ffffff;
-    border-color: #6c757d;
+    border-color: var(--rpms-nav-fill);
 }
 
     :root.rpms-sidebar-is-collapsed #sidebar-toggle:hover,
     #sidebar-toggle[aria-expanded="false"]:hover {
-        background-color: #5a6268;
+        background-color: var(--rpms-nav-fill-hover);
         color: #ffffff;
-        border-color: #5a6268;
+        border-color: var(--rpms-nav-fill-hover);
     }
 
 @media (prefers-reduced-motion: reduce) {
@@ -557,7 +565,7 @@ aside {
     background: #e9ecef;
 }
 
-/* Solid counterparts of the badge tints, keyed off the same colour token — see
+/* Solid counterparts of the badge tints, keyed off the same colour token, see
    DisplayText.StatusColour. A stage's bar and its status badge are the same fact, so they must
    never disagree: a publication in Draft gets an orange bar beside its orange badge. */
 .rpms-stage-success {
@@ -762,7 +770,7 @@ aside {
     flex-direction: column;
     gap: .75rem;
     max-width: min(28rem, calc(100vw - 2rem));
-    pointer-events: none; /* the container never blocks clicks — only the toasts do */
+    pointer-events: none; /* the container never blocks clicks, only the toasts do */
 }
 
 .rpms-toast {
@@ -777,7 +785,7 @@ aside {
     border-left: 4px solid var(--rpms-secondary);
     /* Visible is the resting state, and the entrance animation is decoration on top of it
        (no fill-mode on purpose). A toast that only becomes visible once a script or an
-       animation frame runs stays invisible in a background tab — where animations are paused —
+       animation frame runs stays invisible in a background tab, where animations are paused,
        and can time out unseen. This way the message is on screen regardless. */
     animation: rpms-toast-in .25s ease-out;
 }
@@ -885,7 +893,7 @@ aside {
     }
 
 @media (prefers-reduced-motion: reduce) {
-    /* The toast still appears and still goes away — it just doesn't slide or fade. */
+    /* The toast still appears and still goes away, it just does not slide or fade. */
     .rpms-toast,
     .rpms-toast.rpms-toast-leaving {
         animation: none;
@@ -924,7 +932,7 @@ aside {
    navigation flicker. Removed by site.js once the page is up.
 
    Scoped to the sidebar deliberately. A blanket `*` rule reaches every element on the page, so
-   removing the class forces the browser to recompute styles for all of them at once — which is
+   removing the class forces the browser to recompute styles for all of them at once, which is
    its own visible hitch, and exactly the kind of "something happens to everything just after it
    renders" this was meant to stop. Only the sidebar has a restored state to suppress. */
 .rpms-no-transitions .rpms-sidebar,

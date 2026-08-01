@@ -13,7 +13,7 @@ namespace ResearchPublicationManagementSystem.Models
 
         /// <summary>
         /// True when the catalogue itself could not be reached, which is different from a search
-        /// that legitimately found nothing — the two need different wording.
+        /// that legitimately found nothing. The two need different wording.
         /// </summary>
         public bool LoadFailed { get; set; }
 
@@ -50,7 +50,7 @@ namespace ResearchPublicationManagementSystem.Models
     {
         public CatalogueEntryDto Entry { get; set; } = null!;
 
-        /// <summary>Null when the citation couldn't be built — the page is still worth showing.</summary>
+        /// <summary>Null when the citation could not be built. The page is still worth showing.</summary>
         public CitationDto? Citation { get; set; }
     }
 }

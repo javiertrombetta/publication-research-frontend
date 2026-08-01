@@ -24,8 +24,8 @@ namespace ResearchPublicationManagementSystem.Models
     }
 
     /// <summary>
-    /// Accepting an invitation. The role is not here on purpose — it comes from the invitation,
-    /// so accepting one can never be a way to award yourself a role nobody offered.
+    /// Accepting an invitation. The role is not here on purpose. It comes from the invitation, so
+    /// accepting one can never be a way to award yourself a role nobody offered.
     /// </summary>
     public class AcceptInvitationViewModel
     {

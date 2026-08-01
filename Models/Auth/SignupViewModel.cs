@@ -29,7 +29,7 @@ namespace ResearchPublicationManagementSystem.Models
 
         public string? InstitutionalId { get; set; }
 
-        // Only required for @aisstudent.ac.nz addresses — enforced server-side by the backend,
+        // Only required for @aisstudent.ac.nz addresses, enforced server-side by the backend,
         // shown/hidden client-side based on the typed email domain (UX only).
         public string? StudentIdNumber { get; set; }
         public string? Programme { get; set; }

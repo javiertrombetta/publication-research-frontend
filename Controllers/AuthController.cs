@@ -75,7 +75,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             }
 
             // The backend always returns success here regardless of whether the address is
-            // registered (no email enumeration) — don't branch the UI on the result.
+            // registered (no email enumeration). Do not branch the UI on the result.
             await authApiClient.ForgotPasswordAsync(model.Email);
 
             ViewData["Submitted"] = true;

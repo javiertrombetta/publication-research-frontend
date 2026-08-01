@@ -28,8 +28,8 @@ public class InstitutionOptions
 
     /// <summary>
     /// Where a reader writes to ask for the full text of a published paper. The catalogue shows
-    /// abstracts and metadata only — the papers themselves are not downloadable from it — so this
-    /// is the sole route to a copy. Empty until the address is decided, and while it is empty the
+    /// abstracts and metadata only. The papers themselves are not downloadable from it, so this is
+    /// the sole route to a copy. Empty until the address is decided, and while it is empty the
     /// catalogue says to contact the institution without offering a link that goes nowhere.
     /// </summary>
     public string ResearchEnquiriesEmail { get; set; } = string.Empty;

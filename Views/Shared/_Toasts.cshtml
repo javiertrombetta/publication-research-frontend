@@ -3,7 +3,7 @@
     TempData, and any validation errors sitting in ModelState after a failed submit.
 
     A controller only has to set TempData["SuccessMessage"] / TempData["ErrorMessage"] or leave
-    ModelState invalid — no view needs its own alert markup.
+    ModelState invalid, so no view needs its own alert markup.
 
     The <template> copies at the bottom exist so client-side validation can raise the very same
     toast without a round trip, without a second copy of this markup living in site.js.
@@ -21,8 +21,8 @@
         toasts.Add(("error", new[] { error }));
     }
 
-    // Neither good news nor bad — something waiting to be read, such as unread notifications
-    // on signing in. Kept distinct so it does not borrow the weight of a success or a failure.
+    // Neither good news nor bad. Something waiting to be read, such as unread notifications on
+    // signing in. Kept distinct so it does not borrow the weight of a success or a failure.
     if (TempData["InfoMessage"] is string info && !string.IsNullOrWhiteSpace(info))
     {
         toasts.Add(("info", new[] { info }));
@@ -81,7 +81,7 @@
             <div class="rpms-toast-body">
                 @if (messages is null)
                 {
-                    @* Skeleton — the client fills this in. *@
+                    @* Skeleton, filled in by the client. *@
                 }
                 else if (messages.Count == 1)
                 {
@@ -120,8 +120,8 @@
     }
 </div>
 
-@* Written out one by one rather than looped. A <template> inside a Razor code block — which is
-   what the body of a @@foreach is — fails to compile: the parser does not close the element and
+@* Written out one by one rather than looped. A <template> inside a Razor code block, which is
+   what the body of a @@foreach, fails to compile: the parser does not close the element and
    the whole file falls apart. At markup level it is fine, and there are only three kinds. *@
 <template class="rpms-toast-template" data-toast-kind="success">
     @{ RenderToast("success", null); }

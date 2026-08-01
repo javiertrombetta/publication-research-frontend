@@ -70,10 +70,10 @@ public class UsersApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
         PostJsonAsync<UserDetailDto>("api/users", request, ct);
 
     /// <summary>
-    /// Deletes an account. The backend keeps the row and strips it rather than removing it —
-    /// every reference to a user is a Restrict foreign key, and detaching published research
-    /// from its author to force a row delete would destroy the traceability this records.
-    /// The reason is required and lands in the audit trail.
+    /// Deletes an account. The backend keeps the row and strips it rather than removing it. Every
+    /// reference to a user is a Restrict foreign key, and detaching published research from its
+    /// author to force a row delete would destroy the traceability this records. The reason is
+    /// required and lands in the audit trail.
     /// </summary>
     public Task<ApiResult<object?>> DeleteAsync(Guid id, CommentsRequestDto request, CancellationToken ct = default) =>
         DeleteJsonAsync<object?>($"api/users/{id}", request, ct);

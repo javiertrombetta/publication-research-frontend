@@ -100,9 +100,9 @@ namespace ResearchPublicationManagementSystem.Controllers
         // ---------- Pipeline 2: ethics ----------
 
         /// <summary>
-        /// The supervisor's ethics screen for one publication. Which decision it offers depends
-        /// on where the approval has got to — the requirement ruling comes first, the document
-        /// check only once the student has uploaded them.
+        /// The supervisor's ethics screen for one publication. Which decision it offers depends on
+        /// where the approval has got to. The requirement ruling comes first, the document check
+        /// only once the student has uploaded them.
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> Review_Ethic_assessmentchecklist(Guid id)
@@ -200,7 +200,7 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         /// <summary>
         /// Loads one publication's ethics stage, refusing anything this supervisor isn't assigned
-        /// to. The API enforces that too — this keeps a wrong id from rendering a broken page.
+        /// to. The API enforces that too. This keeps a wrong id from rendering a broken page.
         /// </summary>
         private async Task<(SupervisorEthicsViewModel Model, IActionResult? Redirect)> LoadEthicsAsync(Guid containerId)
         {

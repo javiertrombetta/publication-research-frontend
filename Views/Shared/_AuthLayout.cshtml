@@ -1,7 +1,7 @@
 @*
     Layout for the signed-out screens (login, signup, password recovery/reset, email
     verification, access denied). Deliberately does NOT use Tabler's .page/.page-wrapper/
-    .page-body classes — those are built for the sidebar dashboard shell and set flex:1 on
+    .page-body classes. Those are built for the sidebar dashboard shell and set flex:1 on
     the body element, which stretches the content area and pins content to the top instead
     of centering it.
 *@
@@ -20,12 +20,12 @@
 <body class="rpms-auth-body">
 
     @* Same .rpms-navbar as the signed-in shell, so the bar is exactly as tall here as it is
-       everywhere else — see the fixed height in site.css. *@
+       everywhere else, see the fixed height in site.css. *@
     <header class="navbar navbar-expand-md d-print-none rpms-navbar">
         <div class="container-fluid px-3">
             <div class="d-flex align-items-center">
                 @* This layout is only ever shown signed out, so the brand goes where a signed-out
-                   visitor belongs — the public catalogue — not back to the page they're on. *@
+                   visitor belongs, the public catalogue, not back to the page they're on. *@
                 <a asp-controller="@RoleLanding.Anonymous.Controller" asp-action="@RoleLanding.Anonymous.Action"
                    class="navbar-brand m-0 p-0 d-flex align-items-center">
                     <img src="~/images/ais-logo.png" class="rpms-navbar-logo" alt="Auckland Institute of Studies" />

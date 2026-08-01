@@ -6,8 +6,8 @@ using ResearchPublicationManagementSystem.Models;
 namespace ResearchPublicationManagementSystem.Controllers
 {
     /// <summary>
-    /// The published catalogue. Deliberately anonymous — this is the one part of the system meant
-    /// to be read by people who have no account, which is why it overrides the application's
+    /// The published catalogue. Deliberately anonymous, because this is the one part of the system
+    /// meant to be read by people who have no account, which is why it overrides the application's
     /// authenticate-by-default policy. Only papers whose author chose to publish them appear here;
     /// the backend enforces that independently.
     /// </summary>
@@ -19,7 +19,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// <summary>
         /// Sends an anonymous visitor to sign in when there is no public catalogue to show them.
         ///
-        /// The API refuses these requests as well — this only saves the visitor a page reporting a
+        /// The API refuses these requests as well. This only saves the visitor a page reporting a
         /// failure that is not a failure. Signed-in people are unaffected: the setting governs the
         /// public catalogue, not the institution's own access to what it has published.
         /// </summary>

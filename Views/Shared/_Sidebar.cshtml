@@ -20,7 +20,7 @@
         || User.IsInRole(RoleNames.HeadOfDepartment);
 
     // Which screen is open, taken from the route rather than the URL text so that a link and the
-    // page it opens are compared on the same terms — casing and query strings included.
+    // page it opens are compared on the same terms, casing and query strings included.
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
 }
@@ -41,7 +41,7 @@
 <aside class="border-end bg-white rpms-sidebar" id="rpms-sidebar">
 
     @* Fixed-width inner panel: keeps the nav from reflowing (and labels from wrapping) while
-       the sidebar animates open/closed — it is clipped instead. See .rpms-sidebar-inner. *@
+       the sidebar animates open/closed. It is clipped instead. See .rpms-sidebar-inner. *@
     <div class="p-4 rpms-sidebar-inner">
 
         <nav class="nav flex-column rpms-nav">
@@ -50,7 +50,7 @@
                than a background on each link, because it has to travel: click another item and it
                slides there while the page is still loading, so the menu answers the click instead
                of sitting still until the next paint. site.js places it; until then it is invisible,
-               which is also what a reader without JavaScript gets — the active item is still
+               which is also what a reader without JavaScript gets. The active item is still
                marked, by the outline that .rpms-nav-marker-ready turns off. *@
             <span class="rpms-nav-marker" aria-hidden="true"></span>
 
@@ -90,7 +90,7 @@
                 </a>
             }
 
-            @* The Head of Department has one decision — the ethics review — plus oversight of
+            @* The Head of Department has one decision, the ethics review, plus oversight of
                their department's proposals. *@
             @if (isHeadOfDepartment)
             {
@@ -121,7 +121,7 @@
             }
 
             @* Shown whatever the public-catalogue setting says. That setting governs what the
-               world sees, not what the institution can see of its own published work — and if it
+               world sees, not what the institution can see of its own published work, and if it
                were hidden here too, a student's decision to publish would have no visible effect
                anywhere, which would make that step of the process meaningless. *@
             <a asp-controller="Public" asp-action="public_catalogue" class="@NavClass(currentController, currentAction, "Public", "public_catalogue")">Public catalogue</a>

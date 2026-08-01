@@ -7,7 +7,7 @@
     <h1 class="page-title mb-1">Assign evaluation committees</h1>
     <div class="text-secondary">
         Papers a supervisor has accepted that have no committee yet. Nothing moves until one is
-        assigned — the coordinator's final decision is blocked on it.
+        assigned, because the coordinator's final decision is blocked on it.
     </div>
 </div>
 
@@ -79,8 +79,8 @@ else
                                     <span class="form-check-label">
                                         @member.FullName
                                         <span class="d-block text-secondary small">
-                                            @* External is a fact about the person — they are from outside
-                                               the institution — so it is shown rather than chosen here, and
+                                            @* External is a fact about the person, who comes from outside
+                                               the institution, so it is shown rather than chosen here, and
                                                it is what the required composition counts. *@
                                             @(member.Roles.Contains(RoleNames.ExternalCommitteeMember) ? "External" : "Internal")
                                             @if (member.Roles.Any(r => r != RoleNames.ExternalCommitteeMember))

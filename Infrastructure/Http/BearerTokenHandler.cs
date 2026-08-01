@@ -21,9 +21,9 @@ public class BearerTokenHandler(IHttpContextAccessor httpContextAccessor, IAuthC
         var httpContext = httpContextAccessor.HttpContext;
         var accessToken = httpContext?.User.FindFirst(AuthClaimTypes.AccessToken)?.Value;
 
-        // Refresh ahead of expiry when possible — besides avoiding a failed-request round trip,
-        // this matters for multipart uploads: a reactive 401-retry can't safely resend a
-        // stream-backed request body that's already been read once.
+        // Refresh ahead of expiry when possible. Besides avoiding a failed-request round trip, this
+        // matters for multipart uploads: a reactive 401-retry can't safely resend a stream-backed
+        // request body that's already been read once.
         if (httpContext is not null && accessToken is not null && IsNearExpiry(httpContext))
         {
             var refreshToken = httpContext.User.FindFirst(AuthClaimTypes.RefreshToken)?.Value;
@@ -60,9 +60,9 @@ public class BearerTokenHandler(IHttpContextAccessor httpContextAccessor, IAuthC
             return response;
         }
 
-        // The refresh worked, but only replay the request if its body can actually be sent twice.
-        // A multipart upload's content is backed by an IFormFile stream that this request already
-        // consumed — replaying it would silently send an empty body, which is worse than surfacing
+        // The refresh worked, but only replay the request if its body can actually be sent twice. A
+        // multipart upload's content is backed by an IFormFile stream that this request already
+        // consumed. Replaying it would silently send an empty body, which is worse than surfacing
         // the 401 as "session expired, please retry".
         if (!request.Options.TryGetValue(ApiClientBase.ReplayableOption, out var replayable) || !replayable)
         {

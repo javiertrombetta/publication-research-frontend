@@ -61,9 +61,9 @@ public class PublicationsApiClient(HttpClient httpClient) : ApiClientBase(httpCl
             $"api/publications/pending?page={Math.Max(1, page)}&pageSize={pageSize}", ct);
 
     /// <summary>
-    /// Papers a supervisor has approved that have no evaluation committee yet — the
-    /// administrator's queue, answered in one request rather than reconstructed from the
-    /// containers list, which could not see whether the supervisor had approved.
+    /// Papers a supervisor has approved that have no evaluation committee yet. This is the
+    /// administrator's queue, answered in one request rather than reconstructed from the containers
+    /// list, which could not see whether the supervisor had approved.
     /// </summary>
     public Task<ApiResult<IReadOnlyList<AwaitingCommitteeDto>>> GetAwaitingCommitteeAsync(CancellationToken ct = default) =>
         GetAsync<IReadOnlyList<AwaitingCommitteeDto>>("api/publications/awaiting-committee", ct);

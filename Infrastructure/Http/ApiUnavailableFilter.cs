@@ -6,13 +6,12 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 namespace ResearchPublicationManagementSystem.Infrastructure.Http;
 
 /// <summary>
-/// Replaces the page with a maintenance notice when the backend could not be reached while
-/// building it.
+/// Replaces the page with a maintenance notice when the backend could not be reached while building
+/// it.
 ///
-/// Without this each screen renders its own idea of failure — an empty table here, a "we
-/// couldn't load this" card there, a dashboard of zeroes — which reads as the application being
-/// broken rather than temporarily unavailable. One honest message is better than a dozen
-/// half-truths.
+/// Without this each screen renders its own idea of failure: an empty table here, a "we couldn't
+/// load this" card there, a dashboard of zeroes, which reads as the application being broken rather
+/// than temporarily unavailable. One honest message is better than a dozen half-truths.
 ///
 /// Runs after the action, not before: whether the API answers is only known once the attempt has
 /// been made.
@@ -39,7 +38,7 @@ public class ApiUnavailableFilter : IAsyncResultFilter
         context.HttpContext.Response.Headers.RetryAfter = "60";
 
         // Whatever the action left to say about the failure describes this same outage, in the
-        // words of a stack trace — "Connection refused (localhost:5020)" and the like. The page
+        // words of a stack trace: "Connection refused (localhost:5020)" and the like. The page
         // already says it properly, and a toast quoting the transport on top of it both leaks
         // internals and contradicts the calm of the message.
         DiscardMessagesAboutTheOutage(context);

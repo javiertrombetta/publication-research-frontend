@@ -2,7 +2,7 @@
 @*
     A publication's narrative history: every action taken on it, by whom and in what capacity,
     with the comment that justified it. The backend records the same log for every role, so this
-    partial is shared — each role's container view renders it as its own tab.
+    partial is shared, and each role's container view renders it as its own tab.
 
     Newest first, as the backend returns it: the latest decision is what someone comes here to
     read, and the rest is the chronology behind it.
@@ -13,8 +13,8 @@
         <div class="card-body text-center py-5">
             <h3 class="mb-2">Nothing has happened yet</h3>
             <p class="text-secondary m-0">
-                Every action taken on this publication — by the student, the coordinator, the
-                supervisor or the committee — will be recorded here with its comment.
+                Every action taken on this publication, by the student, the coordinator, the
+                supervisor or the committee, will be recorded here with its comment.
             </p>
         </div>
     </div>
@@ -68,7 +68,7 @@ else
                                 @if (entry.NewStatus is not null)
                                 {
                                     <div class="mt-2">
-                                        @* Both sides of the transition are coloured by what they are —
+                                        @* Both sides of the transition are coloured by what they are,
                                            the arrow already says which one came first. *@
                                         @if (entry.PreviousStatus is not null)
                                         {

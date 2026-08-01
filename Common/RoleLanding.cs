@@ -32,7 +32,7 @@ public static class RoleLanding
     public static (string Controller, string Action) For(ClaimsPrincipal user) =>
         user.Identity?.IsAuthenticated == true
             ? For(user.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList())
-            // Signed out, so there is no role to land on — and sending them to a page that
-            // demands a login would make the brand link a trap.
+            // Signed out, so there is no role to land on, and sending them to a page that demands a
+            // login would make the brand link a trap.
             : Anonymous;
 }

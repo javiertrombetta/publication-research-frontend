@@ -44,8 +44,8 @@ public record SetCommitteeRoleConfigRequestDto(string RoleType, int RequiredCoun
 
 /// <summary>
 /// Granting a role to an existing account. Carries what the new role needs: a role without its
-/// profile is one the person cannot use — a Coordinator with no profile is invisible to
-/// auto-assignment, and a committee member with none cannot be put on a committee.
+/// profile is one the person cannot use: a Coordinator with no profile is invisible to auto-
+/// assignment, and a committee member with none cannot be put on a committee.
 /// </summary>
 public record ChangeUserRoleRequestDto(
     string Role,

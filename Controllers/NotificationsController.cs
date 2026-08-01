@@ -40,10 +40,10 @@ namespace ResearchPublicationManagementSystem.Controllers
         [HttpGet]
         public async Task<IActionResult> Open(Guid id)
         {
-            // Where this goes is read from the notification itself rather than taken from the
-            // URL. The old form trusted query parameters for the destination, which meant the
-            // link could be pointed anywhere the person fancied — harmless, since every target
-            // enforces its own access, but the record is the only honest source.
+            // Where this goes is read from the notification itself rather than taken from the URL.
+            // The old form trusted query parameters for the destination, which meant the link could
+            // be pointed anywhere the person fancied. Harmless, since every target enforces its own
+            // access, but the record is the only honest source.
             var notifications = await notificationsApi.GetAsync();
             var notification = notifications.Data?.FirstOrDefault(n => n.Id == id);
 

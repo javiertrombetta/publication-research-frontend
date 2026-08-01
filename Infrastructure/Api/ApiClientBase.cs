@@ -15,10 +15,10 @@ public abstract class ApiClientBase(HttpClient httpClient)
 {
 
     /// <summary>
-    /// Marks a request whose body can safely be sent a second time, so BearerTokenHandler knows
-    /// it may replay it after a token refresh. JSON/no-body requests are replayable; multipart
-    /// uploads are not — their content is backed by a forward-only IFormFile stream that is
-    /// already consumed by the time a 401 comes back.
+    /// Marks a request whose body can safely be sent a second time, so BearerTokenHandler knows it
+    /// may replay it after a token refresh. JSON/no-body requests are replayable; multipart uploads
+    /// are not. Their content is backed by a forward-only IFormFile stream that is already consumed
+    /// by the time a 401 comes back.
     /// </summary>
     public static readonly HttpRequestOptionsKey<bool> ReplayableOption = new("RpmsReplayable");
 
@@ -107,8 +107,8 @@ public abstract class ApiClientBase(HttpClient httpClient)
     }
 
     /// <summary>
-    /// The API is not answering. Recording that on the request is ApiAvailabilityHandler's job —
-    /// it sits in the message pipeline and sees every call, including the ones whose result never
+    /// The API is not answering. Recording that on the request is ApiAvailabilityHandler's job. It
+    /// sits in the message pipeline and sees every call, including the ones whose result never
     /// reaches a controller. This only shapes the result.
     /// </summary>
     private static ApiResult<T> Unreachable<T>(string message, int statusCode = 0) =>
@@ -123,7 +123,7 @@ public abstract class ApiClientBase(HttpClient httpClient)
     /// <summary>
     /// Used only by AuthApiClient, whose HttpClient deliberately carries no BearerTokenHandler
     /// (that handler depends on IAuthCookieService, which depends on AuthApiClient for token
-    /// refresh — attaching the handler here would create a DI cycle). Its one authenticated
+    /// refresh, and attaching the handler here would create a DI cycle). Its one authenticated
     /// endpoint (change-password) attaches the token explicitly instead.
     /// </summary>
     private static HttpRequestMessage WithBearer(HttpRequestMessage request, string? bearerToken)
@@ -136,8 +136,8 @@ public abstract class ApiClientBase(HttpClient httpClient)
         new(JsonSerializer.Serialize(body, JsonOpts), Encoding.UTF8, "application/json");
 
     /// <summary>
-    /// Streams IFormFile content directly into a multipart request without buffering the whole
-    /// file into memory — needed for paper-version uploads up to 200MB.
+    /// Streams IFormFile content directly into a multipart request without buffering the whole file
+    /// into memory, needed for paper-version uploads up to 200MB.
     /// </summary>
     protected async Task<ApiResult<T>> PostMultipartAsync<T>(
         string url,
@@ -255,7 +255,8 @@ public abstract class ApiClientBase(HttpClient httpClient)
                         return ApiResult<T>.Ok(data, statusCode);
                     }
 
-                    // Errors is a flat string[] here (not field-keyed) — surface as one combined message.
+                    // Errors is a flat string[] here (not field-keyed), so surface it as one
+                    // combined message.
                     var errorList = doc.RootElement.TryGetProperty("errors", out var errorsEl) && errorsEl.ValueKind == JsonValueKind.Array
                         ? errorsEl.EnumerateArray().Select(e => e.GetString() ?? "").Where(s => s.Length > 0).ToArray()
                         : [];
