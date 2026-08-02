@@ -85,9 +85,18 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
     public Task<ApiResult<PagedResultDto<PublicationContainerDto>>> GetInMyDepartmentAsync(
         string? ethicsSteps = null, int page = 1, int pageSize = Paging.DefaultPageSize,
         string? sort = null, bool descending = false, string? search = null,
-        CancellationToken ct = default) =>
-        GetAsync<PagedResultDto<PublicationContainerDto>>(
-            WithSteps("api/containers/in-my-department", ethicsSteps, page, pageSize, sort, descending, search), ct);
+        string? paperAwaiting = null, CancellationToken ct = default)
+    {
+        var path = WithSteps("api/containers/in-my-department", ethicsSteps, page, pageSize, sort, descending, search);
+
+        // Whose turn it is on the paper, so the head of department can look at the research paper
+        // stage on its own rather than reading it out of the whole department's listing.
+        return GetAsync<PagedResultDto<PublicationContainerDto>>(
+            string.IsNullOrWhiteSpace(paperAwaiting)
+                ? path
+                : path + (path.Contains('?') ? "&" : "?") + $"paperAwaiting={Uri.EscapeDataString(paperAwaiting)}",
+            ct);
+    }
 
     private static string WithSteps(string path, string? ethicsSteps, int page, int pageSize,
         string? sort = null, bool descending = false, string? search = null)

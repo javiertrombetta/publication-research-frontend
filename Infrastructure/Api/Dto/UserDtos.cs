@@ -14,7 +14,9 @@ public record UserDetailDto(
     DateTime CreatedAt,
     JsonElement? Profile,
     bool HasProfilePhoto,
-    bool IsAvailable = true);
+    bool IsAvailable = true,
+    /// <summary>Light or dark, as they last chose it. Null until they have.</summary>
+    string? ThemePreference = null);
 
 /// <summary>Whether this person is taking work on. Theirs to set, unlike Status.</summary>
 public record SetAvailabilityRequestDto(bool IsAvailable);

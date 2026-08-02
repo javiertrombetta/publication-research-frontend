@@ -10,16 +10,23 @@
         PipelineStage.ResearchPaper => "Research paper",
         _ => "—"
     };
+
+    // Whose move it is, whoever that happens to be. The other dashboards answer "is it mine";
+    // this one is oversight, so it names the person the department is waiting on instead.
+    string WaitingOn(PublicationContainerDto c)
+    {
+        if (c.Status == "Completed") return "Nobody, it is finished";
+        if (c.EthicsAwaitingRole is { } ethics) return Humanise(ethics);
+        if (c.PaperAwaitingRole is { } paper) return Humanise(paper);
+        return "Nobody";
+    }
 }
 
 <div class="mb-4">
     <h1 class="page-title mb-1">Head of Department dashboard</h1>
     <div class="text-secondary">
-        @(Model.AwaitingReview.Count == 0
-            ? "Nothing is waiting on your review."
-            : Model.AwaitingReview.Count == 1
-                ? "One ethics review is waiting on you."
-                : $"{Model.AwaitingReview.Count} ethics reviews are waiting on you.")
+        Everything moving through your department, at whichever stage it has reached, and who the
+        next move belongs to.
     </div>
 </div>
 
@@ -35,19 +42,44 @@
 }
 else
 {
+    @* One card per stage, so the shape of the department reads at a glance: how much is still
+       choosing a topic, how much is in ethics, how much is being written and judged. The ethics
+       card carries the one decision that is theirs, because that is the part they act on. *@
     <div class="row row-cards mb-4">
+        <div class="col-12 col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-secondary mb-1">Research proposals</div>
+                    <div class="h1 m-0">@Model.ProposalStageTotal</div>
+                    <div class="text-secondary">
+                        @(Model.ProposalStageTotal == 1 ? "publication at this stage" : "publications at this stage")
+                    </div>
+                    <a asp-controller="HeadOfDepartment" asp-action="all_proposals_fromstudent"
+                       class="btn btn-outline-primary btn-sm mt-3">Department proposals</a>
+                </div>
+            </div>
+        </div>
 
         <div class="col-12 col-md-4">
-            <div class="card h-100 @(Model.AwaitingReview.Count > 0 ? "border-primary" : "")">
+            <div class="card h-100 @(Model.AwaitingMyReviewTotal > 0 ? "border-primary" : "")">
                 <div class="card-body">
-                    <div class="text-secondary mb-1">Ethics reviews</div>
-                    <div class="h1 m-0">@Model.AwaitingReview.Count</div>
-                    <div class="text-secondary">waiting on you</div>
-                    @if (Model.AwaitingReview.Count > 0)
+                    <div class="text-secondary mb-1">Ethics approval</div>
+                    <div class="h1 m-0">@Model.EthicsStageTotal</div>
+                    <div class="text-secondary">
+                        @(Model.EthicsStageTotal == 1 ? "publication at this stage" : "publications at this stage")
+                    </div>
+
+                    @if (Model.AwaitingMyReviewTotal > 0)
                     {
-                        <a asp-controller="HeadOfDepartment" asp-action="Headofdepartment_feedback"
-                           class="btn btn-primary btn-sm mt-3">Review them</a>
+                        <div class="text-secondary small mt-1">
+                            <strong>@Model.AwaitingMyReviewTotal</strong> waiting on your comments
+                        </div>
                     }
+
+                    <a asp-controller="HeadOfDepartment" asp-action="Headofdepartment_feedback"
+                       class="btn @(Model.AwaitingMyReviewTotal > 0 ? "btn-primary" : "btn-outline-primary") btn-sm mt-3">
+                        Ethics reviews
+                    </a>
                 </div>
             </div>
         </div>
@@ -55,26 +87,19 @@ else
         <div class="col-12 col-md-4">
             <div class="card h-100">
                 <div class="card-body">
-                    <div class="text-secondary mb-1">In progress</div>
-                    <div class="h1 m-0">@Model.InProgress</div>
-                    <div class="text-secondary">publications under way</div>
+                    <div class="text-secondary mb-1">Research papers</div>
+                    <div class="h1 m-0">@Model.PaperStageTotal</div>
+                    <div class="text-secondary">
+                        @(Model.PaperStageTotal == 1 ? "publication at this stage" : "publications at this stage")
+                    </div>
+                    <a asp-controller="HeadOfDepartment" asp-action="Department_papers"
+                       class="btn btn-outline-primary btn-sm mt-3">Department papers</a>
                 </div>
             </div>
         </div>
-
-        <div class="col-12 col-md-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="text-secondary mb-1">Completed</div>
-                    <div class="h1 m-0">@Model.Completed</div>
-                    <div class="text-secondary">publications finished</div>
-                </div>
-            </div>
-        </div>
-
     </div>
 
-    @if (Model.Publications.Count == 0)
+    @if (Model.TotalCount == 0 && !Model.HasSearch)
     {
         <div class="card">
             <div class="card-body text-center py-5">
@@ -87,49 +112,115 @@ else
     }
     else
     {
-        <h2 class="h3 mb-2">Your department's publications</h2>
-        <div class="card">
-            <div class="table-responsive">
-                <table class="table card-table table-vcenter">
-                    <thead>
-                        <tr>
-                            <th>Student</th>
-                            <th>Publication</th>
-                            <th>Stage</th>
-                            <th>Status</th>
-                            <th>Waiting on you</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var publication in Model.Publications)
-                        {
-                            <tr>
-                                <td>@publication.StudentName</td>
-                                <td>@publication.DisplayTitle</td>
-                                <td>@StageLabel(publication.CurrentPipeline)</td>
-                                <td>
-                                    <span class="badge @StatusBadge(publication.DisplayStatus)">
-                                        @Humanise(publication.DisplayStatus)
-                                    </span>
-                                </td>
-                                <td>
-                                    @if (publication.EthicsAwaitingRole == RoleNames.HeadOfDepartment)
-                                    {
-                                        <a asp-controller="HeadOfDepartment" asp-action="Headofdepartment_feedback"
-                                           asp-route-id="@publication.Id" class="btn btn-sm btn-primary">
-                                            Review ethics
-                                        </a>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-secondary">&mdash;</span>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+        <div class="card mb-3">
+            <div class="card-body py-3">
+                <form method="get" asp-controller="HeadOfDepartment" asp-action="Head_of_Department_dashboard"
+                      class="row g-2 align-items-center">
+
+                    @* The order survives a search, so narrowing the list does not silently reorder it. *@
+                    <input type="hidden" name="sort" value="@Model.Sort" />
+                    <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+
+                    <div class="col-12 col-md">
+                        <input type="search" name="search" value="@Model.Search" class="form-control"
+                               placeholder="Search by student or publication" aria-label="Search" />
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                    <div class="col-auto">
+                        <a asp-controller="HeadOfDepartment" asp-action="Head_of_Department_dashboard"
+                           asp-all-route-data="Model.ClearSearchRoute()"
+                           class="btn btn-outline-secondary">Clear</a>
+                    </div>
+                    <div class="col-12 col-md-auto ms-md-auto text-secondary small">
+                        <strong>@Model.TotalCount</strong>
+                        @(Model.TotalCount == 1 ? "publication" : "publications"),
+                        @Model.Publications.Count on this page.
+                    </div>
+                </form>
             </div>
         </div>
+
+        if (Model.Publications.Count == 0)
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+                    <p class="text-secondary mb-4">No publication in your department has that student or title.</p>
+                    <a asp-controller="HeadOfDepartment" asp-action="Head_of_Department_dashboard" class="btn btn-primary">
+                        Show them all
+                    </a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="table-responsive">
+                    @{
+                        var byStudent = Model.Column("student", "Student");
+                        var byStarted = Model.Column("started", "Publication", descendingFirst: true);
+                        var byStage = Model.Column("stage", "Stage");
+                        var byStatus = Model.Column("status", "Status");
+                    }
+                    <table class="table card-table table-vcenter rpms-table-stable">
+                        @* Declared once so the columns do not resize themselves around whichever
+                           ten rows a sort happens to bring onto the page. *@
+                        <colgroup>
+                            <col style="width: 18%" />
+                            <col style="width: 34%" />
+                            <col style="width: 16%" />
+                            <col style="width: 14%" />
+                            <col style="width: 18%" />
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th><partial name="_SortableHeader" model="byStudent" /></th>
+                                <th><partial name="_SortableHeader" model="byStarted" /></th>
+                                <th><partial name="_SortableHeader" model="byStage" /></th>
+                                <th><partial name="_SortableHeader" model="byStatus" /></th>
+                                @* Not sortable: it is read out of two fields the projection
+                                   computes, and there is no single column behind it. *@
+                                <th>Waiting on</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var publication in Model.Publications)
+                            {
+                                <tr>
+                                    <td>@publication.StudentName</td>
+                                    <td>@publication.DisplayTitle</td>
+                                    <td>@StageLabel(publication.CurrentPipeline)</td>
+                                    <td>
+                                        <span class="badge @StatusBadge(publication.DisplayStatus)">
+                                            @Humanise(publication.DisplayStatus)
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (publication.EthicsAwaitingRole == RoleNames.HeadOfDepartment)
+                                        {
+                                            @* Theirs to act on, so it is a way in rather than a label. *@
+                                            <a asp-controller="HeadOfDepartment" asp-action="Headofdepartment_feedback"
+                                               asp-route-id="@publication.Id"
+                                               class="btn btn-sm btn-primary">Add your comments</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary">@WaitingOn(publication)</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            @if (Model.Pager is not null)
+            {
+                <partial name="_Pager" model="Model.Pager" />
+            }
+        }
     }
 }

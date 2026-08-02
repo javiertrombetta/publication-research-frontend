@@ -22,13 +22,19 @@ namespace ResearchPublicationManagementSystem.Controllers
         // ---------- Overview ----------
 
         [HttpGet]
-        public async Task<IActionResult> Head_of_Department_dashboard()
+        public async Task<IActionResult> Head_of_Department_dashboard(
+            int page = 1, string? sort = null, bool desc = false, string? search = null)
         {
-            var model = new HeadOfDepartmentDashboardViewModel();
+            var model = new HeadOfDepartmentDashboardViewModel
+            {
+                Sort = sort ?? "started",
+                Descending = desc,
+                Search = search
+            };
 
-            // The dashboard is an overview of the department, so it asks for a generous page and
-            // states its figures from the total rather than from what fits on one.
-            var containers = await containersApi.GetInMyDepartmentAsync(pageSize: 100);
+            var containers = await containersApi.GetInMyDepartmentAsync(
+                page: page, sort: sort ?? "started", descending: desc, search: search);
+
             if (!containers.Success)
             {
                 TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your department's publications.";
@@ -37,10 +43,65 @@ namespace ResearchPublicationManagementSystem.Controllers
             }
 
             model.Publications = containers.Data?.Items ?? [];
+            model.TotalCount = containers.Data?.TotalCount ?? 0;
+            model.Pager = Paging.PagerFor(containers.Data, "HeadOfDepartment",
+                nameof(Head_of_Department_dashboard), model.RouteValues());
+
+            // How much of the department sits at each stage, each asked for as a count rather than
+            // a page: the cards state figures, and a figure capped at the page size would be wrong.
+            // Counted from the listing's own totals so the three add up to what is below them.
+            var all = await containersApi.GetInMyDepartmentAsync(pageSize: 100);
+            var everything = all.Data?.Items ?? [];
+
+            model.ProposalStageTotal = everything.Count(c => c.CurrentPipeline == PipelineStage.ResearchProposals);
+            model.EthicsStageTotal = everything.Count(c => c.CurrentPipeline == PipelineStage.EthicsApproval);
+            model.PaperStageTotal = everything.Count(c => c.CurrentPipeline == PipelineStage.ResearchPaper);
+            model.AwaitingMyReviewTotal = everything.Count(c => c.EthicsAwaitingRole == RoleNames.HeadOfDepartment);
+
             return View(model);
         }
 
-        // ---------- Ethics review ----------
+        /// <summary>
+        /// The research paper stage across the department, read-only.
+        ///
+        /// Their one decision is the ethics comment, and this is not it. It is oversight: a head of
+        /// department is the authority over the department, so what is happening to its research
+        /// and who is holding each piece up is theirs to see, even where the next move is somebody
+        /// else's to make.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> Department_papers(
+            int page = 1, string? sort = null, bool desc = false, string? search = null)
+        {
+            var model = new DepartmentPapersViewModel
+            {
+                Sort = sort ?? "started",
+                Descending = desc,
+                Search = search
+            };
+
+            var containers = await containersApi.GetInMyDepartmentAsync(
+                page: page, sort: sort ?? "started", descending: desc, search: search);
+
+            if (!containers.Success)
+            {
+                TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your department's papers.";
+                model.LoadFailed = true;
+                return View(model);
+            }
+
+            // The paper stage only. Filtered here rather than asked for, because a container with
+            // no paper yet has nothing to show on this screen and the API's paper filter answers a
+            // narrower question: whose turn it is, not whether the stage has been reached.
+            model.Publications = [.. (containers.Data?.Items ?? [])
+                .Where(c => c.CurrentPipeline == PipelineStage.ResearchPaper)];
+
+            model.TotalCount = containers.Data?.TotalCount ?? 0;
+            model.Pager = Paging.PagerFor(containers.Data, "HeadOfDepartment",
+                nameof(Department_papers), model.RouteValues());
+
+            return View(model);
+        }
 
         /// <summary>
         /// Ethics documentation waiting on this Head of Department. An optional id narrows it to

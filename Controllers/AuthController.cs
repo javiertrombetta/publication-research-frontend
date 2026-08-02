@@ -16,6 +16,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         NotificationsApiClient notificationsApiClient,
         IInstitutionDetails institutionDetails,
         IAuthCookieService authCookieService,
+        UsersApiClient usersApiClient,
         MicrosoftSsoOptions microsoftSso) : Controller
     {
         // GET: /Auth/home
@@ -91,6 +92,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             }
 
             await authCookieService.SignInAsync(HttpContext, result.Data);
+            await ApplyStoredThemeAsync();
             await AnnounceUnreadNotificationsAsync();
 
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -123,6 +125,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             }
 
             await authCookieService.SignInAsync(HttpContext, result.Data, model.RememberMe);
+            await ApplyStoredThemeAsync();
             await AnnounceUnreadNotificationsAsync();
 
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -309,6 +312,23 @@ namespace ResearchPublicationManagementSystem.Controllers
         {
             var result = await departmentsApiClient.GetAllAsync();
             model.DepartmentOptions = result.Success && result.Data is not null ? result.Data : [];
+        }
+
+        /// <summary>
+        /// Puts the theme this person last chose back into the cookie the page is drawn from.
+        ///
+        /// Without it the preference would belong to the browser rather than to them: signing in
+        /// on a colleague's machine would hand them that machine's theme, and their own would be
+        /// forgotten the moment they cleared their cookies. Silent if it cannot be read; the site
+        /// simply stays as it is.
+        /// </summary>
+        private async Task ApplyStoredThemeAsync()
+        {
+            var me = await usersApiClient.GetMeAsync();
+            if (me.Data?.ThemePreference is { } stored)
+            {
+                SiteTheme.Set(HttpContext, stored);
+            }
         }
 
         private IActionResult RedirectToLandingPage(IReadOnlyList<string>? roles = null)

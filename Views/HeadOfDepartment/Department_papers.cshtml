@@ -1,0 +1,177 @@
+@using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
+@model DepartmentPapersViewModel
+@{
+    ViewData["Title"] = "Department papers";
+
+    // Whose move it is on the paper. UnderReview covers four separate waits, so the role the
+    // projection works out is the only honest answer; the status alone would say the same thing
+    // about four different situations.
+    string WaitingOn(PublicationContainerDto c)
+    {
+        if (c.Status == "Completed") return "Nobody, it is finished";
+        if (c.PaperAwaitingRole is { } role) return Humanise(role);
+        return "Nobody";
+    }
+}
+
+<div class="mb-4">
+    <h1 class="page-title mb-1">Department papers</h1>
+    <div class="text-secondary">
+        The research papers your department has reached, and who each one is waiting on. Reading
+        only: the decisions here belong to supervisors, committees and coordinators.
+    </div>
+</div>
+
+@if (Model.LoadFailed)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">We couldn't load your department's papers</h3>
+            <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
+            <a asp-controller="HeadOfDepartment" asp-action="Department_papers" class="btn btn-primary">Retry</a>
+        </div>
+    </div>
+}
+else
+{
+    @if (Model.Publications.Count > 0 || Model.HasSearch)
+    {
+        <div class="card mb-3">
+            <div class="card-body py-3">
+                <form method="get" asp-controller="HeadOfDepartment" asp-action="Department_papers"
+                      class="row g-2 align-items-center">
+
+                    <input type="hidden" name="sort" value="@Model.Sort" />
+                    <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+
+                    <div class="col-12 col-md">
+                        <input type="search" name="search" value="@Model.Search" class="form-control"
+                               placeholder="Search by student or paper" aria-label="Search" />
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                    <div class="col-auto">
+                        <a asp-controller="HeadOfDepartment" asp-action="Department_papers"
+                           asp-all-route-data="Model.ClearSearchRoute()"
+                           class="btn btn-outline-secondary">Clear</a>
+                    </div>
+
+                    @{
+                        var byStudent = Model.Column("student", "Student");
+                        var byStarted = Model.Column("started", "Date", descendingFirst: true);
+                        var byStatus = Model.Column("status", "Status");
+                    }
+                    <div class="col-12 col-md-auto ms-md-auto d-flex align-items-center gap-3">
+                        <span class="text-secondary small">Sort by</span>
+                        <partial name="_SortableHeader" model="byStarted" />
+                        <partial name="_SortableHeader" model="byStudent" />
+                        <partial name="_SortableHeader" model="byStatus" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+
+    @if (Model.Publications.Count == 0 && Model.HasSearch)
+    {
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+                <p class="text-secondary mb-4">No paper in your department has that student or title.</p>
+                <a asp-controller="HeadOfDepartment" asp-action="Department_papers" class="btn btn-primary">
+                    Show them all
+                </a>
+            </div>
+        </div>
+    }
+    else if (Model.Publications.Count == 0)
+    {
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <h3 class="mb-2">No papers yet</h3>
+                <p class="text-secondary mb-4">
+                    A publication reaches this stage once its ethics approval has been settled.
+                </p>
+                <a asp-controller="HeadOfDepartment" asp-action="Head_of_Department_dashboard" class="btn btn-primary">
+                    Back to dashboard
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card mb-3">
+            <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
+                <span class="text-secondary me-auto">
+                    <strong>@Model.Publications.Count</strong>
+                    @(Model.Publications.Count == 1 ? "paper" : "papers") at this stage,
+                    of @Model.TotalCount in the department.
+                </span>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-rpms-expand-all="department-paper-cards">Expand all</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                        data-rpms-collapse-all="department-paper-cards">Collapse all</button>
+            </div>
+        </div>
+
+        @foreach (var publication in Model.Publications)
+        {
+            <div class="card mb-3">
+                <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+                     data-rpms-header-toggle="#paper-@publication.Id"
+                     role="button" tabindex="0"
+                     aria-expanded="true" aria-controls="paper-@publication.Id">
+                    <span class="rpms-collapse-icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
+                             viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M6 9l6 6l6 -6" />
+                        </svg>
+                    </span>
+
+                    <div class="me-auto">
+                        <h3 class="card-title m-0">@publication.DisplayTitle</h3>
+                        <div class="text-secondary small">@publication.StudentName</div>
+                    </div>
+
+                    <span class="badge @StatusBadge(publication.DisplayStatus)">
+                        @Humanise(publication.DisplayStatus)
+                    </span>
+                </div>
+
+                <div class="card-body collapse show" id="paper-@publication.Id"
+                     data-rpms-collapsible="department-paper-cards">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <div class="text-secondary small">Waiting on</div>
+                            <div>@WaitingOn(publication)</div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="text-secondary small">Supervisor</div>
+                            <div>@(publication.AssignedSupervisorName ?? "Not assigned")</div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="text-secondary small">Coordinator</div>
+                            <div>@publication.CoordinatorName</div>
+                        </div>
+                    </div>
+
+                    @* The paper itself, for a head of department reading what their department is
+                       producing. Who may open it is the API's decision, not this link's. *@
+                    <div class="mt-3">
+                        <a asp-controller="Downloads" asp-action="Paper"
+                           asp-route-publicationId="@publication.Id"
+                           class="btn btn-outline-primary btn-sm">Download the paper</a>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (Model.Pager is not null)
+        {
+            <partial name="_Pager" model="Model.Pager" />
+        }
+    }
+}
