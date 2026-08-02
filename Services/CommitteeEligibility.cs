@@ -26,10 +26,12 @@ public class CommitteeEligibility(CommitteesApiClient committeesApi, IMemoryCach
 {
     public async Task<bool> IsCandidateAsync(ClaimsPrincipal user, CancellationToken ct = default)
     {
-        // Students are never candidates and an account with only the placeholder role has no job to
-        // be asked about. Answered here rather than by asking, because it is the common case and
-        // the API would only say the same thing.
-        if (user.IsInRole(RoleNames.Student) || !user.Identity?.IsAuthenticated is true) return false;
+        // Answered here rather than by asking, because these are the common cases and the API would
+        // only say the same thing. Somebody holding no operational role is never a candidate: a
+        // student is the subject of the work, and an account still on the placeholder role has not
+        // been given a job yet.
+        if (user.Identity?.IsAuthenticated != true) return false;
+        if (!RoleNames.Operational.Any(user.IsInRole)) return false;
 
         var id = user.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrWhiteSpace(id)) return false;

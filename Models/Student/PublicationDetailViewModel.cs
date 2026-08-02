@@ -20,6 +20,13 @@ namespace ResearchPublicationManagementSystem.Models
         public IReadOnlyList<ActivityHistoryEntryDto> History { get; set; } = [];
 
         /// <summary>
+        /// How much of the trail there is, and which page of it is shown. A publication that has
+        /// been through three stages, several revisions and a committee accumulates a long one.
+        /// </summary>
+        public int HistoryTotal { get; set; }
+        public PagerViewModel? HistoryPager { get; set; }
+
+        /// <summary>
         /// The ethics documents this publication was asked for, and which of them have arrived.
         /// Only read once the supervisor has asked for any; empty otherwise.
         /// </summary>

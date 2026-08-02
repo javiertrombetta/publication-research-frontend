@@ -379,6 +379,14 @@
 </div><!-- /progress tab -->
 
 <div class="tab-pane" id="publication-history" role="tabpanel">
-    <partial name="_ActivityHistory" model="Model.History" />
+    @{
+        var historyModel = new ResearchPublicationManagementSystem.Models.ActivityHistoryViewModel
+        {
+            Entries = Model.History,
+            TotalCount = Model.HistoryTotal,
+            Pager = Model.HistoryPager
+        };
+    }
+    <partial name="_ActivityHistory" model="historyModel" />
 </div><!-- /history tab -->
 </div><!-- /tab-content -->
