@@ -12,6 +12,11 @@
     var isCommitteeMember = User.IsInRole(RoleNames.InternalCommitteeMember)
         || User.IsInRole(RoleNames.ExternalCommitteeMember);
 
+    // Anyone who can be appointed to a committee needs the way in, not only the two roles named
+    // after it: a supervisor or coordinator on a committee has a decision to make like anybody
+    // else. Their own screen shows nothing until they are on one.
+    var canEvaluate = isCommitteeMember || isAdmin || isCoordinator || isSupervisor || isHeadOfDepartment;
+
     // Whether this person has a dashboard of their own to land on, as opposed to only a profile.
     var hasDashboard = isAdmin
         || isCoordinator
@@ -100,7 +105,7 @@
                 </a>
             }
 
-            @if (isCommitteeMember)
+            @if (canEvaluate)
             {
                 <a asp-controller="ExternalSupervisor" asp-action="committee_review" class="@NavClass(currentController, currentAction, "ExternalSupervisor", "committee_review")">
                     Papers to evaluate

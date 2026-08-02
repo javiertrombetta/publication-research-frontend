@@ -16,7 +16,11 @@ namespace ResearchPublicationManagementSystem.Controllers
     /// A member reads the paper and records one decision. They cannot see other members' votes
     /// before deciding, which is the point of an evaluation committee.
     /// </summary>
-    [Authorize(Roles = $"{RoleNames.InternalCommitteeMember},{RoleNames.ExternalCommitteeMember}")]
+    // Anyone who can be appointed to a committee can open these screens. Locking them to the two
+    // committee-member roles meant a supervisor or coordinator could be appointed, be notified, and
+    // then be refused the screen where the decision is made, so the committee could never reach the
+    // number of approvals it needed.
+    [Authorize(Roles = RoleNames.CommitteeEligibleRoles)]
     public class ExternalSupervisorController(
         CommitteesApiClient committeesApi) : Controller
     {
