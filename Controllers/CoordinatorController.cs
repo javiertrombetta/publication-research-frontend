@@ -26,10 +26,11 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         [HttpGet]
         public async Task<IActionResult> Coordinator_dashboard(
-            int page = 1, string? sort = null, bool desc = false)
+            int page = 1, string? sort = null, bool desc = false, string? search = null)
         {
             var model = new CoordinatorDashboardViewModel
             {
+                Search = search,
                 // The default, spelled out rather than left null, so the heading in force is the
                 // one marked as active. Oldest first, as on every other queue.
                 Sort = sort ?? "started",
@@ -41,7 +42,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             // is what is left to do; leaving them in pushed the live ones onto later pages.
             var containers = await containersApi.GetAllAsync(
                 coordinatorId: CurrentUserId(), status: "InProgress", page: page,
-                sort: sort ?? "started", descending: desc);
+                sort: sort ?? "started", descending: desc, search: search);
             if (!containers.Success)
             {
                 TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your publications right now.";
