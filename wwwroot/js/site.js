@@ -708,3 +708,95 @@ document.addEventListener('submit', function (event) {
         });
     });
 })();
+
+// Searching as you type.
+//
+// Every search box on the site narrows a list the API holds, so the search has to reach the API:
+// what is on screen is one page of the answer, not the answer. That means a page load per search,
+// which is exactly why these all had a button. Pressed once, the reader waits; pressed after every
+// keystroke, they would be interrupted mid-word.
+//
+// So: three characters before anything happens, and a pause after typing stops. Three because one
+// or two match most of a department and the round trip buys nothing; the pause because it is the
+// difference between one request and one per letter. Emptying the box searches immediately, since
+// that is somebody asking for the whole list back rather than for a narrower one.
+//
+// The caret is put back where it was afterwards, which is what makes it read as live rather than
+// as a page that keeps reloading underneath you. The button stays for anyone who prefers it, and
+// for anyone without JavaScript this whole block simply does not run.
+(function () {
+    var DELAY = 400;
+    var MINIMUM = 3;
+    var RESUME_KEY = 'rpms-search-resume';
+
+    function formFor(input) {
+        // form= wins over containing form: the supervisor chooser's box sits inside the dispatch
+        // form and belongs to a different one, and submitting the wrong one would send proposals.
+        return input.form;
+    }
+
+    function run() {
+        var inputs = document.querySelectorAll('input[type="search"]');
+        if (!inputs.length) return;
+
+        Array.prototype.forEach.call(inputs, function (input) {
+            var form = formFor(input);
+
+            // Only where a search is a link. A POST form does something, and doing it because
+            // somebody paused while typing is not a thing to arrange.
+            if (!form || (form.method || 'get').toLowerCase() !== 'get') return;
+
+            var timer = null;
+            var initial = input.value;
+
+            input.addEventListener('input', function () {
+                window.clearTimeout(timer);
+
+                var value = input.value.trim();
+
+                // Back to what the page was already showing: nothing to ask for.
+                if (value === initial.trim()) return;
+
+                if (value.length > 0 && value.length < MINIMUM) return;
+
+                timer = window.setTimeout(function () {
+                    try {
+                        window.sessionStorage.setItem(RESUME_KEY, JSON.stringify({
+                            path: window.location.pathname,
+                            name: input.getAttribute('name')
+                        }));
+                    } catch (ignored) {
+                        // Private browsing refuses storage. The search still runs; the caret is
+                        // the only thing lost, and that is not worth abandoning the search over.
+                    }
+
+                    form.submit();
+                }, DELAY);
+            });
+        });
+
+        // Put the reader back in the box they were typing in, at the end of what they typed.
+        var resume = null;
+        try {
+            resume = JSON.parse(window.sessionStorage.getItem(RESUME_KEY) || 'null');
+            window.sessionStorage.removeItem(RESUME_KEY);
+        } catch (ignored) { /* Nothing to restore. */ }
+
+        if (!resume || resume.path !== window.location.pathname) return;
+
+        var box = document.querySelector('input[type="search"][name="' + resume.name + '"]');
+        if (!box) return;
+
+        // Without preventScroll the browser jumps to wherever it decides the box is, which on a
+        // page that just got shorter is not where the reader was. The box is at the top of these
+        // screens anyway, so there is nothing to scroll to.
+        box.focus({ preventScroll: true });
+        box.setSelectionRange(box.value.length, box.value.length);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', run);
+    } else {
+        run();
+    }
+})();

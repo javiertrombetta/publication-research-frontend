@@ -187,7 +187,7 @@ else
         @foreach (var group in Model.ByPublication)
         {
             <div class="card mb-3">
-                <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+                <div class="card-header d-flex flex-wrap align-items-center gap-2 rpms-collapse-header"
                  data-rpms-header-toggle="#student-@group.Key"
                  role="button" tabindex="0"
                  aria-expanded="true" aria-controls="student-@group.Key">
@@ -204,7 +204,50 @@ else
                         </svg>
                 </span>
 
-                    <h3 class="card-title m-0 me-auto">@Model.StudentFor(group.Key)</h3>
+                    @{
+                        var student = Model.FirstIn(group.Key);
+                        var submitted = Model.SubmittedFor(group.Key);
+                    }
+                    <div class="me-auto">
+                        <h3 class="card-title m-0">@Model.StudentFor(group.Key)</h3>
+
+                        @* Who this actually is. The same student heads a group for each
+                           publication they have open, so the name alone leaves a coordinator
+                           looking at two identical headings, and two people can share one. *@
+                        @if (student is not null
+                             && (!string.IsNullOrWhiteSpace(student.StudentIdNumber)
+                                 || !string.IsNullOrWhiteSpace(student.StudentEmail)))
+                        {
+                            <div class="text-secondary small">
+                                @if (!string.IsNullOrWhiteSpace(student.StudentIdNumber))
+                                {
+                                    <span>@student.StudentIdNumber</span>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(student.StudentEmail))
+                                {
+                                    @if (!string.IsNullOrWhiteSpace(student.StudentIdNumber))
+                                    {
+                                        <span class="mx-1">&middot;</span>
+                                    }
+                                    @* A link, because the thing a coordinator does with a student's
+                                       address on this screen is write to them. *@
+                                    <a href="mailto:@student.StudentEmail"
+                                       class="text-secondary text-decoration-none">@student.StudentEmail</a>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    @* The date the round was sent in, which is what the list orders by. Without it
+                       the order was a claim the screen made and did not show, and two rounds from
+                       the same student were told apart by nothing at all. *@
+                    @if (submitted is { } sentIn)
+                    {
+                        <span class="text-secondary small text-nowrap"
+                              title="The date this student submitted these proposals">
+                            @sentIn.ToLocalTime().ToString("d MMM yyyy")
+                        </span>
+                    }
 
                     @{ var cameBack = group.Any(p => p.CameBack); }
                     @if (cameBack)

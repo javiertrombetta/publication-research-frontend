@@ -27,7 +27,7 @@ public class CatalogueApiClient(HttpClient httpClient) : ApiClientBase(httpClien
             ["researchArea"] = Trimmed(query.ResearchArea),
             ["year"] = query.Year?.ToString(CultureInfo.InvariantCulture),
             ["page"] = query.Page.ToString(CultureInfo.InvariantCulture),
-            ["pageSize"] = query.PageSize.ToString(CultureInfo.InvariantCulture)
+            ["pageSize"] = Common.Paging.SizeValue(query.PageSize)
         };
 
         var url = QueryHelpers.AddQueryString("api/catalogue",
@@ -52,7 +52,8 @@ public class CatalogueApiClient(HttpClient httpClient) : ApiClientBase(httpClien
 /// </summary>
 public class CatalogueSearchQuery
 {
-    public const int DefaultPageSize = 10;
+    /// <summary>Nothing, so the API applies the length the institution has set.</summary>
+    public const int DefaultPageSize = Common.Paging.AsConfigured;
 
     public string? Query { get; set; }
     public string? Author { get; set; }

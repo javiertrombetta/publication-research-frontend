@@ -82,7 +82,19 @@ public record ProposalWithInvitationsDto(
     /// willing, and null if it has never been. A proposal waiting its first turn and one that has
     /// already had one are different things to decide about.
     /// </summary>
-    DateTime? ReturnedToDispatchAt = null)
+    DateTime? ReturnedToDispatchAt = null,
+    /// <summary>
+    /// The student's institutional id, or null on an account with no student profile. A queue
+    /// grouped by student heads one group per publication, so the same name appears twice for
+    /// anybody with two open, and two people can share a name outright.
+    /// </summary>
+    string? StudentIdNumber = null,
+    /// <summary>
+    /// The address on the student's account, which at this institution is their id at the student
+    /// domain. Carried rather than composed from the id, because it is the address that reaches
+    /// them.
+    /// </summary>
+    string? StudentEmail = null)
 {
     public bool CameBack => ReturnedToDispatchAt is not null;
 }

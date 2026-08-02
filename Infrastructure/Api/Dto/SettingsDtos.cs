@@ -210,7 +210,13 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
     /// Whether the site shows a public catalogue at all. Rides on the anonymous response because
     /// it decides the landing page, which has to be settled before anyone has signed in.
     /// </summary>
-    bool PublicCatalogueEnabled = true);
+    bool PublicCatalogueEnabled = true,
+    /// <summary>
+    /// How many rows every listing on the site shows before it pages. Rides on this response
+    /// because the site reads it on every page already, and a page's length has to be known
+    /// before the first listing is drawn.
+    /// </summary>
+    int RowsPerPage = Common.Paging.DefaultRowsPerPage);
 
     public record UpdateInstitutionSettingsRequestDto(
         string Name,
@@ -220,7 +226,8 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         string? ResearchEnquiriesEmail,
         string? PrivacyPolicyUrl,
         string? CurrentAcademicCycle,
-        string? WebsiteUrl = null);
+        string? WebsiteUrl = null,
+        int RowsPerPage = Common.Paging.DefaultRowsPerPage);
 
     /// <summary>How long each stage should take. Zero means nothing is ever reported late.</summary>
     public record DeadlineSettingsDto(int SupervisorResponseDays, int EthicsReviewDays, int CommitteeReviewDays);

@@ -950,6 +950,17 @@
                                 </small>
                             </div>
 
+                            <div class="col-12 col-sm-6">
+                                <label class="form-label" for="rows-per-page">Rows per page</label>
+                                <input id="rows-per-page" name="rowsPerPage" type="number"
+                                       value="@Model.Institution.RowsPerPage" class="form-control"
+                                       min="5" max="100" step="1" required />
+                                <small class="form-hint">
+                                    How many rows every listing on the site shows before it pages.
+                                    Between 5 and 100.
+                                </small>
+                            </div>
+
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Save institution details</button>
                             </div>
