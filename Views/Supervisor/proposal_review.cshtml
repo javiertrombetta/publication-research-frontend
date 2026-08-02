@@ -135,6 +135,13 @@ else
 
                 <div class="me-auto">
                     <h3 class="card-title m-0">@proposal.Title</h3>
+                    @* Whose work this is. The queue offers a search and an ordering by the student
+                       and named nobody: agreeing to supervise a piece of work is agreeing to work
+                       with a person. *@
+                    @if (!string.IsNullOrWhiteSpace(proposal.StudentName))
+                    {
+                        <div class="text-secondary small">@proposal.StudentName</div>
+                    }
                 </div>
 
                 @* The date the coordinator asked for an answer by. Readable with the card shut,

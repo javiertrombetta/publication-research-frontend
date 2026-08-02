@@ -47,8 +47,12 @@ else if (Model.Proposals.Count == 0)
         </div>
     </div>
 }
-else if (Model.Supervisors.Count == 0)
+else if (Model.Supervisors.Count == 0 && !Model.HasSupervisorSearch)
 {
+    @* Only when there is genuinely nobody. A search that matched nobody is a different thing and
+       is answered inside the chooser below, because taking the whole screen away over it hid the
+       proposals, the search boxes and the filter itself: the coordinator was told the institution
+       had no supervisors and left with no way to undo the search that caused it. *@
     <div class="card">
         <div class="card-body text-center py-5">
             <h3 class="mb-2">No supervisors available</h3>
@@ -102,9 +106,17 @@ else
     </div>
 
     @* Outside the dispatch form, and referenced by the search box through form=. HTML has no
-       nested forms, and this one only narrows the chooser. *@
+       nested forms, and this one only narrows the chooser.
+
+       It carries what the reader has already chosen about the proposals. Empty, it did not:
+       narrowing the chooser silently discarded the proposal search and the ordering, and threw
+       the coordinator back to the whole queue. *@
     <form id="supervisor-filter" method="get"
-          asp-controller="Coordinator" asp-action="assigning_proposal_forsupervisor"></form>
+          asp-controller="Coordinator" asp-action="assigning_proposal_forsupervisor">
+        <input type="hidden" name="search" value="@Model.Search" />
+        <input type="hidden" name="sort" value="@Model.Sort" />
+        <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+    </form>
 
     @* The group forms live out here for the same reason: they post, and they sit inside the card
        that the dispatch form owns. The name field and the chosen ids are filled in from the ticks
@@ -441,6 +453,16 @@ else
                             ? "No available supervisor matches that."
                             : "Nobody is available to take proposals on at the moment.")
                     </p>
+
+                    @if (Model.HasSupervisorSearch)
+                    {
+                        @* A way back, here rather than only above the list: the row that holds
+                           Show all is the one a narrowed-to-nothing chooser makes least visible,
+                           and this is the moment somebody needs it. *@
+                        <a asp-controller="Coordinator" asp-action="assigning_proposal_forsupervisor"
+                           asp-all-route-data="Model.ClearSupervisorSearchRoute()"
+                           class="btn btn-outline-secondary btn-sm mt-2">Show every available supervisor</a>
+                    }
                 }
 
                 <div class="mt-3">

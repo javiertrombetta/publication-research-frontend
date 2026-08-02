@@ -11,7 +11,13 @@ public record ProposalDto(
     /// When the supervisor reading this has to have answered by. Only filled in on the listing of
     /// proposals sent to a supervisor, which is the only place anybody is being held to it.
     /// </summary>
-    DateTime? RespondBy = null)
+    DateTime? RespondBy = null,
+    /// <summary>
+    /// Whose proposal it is. Null where the reader is the student themselves. A supervisor
+    /// deciding whether to take work on is deciding about a person as much as a topic, and their
+    /// queue lets them search and order by the student.
+    /// </summary>
+    string? StudentName = null)
 {
     /// <summary>The date in the reader's own time, which is the only one worth showing them.</summary>
     public DateTime? RespondByLocal => RespondBy?.ToLocalTime();
