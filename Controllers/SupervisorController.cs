@@ -204,10 +204,14 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// </summary>
         private async Task<(SupervisorEthicsViewModel Model, IActionResult? Redirect)> LoadEthicsAsync(Guid containerId)
         {
-            var supervising = await containersApi.GetSupervisingAsync();
-            var container = (supervising.Data?.Items ?? []).FirstOrDefault(c => c.Id == containerId);
+            // Asked for by id, not searched for in the supervising list. That list is paged, so
+            // searching it answered "is this on the first page of what I supervise", which turned
+            // supervisors away from their own eleventh publication onwards. The API applies the
+            // access rule itself, so a refusal from it is the real answer.
+            var supervising = await containersApi.GetByIdAsync(containerId);
+            var container = supervising.Data;
 
-            if (container is null)
+            if (!supervising.Success || container is null)
             {
                 TempData["ErrorMessage"] = "That publication isn't one of yours to supervise.";
                 return (new SupervisorEthicsViewModel(), RedirectToAction(nameof(SupervisorDashboard)));

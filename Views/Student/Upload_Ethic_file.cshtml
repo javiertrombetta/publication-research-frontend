@@ -48,10 +48,11 @@
                                                     <div class="mb-2 text-primary">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-text" width="32" height="32" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" /><path d="M9 9l1 0" /><path d="M9 13l6 0" /><path d="M9 17l6 0" /></svg>
                                                     </div>
-                                                    <div class="fw-bold text-dark mb-1">Research Consent Form and Guidance</div>
+                                                    <div class="fw-bold text-dark mb-1">Consent Form Guidance</div>
                                                     
                                                 </div>
-                                                <a href="/templates/consent_form_template.docx" class="btn btn-outline-primary btn-sm w-100" download>
+                                                <a href="~/templates/consent-form-guidance.docx" class="btn btn-outline-primary btn-sm w-100"
+                                                   download="Consent Form Guidance.docx">
                                                     Download
                                                 </a>
                                             </div>
@@ -64,10 +65,11 @@
                                                     <div class="mb-2 text-primary">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-info-circle" width="32" height="32" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 9h.01" /><path d="M11 12h1v4h1" /></svg>
                                                     </div>
-                                                    <div class="fw-bold text-dark mb-1">Research-Participant Information Sheet and Guidance</div>
+                                                    <div class="fw-bold text-dark mb-1">Participant Information Sheet</div>
                                                     
                                                 </div>
-                                                <a href="/templates/participant_info_template.docx" class="btn btn-outline-primary btn-sm w-100" download>
+                                                <a href="~/templates/participant-information-sheet.docx" class="btn btn-outline-primary btn-sm w-100"
+                                                   download="Participant Information Sheet.docx">
                                                     Download
                                                 </a>
                                             </div>
@@ -83,7 +85,8 @@
                                                     <div class="fw-bold text-dark mb-1">Proposal Form</div>
                                                     
                                                 </div>
-                                                <a href="/templates/proposal_form_template.docx" class="btn btn-outline-primary btn-sm w-100" download>
+                                                <a href="~/templates/proposal-form.docx" class="btn btn-outline-primary btn-sm w-100"
+                                                   download="Proposal Form.docx">
                                                     Download
                                                 </a>
                                             </div>
@@ -136,7 +139,7 @@
                                             @* Indexed by requirement id so the binder can put each
                                                file back against the document it answers. *@
                                             <input type="file" id="file-@requirement.RequirementId"
-                                                   name="Files[@requirement.RequirementId]"
+                                                   name="@UploadEthicsDocumentsViewModel.FieldNameFor(requirement.RequirementId)"
                                                    class="form-control" accept=".pdf,.doc,.docx,.zip" />
 
                                             @if (requirement.IsSatisfied)
