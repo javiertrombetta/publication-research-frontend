@@ -69,6 +69,10 @@ public class UsersApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
         return GetAsync<PagedResultDto<UserListItemDto>>(url, ct);
     }
 
+    /// <summary>Records which theme this person prefers, so it follows them to another machine.</summary>
+    public Task<ApiResult<object?>> SetThemeAsync(string theme, CancellationToken ct = default) =>
+        PutJsonAsync<object?>("api/users/me/theme", new { theme }, ct);
+
     public Task<ApiResult<UserDetailDto>> GetByIdAsync(Guid id, CancellationToken ct = default) =>
         GetAsync<UserDetailDto>($"api/users/{id}", ct);
 

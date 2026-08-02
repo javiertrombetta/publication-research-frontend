@@ -46,7 +46,9 @@
 }
 
 @* The AIS brand lives in the top bar (see _Navbar), not here. *@
-<aside class="border-end bg-white rpms-sidebar" id="rpms-sidebar">
+@* No bg-white: that utility pins the colour, which left the sidebar bright white in
+   the dark theme. The background comes from .rpms-sidebar, which reads the theme. *@
+<aside class="border-end rpms-sidebar" id="rpms-sidebar">
 
     @* Fixed-width inner panel: keeps the nav from reflowing (and labels from wrapping) while
        the sidebar animates open/closed. It is clipped instead. See .rpms-sidebar-inner. *@
@@ -100,15 +102,20 @@
                 </a>
             }
 
-            @* The Head of Department has one decision, the ethics review, plus oversight of
-               their department's proposals. *@
+            @* The Head of Department has one decision, the ethics comment, and oversight of all
+               three stages. They are not an administrator: this is one department, and being its
+               authority is what makes watching every stage of it theirs to do even where the next
+               move belongs to somebody else. One entry per stage, in the order work moves. *@
             @if (isHeadOfDepartment)
             {
+                <a asp-controller="HeadOfDepartment" asp-action="all_proposals_fromstudent" class="@NavClass(currentController, currentAction, "HeadOfDepartment", "all_proposals_fromstudent")">
+                    Department proposals
+                </a>
                 <a asp-controller="HeadOfDepartment" asp-action="Headofdepartment_feedback" class="@NavClass(currentController, currentAction, "HeadOfDepartment", "Headofdepartment_feedback")">
                     Ethics reviews
                 </a>
-                <a asp-controller="HeadOfDepartment" asp-action="all_proposals_fromstudent" class="@NavClass(currentController, currentAction, "HeadOfDepartment", "all_proposals_fromstudent")">
-                    Department proposals
+                <a asp-controller="HeadOfDepartment" asp-action="Department_papers" class="@NavClass(currentController, currentAction, "HeadOfDepartment", "Department_papers")">
+                    Department papers
                 </a>
             }
 

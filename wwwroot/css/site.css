@@ -44,9 +44,96 @@
     /* ---------- Border Radius ---------- */
 
     --rpms-radius: 10px;
+    /* ---------- Surfaces, text and borders ----------
+
+       Everything in the chrome that is not the brand red is named here rather than written into
+       the rule that uses it, so the dark theme is a second set of these values instead of a second
+       copy of the stylesheet. The red and the white sitting on it are deliberately not among them:
+       a brand colour that changes with the theme is not a brand colour, and the contrast against
+       it is already the right way round in both. */
+
+    --rpms-page-bg: #f5f7fb;
+    --rpms-surface: #fff;
+    --rpms-border: #e9ecef;
+    --rpms-text: #212529;
+    --rpms-text-muted: #6c757d;
+
+    /* Fills that are not surfaces: a hover, a progress track, the tint behind a hovered menu item. */
+    --rpms-hover: rgba(73, 80, 87, .08);
+    --rpms-muted-fill: #e9ecef;
+    --rpms-subtle-fill: rgba(0, 0, 0, .02);
+    --rpms-brand-tint: #fbeceb;
+
     /* ---------- Shadows ---------- */
 
+    --rpms-shadow-colour: rgba(0, 0, 0, .06);
+    --rpms-shadow-colour-strong: rgba(0, 0, 0, .1);
     --rpms-shadow: 0 .125rem .25rem rgba(0,0,0,.05);
+}
+
+/* ==========================================================
+   Dark theme
+   ==========================================================
+
+   Only the values change. Tabler is built on Bootstrap, which switches its own components on the
+   same data-bs-theme attribute, so what is left here is this project's own chrome: the sidebar,
+   the navbar, the cards and the few fills that are ours rather than the framework's.
+
+   The surface is a shade lighter than the page rather than darker, which is how depth reads
+   without light: a raised thing catches more light, so a card sits above the page by being nearer
+   to white, exactly as a shadow does the job in the light theme. */
+[data-bs-theme="dark"] {
+    --rpms-page-bg: #0f1419;
+    --rpms-surface: #171d26;
+    --rpms-border: #2a323d;
+    --rpms-text: #dce1e7;
+    --rpms-text-muted: #8b95a3;
+
+    --rpms-hover: rgba(255, 255, 255, .06);
+    --rpms-muted-fill: #2a323d;
+    --rpms-subtle-fill: rgba(255, 255, 255, .03);
+
+    /* The hovered menu item's tint. A wash of the brand red rather than a lighter grey, so the
+       menu still reads as the same menu. */
+    --rpms-brand-tint: rgba(229, 57, 53, .16);
+
+    /* Deeper, because a shadow has to work against a dark surface to be seen at all. */
+    --rpms-shadow-colour: rgba(0, 0, 0, .5);
+    --rpms-shadow-colour-strong: rgba(0, 0, 0, .6);
+    --rpms-shadow: 0 .125rem .25rem rgba(0, 0, 0, .4);
+}
+
+/* ==========================================================
+   Changing between them
+   ==========================================================
+
+   The switch reloads the page, so the change would otherwise be a hard cut between two paints.
+   These transitions are what turn that into a fade.
+
+   Only colours, and only on the elements that carry a surface. Transitioning every property on
+   every element makes ordinary interaction feel slow, because a hover then takes a quarter of a
+   second to arrive as well. */
+body,
+.card,
+.rpms-sidebar,
+.navbar,
+.dropdown-menu,
+.table,
+.modal-content {
+    transition: background-color .25s ease, border-color .25s ease, color .25s ease;
+}
+
+/* Somebody who has asked their machine for less movement gets none of it. */
+@media (prefers-reduced-motion: reduce) {
+    body,
+    .card,
+    .rpms-sidebar,
+    .navbar,
+    .dropdown-menu,
+    .table,
+    .modal-content {
+        transition: none;
+    }
 }
 /* ---------- Root ---------- */
 
@@ -88,7 +175,7 @@ html {
 
 body {
     margin: 0;
-    background: #f5f7fb;
+    background: var(--rpms-page-bg);
     font-family: var(--tblr-font-sans-serif);
 }
 
@@ -218,8 +305,8 @@ aside {
     display: flex;
     flex-direction: column;
     width: var(--rpms-sidebar-width);
-    background: #fff;
-    border-right: 1px solid #e9ecef;
+    background: var(--rpms-surface);
+    border-right: 1px solid var(--rpms-border);
 }
 
 /* Collapsed state, toggled by the navbar burger (see site.js). Animates the width to 0 so
@@ -268,7 +355,7 @@ aside {
    active one sits on a light background, so the white text was invisible. */
 
 .rpms-sidebar-inner .nav-link {
-    color: #495057;
+    color: var(--rpms-text);
     border-radius: 8px;
     /* Carried by every item, transparent until one is the open one. Adding a border only to the
        active item would make it 2px larger than its neighbours, so the list would shift each
@@ -286,7 +373,7 @@ aside {
     /* Not on the open item: it has its own treatment, and lighting it red on the way past would
        say "you could go here" about the page already being looked at. */
     .rpms-sidebar-inner .nav-link:not(.active):not(.rpms-nav-link-selected):hover {
-        background: #fbeceb;
+        background: var(--rpms-brand-tint);
         color: var(--rpms-primary);
     }
 
@@ -383,8 +470,8 @@ aside {
         max-height: calc(100vh - var(--rpms-navbar-height));
         overflow-y: auto;
         border-right: 0;
-        border-bottom: 1px solid #e9ecef;
-        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .1);
+        border-bottom: 1px solid var(--rpms-border);
+        box-shadow: 0 .5rem 1rem var(--rpms-shadow-colour-strong);
         transition: transform .25s ease;
     }
 
@@ -421,7 +508,7 @@ aside {
 @media (hover: none) {
     .rpms-sidebar-inner .nav-link:not(.active):not(.rpms-nav-link-selected):hover {
         background: transparent;
-        color: #495057;
+        color: var(--rpms-text);
     }
 }
 
@@ -454,8 +541,8 @@ aside {
     padding-top: 0;
     padding-bottom: 0;
     align-items: center;
-    border-bottom: 1px solid #e9ecef;
-    background: #fff;
+    border-bottom: 1px solid var(--rpms-border);
+    background: var(--rpms-surface);
 }
 
     /* Tabler puts min-height: 48px on .navbar-nav and stretches its children to match, which
@@ -488,14 +575,14 @@ aside {
 /* Sidebar open: the button recedes, because the thing it opens is already on screen. */
 #sidebar-toggle {
     background-color: transparent;
-    color: #495057;
+    color: var(--rpms-text);
     border: 1px solid transparent;
     transition: background-color .2s ease, color .2s ease, border-color .2s ease;
 }
 
     #sidebar-toggle:hover {
-        background-color: rgba(73, 80, 87, .08);
-        color: #495057;
+        background-color: var(--rpms-hover);
+        color: var(--rpms-text);
     }
 
 /* Sidebar closed: filled, so the way back is obvious once the nav is out of sight.
@@ -547,7 +634,7 @@ aside {
 .card {
     border-radius: 12px;
     border: none;
-    box-shadow: 0 .125rem .25rem rgba(0,0,0,.06);
+    box-shadow: 0 .125rem .25rem var(--rpms-shadow-colour);
 }
 
 .card-body {
@@ -555,8 +642,8 @@ aside {
 }
 
 .card-header {
-    background: #fff;
-    border-bottom: 1px solid #eef1f4;
+    background: var(--rpms-surface);
+    border-bottom: 1px solid var(--rpms-border);
 }
 
 .card-title {
@@ -569,7 +656,7 @@ aside {
 .rpms-stage-bar {
     height: 4px;
     border-radius: 2px;
-    background: #e9ecef;
+    background: var(--rpms-muted-fill);
 }
 
 /* Solid counterparts of the badge tints, keyed off the same colour token, see
@@ -683,25 +770,25 @@ aside {
 .detail-card {
     border: none;
     border-radius: 12px;
-    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075);
+    box-shadow: 0 0.125rem 0.25rem var(--rpms-shadow-colour);
     margin-bottom: 1.5rem;
 }
 
 .detail-section-title {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #212529;
+    color: var(--rpms-text);
     margin-bottom: 1rem;
 }
 
 .detail-label {
     font-size: .85rem;
-    color: #6c757d;
+    color: var(--rpms-text-muted);
 }
 
 .detail-value {
     font-weight: 600;
-    color: #212529;
+    color: var(--rpms-text);
 }
 
 .detail-divider {
@@ -729,7 +816,7 @@ aside {
         top: 36px;
         width: 2px;
         height: calc(100% - 10px);
-        background: #dee2e6;
+        background: var(--rpms-muted-fill);
     }
 
 .workflow-icon {
@@ -787,8 +874,8 @@ aside {
     gap: .75rem;
     padding: .875rem 1rem;
     border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .14);
+    background: var(--rpms-surface);
+    box-shadow: 0 .5rem 1.5rem var(--rpms-shadow-colour-strong);
     border-left: 4px solid var(--rpms-secondary);
     /* Visible is the resting state, and the entrance animation is decoration on top of it
        (no fill-mode on purpose). A toast that only becomes visible once a script or an
@@ -843,7 +930,7 @@ aside {
 
 .rpms-toast-body {
     flex: 1 1 auto;
-    color: #1f2937;
+    color: var(--rpms-text);
     font-size: .95rem;
     line-height: 1.4;
 }
@@ -888,7 +975,7 @@ aside {
     flex: 0 0 auto;
     border: 0;
     background: transparent;
-    color: #9ca3af;
+    color: var(--rpms-text-muted);
     padding: 0;
     line-height: 1;
     cursor: pointer;
@@ -896,7 +983,7 @@ aside {
 }
 
     .rpms-toast-close:hover {
-        color: #1f2937;
+        color: var(--rpms-text);
     }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1075,7 +1162,7 @@ aside {
     flex: 0 0 auto;
     width: 1.75rem;
     height: 1.75rem;
-    color: #6c757d;
+    color: var(--rpms-text-muted);
     transition: transform .2s ease;
 }
 
@@ -1090,7 +1177,7 @@ aside {
 }
 
     .rpms-collapse-header:hover {
-        background: rgba(0, 0, 0, .02);
+        background: var(--rpms-subtle-fill);
     }
 
     /* Anything inside the header that does something of its own keeps its own cursor, so a link
@@ -1107,3 +1194,19 @@ aside {
     .rpms-collapse-header button {
         cursor: pointer;
     }
+
+
+/* The theme switch has both faces in the markup and shows the one that matches, so flipping the
+   attribute on <html> is the whole of the change. Written with !important because the faces carry
+   d-flex, which is itself a display rule. */
+.rpms-when-dark { display: none !important; }
+[data-bs-theme="dark"] .rpms-when-light { display: none !important; }
+[data-bs-theme="dark"] .rpms-when-dark { display: flex !important; }
+
+
+/* The footer took its colour from bg-light, which is a fixed value and stayed pale in the dark
+   theme. It reads the same variable as every other surface now. */
+.rpms-footer {
+    background: var(--rpms-surface);
+    border-color: var(--rpms-border) !important;
+}

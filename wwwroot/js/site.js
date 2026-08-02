@@ -656,3 +656,47 @@ document.addEventListener('submit', function (event) {
     chooser.addEventListener('change', show);
     show();
 })();
+
+
+// ==========================================================
+// Switching between the light and the dark theme
+// ==========================================================
+//
+// The switch is a form, and submitting it works on its own: the server writes the cookie and the
+// next page is drawn in the new theme. That is the version somebody without JavaScript gets, and
+// it is correct, but it is a hard cut between two paints because a CSS transition cannot run
+// across a navigation.
+//
+// So where JavaScript is available the attribute is flipped here instead, which the transitions in
+// site.css then animate, and the form is posted in the background to record the choice. Nothing
+// reloads, so the page being read stays where it is and the change is a fade rather than a blink.
+(function () {
+    var form = document.querySelector('form[action$="/Theme/Set"]');
+    if (!form) return;
+
+    form.addEventListener('submit', function (event) {
+        var wanted = form.querySelector('input[name="theme"]');
+        if (!wanted) return;
+
+        event.preventDefault();
+
+        var root = document.documentElement;
+        var next = wanted.value === 'dark' ? 'dark' : 'light';
+
+        // The paint, immediately. Everything below is bookkeeping the reader never waits for.
+        root.setAttribute('data-bs-theme', next);
+
+        // The control now offers the other one, so pressing it twice returns where it started
+        // without a round trip. Its label and icon follow the attribute through CSS, so there is
+        // nothing here to keep in step by hand.
+        wanted.value = next === 'dark' ? 'light' : 'dark';
+
+        // Recorded in the background: the cookie for this browser, and the account behind it, so
+        // the choice survives signing out and follows the person to another machine. A failure
+        // here leaves the page correct until the next load, which is the right way for it to fail.
+        var body = new FormData(form);
+        body.set('theme', next);
+        fetch(form.action, { method: 'POST', body: body, credentials: 'same-origin' })
+            .catch(function () { /* The theme still changed. Nothing to tell anybody. */ });
+    });
+})();
