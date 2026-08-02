@@ -76,22 +76,28 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
     /// <summary>The publications this supervisor has been assigned to, newest first.</summary>
     public Task<ApiResult<PagedResultDto<PublicationContainerDto>>> GetSupervisingAsync(
         string? ethicsSteps = null, int page = 1, int pageSize = Paging.DefaultPageSize,
-        string? sort = null, bool descending = false, CancellationToken ct = default) =>
+        string? sort = null, bool descending = false, string? search = null,
+        CancellationToken ct = default) =>
         GetAsync<PagedResultDto<PublicationContainerDto>>(
-            WithSteps("api/containers/supervising", ethicsSteps, page, pageSize, sort, descending), ct);
+            WithSteps("api/containers/supervising", ethicsSteps, page, pageSize, sort, descending, search), ct);
 
     /// <summary>Publications by students in this Head of Department's department.</summary>
     public Task<ApiResult<PagedResultDto<PublicationContainerDto>>> GetInMyDepartmentAsync(
         string? ethicsSteps = null, int page = 1, int pageSize = Paging.DefaultPageSize,
-        string? sort = null, bool descending = false, CancellationToken ct = default) =>
+        string? sort = null, bool descending = false, string? search = null,
+        CancellationToken ct = default) =>
         GetAsync<PagedResultDto<PublicationContainerDto>>(
-            WithSteps("api/containers/in-my-department", ethicsSteps, page, pageSize, sort, descending), ct);
+            WithSteps("api/containers/in-my-department", ethicsSteps, page, pageSize, sort, descending, search), ct);
 
     private static string WithSteps(string path, string? ethicsSteps, int page, int pageSize,
-        string? sort = null, bool descending = false)
+        string? sort = null, bool descending = false, string? search = null)
     {
         var parameters = Page(page, pageSize);
         parameters["ethicsSteps"] = ethicsSteps;
+
+        // One term across the student, the title and the abstract, applied by the API so it covers
+        // the whole queue rather than the page already in hand.
+        parameters["search"] = search;
 
         // Left off entirely when nothing is chosen, so the endpoint applies its own default order
         // rather than being told to sort by an empty column.

@@ -1,0 +1,165 @@
+@model SupervisorEthicsQueueViewModel
+@{
+    ViewData["Title"] = "Ethics reviews";
+}
+
+<div class="mb-4">
+    <h1 class="page-title mb-1">Ethics reviews</h1>
+    <div class="text-secondary">
+        Ethics stages waiting on you. Two decisions arrive here: ruling on whether a piece of
+        research needs approval at all, and checking the documents once it does.
+    </div>
+</div>
+
+@if (!Model.LoadFailed && (Model.Items.Count > 0 || Model.HasSearch))
+{
+    <div class="card mb-3">
+        <div class="card-body py-3">
+            <form method="get" asp-controller="Supervisor" asp-action="Ethic_reviews"
+                  class="row g-2 align-items-center">
+
+                <input type="hidden" name="sort" value="@Model.Sort" />
+                <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+
+                <div class="col-12 col-md">
+                    <input type="search" name="search" value="@Model.Search" class="form-control"
+                           placeholder="Search by student or publication" aria-label="Search" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                <div class="col-auto">
+                    <a asp-controller="Supervisor" asp-action="Ethic_reviews"
+                       asp-all-route-data="Model.ClearSearchRoute()"
+                       class="btn btn-outline-secondary">Clear</a>
+                </div>
+
+                @{
+                    var byStarted = Model.Column("started", "Date", descendingFirst: true);
+                    var byStudent = Model.Column("student", "Student");
+                }
+                <div class="col-12 col-md-auto ms-md-auto d-flex align-items-center gap-3">
+                    <span class="text-secondary small">Sort by</span>
+                    <partial name="_SortableHeader" model="byStarted" />
+                    <partial name="_SortableHeader" model="byStudent" />
+                </div>
+            </form>
+
+            @if (Model.HasSearch)
+            {
+                <div class="text-secondary small mt-2">
+                    @Model.TotalCount @(Model.TotalCount == 1 ? "publication matches" : "publications match") &ldquo;@Model.Search&rdquo;.
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@if (Model.LoadFailed)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">We couldn't load the ethics reviews</h3>
+            <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
+            <a asp-controller="Supervisor" asp-action="Ethic_reviews" class="btn btn-primary">Retry</a>
+        </div>
+    </div>
+}
+else if (Model.Items.Count == 0 && Model.HasSearch)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+            <p class="text-secondary mb-4">No ethics stage waiting on you has that student or title.</p>
+            <a asp-controller="Supervisor" asp-action="Ethic_reviews" class="btn btn-primary">Show them all</a>
+        </div>
+    </div>
+}
+else if (Model.Items.Count == 0)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">Nothing waiting for you</h3>
+            <p class="text-secondary mb-4">
+                Ethics decisions appear here once a student has made their declaration, and again
+                once they have uploaded the documents.
+            </p>
+            <a asp-controller="Supervisor" asp-action="SupervisorDashboard" class="btn btn-primary">Back to dashboard</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
+            <span class="text-secondary me-auto">
+                <strong>@Model.TotalCount</strong>
+                @(Model.TotalCount == 1 ? "ethics decision" : "ethics decisions") waiting on you,
+                @Model.Items.Count on this page.
+            </span>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-rpms-expand-all="ethics-cards">Expand all</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-rpms-collapse-all="ethics-cards">Collapse all</button>
+        </div>
+    </div>
+
+    @foreach (var item in Model.Items)
+    {
+        var isRuling = SupervisorEthicsQueueViewModel.IsRuling(item);
+
+        <div class="card mb-3">
+            <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+                 data-rpms-header-toggle="#ethics-@item.Id"
+                 role="button" tabindex="0"
+                 aria-expanded="true" aria-controls="ethics-@item.Id">
+                <span class="rpms-collapse-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
+                         viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M6 9l6 6l6 -6" />
+                    </svg>
+                </span>
+
+                <div class="me-auto">
+                    <h3 class="card-title m-0">@item.DisplayTitle</h3>
+                    <div class="text-secondary small">@item.StudentName</div>
+                </div>
+
+                @* Which of the two decisions this is, readable with the card shut, because the two
+                   are different work and a supervisor deciding what to open next is choosing
+                   between them. *@
+                <span class="badge @(isRuling ? "bg-primary-lt" : "bg-azure-lt")">
+                    @(isRuling ? "Needs your ruling" : "Documents to check")
+                </span>
+            </div>
+
+            <div class="card-body collapse show" id="ethics-@item.Id"
+                 data-rpms-collapsible="ethics-cards">
+                <p class="text-secondary">
+                    @if (isRuling)
+                    {
+                        @:The student has declared. Nobody has ruled yet on whether this research needs ethics approval, and nothing moves until you do. The coordinator confirms whichever way you rule.
+                    }
+                    else
+                    {
+                        @:The student has uploaded everything they were asked for. Yours is the first read; the coordinator and the head of department see it after you.
+                    }
+                </p>
+
+                @* Both go to the same screen. It asks for whichever decision the stage has reached,
+                   so the queue does not have to keep two routes in step with the workflow. *@
+                <a asp-controller="Supervisor" asp-action="Review_Ethic_assessmentchecklist"
+                   asp-route-id="@item.Id" class="btn btn-primary">
+                    @(isRuling ? "Make the ruling" : "Check the documents")
+                </a>
+            </div>
+        </div>
+    }
+
+    @if (Model.Pager is not null)
+    {
+        <partial name="_Pager" model="Model.Pager" />
+    }
+}

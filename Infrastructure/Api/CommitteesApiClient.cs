@@ -16,6 +16,10 @@ public class CommitteesApiClient(HttpClient httpClient) : ApiClientBase(httpClie
     public Task<ApiResult<IReadOnlyList<CommitteeCandidateDto>>> GetCandidatesAsync(CancellationToken ct = default) =>
         GetAsync<IReadOnlyList<CommitteeCandidateDto>>("api/committees/candidates", ct);
 
+    /// <summary>Whether the person signed in could be put on a committee under the rules as they stand.</summary>
+    public Task<ApiResult<bool>> GetMyEligibilityAsync(CancellationToken ct = default) =>
+        GetAsync<bool>("api/committees/my-eligibility", ct);
+
     /// <summary>The committees the acting member sits on.</summary>
     public Task<ApiResult<PagedResultDto<CommitteeDto>>> GetMyAssignmentsAsync(
         int page = 1, int pageSize = Paging.DefaultPageSize, CancellationToken ct = default) =>

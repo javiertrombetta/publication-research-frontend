@@ -101,8 +101,17 @@ public class ProposalsApiClient(HttpClient httpClient) : ApiClientBase(httpClien
     // ---------- Supervisor ----------
 
     /// <summary>Proposals a Coordinator has sent this supervisor to consider.</summary>
-    public Task<ApiResult<IReadOnlyList<ProposalDto>>> GetInvitedAsync(CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<ProposalDto>>("api/proposals/invited", ct);
+    public Task<ApiResult<PagedResultDto<ProposalDto>>> GetInvitedAsync(
+        int page = 1, int pageSize = Paging.DefaultPageSize, string? sort = null, bool descending = false,
+        string? search = null, CancellationToken ct = default)
+    {
+        var query = $"api/proposals/invited?page={Math.Max(1, page)}&pageSize={pageSize}";
+        if (!string.IsNullOrWhiteSpace(sort)) query += $"&sortBy={Uri.EscapeDataString(sort)}";
+        if (descending) query += "&sortDescending=true";
+        if (!string.IsNullOrWhiteSpace(search)) query += $"&search={Uri.EscapeDataString(search.Trim())}";
+
+        return GetAsync<PagedResultDto<ProposalDto>>(query, ct);
+    }
 
     /// <summary>Records that this supervisor is willing to supervise the proposal.</summary>
     public Task<ApiResult<object?>> SupervisorSelectionAsync(

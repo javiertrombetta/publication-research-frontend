@@ -22,11 +22,21 @@ namespace ResearchPublicationManagementSystem.Controllers
         // ---------- Overview ----------
 
         [HttpGet]
-        public async Task<IActionResult> SupervisorDashboard()
+        public async Task<IActionResult> SupervisorDashboard(
+            int page = 1, string? sort = null, bool desc = false, string? search = null)
         {
-            var model = new SupervisorDashboardViewModel();
+            var model = new SupervisorDashboardViewModel
+            {
+                // Spelled out rather than left null so the heading in force is the one marked as
+                // active. Oldest first, as on every other queue.
+                Sort = sort ?? "started",
+                Descending = desc,
+                Search = search
+            };
 
-            var supervising = await containersApi.GetSupervisingAsync();
+            var supervising = await containersApi.GetSupervisingAsync(
+                page: page, sort: sort ?? "started", descending: desc, search: search);
+
             if (!supervising.Success)
             {
                 TempData["ErrorMessage"] = supervising.ErrorMessage ?? "Could not load your publications right now.";
@@ -35,27 +45,28 @@ namespace ResearchPublicationManagementSystem.Controllers
             }
 
             model.Supervising = supervising.Data?.Items ?? [];
+            model.TotalCount = supervising.Data?.TotalCount ?? 0;
+            model.Pager = Paging.PagerFor(supervising.Data, "Supervisor", nameof(SupervisorDashboard),
+                model.RouteValues());
 
-            // The listing already carries the ethics status, so the two ethics queues come out of
-            // it without a request per publication.
-            model.EthicsAwaitingDecision = model.Supervising
-                .Where(c => c.EthicsStatus == EthicsStatus.PendingSupervisorDecision)
-                .ToList();
+            // The three cards, each asked only for its size. A page of rows would be thrown away:
+            // what the top of this screen says is how much is waiting, and the listing below says
+            // which publication it belongs to.
+            var proposals = await proposalsApi.GetInvitedAsync(page: 1, pageSize: 1);
+            model.ProposalsToReviewTotal = proposals.Data?.TotalCount ?? 0;
 
-            // Not "status is PendingVerification": that also covers documents this supervisor
-            // has already accepted and passed on. The backend says whose turn it is.
-            model.EthicsAwaitingReview = model.Supervising
-                .Where(c => c.EthicsAwaitingRole == RoleNames.Supervisor
-                            && c.EthicsStatus == EthicsStatus.PendingVerification)
-                .ToList();
+            // The two ethics queues counted separately, because a ruling and a document check are
+            // different work even though they arrive together.
+            var ruling = await containersApi.GetSupervisingAsync(
+                ethicsSteps: EthicsSteps.SupervisorDecision, page: 1, pageSize: 1);
+            model.EthicsAwaitingRulingTotal = ruling.Data?.TotalCount ?? 0;
 
-            var invited = await proposalsApi.GetInvitedAsync();
-            model.InvitedProposals = invited.Data ?? [];
+            var check = await containersApi.GetSupervisingAsync(
+                ethicsSteps: EthicsSteps.SupervisorDocumentReview, page: 1, pageSize: 1);
+            model.EthicsAwaitingCheckTotal = check.Data?.TotalCount ?? 0;
 
-            // The dashboard states a figure, so it takes the total rather than the page.
-            var papers = await publicationsApi.GetPendingForSupervisorAsync();
-            model.PapersAwaitingReview = papers.Data?.Items ?? [];
-            model.PapersAwaitingReviewTotal = papers.Data?.TotalCount ?? 0;
+            var papers = await publicationsApi.GetPendingForSupervisorAsync(page: 1, pageSize: 1);
+            model.PapersToReviewTotal = papers.Data?.TotalCount ?? 0;
 
             return View(model);
         }
@@ -63,11 +74,12 @@ namespace ResearchPublicationManagementSystem.Controllers
         // ---------- Pipeline 1: choosing a proposal ----------
 
         [HttpGet]
-        public async Task<IActionResult> proposal_review()
+        public async Task<IActionResult> proposal_review(
+            int page = 1, string? sort = null, bool desc = false, string? search = null)
         {
-            var model = new InvitedProposalsViewModel();
+            var model = new InvitedProposalsViewModel { Sort = sort, Descending = desc, Search = search };
 
-            var invited = await proposalsApi.GetInvitedAsync();
+            var invited = await proposalsApi.GetInvitedAsync(page, sort: sort, descending: desc, search: search);
             if (!invited.Success)
             {
                 TempData["ErrorMessage"] = invited.ErrorMessage ?? "Could not load the proposals sent to you.";
@@ -75,7 +87,10 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return View(model);
             }
 
-            model.Proposals = invited.Data ?? [];
+            model.Proposals = invited.Data?.Items ?? [];
+            model.TotalCount = invited.Data?.TotalCount ?? 0;
+            model.Pager = Paging.PagerFor(invited.Data, "Supervisor", nameof(proposal_review), model.RouteValues());
+
             return View(model);
         }
 
@@ -98,6 +113,43 @@ namespace ResearchPublicationManagementSystem.Controllers
         }
 
         // ---------- Pipeline 2: ethics ----------
+
+        /// <summary>
+        /// Every ethics stage waiting on this supervisor, both kinds in one list.
+        ///
+        /// Until now the only way in was the dashboard, which meant the work existed but had no
+        /// screen of its own and nothing in the menu pointed at it. The two decisions live together
+        /// because the question is "what is mine to do", and each row opens whichever screen its
+        /// own decision needs.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> Ethic_reviews(
+            int page = 1, string? sort = null, bool desc = false, string? search = null)
+        {
+            var model = new SupervisorEthicsQueueViewModel
+            {
+                Sort = sort ?? "started",
+                Descending = desc,
+                Search = search
+            };
+
+            var queue = await containersApi.GetSupervisingAsync(
+                ethicsSteps: EthicsSteps.SupervisorReview, page: page,
+                sort: sort ?? "started", descending: desc, search: search);
+
+            if (!queue.Success)
+            {
+                TempData["ErrorMessage"] = queue.ErrorMessage ?? "Could not load the ethics reviews waiting on you.";
+                model.LoadFailed = true;
+                return View(model);
+            }
+
+            model.Items = queue.Data?.Items ?? [];
+            model.TotalCount = queue.Data?.TotalCount ?? 0;
+            model.Pager = Paging.PagerFor(queue.Data, "Supervisor", nameof(Ethic_reviews), model.RouteValues());
+
+            return View(model);
+        }
 
         /// <summary>
         /// The supervisor's ethics screen for one publication. Which decision it offers depends on
@@ -153,11 +205,14 @@ namespace ResearchPublicationManagementSystem.Controllers
         // ---------- Pipeline 3: the research paper ----------
 
         [HttpGet]
-        public async Task<IActionResult> publication_review(int page = 1)
+        public async Task<IActionResult> publication_review(
+            int page = 1, string? sort = null, bool desc = false, string? search = null)
         {
-            var model = new SupervisorPapersViewModel();
+            var model = new SupervisorPapersViewModel { Sort = sort, Descending = desc, Search = search };
 
-            var papers = await publicationsApi.GetPendingForSupervisorAsync(page);
+            var papers = await publicationsApi.GetPendingForSupervisorAsync(
+                page, sort: sort, descending: desc, search: search);
+
             if (!papers.Success)
             {
                 TempData["ErrorMessage"] = papers.ErrorMessage ?? "Could not load the papers awaiting your review.";
@@ -166,7 +221,8 @@ namespace ResearchPublicationManagementSystem.Controllers
             }
 
             model.Papers = papers.Data?.Items ?? [];
-            model.Pager = Paging.PagerFor(papers.Data, "Supervisor", nameof(publication_review));
+            model.TotalCount = papers.Data?.TotalCount ?? 0;
+            model.Pager = Paging.PagerFor(papers.Data, "Supervisor", nameof(publication_review), model.RouteValues());
 
             return View(model);
         }

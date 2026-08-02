@@ -17,4 +17,12 @@ public static class EthicsSteps
     /// screen asks for both and the API returns one queue.
     /// </summary>
     public const string CoordinatorFirstReview = $"{CoordinatorConfirmation},{CoordinatorDocumentReview}";
+
+    /// <summary>
+    /// Everything an ethics stage can be waiting on this supervisor for. Two quite different
+    /// decisions, the ruling on whether approval is needed at all and the check of the documents
+    /// once it is, but they arrive in the same queue because the question a supervisor is asking is
+    /// "what is mine to do", not "which kind of ethics work is this".
+    /// </summary>
+    public const string SupervisorReview = $"{SupervisorDecision},{SupervisorDocumentReview}";
 }
