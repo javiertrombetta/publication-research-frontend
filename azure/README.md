@@ -11,5 +11,19 @@ az account set --subscription "Azure for Students"
 ./azure/deploy.sh
 ```
 
-The full walkthrough, the costs and what to do afterwards are in the API repository, at
-`docs/azure.md`. It covers both applications because they are deployed together.
+`deploy-image.sh` is the smaller one: it points the running application at the image built from the
+commit you are standing on and changes nothing else. Every push to `main` already does this on its
+own, so this is for putting a specific image up by hand, or for a commit built before that was
+switched on.
+
+```bash
+./azure/deploy-image.sh              # the current commit
+./azure/deploy-image.sh sha-abc1234  # or a tag you name
+```
+
+It refuses a tag that was never built, rather than leaving the application pointing at an image that
+does not exist, and it waits until the new revision is the one actually serving traffic before
+saying it is done.
+
+The full walkthrough, the costs, how GitHub signs in to Azure and what to do afterwards are in the
+API repository, at `docs/azure.md`. It covers both applications because they are deployed together.
