@@ -1,0 +1,82 @@
+@*
+    Switching between the light and the dark theme.
+
+    One partial in two presentations, because the control belongs in two quite different places.
+    Signed in it is an item in the user menu, between Change Password and Logout. Signed out there
+    is no menu, so it is a button of its own in the header: the catalogue, signing in, signing up
+    and recovering a password are all read by people with no account, and how a page looks is not
+    something to hold behind one.
+
+    Pass "item" for the menu form and "button" for the standalone one. A model is always required:
+    a partial called without one inherits the model of the page it sits on, which here would be
+    whatever that page happens to be.
+
+        <partial name="_ThemeSwitch" model="@("item")" />
+        <partial name="_ThemeSwitch" model="@("button")" />
+
+    Both faces are rendered and the CSS shows whichever matches the theme in force. That is what
+    lets the switch flip instantly without a reload: site.js changes one attribute on <html> and
+    the label and icon follow, with nothing to swap by hand.
+*@
+@model string
+@{
+    var asMenuItem = Model == "item";
+
+    var currentTheme = ResearchPublicationManagementSystem.Services.SiteTheme.For(Context);
+    var otherTheme = ResearchPublicationManagementSystem.Services.SiteTheme.Opposite(currentTheme);
+
+    // Back to the page it was pressed on, so the switch never moves anybody off what they were
+    // reading. Only used when the form actually submits, which is the no-JavaScript path.
+    var here = $"{Context.Request.Path}{Context.Request.QueryString}";
+
+    var buttonClass = asMenuItem
+        ? "dropdown-item d-flex align-items-center gap-2"
+        : "btn btn-icon btn-ghost-secondary rpms-theme-button";
+}
+
+<form asp-controller="Theme" asp-action="Set" method="post" class="m-0" data-rpms-theme-form>
+    <input type="hidden" name="theme" value="@otherTheme" />
+    <input type="hidden" name="returnUrl" value="@here" />
+
+    <button type="submit" class="@buttonClass"
+            title="@(currentTheme == "dark" ? "Switch to the light theme" : "Switch to the dark theme")">
+
+        @* Shown while the light theme is in force: pressing this goes dark. *@
+        <span class="rpms-when-light d-flex align-items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="18" height="18"
+                 viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+            </svg>
+            @if (asMenuItem)
+            {
+                <span>Dark theme</span>
+            }
+            else
+            {
+                @* The icon alone in a header, where a word would crowd the brand. The title and
+                   this label carry the meaning for anybody not reading the picture. *@
+                <span class="visually-hidden">Switch to the dark theme</span>
+            }
+        </span>
+
+        <span class="rpms-when-dark d-flex align-items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="18" height="18"
+                 viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
+            </svg>
+            @if (asMenuItem)
+            {
+                <span>Light theme</span>
+            }
+            else
+            {
+                <span class="visually-hidden">Switch to the light theme</span>
+            }
+        </span>
+    </button>
+</form>

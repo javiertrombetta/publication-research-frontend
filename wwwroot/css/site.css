@@ -1203,6 +1203,24 @@ aside {
 [data-bs-theme="dark"] .rpms-when-light { display: none !important; }
 [data-bs-theme="dark"] .rpms-when-dark { display: flex !important; }
 
+/* The mark itself, on the same principle. Its lettering is ink rather than a themed colour, so the
+   dark theme is served a second sheet drawn in white; both sheets are transparent, since a white
+   rectangle behind a logo is only invisible while the page behind it is white too. Marked, like the
+   faces of the switch, because the rule sizing the mark also sets a display and would otherwise win
+   on specificity and leave both sheets showing at once. */
+.rpms-logo-dark { display: none !important; }
+[data-bs-theme="dark"] .rpms-logo-light { display: none !important; }
+[data-bs-theme="dark"] .rpms-logo-dark { display: block !important; }
+
+/* A ghost button keeps its pressed fill while it holds focus, which after a click leaves the switch
+   looking permanently lit. It is a control that reports its state through the whole page, so it does
+   not need to hold a highlight of its own; the keyboard ring stays. */
+.rpms-theme-button:focus:not(:focus-visible),
+.rpms-theme-button:focus:not(:focus-visible):active {
+    background: transparent;
+    box-shadow: none;
+}
+
 
 /* The footer took its colour from bg-light, which is a fixed value and stayed pale in the dark
    theme. It reads the same variable as every other surface now. */

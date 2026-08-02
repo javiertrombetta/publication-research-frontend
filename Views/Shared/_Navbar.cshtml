@@ -59,7 +59,13 @@
 
             <!-- Brand: sized to the navbar, so it never drives the bar's height -->
             <a asp-controller="@homeController" asp-action="@homeAction" class="navbar-brand m-0 p-0 d-flex align-items-center">
-                <img src="~/images/ais-logo.png" class="rpms-navbar-logo" alt="Auckland Institute of Studies" />
+                @* Two sheets of the same mark. The lettering is black, which disappears against a dark
+                   bar, so the dark theme gets the same mark drawn in white. Both are in the markup and
+                   the CSS shows whichever matches, the way the theme switch itself works. *@
+                <img src="~/images/ais-logo.png" class="rpms-navbar-logo rpms-logo-light"
+                     alt="Auckland Institute of Studies" />
+                <img src="~/images/ais-logo-dark.png" class="rpms-navbar-logo rpms-logo-dark"
+                     alt="Auckland Institute of Studies" />
             </a>
 
         </div>
@@ -69,7 +75,10 @@
            opened to anonymous visitors this keeps the user menu (and its Logout) hidden. *@
         @if (!isAuthenticated)
         {
-            <div class="navbar-nav flex-row order-md-last">
+            <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
+                @* The catalogue is read by people with no account, and how a page looks is not
+                   something to hold behind one. *@
+                <partial name="_ThemeSwitch" model="@("button")" />
                 <a asp-controller="Auth" asp-action="home" class="btn btn-primary">Sign in</a>
             </div>
         }
@@ -142,46 +151,9 @@
                         Change Password
                     </a>
 
-                    @* The theme switch. A form rather than a link because it changes something,
-                       and it comes back to the page it was pressed on so nobody is moved off what
-                       they were reading.
-
-                       Both faces are rendered and the CSS shows whichever matches the theme in
-                       force. That is what lets the switch flip instantly without a reload: the
-                       script changes one attribute on <html> and this label and icon follow, with
-                       no second request to wait for and nothing to swap by hand. *@
-                    @{
-                        var currentTheme = ResearchPublicationManagementSystem.Services.SiteTheme.For(Context);
-                        var otherTheme = ResearchPublicationManagementSystem.Services.SiteTheme.Opposite(currentTheme);
-                        var here = $"{Context.Request.Path}{Context.Request.QueryString}";
-                    }
-                    <form asp-controller="Theme" asp-action="Set" method="post" class="m-0" data-rpms-theme-form>
-                        <input type="hidden" name="theme" value="@otherTheme" />
-                        <input type="hidden" name="returnUrl" value="@here" />
-                        <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
-                            @* Shown while the light theme is in force: pressing this goes dark. *@
-                            <span class="rpms-when-light d-flex align-items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="18" height="18"
-                                     viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                    <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
-                                </svg>
-                                Dark theme
-                            </span>
-
-                            <span class="rpms-when-dark d-flex align-items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="18" height="18"
-                                     viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
-                                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                    <path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
-                                    <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
-                                </svg>
-                                Light theme
-                            </span>
-                        </button>
-                    </form>
+                    @* Between Change Password and Logout. Signed out the same control is a
+                       button in the header instead, see the branch above. *@
+                    <partial name="_ThemeSwitch" model="@("item")" />
 
                     <div class="dropdown-divider"></div>
 

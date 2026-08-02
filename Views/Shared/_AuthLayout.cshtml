@@ -22,14 +22,27 @@
     @* Same .rpms-navbar as the signed-in shell, so the bar is exactly as tall here as it is
        everywhere else, see the fixed height in site.css. *@
     <header class="navbar navbar-expand-md d-print-none rpms-navbar">
-        <div class="container-fluid px-3">
+        <div class="container-fluid px-3 d-flex align-items-center">
             <div class="d-flex align-items-center">
                 @* This layout is only ever shown signed out, so the brand goes where a signed-out
                    visitor belongs, the public catalogue, not back to the page they're on. *@
                 <a asp-controller="@RoleLanding.Anonymous.Controller" asp-action="@RoleLanding.Anonymous.Action"
                    class="navbar-brand m-0 p-0 d-flex align-items-center">
-                    <img src="~/images/ais-logo.png" class="rpms-navbar-logo" alt="Auckland Institute of Studies" />
+                    @* Two sheets of the same mark. The lettering is black, which disappears against a dark
+                       bar, so the dark theme gets the same mark drawn in white. Both are in the markup and
+                       the CSS shows whichever matches, the way the theme switch itself works. *@
+                    <img src="~/images/ais-logo.png" class="rpms-navbar-logo rpms-logo-light"
+                         alt="Auckland Institute of Studies" />
+                    <img src="~/images/ais-logo-dark.png" class="rpms-navbar-logo rpms-logo-dark"
+                         alt="Auckland Institute of Studies" />
                 </a>
+            </div>
+
+            @* Signing in, signing up and recovering a password are all read before there is an
+               account, and somebody who prefers a dark screen prefers it here too. The same
+               control the signed-in menu carries, in the only place there is room for it. *@
+            <div class="ms-auto">
+                <partial name="_ThemeSwitch" model="@("button")" />
             </div>
         </div>
     </header>
