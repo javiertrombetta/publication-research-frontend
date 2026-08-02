@@ -23,17 +23,20 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         [HttpGet]
         public async Task<IActionResult> Head_of_Department_dashboard(
-            int page = 1, string? sort = null, bool desc = false, string? search = null)
+            int page = 1, string? sort = null, bool desc = false, string? search = null,
+            string? waitingOn = null)
         {
             var model = new HeadOfDepartmentDashboardViewModel
             {
                 Sort = sort ?? "started",
                 Descending = desc,
-                Search = search
+                Search = search,
+                WaitingOn = waitingOn
             };
 
             var containers = await containersApi.GetInMyDepartmentAsync(
-                page: page, sort: sort ?? "started", descending: desc, search: search);
+                page: page, sort: sort ?? "started", descending: desc, search: search,
+                waitingOn: waitingOn);
 
             if (!containers.Success)
             {
@@ -109,44 +112,63 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> Headofdepartment_feedback(
-            Guid? id, int page = 1, string? sort = null, bool desc = false)
+            Guid? id, int page = 1, string? sort = null, bool desc = false, string? search = null)
         {
-            var model = new HeadOfDepartmentEthicsViewModel { Sort = sort ?? "started", Descending = desc };
-
-            // This screen's own queue, by name, one page of it. Everything else the department has
-            // in flight is somebody else's problem and no longer travels down the wire.
-            // Oldest first by default, as on every other queue: the longest wait is the one that
-            // needs looking at.
-            var containers = await containersApi.GetInMyDepartmentAsync(
-                ethicsSteps: EthicsSteps.HeadOfDepartmentReview, page: page,
-                sort: sort ?? "started", descending: desc);
-            if (!containers.Success)
+            var model = new HeadOfDepartmentEthicsViewModel
             {
-                TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your department's publications.";
-                model.LoadFailed = true;
-                return View(model);
-            }
+                Sort = sort ?? "started",
+                Descending = desc,
+                Search = search,
+                OnlyId = id
+            };
 
-            var candidates = (containers.Data?.Items ?? [])
-                .ToList();
+            List<PublicationContainerDto> candidates;
 
             if (id is { } only)
             {
-                candidates = candidates.Where(c => c.Id == only).ToList();
-                if (candidates.Count == 0)
+                // Asked for by id, so it is fetched by id. Looking for it inside a page of the
+                // queue found it only when it happened to be on the page the reader was on, and
+                // told everybody else their own publication was not waiting on them.
+                var one = await containersApi.GetByIdAsync(only);
+                if (!one.Success || one.Data is null)
                 {
                     TempData["ErrorMessage"] = "That publication isn't waiting on your review.";
                     return RedirectToAction(nameof(Head_of_Department_dashboard));
                 }
+
+                if (one.Data.EthicsAwaitingStep != EthicsSteps.HeadOfDepartmentReview)
+                {
+                    TempData["ErrorMessage"] = "That publication isn't waiting on your review.";
+                    return RedirectToAction(nameof(Head_of_Department_dashboard));
+                }
+
+                candidates = [one.Data];
+                model.TotalCount = 1;
+            }
+            else
+            {
+                // This screen's own queue, by name, one page of it. Everything else the department
+                // has in flight is somebody else's problem and no longer travels down the wire.
+                // Oldest first by default, as on every other queue: the longest wait is the one
+                // that needs looking at.
+                var containers = await containersApi.GetInMyDepartmentAsync(
+                    ethicsSteps: EthicsSteps.HeadOfDepartmentReview, page: page,
+                    sort: sort ?? "started", descending: desc, search: search);
+
+                if (!containers.Success)
+                {
+                    TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your department's publications.";
+                    model.LoadFailed = true;
+                    return View(model);
+                }
+
+                candidates = [.. containers.Data?.Items ?? []];
+                model.TotalCount = containers.Data?.TotalCount ?? 0;
+                model.Pager = Paging.PagerFor(containers.Data, "HeadOfDepartment",
+                    nameof(Headofdepartment_feedback), model.RouteValues());
             }
 
             // Only the rows on this page are filled in: each costs two further requests.
-            var pagerValues = model.RouteValues();
-            if (id is not null) pagerValues["id"] = id.ToString();
-
-            model.Pager = Paging.PagerFor(containers.Data, "HeadOfDepartment", nameof(Headofdepartment_feedback),
-                pagerValues);
-
             foreach (var container in candidates)
             {
                 var approval = await ethicsApi.GetApprovalAsync(container.Id);
@@ -214,15 +236,15 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return View(model);
             }
 
-            // Still grouped by publication, since that is how a reader makes sense of them: three
-            // proposals from one student are one decision, not three.
+            // One row per proposal, in the order the API returned them. Grouping them by student
+            // undid the ordering the reader had asked for: a list sorted by title came back sorted
+            // by title within each student and by nothing at all between them.
             model.Items = [.. (proposals.Data?.Items ?? [])
-                .GroupBy(p => p.PublicationContainerId)
-                .Select(group => new DepartmentProposalItem
+                .Select(p => new DepartmentProposalItem
                 {
-                    StudentName = group.First().StudentName,
-                    Proposals = [.. group.Select(p => new ProposalDto(
-                        p.Id, p.PublicationContainerId, p.Title, p.Abstract, p.Status, p.SubmittedAt))]
+                    StudentName = p.StudentName,
+                    Proposal = new ProposalDto(
+                        p.Id, p.PublicationContainerId, p.Title, p.Abstract, p.Status, p.SubmittedAt)
                 })];
 
             model.TotalCount = proposals.Data?.TotalCount ?? 0;

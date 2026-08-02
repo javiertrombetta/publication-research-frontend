@@ -1137,6 +1137,22 @@ aside {
 /* The chevron beside a student's name is a 20px target and the name beside it is what everybody
    aims at, so the whole row is the handle. The header is the control: it takes the focus, it
    answers the keyboard, and the arrow inside it is only an arrow. */
+/* The column titles above a list of cards. A card has no header row to click, so the headings sit
+   in a strip of their own on the same grid the card headers use.
+
+   Hidden on a narrow screen, where those headers stack one field per line: a row of headings
+   standing over nothing is worse than no headings at all, and the sort control is still reachable
+   from the ordering the page arrived in. */
+.rpms-queue-columns {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .rpms-queue-columns {
+        display: block;
+    }
+}
+
 .rpms-collapse-header {
     cursor: pointer;
     user-select: none;

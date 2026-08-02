@@ -26,17 +26,48 @@ namespace ResearchPublicationManagementSystem.Models
 
         protected abstract string QueueAction { get; }
 
+        /// <summary>
+        /// Which role the reader has narrowed the listing to, if any. Empty means the whole
+        /// department, whoever each publication happens to be waiting on.
+        /// </summary>
+        public string? WaitingOn { get; set; }
+
+        public bool HasWaitingOn => !string.IsNullOrWhiteSpace(WaitingOn);
+
         public Dictionary<string, string?> RouteValues()
         {
             var values = new Dictionary<string, string?>();
             if (!string.IsNullOrWhiteSpace(Sort)) values["sort"] = Sort;
             if (Descending) values["desc"] = "true";
             if (HasSearch) values["search"] = Search;
+            if (HasWaitingOn) values["waitingOn"] = WaitingOn;
             return values;
         }
 
         public Dictionary<string, string?> ClearSearchRoute() =>
             RouteValues().Where(v => v.Key != "search").ToDictionary(v => v.Key, v => v.Value);
+
+        /// <summary>
+        /// Where Clear goes on a listing that can be narrowed two ways: back to everything, still
+        /// in the order the reader chose. Clearing only the term leaves a role filter in place and
+        /// the list looking just as short as before.
+        /// </summary>
+        public Dictionary<string, string?> ClearFiltersRoute() =>
+            RouteValues()
+                .Where(v => v.Key is not ("search" or "waitingOn"))
+                .ToDictionary(v => v.Key, v => v.Value);
+
+        /// <summary>
+        /// Everything the reader has narrowed the list by, which is what a sort link has to carry
+        /// so that reordering keeps the same rows rather than widening back to the department.
+        /// </summary>
+        private Dictionary<string, string?> FilterRoute()
+        {
+            var values = new Dictionary<string, string?>();
+            if (HasSearch) values["search"] = Search;
+            if (HasWaitingOn) values["waitingOn"] = WaitingOn;
+            return values;
+        }
 
         public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
         {
@@ -47,7 +78,7 @@ namespace ResearchPublicationManagementSystem.Models
             CurrentSort = Sort,
             CurrentDescending = Descending,
             DescendingFirst = descendingFirst,
-            RouteValues = HasSearch ? new Dictionary<string, string?> { ["search"] = Search } : []
+            RouteValues = FilterRoute()
         };
     }
 
@@ -86,21 +117,25 @@ namespace ResearchPublicationManagementSystem.Models
         public IReadOnlyList<PublicationContainerDto> Publications { get; set; } = [];
     }
 
-    /// <summary>Ethics documentation awaiting the Head of Department's comments.</summary>
-    public class HeadOfDepartmentEthicsViewModel : SortablePublicationQueue
+    /// <summary>
+    /// Ethics documentation awaiting the Head of Department's comments.
+    ///
+    /// The same queue shape as the department's other listings, so it is searched, ordered and
+    /// paged by the API rather than in the page already in hand. One of these is only ever a
+    /// handful of rows on a quiet week and the whole department's backlog on a busy one, and the
+    /// screen cannot tell which it is going to be.
+    /// </summary>
+    public class HeadOfDepartmentEthicsViewModel : DepartmentQueue
     {
-        protected override string SortController => "HeadOfDepartment";
-        protected override string SortAction => "Headofdepartment_feedback";
-
+        protected override string QueueAction => "Headofdepartment_feedback";
 
         /// <summary>
-        /// Which page of the queue this is. Null where everything fits on one, so the controls
-        /// only appear when there is somewhere to go.
+        /// Narrowed to one publication, when the reader arrived from a link on the dashboard. The
+        /// sort and search controls are pointless on a queue of one, so the screen hides them.
         /// </summary>
-        public PagerViewModel? Pager { get; set; }
-        public List<HeadOfDepartmentEthicsItem> Items { get; set; } = [];
+        public Guid? OnlyId { get; set; }
 
-        public bool LoadFailed { get; set; }
+        public List<HeadOfDepartmentEthicsItem> Items { get; set; } = [];
     }
 
     public class HeadOfDepartmentEthicsItem
@@ -112,69 +147,27 @@ namespace ResearchPublicationManagementSystem.Models
         public IReadOnlyList<EthicsDocumentDto> Documents { get; set; } = [];
     }
 
-    /// <summary>Every proposal from students in the department, for oversight rather than action.</summary>
-    public class DepartmentProposalsViewModel
+    /// <summary>
+    /// Every proposal from students in the department, for oversight rather than action.
+    ///
+    /// One row per proposal rather than per student. They were grouped, on the reasoning that
+    /// three proposals from one student are one decision; but nobody decides anything here, and a
+    /// listing ordered by title or by status cannot also be grouped by author without the order
+    /// applying inside each group and to nothing else. The student's name is on every row instead,
+    /// which is what the grouping was carrying.
+    /// </summary>
+    public class DepartmentProposalsViewModel : DepartmentQueue
     {
-        /// <summary>
-        /// The order and the search term, both applied by the API before the page is cut. A
-        /// department's oldest proposal is on its last page, so ordering what has already arrived
-        /// would never bring it into view.
-        /// </summary>
-        public string? Sort { get; set; }
-        public bool Descending { get; set; }
-        public string? Search { get; set; }
-        public int TotalCount { get; set; }
+        protected override string QueueAction => "all_proposals_fromstudent";
 
-        public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
-
-        public Dictionary<string, string?> RouteValues()
-        {
-            var values = new Dictionary<string, string?>();
-            if (HasSearch) values["search"] = Search;
-            if (!string.IsNullOrWhiteSpace(Sort)) values["sort"] = Sort;
-            if (Descending) values["desc"] = "true";
-            return values;
-        }
-
-        /// <summary>
-        /// Where Clear goes: this list again, without the search term and still in the order the
-        /// reader had chosen.
-        /// </summary>
-        public Dictionary<string, string?> ClearSearchRoute() =>
-            RouteValues().Where(v => v.Key != "search").ToDictionary(v => v.Key, v => v.Value);
-
-        public SortBarViewModel SortBar => new()
-        {
-            Controller = "HeadOfDepartment",
-            Action = "all_proposals_fromstudent",
-            Sort = Sort,
-            Descending = Descending,
-            RouteValues = HasSearch ? new Dictionary<string, string?> { ["search"] = Search } : [],
-            Columns =
-            [
-                ("submitted", "Date", true),
-                ("student", "Student", false),
-                ("title", "Proposal", false),
-                ("status", "Status", false)
-            ]
-        };
-
-
-        /// <summary>
-        /// Which page of the queue this is. Null where everything fits on one, so the controls
-        /// only appear when there is somewhere to go.
-        /// </summary>
-        public PagerViewModel? Pager { get; set; }
         public List<DepartmentProposalItem> Items { get; set; } = [];
-
-        public bool LoadFailed { get; set; }
     }
 
     public class DepartmentProposalItem
     {
-        /// <summary>Carried on the proposals themselves, so the screen is one request.</summary>
+        /// <summary>Carried on the proposal itself, so the screen is one request.</summary>
         public string StudentName { get; set; } = string.Empty;
 
-        public IReadOnlyList<ProposalDto> Proposals { get; set; } = [];
+        public ProposalDto Proposal { get; set; } = null!;
     }
 }
