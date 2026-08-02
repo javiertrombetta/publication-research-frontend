@@ -22,10 +22,10 @@ public class CommitteesApiClient(HttpClient httpClient) : ApiClientBase(httpClie
 
     /// <summary>The committees the acting member sits on.</summary>
     public Task<ApiResult<PagedResultDto<CommitteeDto>>> GetMyAssignmentsAsync(
-        int page = 1, int pageSize = Paging.DefaultPageSize, string? sort = null, bool descending = false,
+        int page = 1, int pageSize = Paging.AsConfigured, string? sort = null, bool descending = false,
         string? search = null, CancellationToken ct = default)
     {
-        var query = $"api/committees/my-assignments?page={Math.Max(1, page)}&pageSize={pageSize}";
+        var query = $"api/committees/my-assignments?page={Math.Max(1, page)}{Paging.SizeParam(pageSize)}";
         if (!string.IsNullOrWhiteSpace(sort)) query += $"&sortBy={Uri.EscapeDataString(sort)}";
         if (descending) query += "&sortDescending=true";
         if (!string.IsNullOrWhiteSpace(search)) query += $"&search={Uri.EscapeDataString(search.Trim())}";

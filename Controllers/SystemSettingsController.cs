@@ -345,11 +345,11 @@ namespace ResearchPublicationManagementSystem.Controllers
         public async Task<IActionResult> SaveInstitution(
             string name, string studentEmailDomain, string staffEmailDomain,
             string? itSupportEmail, string? researchEnquiriesEmail, string? privacyPolicyUrl,
-            string? currentAcademicCycle, string? websiteUrl)
+            string? currentAcademicCycle, string? websiteUrl, int rowsPerPage)
         {
             var result = await settingsApi.UpdateInstitutionAsync(new UpdateInstitutionSettingsRequestDto(
                 name, studentEmailDomain, staffEmailDomain, itSupportEmail, researchEnquiriesEmail,
-                privacyPolicyUrl, currentAcademicCycle, websiteUrl));
+                privacyPolicyUrl, currentAcademicCycle, websiteUrl, rowsPerPage));
 
             return Done(result.Success, "institution", result.ErrorMessage, "Saved.");
         }

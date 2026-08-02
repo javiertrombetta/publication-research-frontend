@@ -109,8 +109,7 @@ namespace ResearchPublicationManagementSystem.Models
             Columns =
             [
                 ("submitted", "Date", true),
-                ("student", "Student", false),
-                ("title", "Proposal", false)
+                ("student", "Student", false)
             ]
         };
 
@@ -118,9 +117,29 @@ namespace ResearchPublicationManagementSystem.Models
 
         public bool LoadFailed { get; set; }
 
+        /// <summary>
+        /// The student a group belongs to, and enough to know which student that is.
+        ///
+        /// A name is not an identifier. The same person appears once per publication they have
+        /// open, so a coordinator can be looking at two groups headed identically, and two people
+        /// can share a name outright. The id and the address settle both.
+        /// </summary>
+        public ProposalWithInvitationsDto? FirstIn(Guid containerId) =>
+            Proposals.FirstOrDefault(p => p.PublicationContainerId == containerId);
+
         public string StudentFor(Guid containerId) =>
-            Proposals.FirstOrDefault(p => p.PublicationContainerId == containerId)?.StudentName
-            ?? "Unknown student";
+            FirstIn(containerId)?.StudentName ?? "Unknown student";
+
+        /// <summary>
+        /// When this student sent the round in. One date for the group, because a student submits
+        /// their proposals together: it is the round that was sent, not each proposal separately.
+        /// The earliest, so an older proposal added to a round still dates the round from its
+        /// start rather than from the last thing touched.
+        /// </summary>
+        public DateTime? SubmittedFor(Guid containerId) =>
+            Proposals
+                .Where(p => p.PublicationContainerId == containerId && p.SubmittedAt is not null)
+                .Min(p => p.SubmittedAt);
 
         /// <summary>Proposals grouped by student, since they are sent out per student.</summary>
         public IEnumerable<IGrouping<Guid, ProposalWithInvitationsDto>> ByPublication =>

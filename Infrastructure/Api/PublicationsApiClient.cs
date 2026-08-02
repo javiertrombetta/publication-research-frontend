@@ -56,10 +56,10 @@ public class PublicationsApiClient(HttpClient httpClient) : ApiClientBase(httpCl
 
     /// <summary>Papers submitted by students this supervisor supervises, awaiting their review.</summary>
     public Task<ApiResult<PagedResultDto<PublicationDto>>> GetPendingForSupervisorAsync(
-        int page = 1, int pageSize = Paging.DefaultPageSize, string? sort = null, bool descending = false,
+        int page = 1, int pageSize = Paging.AsConfigured, string? sort = null, bool descending = false,
         string? search = null, CancellationToken ct = default)
     {
-        var query = $"api/publications/pending?page={Math.Max(1, page)}&pageSize={pageSize}";
+        var query = $"api/publications/pending?page={Math.Max(1, page)}{Paging.SizeParam(pageSize)}";
         if (!string.IsNullOrWhiteSpace(sort)) query += $"&sortBy={Uri.EscapeDataString(sort)}";
         if (descending) query += "&sortDescending=true";
         if (!string.IsNullOrWhiteSpace(search)) query += $"&search={Uri.EscapeDataString(search.Trim())}";

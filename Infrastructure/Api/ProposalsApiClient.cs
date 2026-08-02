@@ -30,28 +30,28 @@ public class ProposalsApiClient(HttpClient httpClient) : ApiClientBase(httpClien
     /// of that screen rather than of everything.
     /// </param>
     public Task<ApiResult<PagedResultDto<ProposalWithInvitationsDto>>> GetForCoordinatorAsync(
-        int page = 1, bool awaitingAllocation = false, int pageSize = Paging.DefaultPageSize,
+        int page = 1, bool awaitingAllocation = false, int pageSize = Paging.AsConfigured,
         string? sort = null, bool descending = false, string? search = null,
         CancellationToken ct = default) =>
         GetAsync<PagedResultDto<ProposalWithInvitationsDto>>(
-            $"api/proposals/for-coordinator?page={Math.Max(1, page)}&pageSize={pageSize}"
+            $"api/proposals/for-coordinator?page={Math.Max(1, page)}{Paging.SizeParam(pageSize)}"
             + $"&awaitingAllocation={awaitingAllocation}{Sorting(sort, descending)}{Search(search)}", ct);
 
     /// <summary>Every proposal from the students of the department this person heads.</summary>
     public Task<ApiResult<PagedResultDto<ProposalWithInvitationsDto>>> GetInMyDepartmentAsync(
-        int page = 1, int pageSize = Paging.DefaultPageSize,
+        int page = 1, int pageSize = Paging.AsConfigured,
         string? sort = null, bool descending = false, string? search = null,
         CancellationToken ct = default) =>
         GetAsync<PagedResultDto<ProposalWithInvitationsDto>>(
-            $"api/proposals/in-my-department?page={Math.Max(1, page)}&pageSize={pageSize}"
+            $"api/proposals/in-my-department?page={Math.Max(1, page)}{Paging.SizeParam(pageSize)}"
             + $"{Sorting(sort, descending)}{Search(search)}", ct);
 
     public Task<ApiResult<PagedResultDto<ProposalWithInvitationsDto>>> GetPendingAsync(
-        int page = 1, int pageSize = Paging.DefaultPageSize,
+        int page = 1, int pageSize = Paging.AsConfigured,
         string? sort = null, bool descending = false, string? search = null, bool returnedOnly = false,
         CancellationToken ct = default) =>
         GetAsync<PagedResultDto<ProposalWithInvitationsDto>>(
-            $"api/proposals/pending?page={Math.Max(1, page)}&pageSize={pageSize}"
+            $"api/proposals/pending?page={Math.Max(1, page)}{Paging.SizeParam(pageSize)}"
             + $"{Sorting(sort, descending)}{Search(search)}"
             + (returnedOnly ? "&returnedOnly=true" : ""), ct);
 
@@ -102,10 +102,10 @@ public class ProposalsApiClient(HttpClient httpClient) : ApiClientBase(httpClien
 
     /// <summary>Proposals a Coordinator has sent this supervisor to consider.</summary>
     public Task<ApiResult<PagedResultDto<ProposalDto>>> GetInvitedAsync(
-        int page = 1, int pageSize = Paging.DefaultPageSize, string? sort = null, bool descending = false,
+        int page = 1, int pageSize = Paging.AsConfigured, string? sort = null, bool descending = false,
         string? search = null, CancellationToken ct = default)
     {
-        var query = $"api/proposals/invited?page={Math.Max(1, page)}&pageSize={pageSize}";
+        var query = $"api/proposals/invited?page={Math.Max(1, page)}{Paging.SizeParam(pageSize)}";
         if (!string.IsNullOrWhiteSpace(sort)) query += $"&sortBy={Uri.EscapeDataString(sort)}";
         if (descending) query += "&sortDescending=true";
         if (!string.IsNullOrWhiteSpace(search)) query += $"&search={Uri.EscapeDataString(search.Trim())}";

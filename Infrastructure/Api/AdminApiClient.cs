@@ -22,7 +22,7 @@ public class AdminApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
             ["from"] = query.From?.ToString("O"),
             ["to"] = query.To?.ToString("O"),
             ["page"] = query.Page.ToString(),
-            ["pageSize"] = query.PageSize.ToString()
+            ["pageSize"] = Common.Paging.SizeValue(query.PageSize)
         };
 
         var url = QueryHelpers.AddQueryString("api/audit-log",
@@ -43,7 +43,8 @@ public class AdminApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
 /// <summary>Audit-log filters, carried in the query string so a filtered view can be linked to.</summary>
 public class AuditLogQuery
 {
-    public const int DefaultPageSize = 25;
+    /// <summary>Nothing, so the API applies the length the institution has set.</summary>
+    public const int DefaultPageSize = Common.Paging.AsConfigured;
 
     public Guid? UserId { get; set; }
     public string? EntityType { get; set; }

@@ -11,9 +11,10 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
 
     /// <summary>One page of the acting student's publications, newest first.</summary>
     public Task<ApiResult<PagedResultDto<PublicationContainerDto>>> GetMineAsync(
-        int page = 1, int pageSize = Paging.DefaultPageSize, CancellationToken ct = default) =>
+        int page = 1, int pageSize = Paging.AsConfigured, CancellationToken ct = default) =>
         GetAsync<PagedResultDto<PublicationContainerDto>>(
-            QueryHelpers.AddQueryString("api/containers/me", Page(page, pageSize)), ct);
+            QueryHelpers.AddQueryString("api/containers/me",
+                Page(page, pageSize).Where(p => !string.IsNullOrWhiteSpace(p.Value))), ct);
 
     public Task<ApiResult<PublicationContainerDto>> GetByIdAsync(Guid id, CancellationToken ct = default) =>
         GetAsync<PublicationContainerDto>($"api/containers/{id}", ct);
@@ -23,9 +24,9 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
         DeleteAsync<object?>($"api/containers/{id}", ct);
 
     public Task<ApiResult<PagedResultDto<ActivityHistoryEntryDto>>> GetActivityHistoryAsync(
-        Guid id, int page = 1, int pageSize = Paging.DefaultPageSize, CancellationToken ct = default) =>
+        Guid id, int page = 1, int pageSize = Paging.AsConfigured, CancellationToken ct = default) =>
         GetAsync<PagedResultDto<ActivityHistoryEntryDto>>(
-            $"api/containers/{id}/activity-history?page={Math.Max(1, page)}&pageSize={pageSize}", ct);
+            $"api/containers/{id}/activity-history?page={Math.Max(1, page)}{Paging.SizeParam(pageSize)}", ct);
 
     /// <summary>
     /// Containers filtered server-side. A Coordinator passes their own id so the listing is
@@ -33,7 +34,7 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
     /// </summary>
     public Task<ApiResult<PagedResultDto<PublicationContainerDto>>> GetAllAsync(
         Guid? studentId = null, Guid? coordinatorId = null, string? status = null,
-        string? ethicsSteps = null, int page = 1, int pageSize = Paging.DefaultPageSize,
+        string? ethicsSteps = null, int page = 1, int pageSize = Paging.AsConfigured,
         string? sort = null, bool descending = false, string? search = null,
         string? paperAwaiting = null, CancellationToken ct = default)
     {
@@ -72,12 +73,13 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
     private static Dictionary<string, string?> Page(int page, int pageSize) => new()
     {
         ["page"] = Math.Max(1, page).ToString(),
-        ["pageSize"] = pageSize.ToString()
+        // Absent unless a caller named one, so the API applies the institution's figure.
+        ["pageSize"] = Paging.SizeValue(pageSize)
     };
 
     /// <summary>The publications this supervisor has been assigned to, newest first.</summary>
     public Task<ApiResult<PagedResultDto<PublicationContainerDto>>> GetSupervisingAsync(
-        string? ethicsSteps = null, int page = 1, int pageSize = Paging.DefaultPageSize,
+        string? ethicsSteps = null, int page = 1, int pageSize = Paging.AsConfigured,
         string? sort = null, bool descending = false, string? search = null,
         CancellationToken ct = default) =>
         GetAsync<PagedResultDto<PublicationContainerDto>>(
@@ -85,7 +87,7 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
 
     /// <summary>Publications by students in this Head of Department's department.</summary>
     public Task<ApiResult<PagedResultDto<PublicationContainerDto>>> GetInMyDepartmentAsync(
-        string? ethicsSteps = null, int page = 1, int pageSize = Paging.DefaultPageSize,
+        string? ethicsSteps = null, int page = 1, int pageSize = Paging.AsConfigured,
         string? sort = null, bool descending = false, string? search = null,
         string? paperAwaiting = null, CancellationToken ct = default)
     {

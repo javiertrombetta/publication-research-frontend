@@ -49,7 +49,7 @@ public class UsersApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
     /// </summary>
     public Task<ApiResult<PagedResultDto<UserListItemDto>>> GetAllAsync(
         string? role = null, string? status = null, string? search = null,
-        int page = 1, int pageSize = Paging.DefaultPageSize, string? sort = null, bool descending = false,
+        int page = 1, int pageSize = Paging.AsConfigured, string? sort = null, bool descending = false,
         CancellationToken ct = default)
     {
         var parameters = new Dictionary<string, string?>
@@ -58,7 +58,7 @@ public class UsersApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
             ["status"] = status,
             ["search"] = search,
             ["page"] = Math.Max(1, page).ToString(),
-            ["pageSize"] = pageSize.ToString(),
+            ["pageSize"] = Paging.SizeValue(pageSize),
             ["sortBy"] = sort,
             ["sortDescending"] = descending ? "true" : null
         };
