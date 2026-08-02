@@ -45,24 +45,30 @@ else
     @* One card per stage, so the shape of the department reads at a glance: how much is still
        choosing a topic, how much is in ethics, how much is being written and judged. The ethics
        card carries the one decision that is theirs, because that is the part they act on. *@
+    @* One button design across the three, because they are the same kind of thing: the way into
+       that stage. The ethics one was filled and the other two outlined, which read as a ranking
+       the cards do not mean. Filled throughout, and the ethics card says what is waiting in words
+       above its button rather than by being the only one that stands out. *@
     <div class="row row-cards mb-4">
         <div class="col-12 col-md-4">
             <div class="card h-100">
-                <div class="card-body">
+                <div class="card-body d-flex flex-column">
                     <div class="text-secondary mb-1">Research proposals</div>
                     <div class="h1 m-0">@Model.ProposalStageTotal</div>
                     <div class="text-secondary">
                         @(Model.ProposalStageTotal == 1 ? "publication at this stage" : "publications at this stage")
                     </div>
+                    @* Pushed to the foot of the card so the three buttons line up with each other
+                       however much the ethics card has to say above its own. *@
                     <a asp-controller="HeadOfDepartment" asp-action="all_proposals_fromstudent"
-                       class="btn btn-outline-primary btn-sm mt-3">Department proposals</a>
+                       class="btn btn-primary btn-sm mt-3 align-self-start mt-auto">Department proposals</a>
                 </div>
             </div>
         </div>
 
         <div class="col-12 col-md-4">
             <div class="card h-100 @(Model.AwaitingMyReviewTotal > 0 ? "border-primary" : "")">
-                <div class="card-body">
+                <div class="card-body d-flex flex-column">
                     <div class="text-secondary mb-1">Ethics approval</div>
                     <div class="h1 m-0">@Model.EthicsStageTotal</div>
                     <div class="text-secondary">
@@ -77,7 +83,7 @@ else
                     }
 
                     <a asp-controller="HeadOfDepartment" asp-action="Headofdepartment_feedback"
-                       class="btn @(Model.AwaitingMyReviewTotal > 0 ? "btn-primary" : "btn-outline-primary") btn-sm mt-3">
+                       class="btn btn-primary btn-sm mt-3 align-self-start mt-auto">
                         Ethics reviews
                     </a>
                 </div>
@@ -86,20 +92,20 @@ else
 
         <div class="col-12 col-md-4">
             <div class="card h-100">
-                <div class="card-body">
+                <div class="card-body d-flex flex-column">
                     <div class="text-secondary mb-1">Research papers</div>
                     <div class="h1 m-0">@Model.PaperStageTotal</div>
                     <div class="text-secondary">
                         @(Model.PaperStageTotal == 1 ? "publication at this stage" : "publications at this stage")
                     </div>
                     <a asp-controller="HeadOfDepartment" asp-action="Department_papers"
-                       class="btn btn-outline-primary btn-sm mt-3">Department papers</a>
+                       class="btn btn-primary btn-sm mt-3 align-self-start mt-auto">Department papers</a>
                 </div>
             </div>
         </div>
     </div>
 
-    @if (Model.TotalCount == 0 && !Model.HasSearch)
+    @if (Model.TotalCount == 0 && !Model.HasSearch && !Model.HasWaitingOn)
     {
         <div class="card">
             <div class="card-body text-center py-5">
@@ -125,12 +131,35 @@ else
                         <input type="search" name="search" value="@Model.Search" class="form-control"
                                placeholder="Search by student or publication" aria-label="Search" />
                     </div>
+
+                    @* Narrowing by whose move it is, applied by the API so it covers the whole
+                       department rather than the ten rows in hand. It is the question a head of
+                       department actually arrives with: not "what is happening", which the cards
+                       above answer, but "who is holding something up". Submits on change, because
+                       a select that needed a second click on Search looked like it had not
+                       worked. *@
+                    <div class="col-12 col-md-auto">
+                        <label class="visually-hidden" for="waiting-on">Waiting on</label>
+                        <select id="waiting-on" name="waitingOn" class="form-select"
+                                onchange="this.form.submit()">
+                            <option value="">Waiting on anyone</option>
+                            @foreach (var role in RoleNames.WaitingOnAnswers)
+                            {
+                                <option value="@role" selected="@(Model.WaitingOn == role)">
+                                    @(role == RoleNames.Nobody ? "Nobody" : Humanise(role))
+                                </option>
+                            }
+                        </select>
+                    </div>
+
                     <div class="col-auto">
                         <button type="submit" class="btn btn-primary">Search</button>
                     </div>
                     <div class="col-auto">
+                        @* Back to the whole department: both the term and the role, since either
+                           on its own can be what is hiding the row somebody is looking for. *@
                         <a asp-controller="HeadOfDepartment" asp-action="Head_of_Department_dashboard"
-                           asp-all-route-data="Model.ClearSearchRoute()"
+                           asp-all-route-data="Model.ClearFiltersRoute()"
                            class="btn btn-outline-secondary">Clear</a>
                     </div>
                     <div class="col-12 col-md-auto ms-md-auto text-secondary small">
@@ -146,8 +175,27 @@ else
         {
             <div class="card">
                 <div class="card-body text-center py-5">
-                    <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
-                    <p class="text-secondary mb-4">No publication in your department has that student or title.</p>
+                    @* Which of the two narrowed it to nothing, since the way out differs. *@
+                    @if (Model.HasSearch && Model.HasWaitingOn)
+                    {
+                        <h3 class="mb-2">Nothing matches both of those</h3>
+                        <p class="text-secondary mb-4">
+                            No publication with &ldquo;@Model.Search&rdquo; in it is waiting on
+                            @Humanise(Model.WaitingOn).
+                        </p>
+                    }
+                    else if (Model.HasSearch)
+                    {
+                        <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+                        <p class="text-secondary mb-4">No publication in your department has that student or title.</p>
+                    }
+                    else
+                    {
+                        <h3 class="mb-2">Nothing is waiting on @Humanise(Model.WaitingOn)</h3>
+                        <p class="text-secondary mb-4">
+                            Every publication in your department is with somebody else right now.
+                        </p>
+                    }
                     <a asp-controller="HeadOfDepartment" asp-action="Head_of_Department_dashboard" class="btn btn-primary">
                         Show them all
                     </a>
@@ -180,8 +228,11 @@ else
                                 <th><partial name="_SortableHeader" model="byStarted" /></th>
                                 <th><partial name="_SortableHeader" model="byStage" /></th>
                                 <th><partial name="_SortableHeader" model="byStatus" /></th>
-                                @* Not sortable: it is read out of two fields the projection
-                                   computes, and there is no single column behind it. *@
+                                @* Filtered rather than sorted, from the control above. It is read
+                                   out of two fields the projection computes, so there is no single
+                                   column to order by; and ordering by it would only group the
+                                   roles together, which is the same thing as picking one, more
+                                   slowly. *@
                                 <th>Waiting on</th>
                             </tr>
                         </thead>

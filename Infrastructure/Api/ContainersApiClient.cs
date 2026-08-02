@@ -87,16 +87,23 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
     public Task<ApiResult<PagedResultDto<PublicationContainerDto>>> GetInMyDepartmentAsync(
         string? ethicsSteps = null, int page = 1, int pageSize = Paging.DefaultPageSize,
         string? sort = null, bool descending = false, string? search = null,
-        string? paperAwaiting = null, CancellationToken ct = default)
+        string? paperAwaiting = null, string? waitingOn = null, CancellationToken ct = default)
     {
         var path = WithSteps("api/containers/in-my-department", ethicsSteps, page, pageSize, sort, descending, search);
 
         // Whose turn it is on the paper, so the head of department can look at the research paper
-        // stage on its own rather than reading it out of the whole department's listing.
+        // stage on its own rather than reading it out of the whole department's listing. And whose
+        // turn it is on the publication as a whole, which is the question the dashboard asks:
+        // it shows every stage at once, so a filter tied to one of them would answer a narrower
+        // question than the column it sits under.
+        var extra = new Dictionary<string, string?>
+        {
+            ["paperAwaiting"] = paperAwaiting,
+            ["waitingOn"] = waitingOn
+        };
+
         return GetAsync<PagedResultDto<PublicationContainerDto>>(
-            string.IsNullOrWhiteSpace(paperAwaiting)
-                ? path
-                : path + (path.Contains('?') ? "&" : "?") + $"paperAwaiting={Uri.EscapeDataString(paperAwaiting)}",
+            QueryHelpers.AddQueryString(path, extra.Where(p => !string.IsNullOrWhiteSpace(p.Value))),
             ct);
     }
 
