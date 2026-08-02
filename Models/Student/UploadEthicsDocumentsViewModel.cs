@@ -19,11 +19,16 @@ namespace ResearchPublicationManagementSystem.Models
         public IReadOnlyList<RequiredEthicsDocumentDto> Required { get; set; } = [];
 
         /// <summary>
-        /// The files posted back, keyed by the requirement each one answers. A dictionary because
-        /// the field names are only known at run time; the model binder fills it from inputs
-        /// named <c>Files[requirement-id]</c>.
+        /// The name of the file input answering a given requirement. The field names are only known
+        /// at run time, so they carry the requirement's id.
+        ///
+        /// There is deliberately no property here holding the posted files. A
+        /// <c>Dictionary&lt;Guid, IFormFile&gt;</c> looks like the obvious way to receive them and
+        /// silently never fills: the dictionary binder looks for form *values* under each key, and
+        /// an uploaded file is not a value, it arrives in the request's file collection. The action
+        /// reads them from there instead.
         /// </summary>
-        public Dictionary<Guid, IFormFile?> Files { get; set; } = [];
+        public static string FieldNameFor(Guid requirementId) => $"Files[{requirementId}]";
 
         public IReadOnlyList<EthicsDocumentDto> ExistingDocuments { get; set; } = [];
 

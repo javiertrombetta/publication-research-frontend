@@ -377,8 +377,10 @@ namespace ResearchPublicationManagementSystem.Controllers
             var anyUploaded = false;
             foreach (var requirement in requirements)
             {
-                if (!model.Files.TryGetValue(requirement.RequirementId, out var file) ||
-                    file is not { Length: > 0 })
+                var file = Request.Form.Files
+                    .GetFile(UploadEthicsDocumentsViewModel.FieldNameFor(requirement.RequirementId));
+
+                if (file is not { Length: > 0 })
                 {
                     continue;
                 }
@@ -542,15 +544,13 @@ namespace ResearchPublicationManagementSystem.Controllers
         private async Task<(PublicationContainerDto? Container, IActionResult? Redirect)> GetOwnedContainerAsync(
             Guid containerId, int? requiredStage = null)
         {
-            var result = await containersApi.GetMineAsync(pageSize: 100);
-            if (!result.Success)
-            {
-                TempData["ErrorMessage"] = result.ErrorMessage ?? "Could not load your publications right now.";
-                return (null, RedirectToAction(nameof(student_dashboard)));
-            }
+            // Asked for by id rather than looked for in a page of the student's list. A list is
+            // paged, so searching one answers "is it on this page", not "is it theirs", and a
+            // student past the page size would be turned away from their own publication.
+            var result = await containersApi.GetByIdAsync(containerId);
+            var container = result.Data;
 
-            var container = (result.Data?.Items ?? []).FirstOrDefault(c => c.Id == containerId);
-            if (container is null)
+            if (!result.Success || container is null)
             {
                 TempData["ErrorMessage"] = "That publication could not be found.";
                 return (null, RedirectToAction(nameof(student_dashboard)));
