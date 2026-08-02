@@ -1249,6 +1249,20 @@ aside {
     box-shadow: none;
 }
 
+/* Hovering it.
+
+   A ghost button's own hover is a pale wash, and the bar this one sits on is pale too, so on the
+   signed-out pages the control barely answered the pointer at all. It takes the inverse of the
+   page instead: near-black behind the moon on a light bar, near-white behind the sun on a dark one.
+
+   The icon is drawn in currentColor, so setting the colour is what turns the moon's outline white.
+   Without it the outline stays dark and disappears into the fill it is standing on. */
+.rpms-theme-button:hover,
+.rpms-theme-button:focus-visible {
+    background: var(--rpms-text);
+    color: var(--rpms-surface);
+}
+
 
 /* The footer took its colour from bg-light, which is a fixed value and stayed pale in the dark
    theme. It reads the same variable as every other surface now. */
