@@ -221,86 +221,97 @@ else
                 </div>
             </main>
 
-@if (Model.IsEditable)
-{
+@* The compiler in the current SDK will not read a <script> that sits inside a Razor code block,
+   so the "only while it is editable" part is said in JavaScript instead: on a read-only draft
+   none of these controls are on the page and there is nothing to wire up. *@
+@section Scripts {
     <script>
-        const MAX_WORDS = 2000;
-        const abstractInput = document.getElementById('abstractInput');
-        const noteInput = document.getElementById('noteInput');
-        const abstractCountEl = document.getElementById('abstractWordCount');
-        const noteCountEl = document.getElementById('noteWordCount');
+        if (document.getElementById('abstractInput')) {
+            const MAX_WORDS = 2000;
+            const abstractInput = document.getElementById('abstractInput');
+            const noteInput = document.getElementById('noteInput');
+            const abstractCountEl = document.getElementById('abstractWordCount');
+            const noteCountEl = document.getElementById('noteWordCount');
 
-        // KEYWORD STATE AND DOM HANDLING
-        let keywordsArray = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Model.KeywordsCsv ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)));
-        const keywordField = document.getElementById('keywordField');
-        const addKeywordBtn = document.getElementById('addKeywordBtn');
-        const keywordTagsContainer = document.getElementById('keywordTagsContainer');
-        const hiddenKeywordsInput = document.getElementById('hiddenKeywordsInput');
-        renderTags();
-
-        function updateKeywordsField() {
-            // Keep hidden data sync'd for validation and submit rules
-            hiddenKeywordsInput.value = keywordsArray.join(',');
-        }
-
-        function renderTags() {
-            keywordTagsContainer.innerHTML = '';
-            keywordsArray.forEach((keyword, index) => {
-                const tag = document.createElement('span');
-                tag.className = 'badge bg-blue-lt d-inline-flex align-items-center px-2 py-1 fs-4';
-                tag.innerHTML = `
-                    ${keyword}
-                    <a class="ms-2 text-blue text-decoration-none fw-bold lh-1 p-0 cursor-pointer" style="font-size: 1.1em;" onclick="removeKeyword(${index})">×</a>
-                `;
-                keywordTagsContainer.appendChild(tag);
-            });
-            updateKeywordsField();
-        }
-
-        function addKeywordFromInput() {
-            const val = keywordField.value.trim();
-            if (val && !keywordsArray.includes(val)) {
-                keywordsArray.push(val);
-                renderTags();
-                keywordField.value = '';
-            }
-            keywordField.focus();
-        }
-
-        function removeKeyword(index) {
-            keywordsArray.splice(index, 1);
+            // KEYWORD STATE AND DOM HANDLING
+            let keywordsArray = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((Model.KeywordsCsv ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)));
+            const keywordField = document.getElementById('keywordField');
+            const addKeywordBtn = document.getElementById('addKeywordBtn');
+            const keywordTagsContainer = document.getElementById('keywordTagsContainer');
+            const hiddenKeywordsInput = document.getElementById('hiddenKeywordsInput');
             renderTags();
-        }
 
-        // Trigger additions on button clicks or Enter keys
-        addKeywordBtn.addEventListener('click', addKeywordFromInput);
-        keywordField.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault(); // Stop standard form submission triggers
-                addKeywordFromInput();
+            function updateKeywordsField() {
+                // Keep hidden data sync'd for validation and submit rules
+                hiddenKeywordsInput.value = keywordsArray.join(',');
             }
-        });
 
+            function renderTags() {
+                keywordTagsContainer.innerHTML = '';
+                keywordsArray.forEach((keyword, index) => {
+                    const tag = document.createElement('span');
+                    tag.className = 'badge bg-blue-lt d-inline-flex align-items-center px-2 py-1 fs-4';
 
-        // WORD COUNTER FUNCTIONS
-        function handleWordCount(textarea, counterElement) {
-            textarea.addEventListener('input', () => {
-                const text = textarea.value.trim();
-                const words = text ? text.split(/\s+/) : [];
-                
-                if (words.length > MAX_WORDS) {
-                    const remainingWords = words.slice(0, MAX_WORDS).join(' ');
-                    textarea.value = remainingWords;
-                    counterElement.textContent = `${MAX_WORDS} / ${MAX_WORDS} words`;
-                    counterElement.classList.replace('text-secondary', 'text-danger');
-                } else {
-                    counterElement.textContent = `${words.length} / ${MAX_WORDS} words`;
-                    counterElement.classList.replace('text-danger', 'text-secondary');
+                    // Built element by element rather than from a string of HTML. A keyword is whatever
+                    // the author typed, so putting it through innerHTML would let it bring markup of its
+                    // own along with it.
+                    const remove = document.createElement('a');
+                    remove.className = 'ms-2 text-blue text-decoration-none fw-bold lh-1 p-0 cursor-pointer';
+                    remove.style.fontSize = '1.1em';
+                    remove.textContent = '×';
+                    remove.addEventListener('click', () => removeKeyword(index));
+
+                    tag.replaceChildren(document.createTextNode(keyword), remove);
+                    keywordTagsContainer.appendChild(tag);
+                });
+                updateKeywordsField();
+            }
+
+            function addKeywordFromInput() {
+                const val = keywordField.value.trim();
+                if (val && !keywordsArray.includes(val)) {
+                    keywordsArray.push(val);
+                    renderTags();
+                    keywordField.value = '';
+                }
+                keywordField.focus();
+            }
+
+            function removeKeyword(index) {
+                keywordsArray.splice(index, 1);
+                renderTags();
+            }
+
+            // Trigger additions on button clicks or Enter keys
+            addKeywordBtn.addEventListener('click', addKeywordFromInput);
+            keywordField.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Stop standard form submission triggers
+                    addKeywordFromInput();
                 }
             });
-        }
 
-        handleWordCount(abstractInput, abstractCountEl);
-        handleWordCount(noteInput, noteCountEl);
+
+            // WORD COUNTER FUNCTIONS
+            function handleWordCount(textarea, counterElement) {
+                textarea.addEventListener('input', () => {
+                    const text = textarea.value.trim();
+                    const words = text ? text.split(/\s+/) : [];
+
+                    if (words.length > MAX_WORDS) {
+                        const remainingWords = words.slice(0, MAX_WORDS).join(' ');
+                        textarea.value = remainingWords;
+                        counterElement.textContent = `${MAX_WORDS} / ${MAX_WORDS} words`;
+                        counterElement.classList.replace('text-secondary', 'text-danger');
+                    } else {
+                        counterElement.textContent = `${words.length} / ${MAX_WORDS} words`;
+                        counterElement.classList.replace('text-danger', 'text-secondary');
+                    }
+                });
+            }
+
+            handleWordCount(abstractInput, abstractCountEl);
+            handleWordCount(noteInput, noteCountEl);
+        }
     </script>
 }

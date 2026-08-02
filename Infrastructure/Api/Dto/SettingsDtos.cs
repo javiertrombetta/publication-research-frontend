@@ -91,7 +91,13 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         int InvitationValidDays,
         int AccessTokenMinutes,
         int RefreshTokenDays,
-        bool PublicCatalogueEnabled = true);
+        bool PublicCatalogueEnabled = true,
+        /// <summary>
+        /// Whether this deployment will accept open registration. The API's answer, not this
+        /// application's guess: the rule turns on the API's configuration, and the two are separate
+        /// services once deployed.
+        /// </summary>
+        bool CanOpenRegistration = false);
 
     public record UpdateAccessSettingsRequestDto(
         string RegistrationMode,
@@ -99,7 +105,13 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         int InvitationValidDays,
         int AccessTokenMinutes,
         int RefreshTokenDays,
-        bool PublicCatalogueEnabled = true);
+        bool PublicCatalogueEnabled = true,
+        /// <summary>
+        /// Whether this deployment will accept open registration. The API's answer, not this
+        /// application's guess: the rule turns on the API's configuration, and the two are separate
+        /// services once deployed.
+        /// </summary>
+        bool CanOpenRegistration = false);
 
     public record UploadSettingsDto(int MaxMegabytes, string AllowedExtensions);
 

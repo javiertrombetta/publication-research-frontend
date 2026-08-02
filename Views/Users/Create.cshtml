@@ -76,7 +76,11 @@
                 <div class="row g-3">
                     <div class="col-12 col-sm-4">
                         <label class="form-label" for="studentIdNumber">Student ID</label>
-                        <input id="studentIdNumber" name="StudentIdNumber" value="@r.StudentIdNumber" class="form-control" />
+                        <input id="studentIdNumber" name="StudentIdNumber" value="@r.StudentIdNumber"
+                               class="form-control" placeholder="20260204" inputmode="numeric" />
+                        <small class="form-hint">
+                            Year and month of admission, then their place in that month's intake.
+                        </small>
                     </div>
                     <div class="col-12 col-sm-4">
                         <label class="form-label" for="programme">Programme</label>

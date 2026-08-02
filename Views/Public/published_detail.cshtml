@@ -116,15 +116,15 @@
                         An email address for research enquiries hasn't been published yet.
                         @if (!string.IsNullOrWhiteSpace(institution.WebsiteUrl))
                         {
-                            <text>
+                            <span>
                                 Visit the
                                 <a href="@institution.WebsiteUrl" rel="noopener" target="_blank">@institutionName website</a>
                                 for their contact details.
-                            </text>
+                            </span>
                         }
                         else
                         {
-                            <text>Visit the @institutionName website for their contact details.</text>
+                            @:Visit the @institutionName website for their contact details.
                         }
                     </p>
                 }
