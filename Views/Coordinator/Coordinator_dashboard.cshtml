@@ -149,15 +149,6 @@ else
                            class="btn btn-outline-secondary">Clear</a>
                     </div>
                 </form>
-
-                @* On its own line under the box rather than out at the end of the row. It is a
-                   statement about the list below, not another control, and sitting level with the
-                   buttons it read as one. *@
-                <div class="text-secondary small mt-2">
-                    <strong>@Model.PublicationsTotal</strong>
-                    @(Model.PublicationsTotal == 1 ? "publication" : "publications") in progress,
-                    @Model.Publications.Count on this page.
-                </div>
             </div>
         </div>
 
@@ -177,6 +168,18 @@ else
         }
         else
         {
+            @* The count in a card of its own between the search and the listing, the way the other
+               coordinator queues state theirs. The total in bold because that is the figure being
+               read; the page count is context for it rather than a second number of equal weight. *@
+            <div class="card mb-3">
+                <div class="card-body py-3">
+                    <span class="text-secondary">
+                        <strong>@Model.PublicationsTotal</strong>
+                        @(Model.PublicationsTotal == 1 ? "publication" : "publications") in progress,
+                        @Model.Publications.Count on this page.
+                    </span>
+                </div>
+            </div>
 
         <div class="card">
             <div class="table-responsive">
