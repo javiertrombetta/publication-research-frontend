@@ -36,9 +36,10 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// the dashboard opens straight onto that paper.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> committee_review(Guid? id, int page = 1)
+        public async Task<IActionResult> committee_review(
+            Guid? id, int page = 1, string? sort = null, bool desc = false, string? search = null)
         {
-            var (model, failed) = await LoadAssignmentsAsync(page);
+            var (model, failed) = await LoadAssignmentsAsync(page, sort, desc, search);
 
             if (!failed && id is { } only)
             {
@@ -88,11 +89,13 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         // ---------- Helpers ----------
 
-        private async Task<(CommitteeDashboardViewModel Model, bool Failed)> LoadAssignmentsAsync(int page = 1)
+        private async Task<(CommitteeDashboardViewModel Model, bool Failed)> LoadAssignmentsAsync(
+            int page = 1, string? sort = null, bool desc = false, string? search = null)
         {
-            var model = new CommitteeDashboardViewModel();
+            var model = new CommitteeDashboardViewModel { Sort = sort, Descending = desc, Search = search };
 
-            var assignments = await committeesApi.GetMyAssignmentsAsync(page);
+            var assignments = await committeesApi.GetMyAssignmentsAsync(
+                page, sort: sort, descending: desc, search: search);
             if (!assignments.Success)
             {
                 TempData["ErrorMessage"] = assignments.ErrorMessage ?? "Could not load your committee assignments.";
@@ -100,7 +103,9 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return (model, true);
             }
 
-            model.Pager = Paging.PagerFor(assignments.Data, "ExternalSupervisor", nameof(committee_review));
+            model.TotalCount = assignments.Data?.TotalCount ?? 0;
+            model.Pager = Paging.PagerFor(assignments.Data, "ExternalSupervisor", nameof(committee_review),
+                model.RouteValues());
 
             var me = CurrentUserId();
 

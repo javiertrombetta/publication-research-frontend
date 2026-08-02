@@ -11,6 +11,54 @@
     </div>
 </div>
 
+@* Search and order are applied by the API, so they cover everything assigned to this person
+   rather than the page in hand. The same controls the other reviewer queues carry. *@
+@if (!Model.LoadFailed && (Model.AwaitingMe.Count > 0 || Model.HasSearch))
+{
+    <div class="card mb-3">
+        <div class="card-body py-3">
+            <form method="get" asp-controller="ExternalSupervisor" asp-action="committee_review"
+                  class="row g-2 align-items-center">
+
+                <input type="hidden" name="sort" value="@Model.Sort" />
+                <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+
+                <div class="col-12 col-md">
+                    <input type="search" name="search" value="@Model.Search" class="form-control"
+                           placeholder="Search by paper or student" aria-label="Search" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                <div class="col-auto">
+                    <a asp-controller="ExternalSupervisor" asp-action="committee_review"
+                       asp-all-route-data="Model.ClearSearchRoute()"
+                       class="btn btn-outline-secondary">Clear</a>
+                </div>
+
+                @{
+                    var byDate = Model.Column("submitted", "Date", descendingFirst: true);
+                    var byStudent = Model.Column("student", "Student");
+                    var byTitle = Model.Column("title", "Paper");
+                }
+                <div class="col-12 col-md-auto ms-md-auto d-flex align-items-center gap-3">
+                    <span class="text-secondary small">Sort by</span>
+                    <partial name="_SortableHeader" model="byDate" />
+                    <partial name="_SortableHeader" model="byStudent" />
+                    <partial name="_SortableHeader" model="byTitle" />
+                </div>
+            </form>
+
+            @if (Model.HasSearch)
+            {
+                <div class="text-secondary small mt-2">
+                    @Model.TotalCount @(Model.TotalCount == 1 ? "paper matches" : "papers match") &ldquo;@Model.Search&rdquo;.
+                </div>
+            }
+        </div>
+    </div>
+}
+
 @if (Model.LoadFailed)
 {
     <div class="card">
@@ -18,6 +66,19 @@
             <h3 class="mb-2">We couldn't load your assignments</h3>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="ExternalSupervisor" asp-action="committee_review" class="btn btn-primary">Retry</a>
+        </div>
+    </div>
+}
+else if (Model.AwaitingMe.Count == 0 && Model.HasSearch)
+{
+    @* A search that found nothing is a different thing from an empty queue. *@
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+            <p class="text-secondary mb-4">No paper waiting on you has that title or student.</p>
+            <a asp-controller="ExternalSupervisor" asp-action="committee_review" class="btn btn-primary">
+                Show them all
+            </a>
         </div>
     </div>
 }
@@ -35,11 +96,39 @@ else if (Model.AwaitingMe.Count == 0)
 }
 else
 {
+    <div class="card mb-3">
+        <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
+            <span class="text-secondary me-auto">
+                <strong>@Model.AwaitingMe.Count</strong>
+                @(Model.AwaitingMe.Count == 1 ? "paper" : "papers") waiting on you,
+                of @Model.TotalCount assigned.
+            </span>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-rpms-expand-all="evaluation-cards">Expand all</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-rpms-collapse-all="evaluation-cards">Collapse all</button>
+        </div>
+    </div>
+
     @foreach (var item in Model.AwaitingMe)
     {
         <div class="card mb-3">
-            <div class="card-header">
-                <div>
+            <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+                 data-rpms-header-toggle="#evaluation-@item.Committee.Id"
+                 role="button" tabindex="0"
+                 aria-expanded="true" aria-controls="evaluation-@item.Committee.Id">
+                @* Part of the header rather than a control of its own, so clicking it does not
+                   leave an icon looking selected in the middle of a row. *@
+                <span class="rpms-collapse-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
+                         viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M6 9l6 6l6 -6" />
+                    </svg>
+                </span>
+
+                <div class="me-auto">
                     <h3 class="card-title m-0">@item.Title</h3>
                     @if (item.Paper?.PublicationYear is not null)
                     {
@@ -48,7 +137,8 @@ else
                 </div>
             </div>
 
-            <div class="card-body">
+            <div class="card-body collapse show" id="evaluation-@item.Committee.Id"
+                 data-rpms-collapsible="evaluation-cards">
                 @if (item.Paper is null)
                 {
                     <p class="text-secondary">

@@ -65,8 +65,8 @@ namespace ResearchPublicationManagementSystem.Controllers
             // of the settings are readable without it, and the list says so when it is empty.
             if (model.ActiveTab == "committees")
             {
-                var people = await usersApi.GetAllAsync();
-                model.CommitteePeople = [.. (people.Data ?? [])
+                var people = await usersApi.GetAllAsync(pageSize: 100);
+                model.CommitteePeople = [.. (people.Data?.Items ?? [])
                     .Where(u => u.Roles.Any(model.Committees.SelectableRoles.Contains))
                     .OrderBy(u => u.LastName).ThenBy(u => u.FirstName)];
             }

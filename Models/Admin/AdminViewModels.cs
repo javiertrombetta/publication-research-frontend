@@ -61,8 +61,44 @@ namespace ResearchPublicationManagementSystem.Models
 
         public bool LoadFailed { get; set; }
 
+        /// <summary>
+        /// How many accounts match, and which page of them this is. The directory used to be
+        /// returned entire, which is fine for a demonstration dataset and not for an institution.
+        /// </summary>
+        public int TotalCount { get; set; }
+        public PagerViewModel? Pager { get; set; }
+
+        public string? Sort { get; set; }
+        public bool Descending { get; set; }
+
         public bool HasFilters =>
             !string.IsNullOrWhiteSpace(Role) || !string.IsNullOrWhiteSpace(Status) || !string.IsNullOrWhiteSpace(Search);
+
+        /// <summary>Everything the listing is filtered and ordered by, so paging keeps all of it.</summary>
+        public Dictionary<string, string?> RouteValues()
+        {
+            var values = new Dictionary<string, string?>();
+            if (!string.IsNullOrWhiteSpace(Role)) values["role"] = Role;
+            if (!string.IsNullOrWhiteSpace(Status)) values["status"] = Status;
+            if (!string.IsNullOrWhiteSpace(Search)) values["search"] = Search;
+            if (!string.IsNullOrWhiteSpace(Sort)) values["sort"] = Sort;
+            if (Descending) values["desc"] = "true";
+            return values;
+        }
+
+        public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
+        {
+            Controller = "Users",
+            Action = "Index",
+            Column = column,
+            Label = label,
+            CurrentSort = Sort,
+            CurrentDescending = Descending,
+            DescendingFirst = descendingFirst,
+            RouteValues = RouteValues()
+                .Where(v => v.Key is not ("sort" or "desc"))
+                .ToDictionary(v => v.Key, v => v.Value)
+        };
     }
 
     /// <summary>One account, with the actions an administrator can take on it.</summary>

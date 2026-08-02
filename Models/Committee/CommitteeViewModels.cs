@@ -18,6 +18,42 @@ namespace ResearchPublicationManagementSystem.Models
 
         public bool LoadFailed { get; set; }
 
+        /// <summary>
+        /// How the queue is searched and ordered, both applied by the API. The same controls every
+        /// other reviewer queue has: this was the one screen without them, and it is now reachable
+        /// by anybody an administrator can appoint rather than only the two committee roles.
+        /// </summary>
+        public string? Sort { get; set; }
+        public bool Descending { get; set; }
+        public string? Search { get; set; }
+        public int TotalCount { get; set; }
+
+        public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
+
+        public Dictionary<string, string?> RouteValues()
+        {
+            var values = new Dictionary<string, string?>();
+            if (!string.IsNullOrWhiteSpace(Sort)) values["sort"] = Sort;
+            if (Descending) values["desc"] = "true";
+            if (HasSearch) values["search"] = Search;
+            return values;
+        }
+
+        public Dictionary<string, string?> ClearSearchRoute() =>
+            RouteValues().Where(v => v.Key != "search").ToDictionary(v => v.Key, v => v.Value);
+
+        public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
+        {
+            Controller = "ExternalSupervisor",
+            Action = "committee_review",
+            Column = column,
+            Label = label,
+            CurrentSort = Sort,
+            CurrentDescending = Descending,
+            DescendingFirst = descendingFirst,
+            RouteValues = HasSearch ? new Dictionary<string, string?> { ["search"] = Search } : []
+        };
+
         public IReadOnlyList<CommitteeAssignmentItem> AwaitingMe =>
             Items.Where(i => !i.HasDecided).ToList();
 
