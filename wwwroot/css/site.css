@@ -1217,7 +1217,19 @@ aside {
    d-flex, which is itself a display rule. */
 .rpms-when-dark { display: none !important; }
 [data-bs-theme="dark"] .rpms-when-light { display: none !important; }
-[data-bs-theme="dark"] .rpms-when-dark { display: flex !important; }
+[data-bs-theme="dark"] .rpms-when-dark { display: inline-flex !important; }
+
+/* The face of the switch, whichever of the two is showing.
+
+   inline-flex and never shrinking: as a block-level flex item inside the button it collapsed to no
+   width at all, and the icon spilled out of the left of that zero-width box instead of sitting in
+   the middle of the button. Centred content in a box of nothing is not centred on anything. */
+.rpms-theme-face {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
 
 /* The mark itself, on the same principle. Its lettering is ink rather than a themed colour, so the
    dark theme is served a second sheet drawn in white; both sheets are transparent, since a white
