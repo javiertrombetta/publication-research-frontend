@@ -32,6 +32,13 @@
     var buttonClass = asMenuItem
         ? "dropdown-item d-flex align-items-center gap-2"
         : "btn btn-icon btn-ghost-secondary rpms-theme-button";
+
+    // The gap only means something beside a visible word. On the standalone button the label is
+    // hidden, so the face holds an icon and nothing else, and a gap there was spacing the icon
+    // away from something that is not on the page.
+    var faceClass = asMenuItem
+        ? "rpms-theme-face d-flex align-items-center gap-2"
+        : "rpms-theme-face";
 }
 
 <form asp-controller="Theme" asp-action="Set" method="post" class="m-0" data-rpms-theme-form>
@@ -42,7 +49,7 @@
             title="@(currentTheme == "dark" ? "Switch to the light theme" : "Switch to the dark theme")">
 
         @* Shown while the light theme is in force: pressing this goes dark. *@
-        <span class="rpms-when-light d-flex align-items-center gap-2">
+        <span class="rpms-when-light @faceClass">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="18" height="18"
                  viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -61,7 +68,7 @@
             }
         </span>
 
-        <span class="rpms-when-dark d-flex align-items-center gap-2">
+        <span class="rpms-when-dark @faceClass">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="18" height="18"
                  viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
