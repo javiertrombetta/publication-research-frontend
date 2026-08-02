@@ -671,32 +671,40 @@ document.addEventListener('submit', function (event) {
 // site.css then animate, and the form is posted in the background to record the choice. Nothing
 // reloads, so the page being read stays where it is and the change is a fade rather than a blink.
 (function () {
-    var form = document.querySelector('form[action$="/Theme/Set"]');
-    if (!form) return;
+    // Every switch on the page, not the first. A signed-out header carries one and the signed-in
+    // menu carries another, and a page could reasonably hold both; wiring only the first would
+    // leave the other reloading while its neighbour faded.
+    var forms = document.querySelectorAll('[data-rpms-theme-form]');
+    if (!forms.length) return;
 
-    form.addEventListener('submit', function (event) {
-        var wanted = form.querySelector('input[name="theme"]');
-        if (!wanted) return;
+    Array.prototype.forEach.call(forms, function (form) {
+        form.addEventListener('submit', function (event) {
+            var wanted = form.querySelector('input[name="theme"]');
+            if (!wanted) return;
 
-        event.preventDefault();
+            event.preventDefault();
 
-        var root = document.documentElement;
-        var next = wanted.value === 'dark' ? 'dark' : 'light';
+            var root = document.documentElement;
+            var next = wanted.value === 'dark' ? 'dark' : 'light';
 
-        // The paint, immediately. Everything below is bookkeeping the reader never waits for.
-        root.setAttribute('data-bs-theme', next);
+            // The paint, immediately. Everything below is bookkeeping the reader never waits for.
+            root.setAttribute('data-bs-theme', next);
 
-        // The control now offers the other one, so pressing it twice returns where it started
-        // without a round trip. Its label and icon follow the attribute through CSS, so there is
-        // nothing here to keep in step by hand.
-        wanted.value = next === 'dark' ? 'light' : 'dark';
+            // Recorded in the background: the cookie for this browser, and the account behind it, so
+            // the choice survives signing out and follows the person to another machine. A failure
+            // here leaves the page correct until the next load, which is the right way for it to fail.
+            var body = new FormData(form);
+            body.set('theme', next);
+            fetch(form.action, { method: 'POST', body: body, credentials: 'same-origin' })
+                .catch(function () { /* The theme still changed. Nothing to tell anybody. */ });
 
-        // Recorded in the background: the cookie for this browser, and the account behind it, so
-        // the choice survives signing out and follows the person to another machine. A failure
-        // here leaves the page correct until the next load, which is the right way for it to fail.
-        var body = new FormData(form);
-        body.set('theme', next);
-        fetch(form.action, { method: 'POST', body: body, credentials: 'same-origin' })
-            .catch(function () { /* The theme still changed. Nothing to tell anybody. */ });
+            // Every switch now offers the other theme, so pressing any of them twice returns where
+            // it started without a round trip. Labels and icons follow the attribute through CSS,
+            // so there is nothing else here to keep in step by hand.
+            Array.prototype.forEach.call(forms, function (other) {
+                var field = other.querySelector('input[name="theme"]');
+                if (field) field.value = next === 'dark' ? 'light' : 'dark';
+            });
+        });
     });
 })();
