@@ -17,6 +17,7 @@ namespace ResearchPublicationManagementSystem.Controllers
     [Authorize(Roles = RoleNames.Admin)]
     public class SystemSettingsController(
         SettingsApiClient settingsApi,
+        UsersApiClient usersApi,
         Services.IInstitutionDetails institution) : Controller
     {
         [HttpGet]
@@ -59,6 +60,17 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.Deadlines = deadlines.Data!;
             model.Storage = storage.Data!;
 
+            // Who an administrator can leave out of committee work. Only worth fetching on the tab
+            // that shows it, and a failure here is not worth failing the whole screen for: the rest
+            // of the settings are readable without it, and the list says so when it is empty.
+            if (model.ActiveTab == "committees")
+            {
+                var people = await usersApi.GetAllAsync();
+                model.CommitteePeople = [.. (people.Data ?? [])
+                    .Where(u => u.Roles.Any(model.Committees.SelectableRoles.Contains))
+                    .OrderBy(u => u.LastName).ThenBy(u => u.FirstName)];
+            }
+
             // The API's answer, not this application's guess. It used to ask its own environment,
             // on the assumption that the two run together; deployed as separate services that
             // assumption broke, and the hosted testing deployment greyed out a choice the API
@@ -73,10 +85,17 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveCommittees(int internalMembers, int externalMembers, int minimumApprovals)
+        public async Task<IActionResult> SaveCommittees(
+            int internalMembers, int externalMembers, int minimumApprovals,
+            string[]? candidateRoles = null, Guid[]? excludedUserIds = null)
         {
+            // Sent as empty arrays rather than left out when the form posted none, so clearing every
+            // exclusion is something an administrator can actually do. A null would mean "leave this
+            // alone", which is what a caller that does not manage the setting wants.
             var result = await settingsApi.UpdateCommitteesAsync(
-                new UpdateCommitteeSettingsRequestDto(internalMembers, externalMembers, minimumApprovals));
+                new UpdateCommitteeSettingsRequestDto(
+                    internalMembers, externalMembers, minimumApprovals,
+                    candidateRoles ?? [], excludedUserIds ?? []));
 
             return Done(result.Success, "committees", result.ErrorMessage,
                 "Saved. Publications opened from now on will use these figures; those already under way keep theirs.");

@@ -5,9 +5,25 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
     /// each Publication Container keeps the figures that were in force when it was created, so
     /// research already under way is judged by the rules it started under.
     /// </summary>
-    public record CommitteeSettingsDto(int InternalMembers, int ExternalMembers, int MinimumApprovals);
+    /// <summary>
+    /// How a committee is composed, and who it may be composed of. SelectableRoles is not a
+    /// setting: it is every role that could be chosen, sent by the API so the screen offers the
+    /// real list rather than one written out again here.
+    /// </summary>
+    public record CommitteeSettingsDto(
+        int InternalMembers,
+        int ExternalMembers,
+        int MinimumApprovals,
+        IReadOnlyList<string> CandidateRoles,
+        IReadOnlyList<Guid> ExcludedUserIds,
+        IReadOnlyList<string> SelectableRoles);
 
-    public record UpdateCommitteeSettingsRequestDto(int InternalMembers, int ExternalMembers, int MinimumApprovals);
+    public record UpdateCommitteeSettingsRequestDto(
+        int InternalMembers,
+        int ExternalMembers,
+        int MinimumApprovals,
+        IReadOnlyList<string>? CandidateRoles = null,
+        IReadOnlyList<Guid>? ExcludedUserIds = null);
 
     /// <summary>
     /// What counts as an acceptable password, how long one lasts, and when an account locks.

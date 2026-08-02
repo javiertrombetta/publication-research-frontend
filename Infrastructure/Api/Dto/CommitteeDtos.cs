@@ -59,3 +59,18 @@ public record CommitteePaperDto(
     string Abstract,
     int? PublicationYear,
     IReadOnlyList<string> Keywords);
+
+/// <summary>
+/// Somebody who could be put on a committee, as the API works it out.
+/// <paramref name="IsExternal"/> decides which of the two required counts they fill.
+/// </summary>
+public record CommitteeCandidateDto(
+    Guid UserId,
+    string FirstName,
+    string LastName,
+    string Email,
+    IReadOnlyList<string> Roles,
+    bool IsExternal)
+{
+    public string FullName => $"{FirstName} {LastName}".Trim();
+}

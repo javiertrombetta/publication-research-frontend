@@ -9,7 +9,13 @@ namespace ResearchPublicationManagementSystem.Models
     /// </summary>
     public class SystemSettingsViewModel
     {
-        public CommitteeSettingsDto Committees { get; set; } = new(0, 0, 0);
+        /// <summary>
+        /// Everybody holding a role that could sit on a committee, so an administrator can take
+        /// individuals out of consideration. Only loaded on the committees tab.
+        /// </summary>
+        public IReadOnlyList<UserListItemDto> CommitteePeople { get; set; } = [];
+
+        public CommitteeSettingsDto Committees { get; set; } = new(0, 0, 0, [], [], []);
 
         public PasswordSettingsDto Passwords { get; set; } = new(10, true, true, true, true, 0, 5, 15);
 

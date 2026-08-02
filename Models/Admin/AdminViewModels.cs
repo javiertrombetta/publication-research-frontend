@@ -20,7 +20,11 @@ namespace ResearchPublicationManagementSystem.Models
         public List<AwaitingCommitteeItem> Items { get; set; } = [];
 
         /// <summary>Everyone who can sit on a committee, internal and external.</summary>
-        public IReadOnlyList<UserListItemDto> Members { get; set; } = [];
+        /// <summary>
+        /// Who may be appointed, as the API works it out. Not assembled from the directory here:
+        /// the rule has several parts and an administrator chooses some of them.
+        /// </summary>
+        public IReadOnlyList<CommitteeCandidateDto> Members { get; set; } = [];
 
         /// <summary>
         /// The composition currently configured. Used only for publications that predate the
