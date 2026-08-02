@@ -1,44 +1,122 @@
+using ResearchPublicationManagementSystem.Common;
 using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
 
 namespace ResearchPublicationManagementSystem.Models
 {
     /// <summary>
-    /// A supervisor's queue. Everything they do is a decision someone else is waiting on, so the
-    /// dashboard is organised by decision rather than by publication.
+    /// What every one of the supervisor's queues has in common: it is searched and ordered by the
+    /// API, one page at a time, and it draws the same controls to say so.
+    ///
+    /// Shared rather than repeated three times because the screens are deliberately the same
+    /// screen. A supervisor moving between proposals, ethics and papers should not have to learn
+    /// where the search box went.
     /// </summary>
-    public class SupervisorDashboardViewModel
+    public abstract class SupervisorQueue
     {
-        /// <summary>Proposals a coordinator has sent them, still awaiting a yes.</summary>
-        public IReadOnlyList<ProposalDto> InvitedProposals { get; set; } = [];
-
-        /// <summary>Publications where the student has declared and nobody has ruled yet.</summary>
-        public IReadOnlyList<PublicationContainerDto> EthicsAwaitingDecision { get; set; } = [];
-
-        /// <summary>Publications whose ethics documents have been uploaded and need checking.</summary>
-        public IReadOnlyList<PublicationContainerDto> EthicsAwaitingReview { get; set; } = [];
-
-        /// <summary>Research papers submitted for this supervisor's review.</summary>
-        public IReadOnlyList<PublicationDto> PapersAwaitingReview { get; set; } = [];
-
-        /// <summary>How many there are altogether. The dashboard states a figure, not a page.</summary>
-        public int PapersAwaitingReviewTotal { get; set; }
-
-        /// <summary>Everything they supervise, whether or not it needs them right now.</summary>
-        public IReadOnlyList<PublicationContainerDto> Supervising { get; set; } = [];
-
+        public string? Sort { get; set; }
+        public bool Descending { get; set; }
+        public string? Search { get; set; }
+        public int TotalCount { get; set; }
+        public PagerViewModel? Pager { get; set; }
         public bool LoadFailed { get; set; }
 
-        public int ActionsWaiting =>
-            InvitedProposals.Count + EthicsAwaitingDecision.Count +
-            EthicsAwaitingReview.Count + PapersAwaitingReview.Count;
+        public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
+
+        protected abstract string QueueController { get; }
+        protected abstract string QueueAction { get; }
+
+        public Dictionary<string, string?> RouteValues()
+        {
+            var values = new Dictionary<string, string?>();
+            if (!string.IsNullOrWhiteSpace(Sort)) values["sort"] = Sort;
+            if (Descending) values["desc"] = "true";
+            if (HasSearch) values["search"] = Search;
+            return values;
+        }
+
+        /// <summary>
+        /// Where Clear goes: this queue again, without the search term and still in the order the
+        /// reader chose. Clearing a search should widen the list, not reorder what is left.
+        /// </summary>
+        public Dictionary<string, string?> ClearSearchRoute() =>
+            RouteValues().Where(v => v.Key != "search").ToDictionary(v => v.Key, v => v.Value);
+
+        public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
+        {
+            Controller = QueueController,
+            Action = QueueAction,
+            Column = column,
+            Label = label,
+            CurrentSort = Sort,
+            CurrentDescending = Descending,
+            DescendingFirst = descendingFirst,
+            RouteValues = HasSearch ? new Dictionary<string, string?> { ["search"] = Search } : []
+        };
+    }
+
+    /// <summary>
+    /// A supervisor's overview: three figures for the three things that can be waiting on them,
+    /// and below that everything they supervise.
+    ///
+    /// The listing is the one the coordinator's dashboard shows, for the same reason: the cards say
+    /// how much is outstanding, and the listing says which publication each piece of it belongs to.
+    /// It is paged and ordered by the API, so a supervisor with sixty publications reads them in
+    /// whatever order they ask for rather than the order they happened to be created in.
+    /// </summary>
+    public class SupervisorDashboardViewModel : SupervisorQueue
+    {
+        protected override string QueueController => "Supervisor";
+        protected override string QueueAction => "SupervisorDashboard";
+
+        /// <summary>Everything they supervise, one page of it.</summary>
+        public IReadOnlyList<PublicationContainerDto> Supervising { get; set; } = [];
+
+        /// <summary>Proposals a coordinator has sent them, still awaiting an answer.</summary>
+        public int ProposalsToReviewTotal { get; set; }
+
+        /// <summary>
+        /// Ethics waiting on them, both kinds together: the ruling on whether approval is needed at
+        /// all, and the check of the documents once it is. One card, because they are one queue,
+        /// with the split named underneath because the two read differently.
+        /// </summary>
+        public int EthicsAwaitingRulingTotal { get; set; }
+        public int EthicsAwaitingCheckTotal { get; set; }
+
+        public int EthicsTotal => EthicsAwaitingRulingTotal + EthicsAwaitingCheckTotal;
+
+        /// <summary>Research papers submitted for their review.</summary>
+        public int PapersToReviewTotal { get; set; }
+
+        public int ActionsWaiting => ProposalsToReviewTotal + EthicsTotal + PapersToReviewTotal;
     }
 
     /// <summary>Proposals sent to this supervisor to choose from.</summary>
-    public class InvitedProposalsViewModel
+    public class InvitedProposalsViewModel : SupervisorQueue
     {
-        public IReadOnlyList<ProposalDto> Proposals { get; set; } = [];
+        protected override string QueueController => "Supervisor";
+        protected override string QueueAction => "proposal_review";
 
-        public bool LoadFailed { get; set; }
+        public IReadOnlyList<ProposalDto> Proposals { get; set; } = [];
+    }
+
+    /// <summary>
+    /// Every ethics stage waiting on this supervisor, whichever of the two decisions it wants.
+    ///
+    /// One queue rather than two screens: the question being asked is "what is mine to do", and
+    /// splitting it by which kind of ethics work it happens to be would mean looking in two places
+    /// to find out. Each row says which decision it is waiting for and opens the screen that asks
+    /// for it.
+    /// </summary>
+    public class SupervisorEthicsQueueViewModel : SupervisorQueue
+    {
+        protected override string QueueController => "Supervisor";
+        protected override string QueueAction => "Ethic_reviews";
+
+        public IReadOnlyList<PublicationContainerDto> Items { get; set; } = [];
+
+        /// <summary>Whether this row wants the ruling rather than the document check.</summary>
+        public static bool IsRuling(PublicationContainerDto container) =>
+            container.EthicsAwaitingStep == EthicsSteps.SupervisorDecision;
     }
 
     /// <summary>
@@ -66,16 +144,11 @@ namespace ResearchPublicationManagementSystem.Models
     }
 
     /// <summary>Papers waiting on this supervisor's review.</summary>
-    public class SupervisorPapersViewModel
+    public class SupervisorPapersViewModel : SupervisorQueue
     {
+        protected override string QueueController => "Supervisor";
+        protected override string QueueAction => "publication_review";
 
-        /// <summary>
-        /// Which page of the queue this is. Null where everything fits on one, so the controls
-        /// only appear when there is somewhere to go.
-        /// </summary>
-        public PagerViewModel? Pager { get; set; }
         public IReadOnlyList<PublicationDto> Papers { get; set; } = [];
-
-        public bool LoadFailed { get; set; }
     }
 }

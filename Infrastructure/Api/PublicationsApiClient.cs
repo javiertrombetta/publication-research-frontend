@@ -56,9 +56,16 @@ public class PublicationsApiClient(HttpClient httpClient) : ApiClientBase(httpCl
 
     /// <summary>Papers submitted by students this supervisor supervises, awaiting their review.</summary>
     public Task<ApiResult<PagedResultDto<PublicationDto>>> GetPendingForSupervisorAsync(
-        int page = 1, int pageSize = Paging.DefaultPageSize, CancellationToken ct = default) =>
-        GetAsync<PagedResultDto<PublicationDto>>(
-            $"api/publications/pending?page={Math.Max(1, page)}&pageSize={pageSize}", ct);
+        int page = 1, int pageSize = Paging.DefaultPageSize, string? sort = null, bool descending = false,
+        string? search = null, CancellationToken ct = default)
+    {
+        var query = $"api/publications/pending?page={Math.Max(1, page)}&pageSize={pageSize}";
+        if (!string.IsNullOrWhiteSpace(sort)) query += $"&sortBy={Uri.EscapeDataString(sort)}";
+        if (descending) query += "&sortDescending=true";
+        if (!string.IsNullOrWhiteSpace(search)) query += $"&search={Uri.EscapeDataString(search.Trim())}";
+
+        return GetAsync<PagedResultDto<PublicationDto>>(query, ct);
+    }
 
     /// <summary>
     /// Papers a supervisor has approved that have no evaluation committee yet. This is the

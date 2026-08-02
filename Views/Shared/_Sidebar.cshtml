@@ -1,4 +1,5 @@
 @using ResearchPublicationManagementSystem.Common
+@inject ResearchPublicationManagementSystem.Services.ICommitteeEligibility CommitteeEligibility
 @{
     var (homeController, homeAction) = RoleLanding.For(User);
 
@@ -12,10 +13,12 @@
     var isCommitteeMember = User.IsInRole(RoleNames.InternalCommitteeMember)
         || User.IsInRole(RoleNames.ExternalCommitteeMember);
 
-    // Anyone who can be appointed to a committee needs the way in, not only the two roles named
-    // after it: a supervisor or coordinator on a committee has a decision to make like anybody
-    // else. Their own screen shows nothing until they are on one.
-    var canEvaluate = isCommitteeMember || isAdmin || isCoordinator || isSupervisor || isHeadOfDepartment;
+    // Asked rather than worked out from roles. Which roles committees are drawn from is an
+    // administrator's choice and they can leave individuals out, so a fixed list of roles here
+    // would offer the screen to people who will never have anything on it, and hide it from
+    // somebody the administrator had just added. The answer is cached for a minute, so this is not
+    // a request per page. Somebody already sitting on a committee always keeps the way in.
+    var canEvaluate = await CommitteeEligibility.IsCandidateAsync(User);
 
     // Whether this person has a dashboard of their own to land on, as opposed to only a profile.
     var hasDashboard = isAdmin
@@ -81,12 +84,16 @@
                 </a>
             }
 
-            @* The supervisor's two queues. Their ethics work is reached from the dashboard,
-               where it is listed against the publication it belongs to. *@
+            @* The supervisor's three queues, one per stage they take part in: the proposal, the
+               ethics decision and the paper. Ethics used to be reachable only from the dashboard,
+               which meant the one stage they cannot skip had no screen of its own. *@
             @if (isSupervisor)
             {
                 <a asp-controller="Supervisor" asp-action="proposal_review" class="@NavClass(currentController, currentAction, "Supervisor", "proposal_review")">
                     Proposals sent to me
+                </a>
+                <a asp-controller="Supervisor" asp-action="Ethic_reviews" class="@NavClass(currentController, currentAction, "Supervisor", "Ethic_reviews")">
+                    Ethics reviews
                 </a>
                 <a asp-controller="Supervisor" asp-action="publication_review" class="@NavClass(currentController, currentAction, "Supervisor", "publication_review")">
                     Papers to review

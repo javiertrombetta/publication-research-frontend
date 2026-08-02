@@ -11,6 +11,60 @@
     </div>
 </div>
 
+@* Search and order are applied by the API, so they cover the whole queue rather than the page in
+   hand, and both live in the query string so a filtered view can be linked to and reloaded. *@
+@if (!Model.LoadFailed && (Model.Proposals.Count > 0 || Model.HasSearch))
+{
+    <div class="card mb-3">
+        <div class="card-body py-3">
+            <form method="get" asp-controller="Supervisor" asp-action="proposal_review"
+                  class="row g-2 align-items-center">
+
+                @* The order survives a search, so narrowing the list does not silently reorder it. *@
+                <input type="hidden" name="sort" value="@Model.Sort" />
+                <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+
+                <div class="col-12 col-md">
+                    <input type="search" name="search" value="@Model.Search" class="form-control"
+                           placeholder="Search by proposal or student" aria-label="Search" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                <div class="col-auto">
+                    @* Beside Search, always, so the way back to the whole list is where somebody
+                       looks for it. It carries the ordering with it: clearing a search should
+                       widen the list, not reorder what is left. *@
+                    <a asp-controller="Supervisor" asp-action="proposal_review"
+                       asp-all-route-data="Model.ClearSearchRoute()"
+                       class="btn btn-outline-secondary">Clear</a>
+                </div>
+
+                @{
+                    // Built here rather than inline: a tag helper's model attribute is delimited by
+                    // double quotes, so a call with string arguments cannot be written inside one.
+                    var byDate = Model.Column("submitted", "Date", descendingFirst: true);
+                    var byStudent = Model.Column("student", "Student");
+                    var byTitle = Model.Column("title", "Proposal");
+                }
+                <div class="col-12 col-md-auto ms-md-auto d-flex align-items-center gap-3">
+                    <span class="text-secondary small">Sort by</span>
+                    <partial name="_SortableHeader" model="byDate" />
+                    <partial name="_SortableHeader" model="byStudent" />
+                    <partial name="_SortableHeader" model="byTitle" />
+                </div>
+            </form>
+
+            @if (Model.HasSearch)
+            {
+                <div class="text-secondary small mt-2">
+                    @Model.TotalCount @(Model.TotalCount == 1 ? "proposal matches" : "proposals match") &ldquo;@Model.Search&rdquo;.
+                </div>
+            }
+        </div>
+    </div>
+}
+
 @if (Model.LoadFailed)
 {
     <div class="card">
@@ -18,6 +72,17 @@
             <h3 class="mb-2">We couldn't load the proposals</h3>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="Supervisor" asp-action="proposal_review" class="btn btn-primary">Retry</a>
+        </div>
+    </div>
+}
+else if (Model.Proposals.Count == 0 && Model.HasSearch)
+{
+    @* A search that found nothing is a different thing from an empty queue. *@
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+            <p class="text-secondary mb-4">No proposal sent to you has that title or student.</p>
+            <a asp-controller="Supervisor" asp-action="proposal_review" class="btn btn-primary">Show them all</a>
         </div>
     </div>
 }
@@ -33,31 +98,61 @@ else if (Model.Proposals.Count == 0)
 }
 else
 {
+    @* One control for the lot. A queue of proposals, each with its abstract and its form, is a
+       long scroll; shutting them all and opening the one being worked on turns it back into a
+       list. The counts come first because what a supervisor needs to know is how much is waiting,
+       not that a control exists. *@
+    <div class="card mb-3">
+        <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
+            <span class="text-secondary me-auto">
+                <strong>@Model.TotalCount</strong> @(Model.TotalCount == 1 ? "proposal" : "proposals") waiting on you,
+                @Model.Proposals.Count on this page.
+            </span>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-rpms-expand-all="proposal-cards">Expand all</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-rpms-collapse-all="proposal-cards">Collapse all</button>
+        </div>
+    </div>
+
     @foreach (var proposal in Model.Proposals)
     {
         <div class="card mb-3">
-            <div class="card-body">
-                <h3 class="mb-2">@proposal.Title</h3>
+            <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+                 data-rpms-header-toggle="#proposal-@proposal.Id"
+                 role="button" tabindex="0"
+                 aria-expanded="true" aria-controls="proposal-@proposal.Id">
+                @* Part of the header rather than a control of its own, so clicking it does not
+                   leave an icon looking selected in the middle of a row. *@
+                <span class="rpms-collapse-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
+                         viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M6 9l6 6l6 -6" />
+                    </svg>
+                </span>
 
-                @* The date the coordinator asked for an answer by. It decides whether to read this
-                   now or later, so it belongs above the abstract rather than under the button. *@
+                <div class="me-auto">
+                    <h3 class="card-title m-0">@proposal.Title</h3>
+                </div>
+
+                @* The date the coordinator asked for an answer by. Readable with the card shut,
+                   because it is what decides which one to read next. *@
                 @if (proposal.RespondByLocal is { } by)
                 {
-                    <div class="mb-2">
-                        <span class="badge @(proposal.RespondByHasPassed ? "bg-warning-lt" : "bg-secondary-lt")">
-                            @if (proposal.RespondByHasPassed)
-                            {
-                                @:Answer was due @by.ToString("dddd d MMMM, HH:mm")
-                            }
-                            else
-                            {
-                                @:Answer by @by.ToString("dddd d MMMM, HH:mm")
-                            }
-                        </span>
-                    </div>
+                    <span class="badge @(proposal.RespondByHasPassed ? "bg-warning-lt" : "bg-secondary-lt")"
+                          title="@(proposal.RespondByHasPassed
+                                   ? "The date you had to answer by has passed"
+                                   : "You have until this date to answer")">
+                        @(proposal.RespondByHasPassed ? "Was due" : "Due") @by.ToString("d MMM, HH:mm")
+                    </span>
                 }
+            </div>
 
-                <p class="text-secondary">@proposal.Abstract</p>
+            <div class="card-body collapse show" id="proposal-@proposal.Id"
+                 data-rpms-collapsible="proposal-cards">
+                <p class="text-secondary rpms-preserve-lines">@proposal.Abstract</p>
 
                 <form asp-controller="Supervisor" asp-action="AcceptProposal" method="post">
                     <input type="hidden" name="proposalId" value="@proposal.Id" />
@@ -70,5 +165,10 @@ else
                 </form>
             </div>
         </div>
+    }
+
+    @if (Model.Pager is not null)
+    {
+        <partial name="_Pager" model="Model.Pager" />
     }
 }
