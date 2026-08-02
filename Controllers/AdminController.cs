@@ -46,8 +46,8 @@ namespace ResearchPublicationManagementSystem.Controllers
             // Every supervisor account, not only the available ones. This screen edits lists kept
             // over months, and leaving somebody out because they are away this week would quietly
             // drop them from any group saved while they were.
-            var supervisors = await usersApi.GetAllAsync(role: RoleNames.Supervisor);
-            model.Supervisors = [.. (supervisors.Data ?? [])
+            var supervisors = await usersApi.GetAllAsync(role: RoleNames.Supervisor, pageSize: 100);
+            model.Supervisors = [.. (supervisors.Data?.Items ?? [])
                 .OrderBy(s => s.LastName)
                 .ThenBy(s => s.FirstName)];
 
@@ -191,13 +191,6 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             return RedirectToAction(nameof(assigning_committee_members));
         }
-
-        // ---------- Settings ----------
-
-        // ---------- Still to be wired ----------
-
-        [HttpGet]
-        public IActionResult Admin_check_proposaldetail() => View();
 
         // ---------- Helpers ----------
 

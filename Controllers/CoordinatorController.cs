@@ -120,7 +120,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             // The API narrows this to supervisors who are enabled and who have not marked
             // themselves unavailable, so what arrives is already the people who can be asked.
             var supervisors = await usersApi.GetSupervisorsAsync(search: supervisorSearch);
-            var available = (supervisors.Data ?? [])
+            var available = (supervisors.Data?.Items ?? [])
                 .OrderBy(s => s.LastName)
                 .ThenBy(s => s.FirstName)
                 .ToList();

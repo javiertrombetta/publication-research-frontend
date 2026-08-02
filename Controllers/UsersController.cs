@@ -16,11 +16,16 @@ namespace ResearchPublicationManagementSystem.Controllers
     public class UsersController(UsersApiClient usersApi, DepartmentsApiClient departmentsApi) : Controller
     {
         [HttpGet]
-        public async Task<IActionResult> Index(string? role, string? status, string? search)
+        public async Task<IActionResult> Index(
+            string? role, string? status, string? search,
+            int page = 1, string? sort = null, bool desc = false)
         {
-            var model = new UserDirectoryViewModel { Role = role, Status = status, Search = search };
+            var model = new UserDirectoryViewModel
+            {
+                Role = role, Status = status, Search = search, Sort = sort, Descending = desc
+            };
 
-            var result = await usersApi.GetAllAsync(role, status, search);
+            var result = await usersApi.GetAllAsync(role, status, search, page, sort: sort, descending: desc);
             if (!result.Success)
             {
                 TempData["ErrorMessage"] = result.ErrorMessage ?? "Could not load the user directory.";
@@ -28,7 +33,10 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return View(model);
             }
 
-            model.Users = result.Data ?? [];
+            model.Users = result.Data?.Items ?? [];
+            model.TotalCount = result.Data?.TotalCount ?? 0;
+            model.Pager = Paging.PagerFor(result.Data, "Users", nameof(Index), model.RouteValues());
+
             return View(model);
         }
 

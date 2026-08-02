@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
+using ResearchPublicationManagementSystem.Common;
 
 namespace ResearchPublicationManagementSystem.Infrastructure.Api;
 
@@ -30,30 +31,42 @@ public class UsersApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
     public Task<(byte[] Content, string ContentType)?> GetProfilePhotoAsync(Guid userId, CancellationToken ct = default) =>
         GetBytesAsync($"api/users/{userId}/photo", ct);
 
-    /// <summary>Enabled supervisors, for a Coordinator choosing who to send proposals to.</summary>
-    public Task<ApiResult<IReadOnlyList<UserListItemDto>>> GetSupervisorsAsync(
-        string? search = null, CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<UserListItemDto>>(
-            "api/users/supervisors"
-            + (string.IsNullOrWhiteSpace(search) ? "" : $"?search={Uri.EscapeDataString(search.Trim())}"), ct);
+    /// <summary>
+    /// Enabled supervisors, for a Coordinator choosing who to send proposals to. A chooser rather
+    /// than a listing, so it asks for a page big enough to hold a department's worth of them and
+    /// narrows by search rather than by paging.
+    /// </summary>
+    public Task<ApiResult<PagedResultDto<UserListItemDto>>> GetSupervisorsAsync(
+        string? search = null, int pageSize = 100, CancellationToken ct = default) =>
+        GetAsync<PagedResultDto<UserListItemDto>>(
+            $"api/users/supervisors?pageSize={pageSize}"
+            + (string.IsNullOrWhiteSpace(search) ? "" : $"&search={Uri.EscapeDataString(search.Trim())}"), ct);
 
     // ---------- Administration ----------
 
-    /// <summary>Every account, optionally narrowed by role, status or a search term.</summary>
-    public Task<ApiResult<IReadOnlyList<UserListItemDto>>> GetAllAsync(
-        string? role = null, string? status = null, string? search = null, CancellationToken ct = default)
+    /// <summary>
+    /// The directory, one page at a time, optionally narrowed by role, status or a search term.
+    /// </summary>
+    public Task<ApiResult<PagedResultDto<UserListItemDto>>> GetAllAsync(
+        string? role = null, string? status = null, string? search = null,
+        int page = 1, int pageSize = Paging.DefaultPageSize, string? sort = null, bool descending = false,
+        CancellationToken ct = default)
     {
         var parameters = new Dictionary<string, string?>
         {
             ["role"] = role,
             ["status"] = status,
-            ["search"] = search
+            ["search"] = search,
+            ["page"] = Math.Max(1, page).ToString(),
+            ["pageSize"] = pageSize.ToString(),
+            ["sortBy"] = sort,
+            ["sortDescending"] = descending ? "true" : null
         };
 
         var url = QueryHelpers.AddQueryString("api/users",
             parameters.Where(p => !string.IsNullOrWhiteSpace(p.Value)));
 
-        return GetAsync<IReadOnlyList<UserListItemDto>>(url, ct);
+        return GetAsync<PagedResultDto<UserListItemDto>>(url, ct);
     }
 
     public Task<ApiResult<UserDetailDto>> GetByIdAsync(Guid id, CancellationToken ct = default) =>
