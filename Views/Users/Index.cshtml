@@ -93,6 +93,7 @@ else
                     var byName = Model.Column("name", "Name");
                     var byEmail = Model.Column("email", "Email");
                     var byStatus = Model.Column("status", "Status");
+                    var byAvailable = Model.Column("available", "Taking work on");
                     var byJoined = Model.Column("created", "Joined", descendingFirst: true);
                 }
                 <thead>
@@ -102,6 +103,9 @@ else
                         @* Roles is a list per account, so there is nothing to order by. *@
                         <th>Roles</th>
                         <th><partial name="_SortableHeader" model="byStatus" /></th>
+                        @* Beside Status because the two are read together and are not the same
+                           thing: an account can be enabled and still be turning work away. *@
+                        <th><partial name="_SortableHeader" model="byAvailable" /></th>
                         <th><partial name="_SortableHeader" model="byJoined" /></th>
                         <th></th>
                     </tr>
@@ -126,6 +130,24 @@ else
                                 }
                             </td>
                             <td><span class="badge @StatusBadge(user.Status)">@Humanise(user.Status)</span></td>
+                            <td>
+                                @* A dash rather than "No" where the question was never asked.
+                                   Students and accounts still on the placeholder role carry the
+                                   flag and nothing reads it, so printing a refusal they never
+                                   made would be worse than saying nothing. *@
+                                @if (!user.ChoosesWork)
+                                {
+                                    <span class="text-secondary">&mdash;</span>
+                                }
+                                else if (user.IsAvailable)
+                                {
+                                    <span class="badge bg-success-lt">Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning-lt">Not right now</span>
+                                }
+                            </td>
                             <td class="text-nowrap">@user.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</td>
                             <td>
                                 <a asp-controller="Users" asp-action="Details" asp-route-id="@user.Id"
