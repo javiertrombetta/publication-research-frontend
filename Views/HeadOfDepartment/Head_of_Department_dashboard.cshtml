@@ -105,7 +105,7 @@ else
         </div>
     </div>
 
-    @if (Model.TotalCount == 0 && !Model.HasSearch && !Model.HasWaitingOn)
+    @if (Model.TotalCount == 0 && !Model.HasSearch)
     {
         <div class="card">
             <div class="card-body text-center py-5">
@@ -132,34 +132,12 @@ else
                                placeholder="Search by student or publication" aria-label="Search" />
                     </div>
 
-                    @* Narrowing by whose move it is, applied by the API so it covers the whole
-                       department rather than the ten rows in hand. It is the question a head of
-                       department actually arrives with: not "what is happening", which the cards
-                       above answer, but "who is holding something up". Submits on change, because
-                       a select that needed a second click on Search looked like it had not
-                       worked. *@
-                    <div class="col-12 col-md-auto">
-                        <label class="visually-hidden" for="waiting-on">Waiting on</label>
-                        <select id="waiting-on" name="waitingOn" class="form-select"
-                                onchange="this.form.submit()">
-                            <option value="">Waiting on anyone</option>
-                            @foreach (var role in RoleNames.WaitingOnAnswers)
-                            {
-                                <option value="@role" selected="@(Model.WaitingOn == role)">
-                                    @(role == RoleNames.Nobody ? "Nobody" : Humanise(role))
-                                </option>
-                            }
-                        </select>
-                    </div>
-
                     <div class="col-auto">
                         <button type="submit" class="btn btn-primary">Search</button>
                     </div>
                     <div class="col-auto">
-                        @* Back to the whole department: both the term and the role, since either
-                           on its own can be what is hiding the row somebody is looking for. *@
                         <a asp-controller="HeadOfDepartment" asp-action="Head_of_Department_dashboard"
-                           asp-all-route-data="Model.ClearFiltersRoute()"
+                           asp-all-route-data="Model.ClearSearchRoute()"
                            class="btn btn-outline-secondary">Clear</a>
                     </div>
                     <div class="col-12 col-md-auto ms-md-auto text-secondary small">
@@ -175,27 +153,8 @@ else
         {
             <div class="card">
                 <div class="card-body text-center py-5">
-                    @* Which of the two narrowed it to nothing, since the way out differs. *@
-                    @if (Model.HasSearch && Model.HasWaitingOn)
-                    {
-                        <h3 class="mb-2">Nothing matches both of those</h3>
-                        <p class="text-secondary mb-4">
-                            No publication with &ldquo;@Model.Search&rdquo; in it is waiting on
-                            @Humanise(Model.WaitingOn).
-                        </p>
-                    }
-                    else if (Model.HasSearch)
-                    {
-                        <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
-                        <p class="text-secondary mb-4">No publication in your department has that student or title.</p>
-                    }
-                    else
-                    {
-                        <h3 class="mb-2">Nothing is waiting on @Humanise(Model.WaitingOn)</h3>
-                        <p class="text-secondary mb-4">
-                            Every publication in your department is with somebody else right now.
-                        </p>
-                    }
+                    <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+                    <p class="text-secondary mb-4">No publication in your department has that student or title.</p>
                     <a asp-controller="HeadOfDepartment" asp-action="Head_of_Department_dashboard" class="btn btn-primary">
                         Show them all
                     </a>
@@ -211,6 +170,7 @@ else
                         var byStarted = Model.Column("started", "Publication", descendingFirst: true);
                         var byStage = Model.Column("stage", "Stage");
                         var byStatus = Model.Column("status", "Status");
+                        var byWaiting = Model.Column("waiting", "Waiting on");
                     }
                     <table class="table card-table table-vcenter rpms-table-stable">
                         @* Declared once so the columns do not resize themselves around whichever
@@ -228,12 +188,11 @@ else
                                 <th><partial name="_SortableHeader" model="byStarted" /></th>
                                 <th><partial name="_SortableHeader" model="byStage" /></th>
                                 <th><partial name="_SortableHeader" model="byStatus" /></th>
-                                @* Filtered rather than sorted, from the control above. It is read
-                                   out of two fields the projection computes, so there is no single
-                                   column to order by; and ordering by it would only group the
-                                   roles together, which is the same thing as picking one, more
-                                   slowly. *@
-                                <th>Waiting on</th>
+                                @* Ordered like the rest of the row, from its own heading. The API
+                                   ranks it the way the pipeline runs, student first and nobody's
+                                   turn last, so one click gathers everything held up at the same
+                                   place. *@
+                                <th><partial name="_SortableHeader" model="byWaiting" /></th>
                             </tr>
                         </thead>
                         <tbody>
