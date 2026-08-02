@@ -58,7 +58,12 @@ public record CommitteePaperDto(
     string Title,
     string Abstract,
     int? PublicationYear,
-    IReadOnlyList<string> Keywords);
+    IReadOnlyList<string> Keywords,
+    /// <summary>
+    /// Whose paper it is. The assignment queue lets a member search and order by the student, so
+    /// naming one is the least it owes them. Nothing here is anonymous review.
+    /// </summary>
+    string? StudentName = null);
 
 /// <summary>
 /// Somebody who could be put on a committee, as the API works it out.

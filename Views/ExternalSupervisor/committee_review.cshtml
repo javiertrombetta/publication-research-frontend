@@ -130,9 +130,24 @@ else
 
                 <div class="me-auto">
                     <h3 class="card-title m-0">@item.Title</h3>
-                    @if (item.Paper?.PublicationYear is not null)
+                    @* Whose paper it is, beside the year. The queue searches and orders by the
+                       student and named nobody. *@
+                    @if (!string.IsNullOrWhiteSpace(item.Paper?.StudentName) || item.Paper?.PublicationYear is not null)
                     {
-                        <div class="text-secondary small">@item.Paper.PublicationYear</div>
+                        <div class="text-secondary small">
+                            @if (!string.IsNullOrWhiteSpace(item.Paper?.StudentName))
+                            {
+                                <span>@item.Paper.StudentName</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(item.Paper?.StudentName) && item.Paper?.PublicationYear is not null)
+                            {
+                                <span class="mx-1">&middot;</span>
+                            }
+                            @if (item.Paper?.PublicationYear is not null)
+                            {
+                                <span>@item.Paper.PublicationYear</span>
+                            }
+                        </div>
                     }
                 </div>
             </div>

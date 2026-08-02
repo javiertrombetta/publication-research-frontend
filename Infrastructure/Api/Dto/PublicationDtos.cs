@@ -11,7 +11,13 @@ public record PublicationDto(
     bool IsPublished,
     DateTime? PublishedAt,
     IReadOnlyList<string> Keywords,
-    IReadOnlyList<string> ResearchAreas);
+    IReadOnlyList<string> ResearchAreas,
+    /// <summary>
+    /// Whose paper it is. Null wherever the reader is the author or already knows. Filled in on
+    /// the queues that ask somebody else to judge a paper, which let them search and order by the
+    /// student and so have to be able to name one.
+    /// </summary>
+    string? StudentName = null);
 
 public record UpdatePublicationMetadataRequestDto(
     string Title,

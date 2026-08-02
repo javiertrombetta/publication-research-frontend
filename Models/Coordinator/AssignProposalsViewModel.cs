@@ -115,6 +115,13 @@ namespace ResearchPublicationManagementSystem.Models
 
         public bool HasSupervisorSearch => !string.IsNullOrWhiteSpace(SupervisorSearch);
 
+        /// <summary>
+        /// Where "show every available supervisor" goes: this screen again with the chooser
+        /// widened, and everything the reader chose about the proposals left alone.
+        /// </summary>
+        public Dictionary<string, string?> ClearSupervisorSearchRoute() =>
+            RouteValues().Where(v => v.Key != "supervisorSearch").ToDictionary(v => v.Key, v => v.Value);
+
         public bool LoadFailed { get; set; }
 
         /// <summary>

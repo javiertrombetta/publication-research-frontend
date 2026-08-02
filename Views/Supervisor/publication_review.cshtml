@@ -122,6 +122,12 @@ else
 
                 <div class="me-auto">
                     <h3 class="card-title m-0">@paper.Title</h3>
+                    @* Whose paper it is. The queue searches and orders by the student and named
+                       nobody, so a supervisor was reviewing work without being told whose. *@
+                    @if (!string.IsNullOrWhiteSpace(paper.StudentName))
+                    {
+                        <div class="text-secondary small">@paper.StudentName</div>
+                    }
                 </div>
 
                 @* Readable with the card shut: a resubmission is a different read from a first
