@@ -3,10 +3,13 @@
 @{
     ViewData["Title"] = "My account";
 
-    // Only where it means something. Every decision in the system that picks a person picks a
-    // member of staff, so a student marking themselves unavailable would change nothing and the
-    // control would be a promise the system does not keep.
-    var choosesWork = Model is not null && !Model.Roles.Contains(RoleNames.Student);
+    // Only where it means something. This governs what somebody is offered next, so it is shown
+    // to the people the system actually offers things to.
+    //
+    // That is not "everybody except students". An account holding only the placeholder role has
+    // not been given a job yet, so nothing chooses it either, and the control was a promise the
+    // system does not keep. The API refuses it for the same reason.
+    var choosesWork = Model is not null && Model.Roles.Any(RoleNames.Operational.Contains);
 }
 
 <div class="row justify-content-center">

@@ -22,8 +22,10 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
     public Task<ApiResult<object?>> DeleteAsync(Guid id, CancellationToken ct = default) =>
         DeleteAsync<object?>($"api/containers/{id}", ct);
 
-    public Task<ApiResult<IReadOnlyList<ActivityHistoryEntryDto>>> GetActivityHistoryAsync(Guid id, CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<ActivityHistoryEntryDto>>($"api/containers/{id}/activity-history", ct);
+    public Task<ApiResult<PagedResultDto<ActivityHistoryEntryDto>>> GetActivityHistoryAsync(
+        Guid id, int page = 1, int pageSize = Paging.DefaultPageSize, CancellationToken ct = default) =>
+        GetAsync<PagedResultDto<ActivityHistoryEntryDto>>(
+            $"api/containers/{id}/activity-history?page={Math.Max(1, page)}&pageSize={pageSize}", ct);
 
     /// <summary>
     /// Containers filtered server-side. A Coordinator passes their own id so the listing is

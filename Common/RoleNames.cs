@@ -27,6 +27,20 @@ public static class RoleNames
     /// placeholder an institutional account holds until an administrator says what it is: not a
     /// job, so nobody to ask yet.
     /// </summary>
+    /// <summary>
+    /// The roles that mean a job here: everyone the system can choose for something. Mirrors the
+    /// API, which is what enforces it.
+    ///
+    /// A student is the subject of the work rather than somebody it is handed to, and Staff is the
+    /// placeholder an institutional address is given on the way in, before an administrator says
+    /// what the person is. Neither is ever picked, so neither is asked whether they are available.
+    /// </summary>
+    public static readonly string[] Operational =
+    [
+        Admin, HeadOfDepartment, Coordinator, Supervisor,
+        InternalCommitteeMember, ExternalCommitteeMember
+    ];
+
     public const string CommitteeEligibleRoles =
         $"{Admin},{HeadOfDepartment},{Coordinator},{Supervisor},{InternalCommitteeMember},{ExternalCommitteeMember}";
 

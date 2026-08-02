@@ -105,7 +105,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         // ---------- One publication ----------
 
         [HttpGet]
-        public async Task<IActionResult> Publication(Guid id)
+        public async Task<IActionResult> Publication(Guid id, int historyPage = 1)
         {
             var (container, redirect) = await GetOwnedContainerAsync(id);
             if (redirect is not null) return redirect;
@@ -138,8 +138,14 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             // Best-effort: a publication is still perfectly usable if its history can't be read,
             // so a failure here shows an empty history tab rather than taking down the page.
-            var historyResult = await containersApi.GetActivityHistoryAsync(id);
-            model.History = historyResult.Data ?? [];
+            var historyResult = await containersApi.GetActivityHistoryAsync(id, historyPage);
+            model.History = historyResult.Data?.Items ?? [];
+            model.HistoryTotal = historyResult.Data?.TotalCount ?? 0;
+
+            // The pager returns to this publication with the tab still open, so paging the trail
+            // does not drop somebody back onto the first tab of the screen they were reading.
+            model.HistoryPager = Paging.PagerFor(historyResult.Data, "Student", nameof(Publication),
+                new Dictionary<string, string?> { ["id"] = id.ToString() });
 
             return View(model);
         }
