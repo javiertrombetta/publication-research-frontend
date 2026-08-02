@@ -132,11 +132,11 @@ namespace ResearchPublicationManagementSystem.Controllers
             var items = await FindPapersAwaitingCommitteeAsync();
             model.Items = items;
 
-            // Anyone who works here can sit on a committee, so this is the whole enabled directory
-            // less the students. A committee judges a student's work, so it cannot be drawn from
-            // the people whose work is being judged. One request rather than one per role, and it
-            // no longer hides a supervisor or a coordinator the administrator wanted to appoint.
-            var people = await usersApi.GetAllAsync(status: "Enabled");
+            // Asked for as a list of candidates rather than assembled here from the whole directory.
+            // Who may be appointed is a rule with several parts, and an administrator now chooses
+            // some of them, so working it out a second time on this side would eventually offer
+            // somebody the save then refuses.
+            var people = await committeesApi.GetCandidatesAsync();
 
             if (!people.Success)
             {
@@ -145,11 +145,7 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return View(model);
             }
 
-            model.Members = [.. (people.Data ?? [])
-                // Students are excluded because a committee judges their work, and Staff because it is the
-                // placeholder an account holds before it has a role: there is nobody to ask yet.
-                .Where(u => !u.Roles.Contains(RoleNames.Student) && !u.Roles.Contains(RoleNames.Staff))
-                .OrderBy(u => u.LastName).ThenBy(u => u.FirstName)];
+            model.Members = people.Data ?? [];
 
             // Only needed as a fallback: publications opened before the figures were recorded
             // per publication have none of their own, and the API judges those by today's rules.

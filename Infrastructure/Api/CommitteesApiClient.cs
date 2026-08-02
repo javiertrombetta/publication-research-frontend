@@ -9,6 +9,13 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api;
 /// </summary>
 public class CommitteesApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
 {
+    /// <summary>
+    /// Everybody who could be put on a committee right now. Asked for rather than worked out here,
+    /// so the list offered and the list the API will accept are the same answer.
+    /// </summary>
+    public Task<ApiResult<IReadOnlyList<CommitteeCandidateDto>>> GetCandidatesAsync(CancellationToken ct = default) =>
+        GetAsync<IReadOnlyList<CommitteeCandidateDto>>("api/committees/candidates", ct);
+
     /// <summary>The committees the acting member sits on.</summary>
     public Task<ApiResult<PagedResultDto<CommitteeDto>>> GetMyAssignmentsAsync(
         int page = 1, int pageSize = Paging.DefaultPageSize, CancellationToken ct = default) =>

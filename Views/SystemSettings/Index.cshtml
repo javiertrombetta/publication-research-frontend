@@ -97,6 +97,67 @@
                                 <small class="form-hint">Cannot exceed the committee's size.</small>
                             </div>
                             <div class="col-12">
+                                <hr class="my-2" />
+                                <h3 class="h4 mb-1">Who committees are drawn from</h3>
+                                <p class="text-secondary mb-2">
+                                    Which roles this institution asks to evaluate papers, and anybody
+                                    to leave out of it. Students are never candidates, because a
+                                    committee judges their work, and neither is an account still
+                                    waiting to be given a role.
+                                </p>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Roles</label>
+                                <div class="row g-2">
+                                    @foreach (var role in Model.Committees.SelectableRoles)
+                                    {
+                                        <div class="col-12 col-sm-6 col-lg-4">
+                                            <label class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="candidateRoles"
+                                                       value="@role"
+                                                       checked="@(Model.Committees.CandidateRoles.Contains(role))" />
+                                                <span class="form-check-label">@DisplayText.Humanise(role)</span>
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+                                <small class="form-hint">Choose at least one, or no committee could be formed.</small>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">People to leave out</label>
+                                @if (Model.CommitteePeople.Count == 0)
+                                {
+                                    <div class="text-secondary">
+                                        Nobody holds a role that committees are drawn from yet.
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="row g-2">
+                                        @foreach (var person in Model.CommitteePeople)
+                                        {
+                                            <div class="col-12 col-sm-6 col-lg-4">
+                                                <label class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="excludedUserIds"
+                                                           value="@person.Id"
+                                                           checked="@(Model.Committees.ExcludedUserIds.Contains(person.Id))" />
+                                                    <span class="form-check-label">
+                                                        @person.FullName
+                                                        <span class="text-secondary">@string.Join(", ", person.Roles.Select(DisplayText.Humanise))</span>
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        }
+                                    </div>
+                                    <small class="form-hint">
+                                        Ticked means they will not be offered when a committee is assigned.
+                                    </small>
+                                }
+                            </div>
+
+                            <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Save committee rules</button>
                             </div>
                         </form>
