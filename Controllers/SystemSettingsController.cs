@@ -17,7 +17,6 @@ namespace ResearchPublicationManagementSystem.Controllers
     [Authorize(Roles = RoleNames.Admin)]
     public class SystemSettingsController(
         SettingsApiClient settingsApi,
-        IHostEnvironment environment,
         Services.IInstitutionDetails institution) : Controller
     {
         [HttpGet]
@@ -60,10 +59,12 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.Deadlines = deadlines.Data!;
             model.Storage = storage.Data!;
 
-            // Asked of this process rather than of the API: the frontend and the API run in the
-            // same environment, and hiding a choice the API would refuse is better than offering
-            // it and reporting the refusal.
-            model.CanOpenRegistration = environment.IsDevelopment();
+            // The API's answer, not this application's guess. It used to ask its own environment,
+            // on the assumption that the two run together; deployed as separate services that
+            // assumption broke, and the hosted testing deployment greyed out a choice the API
+            // would have accepted. Hiding a choice the API would refuse is still right, but only
+            // the API knows which those are.
+            model.CanOpenRegistration = access.Data!.CanOpenRegistration;
 
             return View(model);
         }

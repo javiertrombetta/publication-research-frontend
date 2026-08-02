@@ -55,8 +55,13 @@
                     <div id="student-fields" class="d-none">
                         <div class="mb-3">
                             <label asp-for="StudentIdNumber" class="form-label mb-2">Student ID</label>
-                            <input asp-for="StudentIdNumber" class="form-control" placeholder="e.g. AIS123456" />
+                            <input asp-for="StudentIdNumber" class="form-control" placeholder="20260204"
+                                   inputmode="numeric" />
                             <span asp-validation-for="StudentIdNumber" class="text-danger"></span>
+                            <small class="form-hint">
+                                Year and month you were admitted, then your place in that month's
+                                intake. February 2026, fourth to arrive, is 20260204.
+                            </small>
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-6">

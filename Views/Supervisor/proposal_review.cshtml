@@ -47,11 +47,11 @@ else
                         <span class="badge @(proposal.RespondByHasPassed ? "bg-warning-lt" : "bg-secondary-lt")">
                             @if (proposal.RespondByHasPassed)
                             {
-                                <text>Answer was due @by.ToString("dddd d MMMM, HH:mm")</text>
+                                @:Answer was due @by.ToString("dddd d MMMM, HH:mm")
                             }
                             else
                             {
-                                <text>Answer by @by.ToString("dddd d MMMM, HH:mm")</text>
+                                @:Answer by @by.ToString("dddd d MMMM, HH:mm")
                             }
                         </span>
                     </div>
