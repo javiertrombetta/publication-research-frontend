@@ -146,7 +146,9 @@ namespace ResearchPublicationManagementSystem.Controllers
             }
 
             model.Members = [.. (people.Data ?? [])
-                .Where(u => !u.Roles.Contains(RoleNames.Student))
+                // Students are excluded because a committee judges their work, and Staff because it is the
+                // placeholder an account holds before it has a role: there is nobody to ask yet.
+                .Where(u => !u.Roles.Contains(RoleNames.Student) && !u.Roles.Contains(RoleNames.Staff))
                 .OrderBy(u => u.LastName).ThenBy(u => u.FirstName)];
 
             // Only needed as a fallback: publications opened before the figures were recorded
