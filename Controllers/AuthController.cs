@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ResearchPublicationManagementSystem.Common;
 using ResearchPublicationManagementSystem.Infrastructure.Api;
 using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
+using ResearchPublicationManagementSystem.Infrastructure.Auth;
 using ResearchPublicationManagementSystem.Models;
 using ResearchPublicationManagementSystem.Services;
 
@@ -13,7 +15,8 @@ namespace ResearchPublicationManagementSystem.Controllers
         DepartmentsApiClient departmentsApiClient,
         NotificationsApiClient notificationsApiClient,
         IInstitutionDetails institutionDetails,
-        IAuthCookieService authCookieService) : Controller
+        IAuthCookieService authCookieService,
+        MicrosoftSsoOptions microsoftSso) : Controller
     {
         // GET: /Auth/home
         [HttpGet]
@@ -26,7 +29,76 @@ namespace ResearchPublicationManagementSystem.Controllers
             }
 
             ViewData["ReturnUrl"] = returnUrl;
-            return View(new LoginViewModel());
+            return View(new LoginViewModel { MicrosoftSignInAvailable = microsoftSso.IsConfigured });
+        }
+
+        /// <summary>
+        /// Hands the person to Microsoft to sign in against the institution. They come back to
+        /// <see cref="MicrosoftCallback"/>.
+        /// </summary>
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public IActionResult SignInWithMicrosoft(string? returnUrl = null)
+        {
+            if (!microsoftSso.IsConfigured)
+            {
+                // Nothing is configured, so there is nowhere to send them. Said plainly rather than
+                // as a redirect loop to an identity provider that does not exist here.
+                TempData["ErrorMessage"] =
+                    "Signing in with a Microsoft account is not set up on this site. Use your password.";
+                return RedirectToAction(nameof(home));
+            }
+
+            var callback = Url.Action(nameof(MicrosoftCallback), "Auth",
+                returnUrl is not null && Url.IsLocalUrl(returnUrl) ? new { returnUrl } : null);
+
+            return Challenge(new AuthenticationProperties { RedirectUri = callback },
+                MicrosoftSso.Scheme);
+        }
+
+        /// <summary>
+        /// Back from Microsoft. Being known to the institution is not yet being signed in here, so
+        /// the token Entra issued is traded with the API for this application's own, and it is
+        /// those that become the session. A person who arrives this way ends up holding exactly
+        /// what a person who typed a password holds.
+        /// </summary>
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> MicrosoftCallback(string? returnUrl = null)
+        {
+            if (!microsoftSso.IsConfigured) return RedirectToAction(nameof(home));
+
+            var handover = await HttpContext.AuthenticateAsync(MicrosoftSso.HandoverScheme);
+            var entraToken = handover.Succeeded ? handover.Properties?.GetTokenValue("access_token") : null;
+
+            // The handover cookie has done its work either way. Left behind it would be a second,
+            // quieter way of being half signed in.
+            await HttpContext.SignOutAsync(MicrosoftSso.HandoverScheme);
+
+            if (string.IsNullOrWhiteSpace(entraToken))
+            {
+                TempData["ErrorMessage"] = "Microsoft did not return a usable sign-in. Try again, or use your password.";
+                return RedirectToAction(nameof(home));
+            }
+
+            var result = await authApiClient.AzureSsoExchangeAsync(entraToken);
+            if (!result.Success || result.Data is null)
+            {
+                TempData["ErrorMessage"] = result.ErrorMessage
+                    ?? "That Microsoft account is not recognised here. Use your password, or ask an administrator to invite you.";
+                return RedirectToAction(nameof(home));
+            }
+
+            await authCookieService.SignInAsync(HttpContext, result.Data);
+            await AnnounceUnreadNotificationsAsync();
+
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
+            return RedirectToLandingPage(result.Data.User.Roles);
         }
 
         [HttpPost]
@@ -37,6 +109,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             if (!ModelState.IsValid)
             {
                 ViewData["ReturnUrl"] = returnUrl;
+                model.MicrosoftSignInAvailable = microsoftSso.IsConfigured;
                 return View("home", model);
             }
 
@@ -45,6 +118,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             {
                 ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Login failed.");
                 ViewData["ReturnUrl"] = returnUrl;
+                model.MicrosoftSignInAvailable = microsoftSso.IsConfigured;
                 return View("home", model);
             }
 

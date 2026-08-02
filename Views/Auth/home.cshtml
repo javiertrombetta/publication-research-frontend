@@ -42,6 +42,22 @@
                     <button type="submit" class="btn btn-primary w-100">Sign in</button>
                 </div>
             </form>
+
+            @* Shown only where this deployment has actually been given a tenant, an application and
+               the API's scope. Half-configured sign-on that fails at Microsoft is worse than a
+               button that was never offered. External committee members are outside the institution
+               by definition and always sign in with a password, whatever is set here. *@
+            @if (Model.MicrosoftSignInAvailable)
+            {
+                <div class="hr-text hr-text-center mt-4">or</div>
+
+                <form asp-controller="Auth" asp-action="SignInWithMicrosoft" method="post">
+                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        Sign in with your AIS account
+                    </button>
+                </form>
+            }
         </div>
     </div>
 
