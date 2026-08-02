@@ -26,48 +26,17 @@ namespace ResearchPublicationManagementSystem.Models
 
         protected abstract string QueueAction { get; }
 
-        /// <summary>
-        /// Which role the reader has narrowed the listing to, if any. Empty means the whole
-        /// department, whoever each publication happens to be waiting on.
-        /// </summary>
-        public string? WaitingOn { get; set; }
-
-        public bool HasWaitingOn => !string.IsNullOrWhiteSpace(WaitingOn);
-
         public Dictionary<string, string?> RouteValues()
         {
             var values = new Dictionary<string, string?>();
             if (!string.IsNullOrWhiteSpace(Sort)) values["sort"] = Sort;
             if (Descending) values["desc"] = "true";
             if (HasSearch) values["search"] = Search;
-            if (HasWaitingOn) values["waitingOn"] = WaitingOn;
             return values;
         }
 
         public Dictionary<string, string?> ClearSearchRoute() =>
             RouteValues().Where(v => v.Key != "search").ToDictionary(v => v.Key, v => v.Value);
-
-        /// <summary>
-        /// Where Clear goes on a listing that can be narrowed two ways: back to everything, still
-        /// in the order the reader chose. Clearing only the term leaves a role filter in place and
-        /// the list looking just as short as before.
-        /// </summary>
-        public Dictionary<string, string?> ClearFiltersRoute() =>
-            RouteValues()
-                .Where(v => v.Key is not ("search" or "waitingOn"))
-                .ToDictionary(v => v.Key, v => v.Value);
-
-        /// <summary>
-        /// Everything the reader has narrowed the list by, which is what a sort link has to carry
-        /// so that reordering keeps the same rows rather than widening back to the department.
-        /// </summary>
-        private Dictionary<string, string?> FilterRoute()
-        {
-            var values = new Dictionary<string, string?>();
-            if (HasSearch) values["search"] = Search;
-            if (HasWaitingOn) values["waitingOn"] = WaitingOn;
-            return values;
-        }
 
         public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
         {
@@ -78,7 +47,7 @@ namespace ResearchPublicationManagementSystem.Models
             CurrentSort = Sort,
             CurrentDescending = Descending,
             DescendingFirst = descendingFirst,
-            RouteValues = FilterRoute()
+            RouteValues = HasSearch ? new Dictionary<string, string?> { ["search"] = Search } : []
         };
     }
 

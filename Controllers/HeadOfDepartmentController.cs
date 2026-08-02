@@ -23,20 +23,17 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         [HttpGet]
         public async Task<IActionResult> Head_of_Department_dashboard(
-            int page = 1, string? sort = null, bool desc = false, string? search = null,
-            string? waitingOn = null)
+            int page = 1, string? sort = null, bool desc = false, string? search = null)
         {
             var model = new HeadOfDepartmentDashboardViewModel
             {
                 Sort = sort ?? "started",
                 Descending = desc,
-                Search = search,
-                WaitingOn = waitingOn
+                Search = search
             };
 
             var containers = await containersApi.GetInMyDepartmentAsync(
-                page: page, sort: sort ?? "started", descending: desc, search: search,
-                waitingOn: waitingOn);
+                page: page, sort: sort ?? "started", descending: desc, search: search);
 
             if (!containers.Success)
             {

@@ -19,21 +19,7 @@ public static class RoleNames
     /// </summary>
     public const string EvaluationCommittee = "EvaluationCommittee";
 
-    /// <summary>
-    /// Also not an Identity role: the answer to "whose turn is it" when it is nobody's, either
-    /// because the publication is finished or because it sits between stages with no move
-    /// outstanding. Mirrors the API, which is what the "waiting on" filter sends it to.
-    /// </summary>
-    public const string Nobody = "Nobody";
 
-    /// <summary>
-    /// Every answer the "waiting on" question can have, in workflow order, so the filter offering
-    /// them lists them the way the pipeline runs rather than alphabetically.
-    /// </summary>
-    public static readonly string[] WaitingOnAnswers =
-    [
-        Student, Supervisor, Coordinator, HeadOfDepartment, Admin, EvaluationCommittee, Nobody
-    ];
 
     /// <summary>
     /// Everyone who may sit on an evaluation committee, and so everyone the committee screens have
