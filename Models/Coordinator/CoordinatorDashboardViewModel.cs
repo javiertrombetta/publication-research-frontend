@@ -51,13 +51,29 @@ namespace ResearchPublicationManagementSystem.Models
         public string? Sort { get; set; }
         public bool Descending { get; set; }
 
+        /// <summary>
+        /// One term across the student, the title and the abstract, applied by the API so it
+        /// narrows the whole listing rather than the ten rows already on screen.
+        /// </summary>
+        public string? Search { get; set; }
+
+        public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
+
         public Dictionary<string, string?> RouteValues()
         {
             var values = new Dictionary<string, string?>();
             if (!string.IsNullOrWhiteSpace(Sort)) values["sort"] = Sort;
             if (Descending) values["desc"] = "true";
+            if (HasSearch) values["search"] = Search;
             return values;
         }
+
+        /// <summary>
+        /// Where Clear goes: this listing again, without the term and still in the order the reader
+        /// chose. Clearing a search should widen the list, not reorder what is left.
+        /// </summary>
+        public Dictionary<string, string?> ClearSearchRoute() =>
+            RouteValues().Where(v => v.Key != "search").ToDictionary(v => v.Key, v => v.Value);
 
         /// <summary>
         /// One clickable heading. Built per column rather than through the shared bar, because
@@ -71,7 +87,8 @@ namespace ResearchPublicationManagementSystem.Models
             Label = label,
             CurrentSort = Sort,
             CurrentDescending = Descending,
-            DescendingFirst = descendingFirst
+            DescendingFirst = descendingFirst,
+            RouteValues = HasSearch ? new Dictionary<string, string?> { ["search"] = Search } : []
         };
 
         public int ActionsWaiting =>

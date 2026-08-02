@@ -110,7 +110,7 @@ else
         </div>
     </div>
 
-    @if (Model.PublicationsTotal == 0)
+    @if (Model.PublicationsTotal == 0 && !Model.HasSearch)
     {
         <div class="card">
             <div class="card-body text-center py-5">
@@ -124,6 +124,56 @@ else
     }
     else
     {
+        @* One box for the whole listing. A coordinator with two hundred publications was paging to
+           find the one they were thinking of. Applied by the API, like the ordering, so it narrows
+           every publication rather than the ten already on screen. *@
+        <div class="card mb-3">
+            <div class="card-body py-3">
+                <form method="get" asp-controller="Coordinator" asp-action="Coordinator_dashboard"
+                      class="row g-2 align-items-center">
+
+                    @* The order survives a search, so narrowing the list does not silently reorder it. *@
+                    <input type="hidden" name="sort" value="@Model.Sort" />
+                    <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+
+                    <div class="col-12 col-md">
+                        <input type="search" name="search" value="@Model.Search" class="form-control"
+                               placeholder="Search by student or publication" aria-label="Search" />
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                    <div class="col-auto">
+                        <a asp-controller="Coordinator" asp-action="Coordinator_dashboard"
+                           asp-all-route-data="Model.ClearSearchRoute()"
+                           class="btn btn-outline-secondary">Clear</a>
+                    </div>
+                    <div class="col-12 col-md-auto ms-md-auto text-secondary small">
+                        <strong>@Model.PublicationsTotal</strong>
+                        @(Model.PublicationsTotal == 1 ? "publication" : "publications") in progress,
+                        @Model.Publications.Count on this page.
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        if (Model.Publications.Count == 0)
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+                    <p class="text-secondary mb-4">
+                        No publication in progress has that student or title.
+                    </p>
+                    <a asp-controller="Coordinator" asp-action="Coordinator_dashboard" class="btn btn-primary">
+                        Show them all
+                    </a>
+                </div>
+            </div>
+        }
+        else
+        {
+
         <div class="card">
             <div class="table-responsive">
                 @{
@@ -191,9 +241,10 @@ else
             </div>
         </div>
 
-        @if (Model.Pager is not null)
-        {
-            <partial name="_Pager" model="Model.Pager" />
+            @if (Model.Pager is not null)
+            {
+                <partial name="_Pager" model="Model.Pager" />
+            }
         }
     }
 }
