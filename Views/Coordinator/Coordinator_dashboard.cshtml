@@ -148,12 +148,16 @@ else
                            asp-all-route-data="Model.ClearSearchRoute()"
                            class="btn btn-outline-secondary">Clear</a>
                     </div>
-                    <div class="col-12 col-md-auto ms-md-auto text-secondary small">
-                        <strong>@Model.PublicationsTotal</strong>
-                        @(Model.PublicationsTotal == 1 ? "publication" : "publications") in progress,
-                        @Model.Publications.Count on this page.
-                    </div>
                 </form>
+
+                @* On its own line under the box rather than out at the end of the row. It is a
+                   statement about the list below, not another control, and sitting level with the
+                   buttons it read as one. *@
+                <div class="text-secondary small mt-2">
+                    <strong>@Model.PublicationsTotal</strong>
+                    @(Model.PublicationsTotal == 1 ? "publication" : "publications") in progress,
+                    @Model.Publications.Count on this page.
+                </div>
             </div>
         </div>
 
