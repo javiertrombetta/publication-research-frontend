@@ -8,6 +8,7 @@ using ResearchPublicationManagementSystem.Infrastructure.Api;
 using ResearchPublicationManagementSystem.Infrastructure.Http;
 using ResearchPublicationManagementSystem.Infrastructure.Options;
 using ResearchPublicationManagementSystem.Services;
+using ResearchPublicationManagementSystem.Infrastructure.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,7 +26,8 @@ builder.Services.AddOptions<ApiOptions>().Bind(builder.Configuration.GetSection(
 builder.Services.AddOptions<InstitutionOptions>().Bind(builder.Configuration.GetSection(InstitutionOptions.SectionName));
 
 // ---------- Cookie authentication (holds the backend JWT access/refresh tokens as claims) ----------
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+var authenticationBuilder = builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/Auth/home";
@@ -36,6 +38,60 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
     });
+
+// ---------- Signing in with an institutional Microsoft account ----------
+//
+// Registered only where the deployment has been given a tenant, an application and the API's scope.
+// Where it has not, none of this exists: no scheme, no redirect, no button, and the site signs
+// people in with a password exactly as before.
+//
+// The Microsoft sign-in does not become the session. It ends in a short-lived cookie of its own
+// that carries the token Entra issued, which AuthController trades with the API for this
+// application's own tokens, and it is those that become the session. So a person who arrives this
+// way holds the same claims, roles and refresh token as one who typed a password, and everything
+// downstream is unaware there was ever a difference.
+var microsoftSso = builder.Configuration.GetSection(MicrosoftSsoOptions.SectionName)
+    .Get<MicrosoftSsoOptions>() ?? new MicrosoftSsoOptions();
+
+builder.Services.AddSingleton(microsoftSso);
+
+if (microsoftSso.IsConfigured)
+{
+    authenticationBuilder
+        .AddCookie(MicrosoftSso.HandoverScheme, options =>
+        {
+            // Alive only for the moment between coming back from Microsoft and being signed in
+            // here. It is not a session and must never be mistaken for one.
+            options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        })
+        .AddOpenIdConnect(MicrosoftSso.Scheme, options =>
+        {
+            options.SignInScheme = MicrosoftSso.HandoverScheme;
+            options.Authority = microsoftSso.Authority;
+            options.ClientId = microsoftSso.ClientId;
+            options.ClientSecret = microsoftSso.ClientSecret;
+
+            // Authorisation code flow. The implicit alternatives hand tokens to the browser, and
+            // the token this needs is one the server uses, not the browser.
+            options.ResponseType = "code";
+            options.UsePkce = true;
+            options.SaveTokens = true;
+            options.CallbackPath = MicrosoftSso.CallbackPath;
+            options.GetClaimsFromUserInfoEndpoint = false;
+
+            options.Scope.Clear();
+            options.Scope.Add("openid");
+            options.Scope.Add("profile");
+            options.Scope.Add("email");
+            options.Scope.Add("offline_access");
+            // The one that matters: without the API's own scope Entra issues a token for this site,
+            // and the API is right to refuse it.
+            options.Scope.Add(microsoftSso.ApiScope);
+        });
+}
 
 // Secure by default: every endpoint requires an authenticated user unless it explicitly opts out
 // with [AllowAnonymous]. Without this, a controller that simply forgets [Authorize] is wide open,

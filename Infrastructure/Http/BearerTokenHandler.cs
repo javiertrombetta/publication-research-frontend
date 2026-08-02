@@ -34,7 +34,10 @@ public class BearerTokenHandler(IHttpContextAccessor httpContextAccessor, IAuthC
             }
         }
 
-        if (accessToken is not null)
+        // A header the caller set itself wins. The single sign-on handover sends a Microsoft token
+        // to be exchanged for one of ours, and replacing it with the session's own token would send
+        // the wrong credential to the one endpoint whose whole job is to read the other.
+        if (accessToken is not null && request.Headers.Authorization is null)
         {
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         }

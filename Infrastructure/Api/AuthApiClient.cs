@@ -27,4 +27,15 @@ public class AuthApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
 
     public Task<ApiResult<object?>> ChangePasswordAsync(ChangePasswordRequestDto request, string accessToken, CancellationToken ct = default) =>
         PostJsonAsync<object?>("api/auth/change-password", request, ct, accessToken);
+
+    /// <summary>
+    /// Trades a token Microsoft Entra issued for this application's own. The caller has proved who
+    /// they are to the institution; this asks the API who that is here.
+    ///
+    /// The token goes in as the bearer because that is what the endpoint authenticates against: it
+    /// is guarded by the Entra scheme rather than by ours. Where no tenant is configured on the API
+    /// the answer is a plain 401 saying so.
+    /// </summary>
+    public Task<ApiResult<AuthResponseDto>> AzureSsoExchangeAsync(string entraAccessToken, CancellationToken ct = default) =>
+        PostJsonAsync<AuthResponseDto>("api/auth/azure-sso/exchange", new { }, ct, entraAccessToken);
 }
