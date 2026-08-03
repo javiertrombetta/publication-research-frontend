@@ -143,11 +143,18 @@ namespace ResearchPublicationManagementSystem.Models
             Approval?.Status == EthicsStatus.PendingSupervisorDecision;
 
         /// <summary>
-        /// True only while a document is still awaiting its first review. Once the supervisor
-        /// has accepted them the status is unchanged but the work is the coordinator's.
+        /// True only while a document is still awaiting its first review. Once the supervisor has
+        /// accepted them the status is unchanged but the work is the coordinator's, which is what
+        /// the document states say.
+        ///
+        /// The stage has to be open as well. A document can be left at pending on a stage that has
+        /// since closed, and going by the documents alone the screen offered a decision the API
+        /// would refuse: buttons that do nothing but lose you what you typed.
         /// </summary>
         public bool NeedsDocumentReview =>
-            Documents.Any(d => d.Status == EthicsDocumentStatus.PendingReview);
+            Approval?.Status == EthicsStatus.PendingVerification
+            && Approval.FinalDecisionAt is null
+            && Documents.Any(d => d.Status == EthicsDocumentStatus.PendingReview);
     }
 
     /// <summary>Papers waiting on this supervisor's review.</summary>
