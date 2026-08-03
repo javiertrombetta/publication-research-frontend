@@ -175,11 +175,12 @@ else
                     <div class="mb-3">
                         <label class="form-label" for="paper-comments-@item.Paper.Id">Comments</label>
                         <textarea id="paper-comments-@item.Paper.Id" name="comments" rows="2" class="form-control"
-                                  placeholder="Your decision and why"></textarea>
+                                  placeholder="Required when sending it back"></textarea>
                     </div>
                     <div class="btn-list">
                         <button type="submit" name="accept" value="true" class="btn btn-primary">Accept the paper</button>
-                        <button type="submit" name="accept" value="false" class="btn btn-outline-danger">Send back for revision</button>
+                        <button type="submit" name="accept" value="false" class="btn btn-outline-danger"
+                                data-rpms-needs-comments="paper-comments-@item.Paper.Id">Send back for revision</button>
                     </div>
                 </form>
             </div>
