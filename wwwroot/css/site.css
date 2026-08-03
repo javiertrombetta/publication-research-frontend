@@ -41,8 +41,8 @@
 
     /* The handle on the panel's edge. Upright and narrow, and named here because half of the
        width is also how far it hangs over whatever it is sitting on. */
-    --rpms-handle-width: 26px;
-    --rpms-handle-height: 60px;
+    --rpms-handle-width: 32px;
+    --rpms-handle-height: 76px;
     /* ---------- Navigation ---------- */
 
     /* The one fill in the chrome. Two controls wear it, the burger when the sidebar is shut and
@@ -729,7 +729,7 @@ aside {
        both states, because half a disc is half a disc wherever the panel happens to be, and a
        gutter that changed width would make the page shuffle every time the panel moved. */
     .rpms-shell main {
-        padding-left: 20px;
+        padding-left: 24px;
     }
 
     /* ---------- While the handle is being dragged ----------
