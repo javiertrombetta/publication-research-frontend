@@ -120,9 +120,14 @@
             <!-- User menu -->
             <div class="nav-item dropdown">
 
+                @* display="static" turns Popper off. It writes its own transform into the
+                   style attribute to place the menu, and the menu now slides on that very
+                   property; placing it in the stylesheet instead leaves the transform free and
+                   pins the panel to the bar rather than to this link. *@
                 <a href="#"
                    class="nav-link d-flex align-items-center px-2"
                    data-bs-toggle="dropdown"
+                   data-bs-display="static"
                    role="button"
                    aria-expanded="false">
 
@@ -155,7 +160,12 @@
 
                 </a>
 
-                <div class="dropdown-menu dropdown-menu-end">
+                @* Two elements, because one cannot both move and hide the part of itself that
+                   has not arrived. The outer is the opening in the bar: no surface of its own, and
+                   clipped at its top edge. The inner is the panel, and it is the thing that
+                   travels. See .rpms-user-menu in site.css. *@
+                <div class="dropdown-menu dropdown-menu-end rpms-user-menu">
+                  <div class="rpms-user-menu-panel">
 
                     @if (isStudent)
                     {
@@ -187,6 +197,7 @@
                         </button>
                     </form>
 
+                  </div>
                 </div>
 
             </div>

@@ -43,6 +43,10 @@
        tab anybody sees, and that half is also how far it reaches over the page beside it. */
     --rpms-handle-width: 44px;
     --rpms-handle-height: 76px;
+
+    /* Long enough that the user menu is watched sliding out from behind the bar rather than
+       simply found open. */
+    --rpms-menu-speed: .35s;
     /* ---------- Navigation ---------- */
 
     /* The one fill in the chrome. Two controls wear it, the burger when the sidebar is shut and
@@ -805,6 +809,88 @@ aside {
         width: 40px;
         height: 40px;
     }
+
+/* ---------- The user menu ----------
+
+   It comes out from under the top bar. Two elements do that, because one cannot both travel and
+   hide the part of itself that has not arrived yet.
+
+   .rpms-user-menu is the opening: it carries no surface of its own, sits with its top edge on the
+   bar's bottom edge, and is clipped there. The other three sides of that clip are pushed outwards
+   so the panel's shadow is not cut off with it.
+
+   .rpms-user-menu-panel is the panel, and it is what moves: parked a full height up, behind the
+   bar, and slid down into the opening. Popper is off (data-bs-display on the toggle), so the
+   transform is ours to animate and the placement is written here.
+
+   None of it can be switched on with display, because there is nothing to animate between none and
+   block. It is laid out at all times and taken out of reach with visibility instead, which changes
+   with no duration: at the end when closing, so the panel is still there to watch on the way up,
+   and at once when opening. */
+.rpms-user-menu.dropdown-menu {
+    display: block;
+    visibility: hidden;
+
+    /* Under the bar, not under the link that opens it: the link is shorter than the bar, and a
+       panel appearing halfway up it would be coming out of nothing. */
+    position: absolute;
+    top: 100%;
+    left: auto;
+    right: 0;
+    margin: 0;
+
+    padding: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    clip-path: inset(0 -32px -32px 0);
+
+    transition: visibility 0s linear var(--rpms-menu-speed);
+}
+
+    .rpms-user-menu.dropdown-menu.show {
+        visibility: visible;
+        transition: visibility 0s;
+    }
+
+.rpms-user-menu-panel {
+    background: var(--rpms-surface);
+    border: 1px solid var(--rpms-border);
+    border-radius: var(--rpms-radius);
+    box-shadow: 0 .5rem 1rem var(--rpms-shadow-colour-strong);
+    padding: .5rem 0;
+    overflow: hidden;
+
+    transform: translateY(-100%);
+    transition: transform var(--rpms-menu-speed) var(--rpms-sidebar-ease);
+}
+
+    .rpms-user-menu.show .rpms-user-menu-panel {
+        transform: translateY(0);
+    }
+
+/* As wide as what opens it, so the menu and the name above it read as one control rather than two
+   things of different sizes. Only where the name is actually shown: narrower than this the bar
+   keeps the avatar alone, and a menu the width of an avatar would be unreadable. */
+@media (min-width: 768px) {
+    .rpms-user-menu.dropdown-menu {
+        width: 100%;
+        min-width: 0;
+    }
+
+        /* A short name makes a narrow menu, and Bootstrap would rather overflow an item than
+           wrap it. */
+        .rpms-user-menu .dropdown-item {
+            white-space: normal;
+        }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rpms-user-menu.dropdown-menu,
+    .rpms-user-menu-panel {
+        transition: none;
+    }
+}
 
 /* ==========================================================
    Cards
