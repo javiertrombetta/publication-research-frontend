@@ -50,14 +50,20 @@ public static class Paging
         pageSize > 0 ? pageSize.ToString() : null;
 
     /// <summary>Builds the pager from what the API said about the page it returned.</summary>
+    /// <param name="pageKey">
+    /// What the action calls its page parameter. Defaults to the usual name; a screen that pages
+    /// two things has to name each, and one whose parameter is called anything else has to say so
+    /// or the link it builds is a parameter the action never reads and the page never turns.
+    /// </param>
     public static Models.PagerViewModel PagerFor<T>(
         Infrastructure.Api.Dto.PagedResultDto<T>? result, string controller, string action,
-        Dictionary<string, string?>? routeValues = null) => new()
+        Dictionary<string, string?>? routeValues = null, string pageKey = "page") => new()
         {
             Controller = controller,
             Action = action,
             Page = result?.Page ?? 1,
             TotalPages = result?.TotalPages ?? 1,
-            RouteValues = routeValues ?? []
+            RouteValues = routeValues ?? [],
+            PageKey = pageKey
         };
 }

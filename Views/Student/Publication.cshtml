@@ -73,15 +73,22 @@
     </div>
 }
 
-@* Two views of the same publication: where it stands now, and how it got there. *@
+@* Two views of the same publication: where it stands now, and how it got there.
+
+   Which one is open is decided here rather than left to the browser, because paging the trail is
+   a fresh request: marked in the markup, a page turned in the history came back with Progress
+   open and the reader was put back at the top of a screen they had already left. *@
+@{
+    var historyIsOpen = Model.HistoryIsOpen;
+}
 <ul class="nav nav-tabs mb-4" data-bs-toggle="tabs" role="tablist">
     <li class="nav-item" role="presentation">
-        <a href="#publication-progress" class="nav-link active" data-bs-toggle="tab"
-           role="tab" aria-selected="true">Progress</a>
+        <a href="#publication-progress" class="nav-link @(historyIsOpen ? "" : "active")" data-bs-toggle="tab"
+           role="tab" aria-selected="@(historyIsOpen ? "false" : "true")">Progress</a>
     </li>
     <li class="nav-item" role="presentation">
-        <a href="#publication-history" class="nav-link" data-bs-toggle="tab"
-           role="tab" aria-selected="false">
+        <a href="#publication-history" class="nav-link @(historyIsOpen ? "active" : "")" data-bs-toggle="tab"
+           role="tab" aria-selected="@(historyIsOpen ? "true" : "false")">
             Activity history
             @if (Model.History.Count > 0)
             {
@@ -92,7 +99,7 @@
 </ul>
 
 <div class="tab-content">
-<div class="tab-pane active show" id="publication-progress" role="tabpanel">
+<div class="tab-pane @(historyIsOpen ? "" : "active show")" id="publication-progress" role="tabpanel">
 
 <!-- Stage overview -->
 <div class="row row-cards mb-4">
@@ -378,7 +385,7 @@
 
 </div><!-- /progress tab -->
 
-<div class="tab-pane" id="publication-history" role="tabpanel">
+<div class="tab-pane @(historyIsOpen ? "active show" : "")" id="publication-history" role="tabpanel">
     @{
         var historyModel = new ResearchPublicationManagementSystem.Models.ActivityHistoryViewModel
         {
