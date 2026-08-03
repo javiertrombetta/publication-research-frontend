@@ -928,10 +928,10 @@ document.addEventListener('submit', function (event) {
 // is put down. Nothing is guessed from how far the pointer travelled, which is the usual way of
 // telling a click from a drag and the reason drags of a few pixels open pages nobody asked for.
 //
-// The order is kept in this browser, next to the sidebar's open-or-shut state, which is the same
-// kind of thing: how one person likes their own chrome arranged. It is not sent anywhere.
+// The order belongs to the person, not to the machine. It arrives on the page from their account
+// by way of the session, and a change is posted straight back: kept in this browser instead, one
+// person's arrangement was handed to whoever signed in on that browser next.
 (function () {
-    var ORDER_KEY = 'rpms.sidebar.order';
     var HOLD_MS = 400;
     var SLIP = 8;              // How far a finger may wander before a hold is read as a scroll.
 
@@ -948,21 +948,64 @@ document.addEventListener('submit', function (event) {
         return link.getAttribute('href') || '';
     }
 
+    // Written into the markup by the server, from this person's account. Space-separated, since a
+    // route has no spaces in it.
     function readOrder() {
-        try {
-            var raw = localStorage.getItem(ORDER_KEY);
-            var parsed = raw ? JSON.parse(raw) : null;
-            return Array.isArray(parsed) ? parsed : [];
-        } catch (e) {
-            return [];                                  // Private browsing, or somebody's edit.
-        }
+        return (nav.getAttribute('data-rpms-nav-order') || '').split(' ').filter(Boolean);
     }
 
+    // Posted and forgotten. The menu is already in the order it was just put in; what this records
+    // is that it should still be that way tomorrow, and interrupting somebody to say a preference
+    // failed to save would cost more than the preference is worth.
+    //
+    // After a pause, and only the last arrangement. Somebody nudging an item three places up with
+    // the keyboard makes three arrangements in a moment, and sending all three is a race the
+    // slowest wins: the order that stuck was whichever request the server happened to finish
+    // last, which was not the one on the screen.
+    var pending = null;
+
     function saveOrder() {
-        try {
-            localStorage.setItem(ORDER_KEY, JSON.stringify(items().map(keyOf)));
-        } catch (e) { /* The arrangement just will not outlive the page. */ }
+        nav.setAttribute('data-rpms-nav-order', items().map(keyOf).join(' '));
+
+        window.clearTimeout(pending);
+        pending = window.setTimeout(send, 400);
     }
+
+    function send() {
+        var url = nav.getAttribute('data-rpms-nav-order-url');
+        if (!url) return;
+
+        var token = document.querySelector('input[name="__RequestVerificationToken"]');
+        var headers = { 'Content-Type': 'application/json' };
+        if (token) headers['RequestVerificationToken'] = token.value;
+
+        fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: headers,
+            body: JSON.stringify(items().map(keyOf))
+        }).catch(function () { /* Still arranged. Just not remembered. */ });
+    }
+
+    // A pause is no use to somebody who arranges the menu and closes the tab. sendBeacon goes out
+    // whether or not the page survives long enough to hear back, which is all this needs.
+    window.addEventListener('pagehide', function () {
+        if (!pending) return;
+        window.clearTimeout(pending);
+        pending = null;
+
+        var url = nav.getAttribute('data-rpms-nav-order-url');
+        if (!url || !navigator.sendBeacon) return;
+
+        // No header goes with a beacon, so the token travels in the body, where the framework also
+        // looks for it.
+        var token = document.querySelector('input[name="__RequestVerificationToken"]');
+        var form = new FormData();
+        form.append('items', items().map(keyOf).join(' '));
+        if (token) form.append('__RequestVerificationToken', token.value);
+
+        navigator.sendBeacon(url, form);
+    });
 
     // Applied on load. An item nobody has an opinion about yet, because the menu has grown or this
     // person has a role they did not have before, keeps its place at the end rather than being
