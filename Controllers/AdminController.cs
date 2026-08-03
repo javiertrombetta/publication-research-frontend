@@ -166,7 +166,8 @@ namespace ResearchPublicationManagementSystem.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AssignCommittee(
-            Guid publicationId, Guid[] memberUserIds, int minApprovalsRequired, string? comments)
+            Guid publicationId, Guid[] memberUserIds, int minApprovalsRequired, string? comments,
+            bool overrideComposition = false)
         {
             if (memberUserIds.Length == 0)
             {
@@ -181,12 +182,24 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return RedirectToAction(nameof(assigning_committee_members));
             }
 
+            // Departing from the composition this publication was opened under is a decision
+            // somebody owns, so it does not go through on a blank reason. Caught here as well as
+            // at the API, since the answer is the same and the person is still on the screen.
+            if (overrideComposition && string.IsNullOrWhiteSpace(comments))
+            {
+                TempData["ErrorMessage"] =
+                    "Say why this publication is being given a committee of a different shape. It stays on the publication's history.";
+                return RedirectToAction(nameof(assigning_committee_members));
+            }
+
             var result = await committeesApi.AssignAsync(publicationId,
-                new AssignCommitteeRequestDto(memberUserIds, minApprovalsRequired, comments ?? string.Empty));
+                new AssignCommitteeRequestDto(memberUserIds, minApprovalsRequired, comments ?? string.Empty,
+                    overrideComposition));
 
             TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
                 ? $"Committee assigned. {memberUserIds.Length} " +
                   (memberUserIds.Length == 1 ? "member has" : "members have") + " been asked to evaluate the paper."
+                  + (overrideComposition ? " The composition you chose, and your reason, are on the publication's history." : string.Empty)
                 : result.ErrorMessage ?? "Could not assign the committee.";
 
             return RedirectToAction(nameof(assigning_committee_members));

@@ -83,6 +83,20 @@ else
                             System settings governs publications opened after the change, not this one.
                         </div>
                         <div class="small mt-1" data-rpms-committee-tally aria-live="polite"></div>
+
+                        @* A publication can turn out to need a committee of its own shape: the
+                           people it needs are not there, or the work asks for one more reader.
+                           Deciding that is the administrator's, and it costs a reason, which is
+                           what somebody reading the history in six months has to go on. Only
+                           offered here, before the committee exists; one already sitting is not
+                           rearranged underneath its members. *@
+                        <label class="form-check mt-2 mb-0">
+                            <input class="form-check-input" type="checkbox" name="overrideComposition" value="true"
+                                   data-rpms-committee-override />
+                            <span class="form-check-label">
+                                Appoint a different composition for this publication
+                            </span>
+                        </label>
                     </div>
                     <div class="row g-2 mb-3">
                         @foreach (var member in Model.Members)
@@ -112,12 +126,16 @@ else
                     <div class="row g-3 align-items-end">
                         <div class="col-12 col-sm-4">
                             <label class="form-label" for="approvals-@item.Paper.Id">Approvals required</label>
+                            @* No ceiling in the markup: with a composition of its own the committee
+                               can be larger or smaller than the recorded one, and a fixed maximum
+                               would refuse a figure that is perfectly good. The submit check counts
+                               it against the members actually chosen, and so does the API. *@
                             <input id="approvals-@item.Paper.Id" name="minApprovalsRequired" type="number"
-                                   min="1" max="@item.RequiredTotal"
+                                   min="1"
                                    value="@Model.CurrentRules?.MinimumApprovals" class="form-control" required />
                         </div>
                         <div class="col-12 col-sm-8">
-                            <label class="form-label" for="assign-comments-@item.Paper.Id">Comments</label>
+                            <label class="form-label" for="assign-comments-@item.Paper.Id" data-rpms-committee-comments-label>Comments</label>
                             <input id="assign-comments-@item.Paper.Id" name="comments" class="form-control"
                                    placeholder="Recorded on the publication's history" />
                         </div>
@@ -138,6 +156,9 @@ else
             document.querySelectorAll('form[action*="AssignCommittee"]').forEach(function (form) {
                 var banner = form.querySelector('[data-rpms-committee-required-reviewers]');
                 var tally = form.querySelector('[data-rpms-committee-tally]');
+                var override = form.querySelector('[data-rpms-committee-override]');
+                var commentsLabel = form.querySelector('[data-rpms-committee-comments-label]');
+                var comments = form.querySelector('input[name="comments"]');
                 var wantedReviewers = parseInt(banner.dataset.rpmsCommitteeRequiredReviewers, 10);
                 var wantedExternal = parseInt(banner.dataset.rpmsCommitteeRequiredExternal, 10);
 
@@ -152,14 +173,24 @@ else
                 function draw() {
                     var have = chosen();
                     var matches = have.reviewers === wantedReviewers && have.external === wantedExternal;
+
                     tally.textContent = 'Chosen: ' + have.reviewers + ' of ' + wantedReviewers + ' reviewers, '
                         + have.external + ' of ' + wantedExternal + ' external.'
-                        + (matches ? ' That is the composition this publication needs.' : '');
-                    tally.classList.toggle('fw-bold', !matches);
+                        + (override.checked
+                            ? ' This publication will be judged by the committee you appoint here.'
+                            : matches ? ' That is the composition this publication needs.' : '');
+                    tally.classList.toggle('fw-bold', !matches && !override.checked);
+
+                    // The comment is the whole of the record for a committee that departs from
+                    // what was agreed, so the field says as much while that is what it is for.
+                    commentsLabel.textContent = override.checked ? 'Why this composition' : 'Comments';
+                    comments.placeholder = override.checked
+                        ? 'Required. Stays on the publication’s history.'
+                        : 'Recorded on the publication’s history';
                 }
 
                 form.addEventListener('change', function (event) {
-                    if (event.target.name === 'memberUserIds') draw();
+                    if (event.target.name === 'memberUserIds' || event.target === override) draw();
                 });
                 draw();
 
@@ -170,10 +201,14 @@ else
                     var problems = [];
                     if (!have.total) {
                         problems.push('Choose at least one committee member.');
-                    } else if (have.reviewers !== wantedReviewers || have.external !== wantedExternal) {
+                    } else if (override.checked && !comments.value.trim()) {
+                        problems.push('Say why this publication is being given a committee of a different shape. '
+                            + 'It stays on the publication’s history.');
+                    } else if (!override.checked && (have.reviewers !== wantedReviewers || have.external !== wantedExternal)) {
                         problems.push('This publication needs ' + wantedReviewers + ' reviewers and ' + wantedExternal
                             + ' external, the composition it was opened under. You have chosen '
-                            + have.reviewers + ' and ' + have.external + '.');
+                            + have.reviewers + ' and ' + have.external
+                            + '. To appoint a different one, tick the box and say why.');
                     } else if (approvals > have.total) {
                         problems.push('You have asked for ' + approvals + ' approvals but chosen only '
                             + have.total + ' member' + (have.total === 1 ? '' : 's') + '.');
@@ -181,6 +216,7 @@ else
 
                     if (!problems.length) return;
                     event.preventDefault();
+                    if (override.checked && !comments.value.trim()) comments.focus();
                     window.rpmsToast('error', problems);
                 });
             });

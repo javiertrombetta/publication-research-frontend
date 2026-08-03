@@ -30,10 +30,12 @@ public record CommitteeDto(
 
 public record CommitteeMemberReviewRequestDto(bool Approve, string Comments);
 
+/// <param name="OverrideComposition">Set when this publication is to have a committee of a different shape from the one it was opened under. The API accepts it only with a reason in Comments.</param>
 public record AssignCommitteeRequestDto(
     IReadOnlyList<Guid> MemberUserIds,
     int MinApprovalsRequired,
-    string Comments);
+    string Comments,
+    bool OverrideComposition = false);
 
 /// <summary>Matches the backend's CommitteeStatus enum values.</summary>
 public static class CommitteeStatus
