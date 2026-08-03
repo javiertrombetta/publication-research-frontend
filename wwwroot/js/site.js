@@ -51,7 +51,12 @@
 
     function apply(collapsed) {
         sidebar.classList.toggle('rpms-sidebar-collapsed', collapsed);
-        // Also drives the burger's morph into an X (see .rpms-burger-* in site.css).
+
+        // The same fact on the root as well. The panel is fixed on a wide screen, so the content
+        // and the footer have to be moved over to leave room for it, and neither is a sibling of
+        // the panel: there is no selector that reaches them from it.
+        root.classList.toggle('rpms-sidebar-shut', collapsed);
+
         toggle.setAttribute('aria-expanded', String(!collapsed));
     }
 
@@ -80,9 +85,9 @@
     // Where the burger sits on a wide screen: halfway down the list, on the sidebar's edge.
     //
     // The list is a different height for every role, so the middle of it is a measurement rather
-    // than a number a stylesheet could hold. Read as a document position and used as a viewport
-    // one, which are the same thing at the top of the page, so it does not matter whether this
-    // runs before or after somebody has scrolled.
+    // than a number a stylesheet could hold. A viewport position, and it stays one: the panel is
+    // stuck under the bar, so the list is in the same place on the screen however far the page has
+    // been scrolled, and so is the handle on its edge.
     var navList = sidebar.querySelector('.rpms-nav');
 
     function placeToggle() {
@@ -91,9 +96,7 @@
         var box = navList.getBoundingClientRect();
         if (!box.height) return;      // Collapsed to nothing on a phone: leave the last figure.
 
-        root.style.setProperty(
-            '--rpms-burger-top',
-            Math.round(box.top + window.scrollY + box.height / 2) + 'px');
+        root.style.setProperty('--rpms-burger-top', Math.round(box.top + box.height / 2) + 'px');
     }
 
     placeToggle();
