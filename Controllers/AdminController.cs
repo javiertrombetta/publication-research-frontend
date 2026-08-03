@@ -154,8 +154,8 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             foreach (var item in model.Items)
             {
-                item.RequiredInternal = item.Paper.RequiredInternalCommitteeMembers
-                                        ?? currentRules.Data?.InternalMembers ?? 0;
+                item.RequiredReviewers = item.Paper.RequiredReviewerMembers
+                                        ?? currentRules.Data?.ReviewerMembers ?? 0;
                 item.RequiredExternal = item.Paper.RequiredExternalCommitteeMembers
                                         ?? currentRules.Data?.ExternalMembers ?? 0;
             }

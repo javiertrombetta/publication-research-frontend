@@ -11,7 +11,7 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
     /// real list rather than one written out again here.
     /// </summary>
     public record CommitteeSettingsDto(
-        int InternalMembers,
+        int ReviewerMembers,
         int ExternalMembers,
         int MinimumApprovals,
         IReadOnlyList<string> CandidateRoles,
@@ -19,7 +19,7 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         IReadOnlyList<string> SelectableRoles);
 
     public record UpdateCommitteeSettingsRequestDto(
-        int InternalMembers,
+        int ReviewerMembers,
         int ExternalMembers,
         int MinimumApprovals,
         IReadOnlyList<string>? CandidateRoles = null,

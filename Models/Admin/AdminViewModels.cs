@@ -19,7 +19,7 @@ namespace ResearchPublicationManagementSystem.Models
     {
         public List<AwaitingCommitteeItem> Items { get; set; } = [];
 
-        /// <summary>Everyone who can sit on a committee, internal and external.</summary>
+        /// <summary>Everyone who can sit on a committee, reviewers and external members.</summary>
         /// <summary>
         /// Who may be appointed, as the API works it out. Not assembled from the directory here:
         /// the rule has several parts and an administrator chooses some of them.
@@ -44,10 +44,10 @@ namespace ResearchPublicationManagementSystem.Models
         /// rather than from today's settings: it recorded the rules in force when it was opened,
         /// and the API will reject a committee that does not match them.
         /// </summary>
-        public int RequiredInternal { get; set; }
+        public int RequiredReviewers { get; set; }
         public int RequiredExternal { get; set; }
 
-        public int RequiredTotal => RequiredInternal + RequiredExternal;
+        public int RequiredTotal => RequiredReviewers + RequiredExternal;
     }
 
     /// <summary>The user directory.</summary>
@@ -128,7 +128,7 @@ namespace ResearchPublicationManagementSystem.Models
             Common.RoleNames.Supervisor,
             Common.RoleNames.Coordinator,
             Common.RoleNames.HeadOfDepartment,
-            Common.RoleNames.InternalCommitteeMember,
+            Common.RoleNames.Reviewer,
             Common.RoleNames.ExternalCommitteeMember,
             Common.RoleNames.Admin
         ];

@@ -73,5 +73,5 @@ public record AwaitingCommitteeDto(
     string Title,
     string Abstract,
     string StudentName,
-    int? RequiredInternalCommitteeMembers,
+    int? RequiredReviewerMembers,
     int? RequiredExternalCommitteeMembers);
