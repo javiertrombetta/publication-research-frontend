@@ -152,15 +152,23 @@ namespace ResearchPublicationManagementSystem.Controllers
         }
 
         /// <summary>
-        /// The supervisor's ethics screen for one publication. Which decision it offers depends on
-        /// where the approval has got to. The requirement ruling comes first, the document check
-        /// only once the student has uploaded them.
+        /// The supervisor's ruling on whether this research needs ethics approval documentation.
+        /// It comes first; the read of the documents is a screen of its own, once the student has
+        /// uploaded them.
+        ///
+        /// Landing here with the documents waiting instead sends you there, and the other way
+        /// round. A link that is one step behind the workflow, from a queue, a notification or a
+        /// bookmark, then opens the decision that is actually due rather than an empty screen.
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> Review_Ethic_assessmentchecklist(Guid id)
         {
             var (model, redirect) = await LoadEthicsAsync(id);
-            return redirect ?? View(model);
+            if (redirect is not null) return redirect;
+
+            return !model.NeedsRequirementDecision && model.NeedsDocumentReview
+                ? RedirectToAction(nameof(Ethic_document_review), new { id })
+                : View(model);
         }
 
         [HttpPost]
@@ -184,11 +192,19 @@ namespace ResearchPublicationManagementSystem.Controllers
                 : RedirectToAction(nameof(Review_Ethic_assessmentchecklist), new { id });
         }
 
+        /// <summary>
+        /// The supervisor's read of the documents the student uploaded: download each one, and
+        /// either pass the set to the coordinator or ask for some of it again.
+        /// </summary>
         [HttpGet]
         public async Task<IActionResult> Ethic_document_review(Guid id)
         {
             var (model, redirect) = await LoadEthicsAsync(id);
-            return redirect ?? View(model);
+            if (redirect is not null) return redirect;
+
+            return !model.NeedsDocumentReview && model.NeedsRequirementDecision
+                ? RedirectToAction(nameof(Review_Ethic_assessmentchecklist), new { id })
+                : View(model);
         }
 
         [HttpPost]
