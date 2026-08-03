@@ -39,6 +39,11 @@
     --rpms-sidebar-speed: .45s;
     --rpms-sidebar-ease: cubic-bezier(.22, 1, .36, 1);
 
+    /* How far in from the left the page starts: the panel's width when it is open, nothing when it
+       is shut, and wherever the hand has it while it is being dragged. Three things read it, so
+       they cannot drift apart. See @property below. */
+    --rpms-shell-inset: 0px;
+
     /* The handle on the panel's edge. Only half of it is ever drawn, so the width is twice the
        tab anybody sees, and that half is also how far it reaches over the page beside it. */
     --rpms-handle-width: 44px;
@@ -86,6 +91,18 @@
     --rpms-shadow-colour: rgba(0, 0, 0, .06);
     --rpms-shadow-colour-strong: rgba(0, 0, 0, .1);
     --rpms-shadow: 0 .125rem .25rem rgba(0,0,0,.05);
+}
+
+/* Registered, because an unregistered custom property is a string and a string cannot be
+   animated: it would flip from one value to the other. Registered as a length, it interpolates,
+   which is what lets one number carry the panel, the page beside it and the handle on its edge
+   through the same movement rather than three transitions that have to agree.
+
+   A browser too old to know @property still reads the value; it just arrives all at once. */
+@property --rpms-shell-inset {
+    syntax: "<length>";
+    inherits: true;
+    initial-value: 0px;
 }
 
 /* ==========================================================
@@ -170,18 +187,14 @@ html {
     position: relative;
     min-height: 100%;
 
-    /* Always leave room for the scrollbar, whether or not the page needs one.
+    /* No gutter held for the scrollbar. The page runs to the right-hand edge of the window and the
+       scrollbar lies over it, which is what an overlay scrollbar does anyway on the platforms this
+       is used on: the reserved strip was a band of page background nothing was ever drawn in.
 
-       Without this, the width of the content depends on whether it happens to overflow: a page
-       that scrolls is 15px narrower than one that doesn't, so every navigation between the two
-       shifts the whole layout sideways. Worse within a single page. The browser paints before
-       it knows the final height, so text lands, the scrollbar appears, and everything jumps left
-       and settles. That is the flicker.
-
-       Tabler solves this by reserving the width as a LEFT margin on :root, which leaves a visible
-       gap down the left of scrolling pages (undone above). This reserves it on the right, where
-       the scrollbar actually is, so nothing moves and nothing is inset. */
-    scrollbar-gutter: stable;
+       The reservation was there to stop the layout shifting between a page that scrolls and one
+       that does not. Where scrollbars overlay, they take no room in either case and there is
+       nothing to shift; where they are the old kind that take room, this trades that steadiness
+       for the width, which is the trade asked for. */
 }
 
 @media (min-width:768px) {
@@ -352,6 +365,28 @@ aside {
                 border-right-width var(--rpms-sidebar-speed) var(--rpms-sidebar-ease);
 }
 
+/* On a wide screen the width is not animated here at all: it follows --rpms-shell-inset, and so
+   does everything else that moves with it. Animating each of them separately is what let the page
+   widen ahead of the panel it was supposed to be following. */
+@media (min-width: 768px) {
+    :root {
+        --rpms-shell-inset: var(--rpms-sidebar-width);
+        transition: --rpms-shell-inset var(--rpms-sidebar-speed) var(--rpms-sidebar-ease);
+    }
+
+    :root.rpms-sidebar-is-collapsed,
+    :root.rpms-sidebar-shut {
+        --rpms-shell-inset: 0px;
+    }
+
+    /* Under the hand there is nothing to animate: the number is being set outright, many times a
+       second, and a transition would make each of those the start of another one. */
+    :root.rpms-sidebar-dragging {
+        --rpms-shell-inset: var(--rpms-drag-width);
+        transition: none;
+    }
+}
+
 /* Fixed under the bar rather than scrolling away with the page: navigation is wanted from
    wherever the reader has got to, not only from the top.
 
@@ -378,20 +413,7 @@ aside {
     }
 
     .rpms-shell main {
-        margin-left: var(--rpms-sidebar-width);
-        transition: margin-left var(--rpms-sidebar-speed) var(--rpms-sidebar-ease);
-    }
-
-    /* Both names for the same state: the one the pre-paint script writes before this file has
-       drawn anything, and the one site.js keeps up afterwards. */
-    :root.rpms-sidebar-is-collapsed .rpms-shell main,
-    :root.rpms-sidebar-shut .rpms-shell main {
-        margin-left: 0;
-    }
-
-    :root.rpms-sidebar-dragging .rpms-shell main {
-        margin-left: var(--rpms-drag-width);
-        transition: none;
+        margin-left: var(--rpms-shell-inset);
     }
 
     /* The footer is the end of the page rather than the end of the column, so it keeps the whole
@@ -420,6 +442,28 @@ aside {
                     border-right-width var(--rpms-sidebar-speed) var(--rpms-sidebar-ease),
                     visibility 0s linear var(--rpms-sidebar-speed);
     }
+
+/* On a wide screen the width is the shared number, stated after the closed state above so that
+   it wins: that rule is the phone panel's and sets a width of nought outright, along with a
+   transition to reach it by, which is the panel animating its own width again behind the one
+   number that was supposed to be carrying everything.
+
+   The transitions here are what is left once width is not among them. Visibility keeps its
+   asymmetry: at the end when closing, so the panel can be watched on the way out, and at once when
+   opening so there is something to watch. */
+@media (min-width: 768px) {
+    .rpms-sidebar {
+        width: var(--rpms-shell-inset);
+        transition: border-right-width var(--rpms-sidebar-speed) var(--rpms-sidebar-ease);
+    }
+
+    :root.rpms-sidebar-is-collapsed .rpms-sidebar,
+    .rpms-sidebar.rpms-sidebar-collapsed {
+        width: var(--rpms-shell-inset);
+        transition: border-right-width var(--rpms-sidebar-speed) var(--rpms-sidebar-ease),
+                    visibility 0s linear var(--rpms-sidebar-speed);
+    }
+}
 
 /* Holds the expanded width regardless of the aside's animated width, so nothing inside
    re-lays-out mid-animation. */
@@ -745,7 +789,7 @@ aside {
     #sidebar-toggle {
         position: fixed;
         top: var(--rpms-burger-top, 50vh);
-        left: var(--rpms-sidebar-width);
+        left: var(--rpms-shell-inset);
         /* Half a handle back, so it sits centred on the panel's border rather than beside it. */
         margin-left: calc(var(--rpms-handle-width) / -2);
         transform: translateY(-50%);
@@ -761,10 +805,9 @@ aside {
            The insets are negative on the other three sides so the shadow is not cut off with it,
            only the half that would otherwise be sitting over the menu. */
         clip-path: inset(-12px -12px -12px 50%);
-        /* Matches the sidebar's own transition, so panel and handle move as one thing. */
-        transition: left var(--rpms-sidebar-speed) var(--rpms-sidebar-ease),
-                    margin-left var(--rpms-sidebar-speed) var(--rpms-sidebar-ease),
-                    background-color .2s ease, color .2s ease, border-color .2s ease;
+        /* No transition on the position: it rides the number the panel rides, so it is already
+           moving with it. Only the colours it changes on its own account. */
+        transition: background-color .2s ease, color .2s ease, border-color .2s ease;
     }
 
     /* min-width as well as width: Tabler floors .btn-icon at the size of a bar button, which is
@@ -800,11 +843,6 @@ aside {
        its own middle: half a disc left showing against the edge, which is a thing to pull. It is
        the same relationship as when the panel is open, where the handle is centred on the panel's
        right border. Only the border it is centred on has changed. */
-    :root.rpms-sidebar-is-collapsed #sidebar-toggle,
-    #sidebar-toggle[aria-expanded="false"] {
-        left: 0;
-    }
-
         /* Turned to point back at the panel it will bring out. */
         :root.rpms-sidebar-is-collapsed .rpms-toggle-chevron,
         #sidebar-toggle[aria-expanded="false"] .rpms-toggle-chevron {
@@ -826,7 +864,6 @@ aside {
        edge is, --rpms-drag-progress is how far open that is, 0 to 1. Letting go puts the classes
        back and the transitions above carry it the rest of the way. */
     :root.rpms-sidebar-dragging .rpms-sidebar {
-        width: var(--rpms-drag-width);
         border-right-width: 1px;
         visibility: visible;
         transition: none;
@@ -845,12 +882,6 @@ aside {
         pointer-events: none;
     }
 
-    :root.rpms-sidebar-dragging #sidebar-toggle {
-        left: var(--rpms-drag-width);
-        margin-left: calc(var(--rpms-handle-width) / -2);
-        transition: none;
-    }
-
     /* Dragging a panel about should not be selecting the text it passes over, and the cursor says
        which way it is going to go. */
     :root.rpms-sidebar-dragging,
@@ -861,11 +892,13 @@ aside {
 }
 
 @media (prefers-reduced-motion: reduce) {
+    /* :root among them, because that is where the one number the panel and the page both follow
+       is animated. */
+    :root,
     #sidebar-toggle,
     .rpms-toggle-chevron,
     .rpms-sidebar,
     .rpms-sidebar-inner,
-    .rpms-shell main,
     .rpms-footer {
         transition: none;
     }
