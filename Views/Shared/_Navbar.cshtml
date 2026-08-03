@@ -76,10 +76,13 @@
         @if (!isAuthenticated)
         {
             <div class="navbar-nav flex-row order-md-last align-items-center gap-2">
-                @* The catalogue is read by people with no account, and how a page looks is not
-                   something to hold behind one. *@
-                <partial name="_ThemeSwitch" model="@("button")" />
+                @* Sign in first: it is what a visitor came to the bar for, and the one thing here
+                   that takes them somewhere. The theme sits after it, where a preference belongs
+                   rather than in front of the way in. It is offered at all because the catalogue
+                   is read by people with no account, and how a page looks is not something to hold
+                   behind one. *@
                 <a asp-controller="Auth" asp-action="home" class="btn btn-primary">Sign in</a>
+                <partial name="_ThemeSwitch" model="@("button")" />
             </div>
         }
         else
