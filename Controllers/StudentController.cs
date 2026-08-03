@@ -104,8 +104,13 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         // ---------- One publication ----------
 
+        /// <summary>The two tabs a publication is read on, named once because the pager, the
+        /// action and the view all have to agree on the words.</summary>
+        private const string ProgressTab = "progress";
+        private const string HistoryTab = "history";
+
         [HttpGet]
-        public async Task<IActionResult> Publication(Guid id, int historyPage = 1)
+        public async Task<IActionResult> Publication(Guid id, int historyPage = 1, string? tab = null)
         {
             var (container, redirect) = await GetOwnedContainerAsync(id);
             if (redirect is not null) return redirect;
@@ -142,10 +147,16 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.History = historyResult.Data?.Items ?? [];
             model.HistoryTotal = historyResult.Data?.TotalCount ?? 0;
 
-            // The pager returns to this publication with the tab still open, so paging the trail
-            // does not drop somebody back onto the first tab of the screen they were reading.
+            // The pager returns to this publication on the tab the trail is on, and turns the
+            // parameter this action actually reads. It used to write "page", which this action has
+            // never had, so Next reloaded the same page on the first tab.
             model.HistoryPager = Paging.PagerFor(historyResult.Data, "Student", nameof(Publication),
-                new Dictionary<string, string?> { ["id"] = id.ToString() });
+                new Dictionary<string, string?> { ["id"] = id.ToString(), ["tab"] = HistoryTab },
+                pageKey: "historyPage");
+
+            // Which tab to open on. Asked for by name, and taken as read on any page of the trail
+            // but the first, because nothing else could have sent somebody there.
+            model.ActiveTab = tab == HistoryTab || historyPage > 1 ? HistoryTab : ProgressTab;
 
             return View(model);
         }

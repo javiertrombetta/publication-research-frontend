@@ -27,6 +27,15 @@ namespace ResearchPublicationManagementSystem.Models
         public PagerViewModel? HistoryPager { get; set; }
 
         /// <summary>
+        /// Which tab to open on. The tabs are switched in the browser, so a page turned in the
+        /// trail is a fresh request that would otherwise come back on the first tab, and the
+        /// reader would be put back at the top of a screen they had already left.
+        /// </summary>
+        public string ActiveTab { get; set; } = "progress";
+
+        public bool HistoryIsOpen => ActiveTab == "history";
+
+        /// <summary>
         /// The ethics documents this publication was asked for, and which of them have arrived.
         /// Only read once the supervisor has asked for any; empty otherwise.
         /// </summary>
