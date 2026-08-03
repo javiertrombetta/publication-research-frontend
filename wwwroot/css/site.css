@@ -832,12 +832,14 @@ aside {
     visibility: hidden;
 
     /* Under the bar, not under the link that opens it: the link is shorter than the bar, and a
-       panel appearing halfway up it would be coming out of nothing. */
+       panel appearing halfway up it would be coming out of nothing. Then a small step clear of
+       it, so the panel is a thing of its own rather than part of the bar, and the clip goes with
+       it: the panel is still hidden until it crosses that line. */
     position: absolute;
     top: 100%;
     left: auto;
     right: 0;
-    margin: 0;
+    margin: .5rem 0 0;
 
     padding: 0;
     background: none;
@@ -857,7 +859,9 @@ aside {
     background: var(--rpms-surface);
     border: 1px solid var(--rpms-border);
     border-radius: var(--rpms-radius);
-    box-shadow: 0 .5rem 1rem var(--rpms-shadow-colour-strong);
+    /* Lighter than a panel that covers the page. This one stands a step off the bar and is
+       already outlined, so the shadow only has to lift it, not announce it. */
+    box-shadow: 0 .25rem .625rem var(--rpms-shadow-colour);
     padding: .5rem 0;
     overflow: hidden;
 
