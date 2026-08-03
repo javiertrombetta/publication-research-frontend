@@ -176,7 +176,12 @@ namespace ResearchPublicationManagementSystem.Controllers
                     : "Recorded. The coordinator will confirm that no documentation is required."
                 : result.ErrorMessage ?? "Could not record your decision.";
 
-            return RedirectToAction(nameof(SupervisorDashboard));
+            // A decision that did not go through leaves the person on the screen they made it on,
+            // with what they typed still worth retyping and the reason in front of them. Sending
+            // them to the dashboard reads as though something worked.
+            return result.Success
+                ? RedirectToAction(nameof(Ethic_reviews))
+                : RedirectToAction(nameof(Review_Ethic_assessmentchecklist), new { id });
         }
 
         [HttpGet]
@@ -199,7 +204,9 @@ namespace ResearchPublicationManagementSystem.Controllers
                     : "Sent back to the student with your comments."
                 : result.ErrorMessage ?? "Could not record your review.";
 
-            return RedirectToAction(nameof(SupervisorDashboard));
+            return result.Success
+                ? RedirectToAction(nameof(Ethic_reviews))
+                : RedirectToAction(nameof(Ethic_document_review), new { id });
         }
 
         // ---------- Pipeline 3: the research paper ----------

@@ -1,5 +1,6 @@
 @{ ViewData["Title"] = "Ethics screening"; }
 
+@using ResearchPublicationManagementSystem.Common
 @model EthicsDeclarationPageViewModel
 
             <main class="page-body m-0 py-4">
@@ -22,7 +23,7 @@
                             <!-- Minimal Text-Only Header with Context -->
                             <div class="mb-4 px-2">
                                 <h1 class="h1 m-0 fw-bold text-dark">Ethics screening</h1>
-                                <p class="text-secondary small m-0 mt-1">Work through all 20 questions before declaring. They are there to help you judge whether your research needs ethics approval. Your answers to them are not recorded; only the declaration at the bottom is.</p>
+                                <p class="text-secondary small m-0 mt-1">Work through all 20 questions before declaring. They are there to help you judge whether your research needs ethics approval. Your answers are recorded with your declaration, and the supervisor deciding whether ethics approval is needed reads them.</p>
                             </div>
 
                             <!-- Interactive Screening Assessment Container -->
@@ -33,385 +34,34 @@
                                 <div class="card-body p-0">
                                     <div class="divide-y">
                                         
-                                        <!-- Question 1 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">1. Situations where the researcher may be at risk of harm</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q1" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q1" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q1" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
+                                        @* One block per question, from the list the controller reads
+                                           the answers back with. Written out twenty times here, a
+                                           question reworded on one side and not the other would file
+                                           an answer against a different sentence. *@
+                                        @for (var i = 0; i < EthicsScreening.Questions.Length; i++)
+                                        {
+                                            var number = i + 1;
+                                            var chosen = i < Model.Screening.Length ? Model.Screening[i] : null;
 
-                                        <!-- Question 2 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">2. Use of a questionnaire or interview, whether or not it is anonymous, which might reasonably be expected to cause discomfort, embarrassment or psychological or spiritual harm to the participants.</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q2" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q2" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q2" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
+                                            <div class="p-4" data-rpms-question="@number">
+                                                <div class="form-label fw-bold mb-2">@number. @EthicsScreening.Questions[i]</div>
+                                                <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
+                                                    <label class="form-selectgroup-item flex-fill">
+                                                        <input type="radio" name="Screening[@i]" value="yes" class="form-selectgroup-input" checked="@(chosen == "yes")">
+                                                        <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
+                                                    </label>
+                                                    <label class="form-selectgroup-item flex-fill">
+                                                        <input type="radio" name="Screening[@i]" value="no" class="form-selectgroup-input" checked="@(chosen == "no")">
+                                                        <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
+                                                    </label>
+                                                    <label class="form-selectgroup-item flex-fill">
+                                                        <input type="radio" name="Screening[@i]" value="unsure" class="form-selectgroup-input" checked="@(chosen == "unsure")">
+                                                        <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
+                                                    </label>
+                                                </div>
                                             </div>
-                                        </div>
+                                        }
 
-                                        <!-- Question 3 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">3. Processes that are potentially disadvantageous to a person or group, such as the collection of information which may expose a person / group to discrimination.</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q3" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q3" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q3" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 4 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">4. Collection of information of illegal behaviour(s) gained during the research which could place the participants at risk of criminal or civil liability or be damaging to their financial standing, employability, professional or personal relationships.</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q4" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q4" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q4" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 5 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">5. Collection of blood, body fluid, tissue samples or other samples.</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q5" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q5" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q5" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 6 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">6. Any form of exercise regime, or deprivation (e.g. sleep or dietary).</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q6" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q6" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q6" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 7 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">7. Any form of physical examination (e.g. physical, radiation, ultrasound).</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q7" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q7" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q7" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 8 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">8. The administration of any form of drug, medicine (other than in the course of standard medical procedure), or placebo.</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q8" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q8" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q8" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 9 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">9. Physical pain, beyond mild discomfort.</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q9" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q9" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q9" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 10 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">10. Participants whose identities are known to the researcher giving oral consent rather than written consent, other than for cultural reasons.</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q10" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q10" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q10" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 11 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">11. Participants who are unable to give informed consent.</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q11" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q11" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q11" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 12 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">12. The participation of children (seven (7) years old or younger).</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q12" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q12" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q12" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 13 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">13. The participation of children under sixteen (16) years old where active parental consent is not being sought.</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q13" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q13" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q13" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 14 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">14. Participants who are in a dependant situation, such as nursing home or prison, or patients highly dependent on medical care.</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q14" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q14" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q14" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 15 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">15. Participants who are vulnerable.</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q15" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q15" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q15" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 16 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">16. The use of previously collected identifiable personal information or research data for which there was no explicit consent for this research.</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q16" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q16" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q16" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 17 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">17. The use of previously collected biological samples for which there was no explicit consent for this research.</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q17" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q17" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q17" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 18 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">18. Any evaluation of organisational services or practices where information of a personal nature may be collected and where participants or the organisation may be identified.</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q18" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q18" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q18" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 19 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">19. Deception of the participants, including concealment or covert observations.</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q19" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q19" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q19" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <!-- Question 20 -->
-                                        <div class="p-4">
-                                            <div class="form-label fw-bold mb-2">20. Payments or other financial inducements (other than reasonable reimbursement of travel expenses or time) to participants.</div>
-                                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q20" value="yes" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-danger"><span class="me-2">●</span> Yes</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q20" value="no" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-secondary"><span class="me-2">●</span> No</div>
-                                                </label>
-                                                <label class="form-selectgroup-item flex-fill">
-                                                    <input type="radio" name="q20" value="unsure" class="form-selectgroup-input">
-                                                    <div class="form-selectgroup-label d-flex align-items-center p-2 text-warning"><span class="me-2">●</span> Unsure</div>
-                                                </label>
-                                            </div>
-                                        </div>
 
                                     </div>
                                 </div>
@@ -483,14 +133,13 @@
             var QUESTION_COUNT = 20;
 
             function blockFor(number) {
-                var input = form.querySelector('input[name="q' + number + '"]');
-                return input ? input.closest('.p-4') : null;
+                return form.querySelector('[data-rpms-question="' + number + '"]');
             }
 
             function unanswered() {
                 var missing = [];
                 for (var i = 1; i <= QUESTION_COUNT; i++) {
-                    if (!form.querySelector('input[name="q' + i + '"]:checked')) missing.push(i);
+                    if (!form.querySelector('input[name="Screening[' + (i - 1) + ']"]:checked')) missing.push(i);
                 }
                 return missing;
             }
@@ -502,10 +151,11 @@
                 }
             }
 
-            // The screening questions aren't posted anywhere, so this is the only thing standing
-            // between a student and a declaration made without reading them. The declaration
-            // itself is checked here too, so one submit produces one message listing everything
-            // that's missing rather than one problem at a time.
+            // The answers are posted and kept now, but nothing on the server insists on all
+            // twenty: a declaration is still a declaration without them. So this is what stands
+            // between a student and one made without reading the questions. The declaration itself
+            // is checked here too, so one submit produces one message listing everything that is
+            // missing rather than one problem at a time.
             form.addEventListener('submit', function (event) {
                 var missing = unanswered();
                 var declared = !!form.querySelector('input[name="Response"]:checked');
@@ -537,10 +187,12 @@
                 if (block) block.classList.remove('rpms-question-missing');
             });
 
-            // Called from the "Clear guidance answers" button's onclick.
+            // Called from the "Clear guidance answers" button's onclick. The screening only: the
+            // button says guidance answers, and clearing somebody's declaration along with them
+            // would be doing something it does not say.
             window.clearSelections = function () {
                 Array.prototype.forEach.call(
-                    form.querySelectorAll('input[type="radio"]'),
+                    form.querySelectorAll('input[type="radio"][name^="Screening["]'),
                     function (radio) { radio.checked = false; });
                 mark([]);
             };

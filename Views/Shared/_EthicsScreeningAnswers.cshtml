@@ -1,0 +1,75 @@
+@model IReadOnlyList<ResearchPublicationManagementSystem.Infrastructure.Api.Dto.EthicsScreeningAnswerDto>?
+@*
+    The twenty screening questions the student worked through, and what they said to each.
+
+    Shared, because the two people who rule on the declaration need the same thing in front of
+    them: the supervisor deciding whether ethics documentation is required, and the coordinator
+    confirming or overturning that. They were both shown the one-word declaration and none of the
+    working behind it.
+
+    Shut by default. A "yes" to any of these is what a reader is looking for, so the count of them
+    is on the outside and the rest is a click away.
+*@
+@{
+    var answers = Model ?? [];
+    var flagged = answers.Where(a => a.Answer == "Yes").ToList();
+    var unsure = answers.Where(a => a.Answer == "Unsure").ToList();
+
+    // Unique per rendering: two of these on one page, sharing an id, would open together.
+    var panel = $"screening-{Guid.NewGuid():N}";
+
+    string Tone(string answer) => answer switch
+    {
+        "Yes" => "bg-orange-lt",
+        "No" => "bg-secondary-lt",
+        _ => "bg-yellow-lt"
+    };
+}
+
+@if (answers.Count == 0)
+{
+    <div class="text-secondary small">
+        The screening questions were not recorded with this declaration.
+    </div>
+}
+else
+{
+    <div class="d-flex flex-wrap align-items-baseline gap-2 mb-2">
+        <a class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" href="#@panel"
+           role="button" aria-expanded="false" aria-controls="@panel">
+            The @answers.Count screening answers
+        </a>
+
+        @if (flagged.Count > 0)
+        {
+            <span class="badge bg-orange-lt">@flagged.Count answered yes</span>
+        }
+        @if (unsure.Count > 0)
+        {
+            <span class="badge bg-yellow-lt">@unsure.Count unsure</span>
+        }
+        @if (flagged.Count == 0 && unsure.Count == 0)
+        {
+            <span class="badge bg-secondary-lt">No to all of them</span>
+        }
+    </div>
+
+    <div class="collapse" id="@panel">
+        <div class="table-responsive">
+            <table class="table card-table table-vcenter">
+                <tbody>
+                    @foreach (var answer in answers)
+                    {
+                        <tr>
+                            <td class="text-secondary align-top" style="width: 2.5rem">@answer.Number.</td>
+                            <td class="align-top">@answer.Question</td>
+                            <td class="text-end align-top" style="width: 6rem">
+                                <span class="badge @Tone(answer.Answer)">@answer.Answer</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

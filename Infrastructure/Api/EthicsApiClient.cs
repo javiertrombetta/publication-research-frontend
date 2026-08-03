@@ -8,8 +8,11 @@ public class EthicsApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
     public Task<ApiResult<EthicsGuidanceDto>> GetGuidanceAsync(CancellationToken ct = default) =>
         GetAsync<EthicsGuidanceDto>("api/ethics/guidance", ct);
 
-    public Task<ApiResult<EthicsDeclarationDto>> SubmitDeclarationAsync(Guid containerId, string response, CancellationToken ct = default) =>
-        PostJsonAsync<EthicsDeclarationDto>($"api/containers/{containerId}/ethics/declaration", new EthicsDeclarationRequestDto(response), ct);
+    public Task<ApiResult<EthicsDeclarationDto>> SubmitDeclarationAsync(
+        Guid containerId, string response,
+        IReadOnlyList<EthicsScreeningAnswerDto>? screening = null, CancellationToken ct = default) =>
+        PostJsonAsync<EthicsDeclarationDto>($"api/containers/{containerId}/ethics/declaration",
+            new EthicsDeclarationRequestDto(response, screening), ct);
 
     public Task<ApiResult<EthicsApprovalDto>> GetApprovalAsync(Guid containerId, CancellationToken ct = default) =>
         GetAsync<EthicsApprovalDto>($"api/containers/{containerId}/ethics", ct);

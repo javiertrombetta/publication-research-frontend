@@ -5,8 +5,10 @@
 }
 
 <div class="mb-4">
-    <a asp-controller="Supervisor" asp-action="SupervisorDashboard" class="text-secondary text-decoration-none small">
-        &larr; Dashboard
+    @* Back to the queue this was opened from, not to the dashboard. Ethics reviews is where the
+       next one is, and the dashboard is a detour on the way to it. *@
+    <a asp-controller="Supervisor" asp-action="Ethic_reviews" class="text-secondary text-decoration-none small">
+        &larr; Ethics reviews
     </a>
     <h1 class="page-title mt-2 mb-1">Does this research need ethics approval?</h1>
     <div class="text-secondary">@container.DisplayTitle &middot; @container.StudentName</div>
@@ -51,6 +53,11 @@
                 </p>
             }
 
+            <hr class="my-3" />
+
+            <div class="text-secondary small mb-2">The screening they worked through first</div>
+            <partial name="_EthicsScreeningAnswers" model="Model.Approval.StudentScreening" />
+
             <div class="mt-3 small text-secondary">
                 Where the ethics stage has got to:
                 <span class="badge @StatusBadge(Model.Approval.Status)">@Humanise(Model.Approval.Status)</span>
@@ -78,7 +85,7 @@
             <p class="text-secondary mb-4">
                 This publication's ethics stage has already moved past your ruling.
             </p>
-            <a asp-controller="Supervisor" asp-action="SupervisorDashboard" class="btn btn-primary">Back to dashboard</a>
+            <a asp-controller="Supervisor" asp-action="Ethic_reviews" class="btn btn-primary">Back to ethics reviews</a>
         </div>
     </div>
 }
@@ -96,10 +103,16 @@ else
             <form asp-controller="Supervisor" asp-action="SubmitEthicsDecision" method="post">
                 <input type="hidden" name="id" value="@container.Id" />
 
+                @* Required, and said so here as well as enforced by the API: a rule the reader
+                   only meets by breaking it is a rule the screen kept to itself. *@
                 <div class="mb-3">
-                    <label class="form-label" for="ethics-comments">Comments</label>
+                    <label class="form-label required" for="ethics-comments">Why</label>
                     <textarea id="ethics-comments" name="comments" rows="3" class="form-control"
-                              placeholder="What led you to this decision"></textarea>
+                              required placeholder="What led you to this decision"></textarea>
+                    <small class="form-hint">
+                        The coordinator confirms this decision on the strength of your reasoning,
+                        and it stays on the publication's history.
+                    </small>
                 </div>
 
                 <div class="btn-list">
