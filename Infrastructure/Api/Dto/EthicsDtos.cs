@@ -17,7 +17,13 @@ public record EthicsApprovalDto(
     string? CoordinatorDecisionComments,
     string? HeadOfDepartmentComments,
     DateTime? HeadOfDepartmentReviewedAt,
-    DateTime? FinalDecisionAt);
+    DateTime? FinalDecisionAt,
+    /// <summary>
+    /// What the student answered when asked whether their research involves people: Yes, No or
+    /// Unsure, or null before they have said. It is what a supervisor is ruling on.
+    /// </summary>
+    string? StudentDeclaration = null,
+    DateTime? StudentDeclaredAt = null);
 
 public record EthicsDocumentDto(
     Guid Id,

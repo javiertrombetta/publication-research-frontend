@@ -137,6 +137,20 @@ else
             <div class="card-body collapse show" id="ethics-@item.Container.Id"
                  data-rpms-collapsible="ethics-cards">
 
+                @* The student's own answer as well as the supervisor's. The coordinator is
+                   confirming or overturning a ruling made on it, and was being shown only the
+                   ruling. *@
+                @if (item.Approval.StudentDeclaration is not null)
+                {
+                    <div class="mb-3">
+                        <div class="text-secondary small">The student declared</div>
+                        <p class="m-0">
+                            Asked whether their research requires ethical approval, they answered
+                            <strong>@Humanise(item.Approval.StudentDeclaration)</strong>.
+                        </p>
+                    </div>
+                }
+
                 @if (!string.IsNullOrWhiteSpace(item.Approval.SupervisorDecisionComments))
                 {
                     <div class="mb-3">

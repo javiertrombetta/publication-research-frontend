@@ -12,19 +12,63 @@
     <div class="text-secondary">@container.DisplayTitle &middot; @container.StudentName</div>
 </div>
 
+@* What the student actually answered, in the words they were asked it in. This card used to show
+   the ethics stage the workflow had reached and call it the declaration, which told a supervisor
+   nothing about the thing they are being asked to rule on. *@
 <div class="card mb-4">
     <div class="card-body">
         <h2 class="h3 mb-2">The student's declaration</h2>
-        @if (Model.Approval is null)
+
+        @if (Model.Approval?.StudentDeclaration is null)
         {
             <p class="text-secondary m-0">This student hasn't made their declaration yet.</p>
         }
         else
         {
-            <span class="badge @StatusBadge(Model.Approval.Status)">@Humanise(Model.Approval.Status)</span>
+            <p class="text-secondary mb-2">
+                Does your research require ethical approval according to the institutional research
+                ethics policy?
+            </p>
+
+            <div class="d-flex flex-wrap align-items-baseline gap-2">
+                <span class="badge @DeclarationBadge(Model.Approval.StudentDeclaration)">
+                    @Humanise(Model.Approval.StudentDeclaration)
+                </span>
+
+                @if (Model.Approval.StudentDeclaredAt is DateTime declaredAt)
+                {
+                    <span class="text-secondary small">
+                        answered @declaredAt.ToLocalTime().ToString("dd MMM yyyy 'at' HH:mm")
+                    </span>
+                }
+            </div>
+
+            @if (Model.Approval.StudentDeclaration == "Unsure")
+            {
+                <p class="text-secondary mt-3 mb-0">
+                    They were not sure, which is why this is with you: an unsure answer is referred
+                    rather than taken either way.
+                </p>
+            }
+
+            <div class="mt-3 small text-secondary">
+                Where the ethics stage has got to:
+                <span class="badge @StatusBadge(Model.Approval.Status)">@Humanise(Model.Approval.Status)</span>
+            </div>
         }
     </div>
 </div>
+
+@functions {
+    @* The student's own answer, coloured by what it means rather than by the workflow: yes is the
+       one that brings the paperwork, unsure is the one that lands on the supervisor. *@
+    string DeclarationBadge(string response) => response switch
+    {
+        "Yes" => "bg-orange-lt",
+        "No" => "bg-secondary-lt",
+        _ => "bg-yellow-lt"
+    };
+}
 
 @if (!Model.NeedsRequirementDecision)
 {
