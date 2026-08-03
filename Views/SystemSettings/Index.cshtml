@@ -1180,6 +1180,26 @@
                                 </small>
                             </div>
 
+                            @* Checkbox plus a hidden false of the same name: an unchecked box posts
+                               nothing at all, so without it clearing the switch would look exactly
+                               like not touching it. Same pattern as the switches on the other
+                               tabs. *@
+                            <div class="col-12">
+                                <label class="form-check">
+                                    <input class="form-check-input" type="checkbox"
+                                           name="itSupportShownToVisitors" value="true"
+                                           checked="@Model.Institution.ItSupportShownToVisitors" />
+                                    <input type="hidden" name="itSupportShownToVisitors" value="false" />
+                                    <span class="form-check-label">Offer the IT desk to people with no account</span>
+                                </label>
+                                <small class="form-hint">
+                                    Signed-in students and staff are always shown it. Ticked, the
+                                    sign-in page and the public catalogue offer it as well. It starts
+                                    off: a university IT desk supports its own people, and an address
+                                    on a page open to the world will be scraped.
+                                </small>
+                            </div>
+
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Save institution details</button>
                             </div>
