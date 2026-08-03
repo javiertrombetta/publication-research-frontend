@@ -787,6 +787,16 @@ document.addEventListener('submit', function (event) {
     if (!forms.length) return;
 
     Array.prototype.forEach.call(forms, function (form) {
+        // The switch is an item in the user menu, and Bootstrap shuts a menu on any click inside
+        // it. Reasonable for the items that take you somewhere, wrong for this one: it changes the
+        // page it is sitting on and leaves you there, so the menu should stay up, whether to see
+        // the change or to change it back. Kept from the document, which is where that handler is,
+        // and only for this control. The button still submits: stopping a click going up is not
+        // stopping what it does.
+        form.addEventListener('click', function (event) {
+            event.stopPropagation();
+        });
+
         form.addEventListener('submit', function (event) {
             var wanted = form.querySelector('input[name="theme"]');
             if (!wanted) return;
