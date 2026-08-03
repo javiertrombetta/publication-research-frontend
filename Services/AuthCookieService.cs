@@ -52,6 +52,21 @@ public class AuthCookieService(AuthApiClient authApiClient) : IAuthCookieService
         httpContext.User = principal;
     }
 
+    public async Task SetSidebarOrderAsync(HttpContext httpContext, string order)
+    {
+        // Same as the photo flag: every other claim carried over untouched, so recording where
+        // somebody put a menu item never disturbs the session it was done in.
+        var claims = httpContext.User.Claims
+            .Where(c => c.Type != AuthClaimTypes.SidebarOrder)
+            .Append(new Claim(AuthClaimTypes.SidebarOrder, order))
+            .ToList();
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
+        await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+        httpContext.User = principal;
+    }
+
     private static ClaimsPrincipal BuildPrincipal(AuthResponseDto auth)
     {
         var claims = new List<Claim>
@@ -63,7 +78,8 @@ public class AuthCookieService(AuthApiClient authApiClient) : IAuthCookieService
             new(AuthClaimTypes.AccessToken, auth.AccessToken),
             new(AuthClaimTypes.RefreshToken, auth.RefreshToken),
             new(AuthClaimTypes.AccessTokenExpiresAt, auth.AccessTokenExpiresAt.ToString("o")),
-            new(AuthClaimTypes.HasProfilePhoto, auth.User.HasProfilePhoto ? "true" : "false")
+            new(AuthClaimTypes.HasProfilePhoto, auth.User.HasProfilePhoto ? "true" : "false"),
+            new(AuthClaimTypes.SidebarOrder, auth.User.SidebarOrder ?? string.Empty)
         };
 
         claims.AddRange(auth.User.Roles.Select(role => new Claim(ClaimTypes.Role, role)));

@@ -73,6 +73,11 @@ public class UsersApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
     public Task<ApiResult<object?>> SetThemeAsync(string theme, CancellationToken ct = default) =>
         PutJsonAsync<object?>("api/users/me/theme", new { theme }, ct);
 
+    /// <summary>The routes of the sidebar's items, in the order this person wants them.</summary>
+    public Task<ApiResult<object?>> SetSidebarOrderAsync(
+        IReadOnlyList<string> items, CancellationToken ct = default) =>
+        PutJsonAsync<object?>("api/users/me/sidebar-order", new { items }, ct);
+
     public Task<ApiResult<UserDetailDto>> GetByIdAsync(Guid id, CancellationToken ct = default) =>
         GetAsync<UserDetailDto>($"api/users/{id}", ct);
 

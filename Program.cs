@@ -172,6 +172,10 @@ builder.Services.AddHttpClient<NotificationsApiClient>(ConfigureApiClient).AddHt
 builder.Services.AddHttpClient<CatalogueApiClient>(ConfigureApiClient).AddHttpMessageHandler<ApiAvailabilityHandler>();
 
 // ---------- MVC ----------
+// The sidebar records where somebody put a menu item with a fetch rather than a form, so the
+// token has to be allowed to travel in a header. The default is form fields only.
+builder.Services.AddAntiforgery(options => options.HeaderName = "RequestVerificationToken");
+
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add<ForceReauthFilter>();

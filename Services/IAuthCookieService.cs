@@ -20,4 +20,10 @@ public interface IAuthCookieService
     /// reflects an upload or removal immediately instead of only after the next sign-in.
     /// </summary>
     Task SetProfilePhotoFlagAsync(HttpContext httpContext, bool hasPhoto);
+
+    /// <summary>
+    /// Re-issues the auth cookie with this person's sidebar order updated, so the menu keeps the
+    /// arrangement they have just made on every page from here rather than from the next sign-in.
+    /// </summary>
+    Task SetSidebarOrderAsync(HttpContext httpContext, string order);
 }

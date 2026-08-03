@@ -16,6 +16,12 @@ public record UserSummaryDto(
     string LastName,
     string Status,
     IReadOnlyList<string> Roles,
-    bool HasProfilePhoto);
+    bool HasProfilePhoto,
+    /// <summary>
+    /// How this person has arranged their sidebar, as routes separated by spaces, or null if they
+    /// never have. Put into the session at sign-in so the menu can be drawn in their order on
+    /// every page without asking for it each time.
+    /// </summary>
+    string? SidebarOrder = null);
 
 public record CommentsRequestDto(string Comments);
