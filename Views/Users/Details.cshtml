@@ -110,6 +110,23 @@
                         </select>
                     </div>
 
+                    @* And for the roles that can be in several. A supervisor may supervise for
+                       one department and review for another, so this is a list rather than a
+                       choice, and the API refuses the change without at least one. *@
+                    <div class="mb-3 d-none" data-role-departments>
+                        <label class="form-label" for="role-departments">Departments</label>
+                        <select id="role-departments" name="departmentIds" class="form-select" multiple size="4">
+                            @foreach (var department in Model.Departments)
+                            {
+                                <option value="@department.Id"
+                                        selected="@Model.CurrentDepartmentIds.Contains(department.Id)">@department.Name</option>
+                            }
+                        </select>
+                        <small class="form-hint">
+                            Hold Ctrl, or Cmd on a Mac, to choose more than one.
+                        </small>
+                    </div>
+
                     <div class="mb-3 d-none" data-role-affiliation>
                         <label class="form-label" for="role-affiliation">Affiliation</label>
                         <input id="role-affiliation" name="affiliation" class="form-control"
@@ -208,16 +225,23 @@
         // belong to a department cannot be granted without one.
         (function () {
             var departmentRoles = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(UserDetailViewModel.DepartmentRoles));
+            var multiDepartmentRoles = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(UserDetailViewModel.MultiDepartmentRoles));
             var committeeRoles = ['Reviewer', 'ExternalCommitteeMember'];
 
             var role = document.getElementById('role');
             var department = document.querySelector('[data-role-department]');
+            var departments = document.querySelector('[data-role-departments]');
             var affiliation = document.querySelector('[data-role-affiliation]');
 
             function update() {
-                var needsDepartment = departmentRoles.indexOf(role.value) !== -1;
-                department.classList.toggle('d-none', !needsDepartment);
-                department.querySelector('select').required = needsDepartment;
+                var needsOne = departmentRoles.indexOf(role.value) !== -1;
+                var needsSeveral = multiDepartmentRoles.indexOf(role.value) !== -1;
+
+                department.classList.toggle('d-none', !needsOne);
+                department.querySelector('select').required = needsOne;
+
+                departments.classList.toggle('d-none', !needsSeveral);
+                departments.querySelector('select').required = needsSeveral;
 
                 affiliation.classList.toggle('d-none', committeeRoles.indexOf(role.value) === -1);
             }

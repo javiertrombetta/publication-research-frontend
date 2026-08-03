@@ -16,7 +16,12 @@ public record UserDetailDto(
     bool HasProfilePhoto,
     bool IsAvailable = true,
     /// <summary>Light or dark, as they last chose it. Null until they have.</summary>
-    string? ThemePreference = null);
+    string? ThemePreference = null,
+    /// <summary>
+    /// The departments they belong to, for the roles that can be in several. Empty for everybody
+    /// else, and for external committee members, who belong to another institution.
+    /// </summary>
+    IReadOnlyList<Guid>? DepartmentIds = null);
 
 /// <summary>Whether this person is taking work on. Theirs to set, unlike Status.</summary>
 public record SetAvailabilityRequestDto(bool IsAvailable);

@@ -55,17 +55,24 @@ namespace ResearchPublicationManagementSystem.Controllers
             return View(new UserDetailViewModel
             {
                 User = result.Data,
-                Departments = departments.Data ?? []
+                Departments = departments.Data ?? [],
+                CurrentDepartmentIds = result.Data.DepartmentIds ?? []
             });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangeRole(
-            Guid id, string role, string? comments, Guid? departmentId, string? affiliation)
+            Guid id, string role, string? comments, Guid? departmentId, string? affiliation,
+            Guid[]? departmentIds)
         {
+            // Two shapes because the roles differ: one department for a coordinator or a head,
+            // several for a supervisor or a reviewer, none for an external committee member. The
+            // form shows whichever the chosen role takes, and the API refuses a role granted
+            // without the departments it needs.
             var result = await usersApi.ChangeRoleAsync(id, new ChangeUserRoleRequestDto(
-                role, comments ?? string.Empty, departmentId, affiliation));
+                role, comments ?? string.Empty, departmentId, affiliation,
+                departmentIds is { Length: > 0 } ? departmentIds : null));
 
             TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
                 ? $"Role changed to {DisplayText.Humanise(role)}."

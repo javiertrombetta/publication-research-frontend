@@ -47,11 +47,14 @@ public record SetCommitteeRoleConfigRequestDto(string RoleType, int RequiredCoun
 /// profile is one the person cannot use: a Coordinator with no profile is invisible to auto-
 /// assignment, and a committee member with none cannot be put on a committee.
 /// </summary>
+/// <param name="DepartmentId">The department, where the new role belongs to exactly one.</param>
+/// <param name="DepartmentIds">The departments, where the new role may belong to several: a supervisor or a reviewer. Empty for an external committee member, who belongs to another institution.</param>
 public record ChangeUserRoleRequestDto(
     string Role,
     string Comments,
     Guid? DepartmentId = null,
-    string? Affiliation = null);
+    string? Affiliation = null,
+    IReadOnlyList<Guid>? DepartmentIds = null);
 
 public record UpdateUserRequestDto(string FirstName, string LastName, string? InstitutionalId, string Comments);
 
