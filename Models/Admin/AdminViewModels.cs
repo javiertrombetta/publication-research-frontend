@@ -112,13 +112,32 @@ namespace ResearchPublicationManagementSystem.Models
         /// </summary>
         public IReadOnlyList<DepartmentDto> Departments { get; set; } = [];
 
+        /// <summary>
+        /// The departments this person is already in, so the picker opens on what is true rather
+        /// than on nothing. Changing a supervisor's role without this would quietly offer to move
+        /// them out of every department they are in.
+        /// </summary>
+        public IReadOnlyList<Guid> CurrentDepartmentIds { get; set; } = [];
+
         /// <summary>Roles that cannot be granted without saying which department.</summary>
         public static IReadOnlyList<string> DepartmentRoles =>
         [
             Common.RoleNames.Student,
-            Common.RoleNames.Supervisor,
             Common.RoleNames.Coordinator,
             Common.RoleNames.HeadOfDepartment
+        ];
+
+        /// <summary>
+        /// The roles that belong to one department or several.
+        ///
+        /// Supervising and reviewing are not exclusive, so the form offers a list rather than a
+        /// choice. An external committee member is in neither list: they come from another
+        /// institution, so asking them for a department would be asking the wrong question.
+        /// </summary>
+        public static IReadOnlyList<string> MultiDepartmentRoles =>
+        [
+            Common.RoleNames.Supervisor,
+            Common.RoleNames.Reviewer
         ];
 
         /// <summary>The operational roles that can be granted.</summary>
