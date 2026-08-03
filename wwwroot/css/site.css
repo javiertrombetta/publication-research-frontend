@@ -493,6 +493,52 @@ aside {
     max-width: 170px;
 }
 
+/* ---------- Carrying an item to a different place in the list ----------
+
+   A long press lifts one out of the list and it follows the pointer until it is put down. Held
+   rather than dragged, because every item here is a link: a drag that starts at a few pixels
+   cannot be told from a hand that shook while clicking, and the price of getting that wrong is
+   opening a page nobody asked for. See the last block of site.js.
+
+   Nothing here is offered on a first glance, which is deliberate: it is a convenience for the
+   person who wants it, not a control everybody has to step around. */
+.rpms-nav-link-lifted {
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 .5rem 1rem var(--rpms-shadow-colour-strong);
+    background: var(--rpms-surface);
+    cursor: grabbing;
+
+    /* Nothing eased on the one in the air. Tabler eases everything on a nav link for a fifth of a
+       second, which on a link being carried means arriving a fifth of a second after the hand
+       everywhere it goes, and where the item has got to is what decides where it belongs: lagging,
+       it never quite reached the neighbour it was being carried past, and the list never
+       rearranged. Important, because the rule that sets it is Tabler's and reaches this element by
+       a longer path than anything worth writing here to outrank it. */
+    transition: none !important;
+}
+
+/* Off while an item is in the air: the pointer is rearranging a list, not scrolling one or
+   selecting the words in it, and on a touch screen the browser would rather do both. */
+.rpms-nav-reordering {
+    touch-action: none;
+    user-select: none;
+    cursor: grabbing;
+}
+
+    /* The ones being stepped over slide aside rather than jumping, so the list reads as a list
+       being rearranged. The one in the air is exempt: it is following a pointer, and a transition
+       on that would have it arrive late the whole way. */
+    .rpms-nav-reordering .nav-link:not(.rpms-nav-link-lifted) {
+        transition: transform .18s ease;
+    }
+
+/* A held link should not offer to be copied or dragged away as an address. */
+.rpms-nav .nav-link {
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+}
+
 /* Navigation, scoped to the sidebar on purpose.
 
    These were written for the sidebar (solid brand fill, white label on the active item), but
