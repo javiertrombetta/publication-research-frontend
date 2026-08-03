@@ -339,6 +339,59 @@ aside {
                 border-right-width var(--rpms-sidebar-speed) var(--rpms-sidebar-ease);
 }
 
+/* Fixed under the bar rather than scrolling away with the page: navigation is wanted from
+   wherever the reader has got to, not only from the top.
+
+   Fixed and not sticky. Sticky would have been less to change, but a sticky thing may only travel
+   inside the box that holds it, and the box holding this one ends where the content does: at the
+   bottom of a long page the menu slid up under the bar by exactly the height of the footer.
+
+   Which means it no longer takes space from the row, so the page has to leave it: the content and
+   the footer are moved over by the panel's width, and back when it shuts. That is one more thing
+   moving with the panel, and it takes its timing from the same pair of properties as the rest.
+
+   A menu longer than the screen scrolls inside itself. Sideways is still clipped, which is what
+   the panel closing animates. */
+@media (min-width: 768px) {
+    .rpms-sidebar {
+        position: fixed;
+        top: var(--rpms-navbar-height);
+        left: 0;
+        bottom: 0;
+        /* Under the bar it hangs from, over the page it sits on. */
+        z-index: 1020;
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
+    .rpms-shell main {
+        margin-left: var(--rpms-sidebar-width);
+        transition: margin-left var(--rpms-sidebar-speed) var(--rpms-sidebar-ease);
+    }
+
+    /* Both names for the same state: the one the pre-paint script writes before this file has
+       drawn anything, and the one site.js keeps up afterwards. */
+    :root.rpms-sidebar-is-collapsed .rpms-shell main,
+    :root.rpms-sidebar-shut .rpms-shell main {
+        margin-left: 0;
+    }
+
+    :root.rpms-sidebar-dragging .rpms-shell main {
+        margin-left: var(--rpms-drag-width);
+        transition: none;
+    }
+
+    /* The footer is the end of the page rather than the end of the column, so it keeps the whole
+       width and comes up over the menu when the reader reaches it. Above the panel, below the bar:
+       the panel has been on screen the whole way down and the bottom of it is the least of it,
+       whereas the bar is what a reader gets out by and stays in front of everything. Neither
+       moves; the footer arrives over them. */
+    .rpms-shell > .rpms-footer {
+        position: relative;
+        z-index: 1025;
+    }
+}
+
     /* Set in <head> before the first paint, so a remembered collapsed sidebar is never drawn
        open first. Kept in step with the class site.js toggles below. */
     .rpms-sidebar-is-collapsed .rpms-sidebar,
@@ -579,6 +632,13 @@ aside {
     align-items: center;
     border-bottom: 1px solid var(--rpms-border);
     background: var(--rpms-surface);
+
+    /* Stays where it is while the page runs past underneath. Who is signed in, the bell and the
+       way out of the screen are wanted at any point in a long listing, not only at the top of it.
+       Above everything the page draws, and above the panel that comes out from under it. */
+    position: sticky;
+    top: 0;
+    z-index: 1030;
 }
 
     /* Tabler puts min-height: 48px on .navbar-nav and stretches its children to match, which
@@ -792,7 +852,8 @@ aside {
     .rpms-toggle-chevron,
     .rpms-sidebar,
     .rpms-sidebar-inner,
-    .rpms-shell main {
+    .rpms-shell main,
+    .rpms-footer {
         transition: none;
     }
 }
