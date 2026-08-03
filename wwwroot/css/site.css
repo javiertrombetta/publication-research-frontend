@@ -244,19 +244,10 @@ body {
     gap: 1rem;
 }
 
-    /* The links sit against the right edge of the page, opposite the credit. */
+    /* One link at each end of the page, with the copyright between them. */
     .rpms-footer-links {
         justify-self: end;
         text-align: right;
-    }
-
-    /* The heart is the one thing here that is not a fact about the institution, so it keeps the
-       brand colour while the words around it stay muted. Nudged up to sit on the text's centre
-       line rather than its baseline. */
-    .rpms-footer-heart {
-        color: var(--rpms-primary);
-        vertical-align: -.2em;
-        margin: 0 .15rem;
     }
 
 @media (max-width: 767.98px) {
@@ -265,19 +256,15 @@ body {
         text-align: center;
     }
 
-        .rpms-footer-links {
-            justify-self: center;
-            text-align: center;
-        }
-
-    /* One column, so the three read top to bottom: whose site it is, how to reach them, who
-       built it. */
+    /* One column, so the three read top to bottom: whose site it is, then the two links. */
     .rpms-footer-links {
-        order: 2;
+        justify-self: center;
+        text-align: center;
+        order: 3;
     }
 
-    .rpms-footer-credit {
-        order: 3;
+    .rpms-footer-start {
+        order: 2;
     }
 }
 
