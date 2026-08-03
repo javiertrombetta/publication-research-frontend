@@ -675,6 +675,15 @@ aside {
         z-index: 1035;
         border-radius: 999px;
         box-shadow: 0 .125rem .375rem var(--rpms-shadow-colour);
+        /* Only the half past the border is ever drawn, so what shows is a tab coming out of the
+           panel rather than a button laid on top of it. The cut is exactly on the handle's own
+           middle, which is the border it is centred on, and the flat edge it leaves lines up with
+           that border. Closed, the screen's edge does the same thing on its own, and the two
+           states end up looking like one control in two places.
+
+           The insets are negative on the other three sides so the shadow is not cut off with it,
+           only the half that would otherwise be sitting over the menu. */
+        clip-path: inset(-12px -12px -12px 50%);
         /* Matches the sidebar's own transition, so panel and handle move as one thing. */
         transition: left var(--rpms-sidebar-speed) var(--rpms-sidebar-ease),
                     margin-left var(--rpms-sidebar-speed) var(--rpms-sidebar-ease),
@@ -695,8 +704,11 @@ aside {
         display: none;
     }
 
+    /* Sat in the half that shows, since the other half is never drawn. A quarter of the width is
+       the centre of that half. */
     .rpms-toggle-chevron {
         display: block;
+        transform: translateX(calc(var(--rpms-handle-width) / 4));
         transition: transform var(--rpms-sidebar-speed) var(--rpms-sidebar-ease);
     }
 
@@ -716,9 +728,7 @@ aside {
         left: 0;
     }
 
-        /* Turned to point back at the panel it will bring out, and moved into the half of the
-           handle that is still on the screen, so the arrow is whole even though the handle is
-           not. A quarter of the width is the centre of that half. */
+        /* Turned to point back at the panel it will bring out. */
         :root.rpms-sidebar-is-collapsed .rpms-toggle-chevron,
         #sidebar-toggle[aria-expanded="false"] .rpms-toggle-chevron {
             transform: translateX(calc(var(--rpms-handle-width) / 4)) rotate(180deg);
