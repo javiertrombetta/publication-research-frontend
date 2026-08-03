@@ -503,8 +503,10 @@ aside {
    Nothing here is offered on a first glance, which is deliberate: it is a convenience for the
    person who wants it, not a control everybody has to step around. */
 .rpms-nav-link-lifted {
+    /* Over every other item for the whole carry. They are all positioned, so without a number of
+       its own the one in the air would slide behind whichever of them comes after it in the list. */
     position: relative;
-    z-index: 2;
+    z-index: 3;
     box-shadow: 0 .5rem 1rem var(--rpms-shadow-colour-strong);
     background: var(--rpms-surface);
     cursor: grabbing;
@@ -531,6 +533,29 @@ aside {
        on that would have it arrive late the whole way. */
     .rpms-nav-reordering .nav-link:not(.rpms-nav-link-lifted) {
         transition: transform .18s ease;
+    }
+
+/* While one is being carried, the rest are out of reach. A row lighting up as the item passes
+   over it reads as "you are about to open me", which is the opposite of what is happening, and
+   it looks like a fault. */
+.rpms-nav-reordering .nav-link:not(.rpms-nav-link-lifted) {
+    pointer-events: none;
+}
+
+    /* The one in the air is under the pointer the entire time, so it would wear the hovered tint
+       over its own surface. It keeps its own, unless it is the open item, which keeps the fill
+       that says so. */
+    .rpms-sidebar-inner .rpms-nav-reordering .nav-link.rpms-nav-link-lifted:not(.active):not(.rpms-nav-link-selected),
+    .rpms-sidebar-inner .rpms-nav-reordering .nav-link.rpms-nav-link-lifted:not(.active):not(.rpms-nav-link-selected):hover {
+        background: var(--rpms-surface);
+        color: var(--rpms-text);
+    }
+
+    /* Said again with enough of a selector to carry: Tabler gives every nav link a stacking order
+       of its own, and among equals the last one in the list wins, so an item carried downwards
+       would pass behind each row it was crossing. */
+    .rpms-sidebar-inner .rpms-nav-reordering .nav-link.rpms-nav-link-lifted {
+        z-index: 3;
     }
 
 /* A held link should not offer to be copied or dragged away as an address. */
