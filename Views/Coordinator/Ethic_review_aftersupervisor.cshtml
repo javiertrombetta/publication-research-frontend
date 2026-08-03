@@ -1,3 +1,4 @@
+@using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 @model CoordinatorEthicsViewModel
 @{
     ViewData["Title"] = "Ethics awaiting you";
@@ -192,39 +193,63 @@ else
                 {
                     <p class="text-secondary">
                         The supervisor has accepted these documents. Approving sends them to the
-                        Head of Department; sending them back returns them to the student.
+                        Head of Department; sending them back returns them to the student. Tick the
+                        ones you want uploaded again, or leave them all unticked to ask for the lot.
                     </p>
 
-                    @if (item.Documents.Count > 0)
-                    {
-                        <div class="table-responsive mb-3">
-                            <table class="table card-table table-vcenter" data-rpms-sortable-table>
-                                <thead>
-                                    <tr><th data-rpms-sort-column="0">Document</th><th data-rpms-sort-column="1">File</th><th data-rpms-sort-column="2">Status</th><th></th></tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var document in item.Documents)
-                                    {
-                                        <tr>
-                                            <td>@Humanise(document.DocumentType)</td>
-                                            <td>@document.FileName</td>
-                                            <td><span class="badge @StatusBadge(document.Status)">@Humanise(document.Status)</span></td>
-                                            <td class="text-end">
-                                                @* Approving a document you cannot read is not a review. *@
-                                                <a class="btn btn-sm btn-outline-primary"
-                                                   asp-controller="Downloads" asp-action="EthicsDocument"
-                                                   asp-route-containerId="@item.Container.Id"
-                                                   asp-route-documentId="@document.Id">Download</a>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
+                    @* The set actually under review: the newest file against each document, minus
+                       anything an earlier round already sent back. *@
+                    var live = item.Documents
+                            .Where(d => d.Status != EthicsDocumentStatus.RevisionRequested)
+                            .GroupBy(d => d.DocumentType, StringComparer.OrdinalIgnoreCase)
+                            .Select(versions => versions.OrderByDescending(d => d.Version).First())
+                            .ToList();
 
                     <form asp-controller="Coordinator" asp-action="ReviewEthicsDocuments" method="post">
                         <input type="hidden" name="id" value="@item.Container.Id" />
+
+                        @if (item.Documents.Count > 0)
+                        {
+                            <div class="table-responsive mb-3">
+                                <table class="table card-table table-vcenter" data-rpms-sortable-table>
+                                    <thead>
+                                        <tr>
+                                            <th data-rpms-sort-column="0">Document</th>
+                                            <th data-rpms-sort-column="1">File</th>
+                                            <th data-rpms-sort-column="2">Status</th>
+                                            <th></th>
+                                            <th class="text-end">Ask again</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var document in item.Documents)
+                                        {
+                                            <tr>
+                                                <td>@Humanise(document.DocumentType)</td>
+                                                <td>@document.FileName</td>
+                                                <td><span class="badge @StatusBadge(document.Status)">@Humanise(document.Status)</span></td>
+                                                <td class="text-end">
+                                                    @* Approving a document you cannot read is not a review. *@
+                                                    <a class="btn btn-sm btn-outline-primary"
+                                                       asp-controller="Downloads" asp-action="EthicsDocument"
+                                                       asp-route-containerId="@item.Container.Id"
+                                                       asp-route-documentId="@document.Id">Download</a>
+                                                </td>
+                                                <td class="text-end">
+                                                    @if (live.Any(d => d.Id == document.Id))
+                                                    {
+                                                        <input class="form-check-input" type="checkbox"
+                                                               name="documentIds" value="@document.Id"
+                                                               aria-label="Ask for @Humanise(document.DocumentType) again" />
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+
                         <div class="mb-3">
                             <label class="form-label" for="doc-comments-@item.Container.Id">Comments</label>
                             <textarea id="doc-comments-@item.Container.Id" name="comments" rows="2" class="form-control"

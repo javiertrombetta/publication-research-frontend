@@ -413,15 +413,21 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ReviewEthicsDocuments(Guid id, bool approve, string? comments)
+        public async Task<IActionResult> ReviewEthicsDocuments(Guid id, bool approve, string? comments, Guid[]? documentIds = null)
         {
+            // Nothing ticked means the whole set, which is what a coordinator who has singled none
+            // of them out is saying. Ignored altogether when approving.
+            var named = approve || documentIds is null ? [] : documentIds;
+
             var result = await ethicsApi.CoordinatorDocumentReviewAsync(
-                id, new CoordinatorDocumentReviewRequestDto(approve, comments ?? string.Empty));
+                id, new CoordinatorDocumentReviewRequestDto(approve, comments ?? string.Empty, named));
 
             TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
                 ? approve
                     ? "Approved. The Head of Department has been asked to review it."
-                    : "Sent back to the student with your comments."
+                    : named.Length == 0
+                        ? "Sent back to the student, who has been asked for all of the documents again."
+                        : $"Sent back to the student, who has been asked for {named.Length} of the documents again."
                 : result.ErrorMessage ?? "Could not record your review.";
 
             return RedirectToAction(nameof(Ethic_review_aftersupervisor));

@@ -131,6 +131,13 @@ namespace ResearchPublicationManagementSystem.Models
 
         public IReadOnlyList<EthicsDocumentDto> Documents { get; set; } = [];
 
+        /// <summary>
+        /// Everything this publication was asked for, whether or not it has arrived. Without it a
+        /// reviewer sees only what turned up, and a set that is short of one document looks the
+        /// same as a complete one.
+        /// </summary>
+        public IReadOnlyList<RequiredEthicsDocumentDto> Required { get; set; } = [];
+
         /// <summary>True when the supervisor still has to rule on whether documentation is needed.</summary>
         public bool NeedsRequirementDecision =>
             Approval?.Status == EthicsStatus.PendingSupervisorDecision;

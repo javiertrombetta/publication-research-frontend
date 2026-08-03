@@ -1,7 +1,23 @@
+@using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 @model SupervisorEthicsViewModel
 @{
     ViewData["Title"] = "Ethics documents";
     var container = Model.Container;
+
+    // Built from what the publication was asked for rather than from what turned up, so a document
+    // that never arrived has a row of its own. Listed the other way round, a set short of one
+    // looked exactly like a complete one.
+    var latest = Model.Documents
+        .GroupBy(d => d.DocumentType, StringComparer.OrdinalIgnoreCase)
+        .ToDictionary(g => g.Key, g => g.OrderByDescending(d => d.Version).First(), StringComparer.OrdinalIgnoreCase);
+
+    var pending = Model.Documents.Where(d => d.Status == EthicsDocumentStatus.PendingReview).ToList();
+
+    // Uploaded against something the institution has since stopped asking for. It was asked for at
+    // the time, so it is still part of what there is to read.
+    var retired = latest.Values
+        .Where(d => !Model.Required.Any(r => string.Equals(r.Name, d.DocumentType, StringComparison.OrdinalIgnoreCase)))
+        .ToList();
 }
 
 <div class="mb-4">
@@ -14,89 +30,186 @@
     <div class="text-secondary">@container.DisplayTitle &middot; @container.StudentName</div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <h2 class="h3 mb-3">Uploaded by the student</h2>
+<form asp-controller="Supervisor" asp-action="SubmitDocumentReview" method="post">
+    <input type="hidden" name="id" value="@container.Id" />
 
-        @if (Model.Documents.Count == 0)
-        {
-            <p class="text-secondary m-0">Nothing has been uploaded yet.</p>
-        }
-        else
-        {
-            <div class="table-responsive">
-                <table class="table card-table table-vcenter">
-                    <thead>
-                        <tr>
-                            <th>Document</th>
-                            <th>File</th>
-                            <th>Uploaded</th>
-                            <th>Status</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var document in Model.Documents)
-                        {
-                            <tr>
-                                <td>@Humanise(document.DocumentType)</td>
-                                <td>@document.FileName</td>
-                                <td>@document.UploadedAt.ToLocalTime().ToString("dd MMM yyyy 'at' HH:mm")</td>
-                                <td><span class="badge @StatusBadge(document.Status)">@Humanise(document.Status)</span></td>
-                                <td class="text-end">
-                                    @* Accepting a document you cannot read is not a review. Every
-                                       other screen that lists these has offered the file; this one
-                                       printed the name and left the supervisor to guess. *@
-                                    <a class="btn btn-sm btn-outline-primary"
-                                       asp-controller="Downloads" asp-action="EthicsDocument"
-                                       asp-route-containerId="@container.Id"
-                                       asp-route-documentId="@document.Id">Download</a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-    </div>
-</div>
-
-@if (!Model.NeedsDocumentReview)
-{
-    <div class="card">
-        <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing to review here</h3>
-            <p class="text-secondary mb-4">
-                These documents aren't waiting on you at the moment.
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h3 mb-2">What this publication was asked for</h2>
+            <p class="text-secondary">
+                The documents an administrator has this institution asking for. The student uploads
+                all of them before the set reaches you.
             </p>
-            <a asp-controller="Supervisor" asp-action="Ethic_reviews" class="btn btn-primary">Back to ethics reviews</a>
+
+            @if (Model.Required.Count == 0 && Model.Documents.Count == 0)
+            {
+                <p class="text-secondary m-0">Nothing has been asked for yet.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table card-table table-vcenter">
+                        <thead>
+                            <tr>
+                                <th>Document</th>
+                                <th>File</th>
+                                <th>Uploaded</th>
+                                <th>Status</th>
+                                <th></th>
+                                @if (Model.NeedsDocumentReview)
+                                {
+                                    <th class="text-end">Ask again</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var requirement in Model.Required)
+                            {
+                                latest.TryGetValue(requirement.Name, out var document);
+
+                                <tr>
+                                    <td>@requirement.Name</td>
+
+                                    @if (document is null)
+                                    {
+                                        <td colspan="3" class="text-secondary">Not uploaded</td>
+                                        <td></td>
+                                    }
+                                    else
+                                    {
+                                        <td>
+                                            @document.FileName
+                                            @if (document.Version > 1)
+                                            {
+                                                <span class="text-secondary small">&middot; version @document.Version</span>
+                                            }
+                                        </td>
+                                        <td>@document.UploadedAt.ToLocalTime().ToString("dd MMM yyyy 'at' HH:mm")</td>
+                                        <td><span class="badge @StatusBadge(document.Status)">@Humanise(document.Status)</span></td>
+                                        <td class="text-end">
+                                            @* Accepting a document you cannot read is not a review. *@
+                                            <a class="btn btn-sm btn-outline-primary"
+                                               asp-controller="Downloads" asp-action="EthicsDocument"
+                                               asp-route-containerId="@container.Id"
+                                               asp-route-documentId="@document.Id">Download</a>
+                                        </td>
+                                    }
+
+                                    @if (Model.NeedsDocumentReview)
+                                    {
+                                        <td class="text-end">
+                                            @if (document is not null && document.Status == EthicsDocumentStatus.PendingReview)
+                                            {
+                                                <input class="form-check-input" type="checkbox"
+                                                       name="documentIds" value="@document.Id"
+                                                       aria-label="Ask for @requirement.Name again" />
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+
+                            @foreach (var document in retired)
+                            {
+                                <tr>
+                                    <td>
+                                        @document.DocumentType
+                                        <span class="badge bg-secondary-lt ms-1">no longer asked for</span>
+                                    </td>
+                                    <td>@document.FileName</td>
+                                    <td>@document.UploadedAt.ToLocalTime().ToString("dd MMM yyyy 'at' HH:mm")</td>
+                                    <td><span class="badge @StatusBadge(document.Status)">@Humanise(document.Status)</span></td>
+                                    <td class="text-end">
+                                        <a class="btn btn-sm btn-outline-primary"
+                                           asp-controller="Downloads" asp-action="EthicsDocument"
+                                           asp-route-containerId="@container.Id"
+                                           asp-route-documentId="@document.Id">Download</a>
+                                    </td>
+                                    @if (Model.NeedsDocumentReview)
+                                    {
+                                        <td class="text-end">
+                                            @if (document.Status == EthicsDocumentStatus.PendingReview)
+                                            {
+                                                <input class="form-check-input" type="checkbox"
+                                                       name="documentIds" value="@document.Id"
+                                                       aria-label="Ask for @document.DocumentType again" />
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
         </div>
     </div>
-}
-else
-{
-    <div class="card">
-        <div class="card-body">
-            <h2 class="h3 mb-2">Your review</h2>
-            <p class="text-secondary">
-                Accepting sends the documents on to the coordinator. Sending them back returns them
-                to the student, so say what needs changing.
-            </p>
 
-            <form asp-controller="Supervisor" asp-action="SubmitDocumentReview" method="post">
-                <input type="hidden" name="id" value="@container.Id" />
+    @if (!Model.NeedsDocumentReview)
+    {
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <h3 class="mb-2">Nothing to review here</h3>
+                <p class="text-secondary mb-4">
+                    These documents aren't waiting on you at the moment.
+                </p>
+                <a asp-controller="Supervisor" asp-action="Ethic_reviews" class="btn btn-primary">Back to ethics reviews</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h3 mb-2">Your review</h2>
+                <p class="text-secondary">
+                    Accepting sends the whole set on to the coordinator. Sending it back returns it
+                    to the student: tick the documents you want again, or leave them all unticked to
+                    ask for the lot, and say what needs changing. Anything you have not ticked is
+                    accepted, so the student is asked for exactly what was wrong.
+                </p>
 
                 <div class="mb-3">
-                    <label class="form-label" for="document-comments">Comments</label>
+                    <label class="form-label" for="document-comments">What needs changing</label>
                     <textarea id="document-comments" name="comments" rows="3" class="form-control"
-                              placeholder="Required when sending the documents back"></textarea>
+                              placeholder="Required when sending anything back"></textarea>
+                    <small class="form-hint">
+                        It is all the student is given to work from, so name the document and the
+                        problem.
+                    </small>
                 </div>
 
                 <div class="btn-list">
                     <button type="submit" name="accept" value="true" class="btn btn-primary">Accept the documents</button>
-                    <button type="submit" name="accept" value="false" class="btn btn-outline-danger">Send back for revision</button>
+                    <button type="submit" name="accept" value="false" class="btn btn-outline-danger"
+                            data-rpms-needs-comments="document-comments">Send back for revision</button>
                 </div>
-            </form>
+
+                <div class="text-secondary small mt-3">
+                    @pending.Count of @Model.Required.Count @(Model.Required.Count == 1 ? "document is" : "documents are") waiting on you.
+                </div>
+            </div>
         </div>
-    </div>
+    }
+</form>
+
+@section Scripts {
+    <script>
+        // Sending something back without saying why is refused by the API. Caught here so the
+        // supervisor is told before losing the page, and only on that button: accepting needs no
+        // explanation, so the box is not marked required and does not stop it.
+        (function () {
+            var button = document.querySelector('[data-rpms-needs-comments]');
+            if (!button) return;
+
+            button.addEventListener('click', function (event) {
+                var box = document.getElementById(button.getAttribute('data-rpms-needs-comments'));
+                if (box && box.value.trim().length > 0) return;
+
+                event.preventDefault();
+                if (box) box.focus();
+                window.rpmsToast('error', ['Say what needs changing. It is all the student is given to work from.']);
+            });
+        })();
+    </script>
 }
