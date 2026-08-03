@@ -244,14 +244,40 @@ body {
     gap: 1rem;
 }
 
+    /* The links sit against the right edge of the page, opposite the credit. */
+    .rpms-footer-links {
+        justify-self: end;
+        text-align: right;
+    }
+
+    /* The heart is the one thing here that is not a fact about the institution, so it keeps the
+       brand colour while the words around it stay muted. Nudged up to sit on the text's centre
+       line rather than its baseline. */
+    .rpms-footer-heart {
+        color: var(--rpms-primary);
+        vertical-align: -.2em;
+        margin: 0 .15rem;
+    }
+
 @media (max-width: 767.98px) {
     .rpms-footer-grid {
         grid-template-columns: 1fr;
         text-align: center;
     }
 
+        .rpms-footer-links {
+            justify-self: center;
+            text-align: center;
+        }
+
+    /* One column, so the three read top to bottom: whose site it is, how to reach them, who
+       built it. */
     .rpms-footer-links {
         order: 2;
+    }
+
+    .rpms-footer-credit {
+        order: 3;
     }
 }
 
