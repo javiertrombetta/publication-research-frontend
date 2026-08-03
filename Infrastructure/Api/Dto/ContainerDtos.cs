@@ -43,7 +43,7 @@ public record PublicationContainerDto(
     /// as configured today. Null on publications created before the figures were recorded; the
     /// current settings govern those.
     /// </summary>
-    int? RequiredInternalCommitteeMembers = null,
+    int? RequiredReviewerMembers = null,
     int? RequiredExternalCommitteeMembers = null,
     /// <summary>
     /// Which ethics decision this is waiting for, by name. Finer than EthicsAwaitingRole, and the

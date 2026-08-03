@@ -7,7 +7,7 @@ public static class RoleNames
     public const string HeadOfDepartment = "HeadOfDepartment";
     public const string Coordinator = "Coordinator";
     public const string Supervisor = "Supervisor";
-    public const string InternalCommitteeMember = "InternalCommitteeMember";
+    public const string Reviewer = "Reviewer";
     public const string ExternalCommitteeMember = "ExternalCommitteeMember";
     public const string Student = "Student";
     public const string Staff = "Staff";
@@ -40,16 +40,16 @@ public static class RoleNames
     public static readonly string[] Operational =
     [
         Admin, HeadOfDepartment, Coordinator, Supervisor,
-        InternalCommitteeMember, ExternalCommitteeMember
+        Reviewer, ExternalCommitteeMember
     ];
 
     public const string CommitteeEligibleRoles =
-        $"{Admin},{HeadOfDepartment},{Coordinator},{Supervisor},{InternalCommitteeMember},{ExternalCommitteeMember}";
+        $"{Admin},{HeadOfDepartment},{Coordinator},{Supervisor},{Reviewer},{ExternalCommitteeMember}";
 
     /// <summary>Every role, in the order they appear in the workflow. Mirrors the backend's list.</summary>
     public static readonly string[] All =
     [
         Student, Supervisor, Coordinator, HeadOfDepartment,
-        InternalCommitteeMember, ExternalCommitteeMember, Admin, Staff
+        Reviewer, ExternalCommitteeMember, Admin, Staff
     ];
 }

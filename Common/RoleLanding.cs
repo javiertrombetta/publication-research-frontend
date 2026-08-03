@@ -17,7 +17,7 @@ public static class RoleLanding
         if (set.Contains(RoleNames.Supervisor)) return ("Supervisor", "SupervisorDashboard");
         if (set.Contains(RoleNames.HeadOfDepartment)) return ("HeadOfDepartment", "Head_of_Department_dashboard");
         // Both committee roles land on the same screens: they do the same job.
-        if (set.Contains(RoleNames.ExternalCommitteeMember) || set.Contains(RoleNames.InternalCommitteeMember))
+        if (set.Contains(RoleNames.ExternalCommitteeMember) || set.Contains(RoleNames.Reviewer))
             return ("ExternalSupervisor", "External_Supervisor_Dashboard");
         if (set.Contains(RoleNames.Admin)) return ("Admin", "Dashboard");
 

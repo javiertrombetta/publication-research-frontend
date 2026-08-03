@@ -208,7 +208,7 @@
         // belong to a department cannot be granted without one.
         (function () {
             var departmentRoles = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(UserDetailViewModel.DepartmentRoles));
-            var committeeRoles = ['InternalCommitteeMember', 'ExternalCommitteeMember'];
+            var committeeRoles = ['Reviewer', 'ExternalCommitteeMember'];
 
             var role = document.getElementById('role');
             var department = document.querySelector('[data-role-department]');

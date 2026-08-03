@@ -70,7 +70,7 @@ A development or shared testing API comes up with a demonstration dataset alread
 for every role, and publications parked at every point in the three pipelines where somebody has to
 act. Every account uses the password `DevTest123!`: `student.test@aisstudent.ac.nz`,
 `supervisor.test@ais.ac.nz`, `coordinator.test@ais.ac.nz`, `hod.test@ais.ac.nz`,
-`internal.test@ais.ac.nz`, `external.test@ais.ac.nz`, `admin.test@ais.ac.nz`. The API's README lists
+`reviewer.test@ais.ac.nz`, `external.test@ais.ac.nz`, `admin.test@ais.ac.nz`. The API's README lists
 the rest and says what each one has waiting.
 
 Sign in as any of them and the notification bell shows what that role owes, rather than a system with

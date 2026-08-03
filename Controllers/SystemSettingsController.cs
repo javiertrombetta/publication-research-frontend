@@ -86,7 +86,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SaveCommittees(
-            int internalMembers, int externalMembers, int minimumApprovals,
+            int reviewerMembers, int externalMembers, int minimumApprovals,
             string[]? candidateRoles = null, Guid[]? excludedUserIds = null)
         {
             // Sent as empty arrays rather than left out when the form posted none, so clearing every
@@ -94,7 +94,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             // alone", which is what a caller that does not manage the setting wants.
             var result = await settingsApi.UpdateCommitteesAsync(
                 new UpdateCommitteeSettingsRequestDto(
-                    internalMembers, externalMembers, minimumApprovals,
+                    reviewerMembers, externalMembers, minimumApprovals,
                     candidateRoles ?? [], excludedUserIds ?? []));
 
             return Done(result.Success, "committees", result.ErrorMessage,

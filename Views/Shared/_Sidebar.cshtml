@@ -9,8 +9,8 @@
     var isSupervisor = User.IsInRole(RoleNames.Supervisor);
     var isHeadOfDepartment = User.IsInRole(RoleNames.HeadOfDepartment);
 
-    // Internal and external members do the same job and share the same screens.
-    var isCommitteeMember = User.IsInRole(RoleNames.InternalCommitteeMember)
+    // Reviewers and external members do the same job and share the same screens.
+    var isCommitteeMember = User.IsInRole(RoleNames.Reviewer)
         || User.IsInRole(RoleNames.ExternalCommitteeMember);
 
     // Asked rather than worked out from roles. Which roles committees are drawn from is an
