@@ -468,6 +468,10 @@ namespace ResearchPublicationManagementSystem.Controllers
             var versions = versionsResult.Data ?? [];
             var latestVersion = versions.OrderByDescending(v => v.VersionNumber).FirstOrDefault();
 
+            // What was said about it. A paper sent back arrives with a status and nothing else, so
+            // the student is told to revise it without being told what.
+            var reviewsResult = await publicationsApi.GetReviewsAsync(pub.Id);
+
             return View(new CreatePublicationViewModel
             {
                 ContainerId = container!.Id,
@@ -482,7 +486,10 @@ namespace ResearchPublicationManagementSystem.Controllers
                 LatestVersionNumber = latestVersion?.VersionNumber ?? 0,
                 // So a paper past editing can still be read: the file is the paper, and being told
                 // it was accepted without being able to open it is not seeing it.
-                LatestVersionId = latestVersion?.Id
+                LatestVersionId = latestVersion?.Id,
+                Reviews = (reviewsResult.Data ?? [])
+                    .OrderByDescending(r => r.ReviewedAt)
+                    .ToList()
             });
         }
 
