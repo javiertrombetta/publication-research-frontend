@@ -177,7 +177,11 @@ else
                                             _ => ""
                                         };
 
-                                        <div class="flex-fill">
+                                        @* Not flex-fill: that leaves each column as wide as its own
+                                           label, so "Research paper" drew a bar half again as long
+                                           as "Ethics". Three stages of equal weight are three bars
+                                           of equal length. See .rpms-stage-column. *@
+                                        <div class="rpms-stage-column">
                                             <div class="rpms-stage-bar @barClass"></div>
                                             <div class="small mt-1 @(state == "todo" ? "text-secondary" : "")">@StageLabel(stage)</div>
                                         </div>

@@ -77,6 +77,28 @@
         }
     }
 
+    // Where the burger sits on a wide screen: halfway down the list, on the sidebar's edge.
+    //
+    // The list is a different height for every role, so the middle of it is a measurement rather
+    // than a number a stylesheet could hold. Read as a document position and used as a viewport
+    // one, which are the same thing at the top of the page, so it does not matter whether this
+    // runs before or after somebody has scrolled.
+    var navList = sidebar.querySelector('.rpms-nav');
+
+    function placeToggle() {
+        if (!navList) return;
+
+        var box = navList.getBoundingClientRect();
+        if (!box.height) return;      // Collapsed to nothing on a phone: leave the last figure.
+
+        root.style.setProperty(
+            '--rpms-burger-top',
+            Math.round(box.top + window.scrollY + box.height / 2) + 'px');
+    }
+
+    placeToggle();
+    window.addEventListener('resize', placeToggle);
+
     toggle.addEventListener('click', function () {
         setCollapsed(!sidebar.classList.contains('rpms-sidebar-collapsed'));
     });
