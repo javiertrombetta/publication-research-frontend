@@ -99,7 +99,84 @@
     placeToggle();
     window.addEventListener('resize', placeToggle);
 
+    // Dragging the handle drags the panel.
+    //
+    // The handle sits on the panel's edge, so taking hold of it and pulling is the movement the
+    // shape already suggests: the panel follows the pointer, and where it is let go decides
+    // whether it finishes opening or closes. A click still just toggles, which is why nothing
+    // happens until the pointer has actually travelled: a few pixels of wobble while pressing a
+    // button is not a drag, and treating it as one would make the button feel broken.
+    var DRAG_THRESHOLD = 4;
+
+    var dragging = false;
+    var dragged = false;
+    var suppressClick = false;
+    var startX = 0;
+    var startWidth = 0;
+
+    function openWidth() {
+        return parseFloat(getComputedStyle(root).getPropertyValue('--rpms-sidebar-width')) || 260;
+    }
+
+    toggle.addEventListener('pointerdown', function (event) {
+        // Left button only, and not on a phone, where the panel comes down over the page rather
+        // than out from the side and there is no edge to pull.
+        if (isNarrow() || (event.pointerType === 'mouse' && event.button !== 0)) return;
+
+        dragging = true;
+        dragged = false;
+        startX = event.clientX;
+        startWidth = sidebar.classList.contains('rpms-sidebar-collapsed') ? 0 : openWidth();
+
+        // So the drag survives the pointer leaving the button, which it does immediately.
+        if (toggle.setPointerCapture) toggle.setPointerCapture(event.pointerId);
+    });
+
+    toggle.addEventListener('pointermove', function (event) {
+        if (!dragging) return;
+
+        var travelled = event.clientX - startX;
+
+        if (!dragged) {
+            if (Math.abs(travelled) < DRAG_THRESHOLD) return;
+            dragged = true;
+            root.classList.add('rpms-sidebar-dragging');
+        }
+
+        var full = openWidth();
+        var width = Math.min(full, Math.max(0, startWidth + travelled));
+
+        root.style.setProperty('--rpms-drag-width', width + 'px');
+        root.style.setProperty('--rpms-drag-progress', String(width / full));
+    });
+
+    function endDrag() {
+        if (!dragging) return;
+        dragging = false;
+
+        // Pressed and released without moving: an ordinary click, and the click handler has it.
+        if (!dragged) return;
+
+        // Let go past halfway and it opens, short of it and it shuts. The click that follows a
+        // drag would otherwise undo the decision that was just made by hand.
+        suppressClick = true;
+        root.classList.remove('rpms-sidebar-dragging');
+
+        var full = openWidth();
+        var width = parseFloat(root.style.getPropertyValue('--rpms-drag-width'));
+
+        setCollapsed(!(width >= full / 2));
+    }
+
+    toggle.addEventListener('pointerup', endDrag);
+    toggle.addEventListener('pointercancel', endDrag);
+
     toggle.addEventListener('click', function () {
+        if (suppressClick) {
+            suppressClick = false;
+            return;
+        }
+
         setCollapsed(!sidebar.classList.contains('rpms-sidebar-collapsed'));
     });
 
