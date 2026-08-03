@@ -909,3 +909,234 @@ document.addEventListener('submit', function (event) {
         run();
     }
 })();
+
+// Putting the sidebar's items in the order somebody wants them.
+//
+// The difficulty is that every item is a link, and a link answers to being pressed. So pressing is
+// not what starts a move: holding is. Press and let go and you have followed the link, exactly as
+// before; press and keep holding and the item lifts off the list and follows the pointer until it
+// is put down. Nothing is guessed from how far the pointer travelled, which is the usual way of
+// telling a click from a drag and the reason drags of a few pixels open pages nobody asked for.
+//
+// The order is kept in this browser, next to the sidebar's open-or-shut state, which is the same
+// kind of thing: how one person likes their own chrome arranged. It is not sent anywhere.
+(function () {
+    var ORDER_KEY = 'rpms.sidebar.order';
+    var HOLD_MS = 400;
+    var SLIP = 8;              // How far a finger may wander before a hold is read as a scroll.
+
+    var nav = document.querySelector('.rpms-nav');
+    if (!nav) return;
+
+    function items() {
+        return Array.prototype.slice.call(nav.querySelectorAll('.nav-link'));
+    }
+
+    // The route each item opens, which is what it is. Its label changes with the role and its
+    // position is the very thing being recorded, so neither would do.
+    function keyOf(link) {
+        return link.getAttribute('href') || '';
+    }
+
+    function readOrder() {
+        try {
+            var raw = localStorage.getItem(ORDER_KEY);
+            var parsed = raw ? JSON.parse(raw) : null;
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            return [];                                  // Private browsing, or somebody's edit.
+        }
+    }
+
+    function saveOrder() {
+        try {
+            localStorage.setItem(ORDER_KEY, JSON.stringify(items().map(keyOf)));
+        } catch (e) { /* The arrangement just will not outlive the page. */ }
+    }
+
+    // Applied on load. An item nobody has an opinion about yet, because the menu has grown or this
+    // person has a role they did not have before, keeps its place at the end rather than being
+    // dropped or pushed to the top.
+    function applyOrder() {
+        var wanted = readOrder();
+        if (!wanted.length) return;
+
+        var known = items().filter(function (link) { return wanted.indexOf(keyOf(link)) !== -1; });
+        known.sort(function (a, b) { return wanted.indexOf(keyOf(a)) - wanted.indexOf(keyOf(b)); });
+
+        // Appended in order after everything else, then the strangers follow, in the order the
+        // server sent them.
+        var strangers = items().filter(function (link) { return wanted.indexOf(keyOf(link)) === -1; });
+        known.concat(strangers).forEach(function (link) { nav.appendChild(link); });
+    }
+
+    applyOrder();
+
+    var lifted = null;
+    var pointerId = null;
+    var holdTimer = null;
+    var startY = 0;
+    var pressY = 0;
+    var pressX = 0;
+    var moved = false;
+    var orderBefore = null;
+
+    function clearHold() {
+        window.clearTimeout(holdTimer);
+        holdTimer = null;
+    }
+
+    function lift(link) {
+        lifted = link;
+        orderBefore = items().map(keyOf);
+
+        nav.classList.add('rpms-nav-reordering');
+        link.classList.add('rpms-nav-link-lifted');
+
+        // The list is being rearranged, not scrolled, and not selected either.
+        if (link.setPointerCapture && pointerId !== null) {
+            try { link.setPointerCapture(pointerId); } catch (e) { /* gone already */ }
+        }
+    }
+
+    function place(clientY) {
+        var offset = clientY - startY;
+        lifted.style.transform = 'translateY(' + offset + 'px)';
+
+        var box = lifted.getBoundingClientRect();
+        var middle = box.top + box.height / 2;
+
+        var others = items().filter(function (link) { return link !== lifted; });
+
+        for (var i = 0; i < others.length; i++) {
+            var other = others[i];
+            var rect = other.getBoundingClientRect();
+            if (middle < rect.top || middle > rect.bottom) continue;
+
+            var was = lifted.offsetTop;
+
+            if (middle < rect.top + rect.height / 2) {
+                nav.insertBefore(lifted, other);
+            } else {
+                nav.insertBefore(lifted, other.nextSibling);
+            }
+
+            // The item has just been given a different place in the list, so its untransformed
+            // position has moved. Move the reference point with it, or it would jump out from
+            // under the pointer by exactly the height of whatever it stepped over.
+            startY += lifted.offsetTop - was;
+            lifted.style.transform = 'translateY(' + (clientY - startY) + 'px)';
+            break;
+        }
+    }
+
+    function drop(keep) {
+        if (!lifted) return;
+
+        if (!keep && orderBefore) {
+            var by = {};
+            items().forEach(function (link) { by[keyOf(link)] = link; });
+            orderBefore.forEach(function (key) { if (by[key]) nav.appendChild(by[key]); });
+        }
+
+        lifted.style.transform = '';
+        lifted.classList.remove('rpms-nav-link-lifted');
+        nav.classList.remove('rpms-nav-reordering');
+
+        if (keep) saveOrder();
+
+        lifted = null;
+        pointerId = null;
+        orderBefore = null;
+    }
+
+    nav.addEventListener('pointerdown', function (event) {
+        var link = event.target.closest ? event.target.closest('.nav-link') : null;
+        if (!link || !nav.contains(link)) return;
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+        pointerId = event.pointerId;
+        pressX = event.clientX;
+        pressY = event.clientY;
+        moved = false;
+
+        clearHold();
+        holdTimer = window.setTimeout(function () {
+            holdTimer = null;
+            startY = pressY;
+            lift(link);
+        }, HOLD_MS);
+    });
+
+    nav.addEventListener('pointermove', function (event) {
+        if (lifted) {
+            moved = true;
+            event.preventDefault();
+            place(event.clientY);
+            return;
+        }
+
+        // Still waiting on the hold. A finger that has set off somewhere is scrolling the menu,
+        // and a mouse that has wandered is not holding still, so neither is a request to rearrange.
+        if (!holdTimer) return;
+        if (Math.abs(event.clientX - pressX) > SLIP || Math.abs(event.clientY - pressY) > SLIP) {
+            clearHold();
+        }
+    });
+
+    function release() {
+        clearHold();
+        if (lifted) drop(true);
+    }
+
+    nav.addEventListener('pointerup', release);
+    nav.addEventListener('pointercancel', function () {
+        clearHold();
+        if (lifted) drop(false);
+    });
+
+    // A link that has been carried somewhere must not also be followed. The click arrives after
+    // the pointer is up, which is where this catches it.
+    nav.addEventListener('click', function (event) {
+        if (!moved) return;
+        moved = false;
+        event.preventDefault();
+        event.stopPropagation();
+    }, true);
+
+    // Holding a link on a touch screen otherwise offers to copy it, and dragging one offers to
+    // drag the address somewhere.
+    nav.addEventListener('contextmenu', function (event) {
+        if (lifted) event.preventDefault();
+    });
+
+    nav.addEventListener('dragstart', function (event) { event.preventDefault(); });
+
+    // The same thing from the keyboard, for anybody not using a pointer: hold Alt and use the
+    // arrows on the item that has focus.
+    nav.addEventListener('keydown', function (event) {
+        if (!event.altKey) return;
+        if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+
+        var link = event.target.closest ? event.target.closest('.nav-link') : null;
+        if (!link) return;
+
+        var list = items();
+        var at = list.indexOf(link);
+        var to = event.key === 'ArrowUp' ? at - 1 : at + 1;
+        if (to < 0 || to >= list.length) return;
+
+        event.preventDefault();
+
+        if (event.key === 'ArrowUp') nav.insertBefore(link, list[to]);
+        else nav.insertBefore(link, list[to].nextSibling);
+
+        saveOrder();
+        link.focus();
+    });
+
+    // Somebody who changes their mind mid-carry gets the list back as it was.
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && lifted) drop(false);
+    });
+})();
