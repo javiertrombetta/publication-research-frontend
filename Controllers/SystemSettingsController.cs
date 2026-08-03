@@ -18,10 +18,11 @@ namespace ResearchPublicationManagementSystem.Controllers
     public class SystemSettingsController(
         SettingsApiClient settingsApi,
         UsersApiClient usersApi,
+        DepartmentsApiClient departmentsApi,
         Services.IInstitutionDetails institution) : Controller
     {
         [HttpGet]
-        public async Task<IActionResult> Index(string? tab)
+        public async Task<IActionResult> Index(string? tab, Guid? departmentId)
         {
             var model = new SystemSettingsViewModel { ActiveTab = NormaliseTab(tab) };
 
@@ -69,6 +70,30 @@ namespace ResearchPublicationManagementSystem.Controllers
                 model.CommitteePeople = [.. (people.Data?.Items ?? [])
                     .Where(u => u.Roles.Any(model.Committees.SelectableRoles.Contains))
                     .OrderBy(u => u.LastName).ThenBy(u => u.FirstName)];
+            }
+
+            // The departments, and whoever is in the one being looked at. Falls back to the first
+            // department so the tab opens on something rather than on a prompt to choose.
+            if (model.ActiveTab == "departments")
+            {
+                var departments = await departmentsApi.GetAllAsync();
+                model.Departments = departments.Data ?? [];
+
+                var chosen = departmentId ?? model.Departments.FirstOrDefault()?.Id;
+                if (chosen is not null)
+                {
+                    var members = await departmentsApi.GetMembersAsync(chosen.Value);
+                    model.DepartmentMembers = members.Data;
+                    if (!members.Success)
+                    {
+                        TempData["ErrorMessage"] = members.ErrorMessage ?? "Could not load who is in that department.";
+                    }
+                }
+
+                var heads = await usersApi.GetAllAsync(role: RoleNames.HeadOfDepartment, pageSize: 200);
+                var coordinators = await usersApi.GetAllAsync(role: RoleNames.Coordinator, pageSize: 200);
+                model.HeadCandidates = Sorted(heads.Data?.Items);
+                model.CoordinatorCandidates = Sorted(coordinators.Data?.Items);
             }
 
             // The API's answer, not this application's guess. It used to ask its own environment,
@@ -368,7 +393,81 @@ namespace ResearchPublicationManagementSystem.Controllers
                 "Saved. Deadlines mark work as overdue; they never stop it being done late.");
         }
 
+        // ---------- Departments ----------
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddDepartment(string name, string code)
+        {
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(code))
+            {
+                return DepartmentDone(false, null, "Give the department a name and a code.", null);
+            }
+
+            var result = await departmentsApi.CreateAsync(
+                new CreateDepartmentRequestDto(name.Trim(), code.Trim().ToUpperInvariant()));
+
+            return DepartmentDone(result.Success, result.Data?.Id, result.ErrorMessage,
+                "Added. Give it a head of department and its coordinators before students are sent to it.");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RenameDepartment(Guid id, string name, string code)
+        {
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(code))
+            {
+                return DepartmentDone(false, id, "A department needs a name and a code.", null);
+            }
+
+            var result = await departmentsApi.UpdateAsync(id,
+                new UpdateDepartmentRequestDto(name.Trim(), code.Trim().ToUpperInvariant()));
+
+            return DepartmentDone(result.Success, id, result.ErrorMessage,
+                "Saved. The new name shows everywhere the department is named.");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveDepartment(Guid id)
+        {
+            var result = await departmentsApi.RemoveAsync(id);
+
+            return DepartmentDone(result.Success, result.Success ? null : id, result.ErrorMessage,
+                "Removed.");
+        }
+
+        /// <summary>
+        /// The department's heads and coordinators, as a whole list. Naming somebody moves them here
+        /// from wherever they were, so this is where a department is arranged; the API refuses to
+        /// leave anybody holding one of those roles in no department at all.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveDepartmentMembers(
+            Guid id, Guid[]? headOfDepartmentUserIds = null, Guid[]? coordinatorUserIds = null)
+        {
+            var result = await departmentsApi.SetMembersAsync(id,
+                new SetDepartmentMembersRequestDto(headOfDepartmentUserIds ?? [], coordinatorUserIds ?? []));
+
+            return DepartmentDone(result.Success, id, result.ErrorMessage,
+                "Saved. Anybody moved here keeps the role they already had.");
+        }
+
         // ---------- Helpers ----------
+
+        /// <summary>Back to the departments tab, still looking at the department worked on.</summary>
+        private IActionResult DepartmentDone(bool success, Guid? departmentId, string? error, string? successMessage)
+        {
+            TempData[success ? "SuccessMessage" : "ErrorMessage"] =
+                success ? successMessage ?? "Saved." : error ?? "Could not save the department.";
+
+            return RedirectToAction(nameof(Index), new { tab = "departments", departmentId });
+        }
+
+        /// <summary>People in the order a list of names is read in.</summary>
+        private static IReadOnlyList<UserListItemDto> Sorted(IReadOnlyList<UserListItemDto>? people) =>
+            [.. (people ?? []).OrderBy(u => u.LastName).ThenBy(u => u.FirstName)];
 
         private IActionResult Done(bool success, string tab, string? error, string successMessage)
         {
@@ -385,7 +484,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         private static string NormaliseTab(string? tab) => tab switch
         {
             "ethics" or "passwords" or "notifications" or "access" or "uploads"
-                or "institution" or "deadlines" or "storage" => tab,
+                or "institution" or "deadlines" or "storage" or "departments" => tab,
             _ => "committees"
         };
     }

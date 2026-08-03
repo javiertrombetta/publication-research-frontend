@@ -42,6 +42,9 @@
                     <a class="@TabClass("committees")" asp-action="Index" asp-route-tab="committees">Committees</a>
                 </li>
                 <li class="nav-item">
+                    <a class="@TabClass("departments")" asp-action="Index" asp-route-tab="departments">Departments</a>
+                </li>
+                <li class="nav-item">
                     <a class="@TabClass("ethics")" asp-action="Index" asp-route-tab="ethics">Ethics documents</a>
                 </li>
                 <li class="nav-item">
@@ -163,6 +166,222 @@
                         </form>
                     </div>
                 </div>
+            }
+
+            if (Model.ActiveTab == "departments")
+            {
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="h3 mb-2">Departments</h2>
+                        <p class="text-secondary">
+                            What this institution is divided into. Every student belongs to one, and it
+                            decides which coordinator they are given and which head of department
+                            oversees their work.
+                        </p>
+
+                        @if (Model.Departments.Count == 0)
+                        {
+                            <p class="text-secondary mb-0">
+                                None yet. Add one below: nobody can register until there is at least one
+                                department to belong to.
+                            </p>
+                        }
+
+                        @foreach (var department in Model.Departments)
+                        {
+                            var chosen = Model.DepartmentMembers?.DepartmentId == department.Id;
+
+                            <div class="border rounded p-3 mb-3 @(chosen ? "border-primary" : "")">
+                                <form asp-action="RenameDepartment" method="post" class="row g-2 align-items-end">
+                                    <input type="hidden" name="id" value="@department.Id" />
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label" for="dept-name-@department.Id">Name</label>
+                                        <input id="dept-name-@department.Id" name="name" value="@department.Name"
+                                               maxlength="200" class="form-control" required />
+                                    </div>
+                                    <div class="col-6 col-md-2">
+                                        <label class="form-label" for="dept-code-@department.Id">Code</label>
+                                        <input id="dept-code-@department.Id" name="code" value="@department.Code"
+                                               maxlength="20" class="form-control" required />
+                                    </div>
+                                    <div class="col-6 col-md-2 text-end">
+                                        <button type="submit" class="btn btn-outline-primary w-100">Save</button>
+                                    </div>
+                                    <div class="col-12 col-md-2 text-end">
+                                        @if (chosen)
+                                        {
+                                            <span class="btn btn-ghost-secondary w-100 disabled">Arranging</span>
+                                        }
+                                        else
+                                        {
+                                            <a class="btn btn-outline-secondary w-100" asp-action="Index"
+                                               asp-route-tab="departments" asp-route-departmentId="@department.Id">
+                                                Who is in it
+                                            </a>
+                                        }
+                                    </div>
+                                </form>
+
+                                <div class="d-flex align-items-center justify-content-between mt-2">
+                                    <small class="text-secondary">
+                                        @(string.IsNullOrWhiteSpace(department.HeadOfDepartmentName)
+                                            ? "Nobody heads it yet."
+                                            : $"Headed by {department.HeadOfDepartmentName}.")
+                                    </small>
+                                    <form asp-action="RemoveDepartment" method="post"
+                                          onsubmit="return confirm('Remove @department.Name? This only works while nobody belongs to it.');">
+                                        <input type="hidden" name="id" value="@department.Id" />
+                                        <button type="submit" class="btn btn-link link-secondary p-0">Remove</button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="h3 mb-3">Add a department</h2>
+                        <form asp-action="AddDepartment" method="post" class="row g-2 align-items-end">
+                            <div class="col-12 col-md-7">
+                                <label class="form-label" for="new-dept-name">Name</label>
+                                <input id="new-dept-name" name="name" maxlength="200" class="form-control"
+                                       placeholder="Information Technology" required />
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <label class="form-label" for="new-dept-code">Code</label>
+                                <input id="new-dept-code" name="code" maxlength="20" class="form-control"
+                                       placeholder="IT" required />
+                            </div>
+                            <div class="col-6 col-md-2 text-end">
+                                <button type="submit" class="btn btn-primary w-100">Add</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                if (Model.DepartmentMembers is not null)
+                {
+                    var members = Model.DepartmentMembers;
+                    var headIds = members.HeadsOfDepartment.Select(p => p.UserId).ToHashSet();
+                    var coordinatorIds = members.Coordinators.Select(p => p.UserId).ToHashSet();
+
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h2 class="h3 mb-2">Who is in @members.DepartmentName</h2>
+                            <p class="text-secondary">
+                                A head of department and a coordinator belong to one department, so this
+                                is where they are arranged. Ticking somebody moves them here from
+                                wherever they were. Untick nobody: taking someone out is done by putting
+                                them in another department, or by changing what they are in
+                                <a asp-controller="Users" asp-action="Index">Users</a>, which is also
+                                where a role is granted in the first place.
+                            </p>
+
+                            <form asp-action="SaveDepartmentMembers" method="post" class="row g-4">
+                                <input type="hidden" name="id" value="@members.DepartmentId" />
+
+                                <div class="col-12 col-lg-6">
+                                    <label class="form-label">Heads of department</label>
+                                    @if (Model.HeadCandidates.Count == 0)
+                                    {
+                                        <p class="text-secondary mb-0">
+                                            Nobody holds the role yet. Grant it in Users first.
+                                        </p>
+                                    }
+                                    @foreach (var person in Model.HeadCandidates)
+                                    {
+                                        <label class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="headOfDepartmentUserIds"
+                                                   value="@person.Id" checked="@headIds.Contains(person.Id)" />
+                                            <span class="form-check-label">
+                                                @person.FullName
+                                                <small class="d-block text-secondary">@person.Email</small>
+                                            </span>
+                                        </label>
+                                    }
+                                    <small class="form-hint">
+                                        One is the usual arrangement, and more than one is allowed where an
+                                        institution shares the post.
+                                    </small>
+                                </div>
+
+                                <div class="col-12 col-lg-6">
+                                    <label class="form-label">Coordinators</label>
+                                    @if (Model.CoordinatorCandidates.Count == 0)
+                                    {
+                                        <p class="text-secondary mb-0">
+                                            Nobody holds the role yet. Grant it in Users first.
+                                        </p>
+                                    }
+                                    @foreach (var person in Model.CoordinatorCandidates)
+                                    {
+                                        <label class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="coordinatorUserIds"
+                                                   value="@person.Id" checked="@coordinatorIds.Contains(person.Id)" />
+                                            <span class="form-check-label">
+                                                @person.FullName
+                                                <small class="d-block text-secondary">@person.Email</small>
+                                            </span>
+                                        </label>
+                                    }
+                                    <small class="form-hint">
+                                        As many as the department needs. New students are shared out among
+                                        whoever is taking work on.
+                                    </small>
+                                </div>
+
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">Save who is in it</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <h2 class="h3 mb-2">Also working here</h2>
+                            <p class="text-secondary">
+                                A supervisor and a reviewer may work in several departments at once, so
+                                which ones they are in is part of what they are rather than something
+                                this department decides. It is set with their role, in
+                                <a asp-controller="Users" asp-action="Index">Users</a>.
+                            </p>
+
+                            <div class="row g-4">
+                                <div class="col-12 col-lg-6">
+                                    <label class="form-label">Supervisors</label>
+                                    @if (members.Supervisors.Count == 0)
+                                    {
+                                        <p class="text-secondary mb-0">None attached to this department.</p>
+                                    }
+                                    @foreach (var person in members.Supervisors)
+                                    {
+                                        <div class="border-top py-2">
+                                            @person.Name
+                                            <small class="d-block text-secondary">@person.Email</small>
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="col-12 col-lg-6">
+                                    <label class="form-label">Reviewers</label>
+                                    @if (members.Reviewers.Count == 0)
+                                    {
+                                        <p class="text-secondary mb-0">None attached to this department.</p>
+                                    }
+                                    @foreach (var person in members.Reviewers)
+                                    {
+                                        <div class="border-top py-2">
+                                            @person.Name
+                                            <small class="d-block text-secondary">@person.Email</small>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
             }
 
             if (Model.ActiveTab == "ethics")

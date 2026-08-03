@@ -43,6 +43,25 @@ namespace ResearchPublicationManagementSystem.Models
 
         public DeadlineSettingsDto Deadlines { get; set; } = new(14, 21, 30);
 
+        /// <summary>Every department, for the tab that arranges them. Only loaded on that tab.</summary>
+        public IReadOnlyList<DepartmentDto> Departments { get; set; } = [];
+
+        /// <summary>
+        /// Who is in the department being looked at. Null until one is chosen, and on every other
+        /// tab.
+        /// </summary>
+        public DepartmentMembersDto? DepartmentMembers { get; set; }
+
+        /// <summary>
+        /// Everybody already holding the head-of-department role, anywhere. Moving one here is what
+        /// this tab does; giving somebody the role in the first place belongs to the user
+        /// directory, which asks for everything the role needs.
+        /// </summary>
+        public IReadOnlyList<UserListItemDto> HeadCandidates { get; set; } = [];
+
+        /// <summary>Everybody already holding the coordinator role, on the same terms.</summary>
+        public IReadOnlyList<UserListItemDto> CoordinatorCandidates { get; set; } = [];
+
         public bool LoadFailed { get; set; }
 
         /// <summary>
