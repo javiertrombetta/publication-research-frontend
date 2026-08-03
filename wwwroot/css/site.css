@@ -1622,4 +1622,11 @@ aside {
 .rpms-footer {
     background: var(--rpms-surface);
     border-color: var(--rpms-border) !important;
+
+    /* The bar's shadow, cast the other way. The two are the same thing at opposite ends of the
+       screen: a strip standing over the page and over the menu, and a shadow going down from the
+       top one and up from the bottom one is what says they are at the same height. The colour is
+       the theme's rather than the fixed one behind Bootstrap's own shadow class, which stayed a
+       pale grey against a dark page. */
+    box-shadow: 0 -.125rem .25rem var(--rpms-shadow-colour);
 }
