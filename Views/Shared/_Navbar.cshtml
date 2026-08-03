@@ -33,11 +33,14 @@
                         aria-controls="rpms-sidebar"
                         aria-expanded="true">
 
-                    @* Three bars in both states. Only the button behind them changes: filled when
-                       the sidebar is closed, transparent when it is open, see #sidebar-toggle
-                       in site.css. *@
+                    @* Two marks, one shown at a time, because the control is two different things
+                       depending on the width. In the bar on a phone it is a menu button, and three
+                       bars is what a menu button looks like. On a wide screen it has left the bar
+                       and sits on the panel's edge, where it is a handle: an arrow that points the
+                       way the panel is about to move says more than a menu icon would, and asks for
+                       far less room. See .rpms-toggle-* in site.css. *@
                     <svg xmlns="http://www.w3.org/2000/svg"
-                         class="icon rpms-burger"
+                         class="icon rpms-toggle-bars"
                          width="24"
                          height="24"
                          viewBox="0 0 24 24"
@@ -51,6 +54,24 @@
                         <path d="M4 6h16" />
                         <path d="M4 12h16" />
                         <path d="M4 18h16" />
+
+                    </svg>
+
+                    @* One arrow, pointing the way the panel is about to go: left to shut it, and
+                       turned to the right once it is shut, to bring it back. *@
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         class="icon rpms-toggle-chevron"
+                         width="18"
+                         height="18"
+                         viewBox="0 0 24 24"
+                         stroke-width="2.5"
+                         stroke="currentColor"
+                         fill="none"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M15 6l-6 6l6 6" />
 
                     </svg>
 

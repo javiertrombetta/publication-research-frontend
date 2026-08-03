@@ -30,6 +30,19 @@
 
     --rpms-sidebar-width: 260px;
     --rpms-navbar-height: 56px;
+
+    /* How the sidebar opens and shuts, in one place, because five things move together and any
+       one of them out of step is what makes an animation look broken rather than smooth: the
+       panel's width, its border, what is inside it, the handle on its edge, and the page taking
+       up the room. Slow enough to watch, and eased so it leaves quickly and arrives gently
+       instead of running at one speed and stopping dead. */
+    --rpms-sidebar-speed: .45s;
+    --rpms-sidebar-ease: cubic-bezier(.22, 1, .36, 1);
+
+    /* The handle on the panel's edge. Upright and narrow, and named here because half of the
+       width is also how far it hangs over whatever it is sitting on. */
+    --rpms-handle-width: 26px;
+    --rpms-handle-height: 60px;
     /* ---------- Navigation ---------- */
 
     /* The one fill in the chrome. Two controls wear it, the burger when the sidebar is shut and
@@ -318,7 +331,8 @@ aside {
 .rpms-sidebar {
     flex: 0 0 auto;
     overflow: hidden;
-    transition: width .2s ease, border-right-width .2s ease;
+    transition: width var(--rpms-sidebar-speed) var(--rpms-sidebar-ease),
+                border-right-width var(--rpms-sidebar-speed) var(--rpms-sidebar-ease);
 }
 
     /* Set in <head> before the first paint, so a remembered collapsed sidebar is never drawn
@@ -332,7 +346,9 @@ aside {
            progressively instead of blinking out at the start, while opening makes it visible at
            once so there is something to watch as it grows. Both still take .2s end to end. */
         visibility: hidden;
-        transition: width .2s ease, border-right-width .2s ease, visibility 0s linear .2s;
+        transition: width var(--rpms-sidebar-speed) var(--rpms-sidebar-ease),
+                    border-right-width var(--rpms-sidebar-speed) var(--rpms-sidebar-ease),
+                    visibility 0s linear var(--rpms-sidebar-speed);
     }
 
 /* Holds the expanded width regardless of the aside's animated width, so nothing inside
@@ -340,7 +356,22 @@ aside {
 .rpms-sidebar-inner {
     width: var(--rpms-sidebar-width);
     flex: 0 0 auto;
+    /* The list draws back a little and fades as the panel shuts, rather than being sliced off at
+       a hard edge. It leads the width slightly, so what you watch is the menu leaving and the
+       panel following it, which is the same movement read the right way round. */
+    transition: opacity calc(var(--rpms-sidebar-speed) * .6) ease,
+                transform var(--rpms-sidebar-speed) var(--rpms-sidebar-ease);
 }
+
+    /* Wide screens only. On a phone the panel slides up behind the bar as a whole, and a list
+       drifting sideways inside something travelling upwards is two animations disagreeing. */
+    @media (min-width: 768px) {
+        :root.rpms-sidebar-is-collapsed .rpms-sidebar-inner,
+        .rpms-sidebar.rpms-sidebar-collapsed .rpms-sidebar-inner {
+            opacity: 0;
+            transform: translateX(-16px);
+        }
+    }
 
 /* Logo */
 
@@ -472,7 +503,7 @@ aside {
         border-right: 0;
         border-bottom: 1px solid var(--rpms-border);
         box-shadow: 0 .5rem 1rem var(--rpms-shadow-colour-strong);
-        transition: transform .25s ease;
+        transition: transform var(--rpms-sidebar-speed) var(--rpms-sidebar-ease);
     }
 
         /* Slid up behind the top bar rather than shrunk: width is what the desktop state animates,
@@ -484,7 +515,8 @@ aside {
             width: auto;
             border-right-width: 0;
             transform: translateY(-100%);
-            transition: transform .25s ease, visibility 0s linear .25s;
+            transition: transform var(--rpms-sidebar-speed) var(--rpms-sidebar-ease),
+                        visibility 0s linear var(--rpms-sidebar-speed);
         }
 
     /* The fixed 260px exists to stop the nav reflowing while the desktop panel animates its
@@ -564,6 +596,14 @@ aside {
         height: 40px;
     }
 
+/* ---------- Which of the toggle's two marks is showing ---------- */
+
+/* Three bars in the bar on a phone, a chevron on the panel's edge on a wide screen. The wide-screen
+   half is switched on in the min-width block further down, so this is the narrow default. */
+.rpms-toggle-chevron {
+    display: none;
+}
+
 /* ---------- Burger animation ---------- */
 
 /* Driven off the button's own aria-expanded, which site.js already keeps in sync with the
@@ -623,17 +663,41 @@ aside {
    Leaving the bar also gives the brand the corner to itself, which is why the logo now starts at
    the container's own padding rather than a burger's width in from it. */
 @media (min-width: 768px) {
+    /* A handle, not a menu button: a slot in the panel's edge, narrow and upright, with its ends
+       rounded off so half of it showing past the screen still reads as something to take hold of. */
     #sidebar-toggle {
         position: fixed;
         top: var(--rpms-burger-top, 50vh);
         left: var(--rpms-sidebar-width);
-        /* Half a button back, so it sits centred on the sidebar's edge rather than beside it. */
-        margin-left: -20px;
+        /* Half a handle back, so it sits centred on the panel's border rather than beside it. */
+        margin-left: calc(var(--rpms-handle-width) / -2);
         transform: translateY(-50%);
         z-index: 1035;
-        /* Matches the sidebar's own width transition, so panel and handle move as one thing. */
-        transition: left .2s ease, margin-left .2s ease, background-color .2s ease,
-                    color .2s ease, border-color .2s ease;
+        border-radius: 999px;
+        box-shadow: 0 .125rem .375rem var(--rpms-shadow-colour);
+        /* Matches the sidebar's own transition, so panel and handle move as one thing. */
+        transition: left var(--rpms-sidebar-speed) var(--rpms-sidebar-ease),
+                    margin-left var(--rpms-sidebar-speed) var(--rpms-sidebar-ease),
+                    background-color .2s ease, color .2s ease, border-color .2s ease;
+    }
+
+    /* min-width as well as width: Tabler floors .btn-icon at the size of a bar button, which is
+       square, and this is not. */
+    .rpms-navbar .btn-icon#sidebar-toggle {
+        width: var(--rpms-handle-width);
+        min-width: var(--rpms-handle-width);
+        height: var(--rpms-handle-height);
+        min-height: var(--rpms-handle-height);
+        padding: 0;
+    }
+
+    .rpms-toggle-bars {
+        display: none;
+    }
+
+    .rpms-toggle-chevron {
+        display: block;
+        transition: transform var(--rpms-sidebar-speed) var(--rpms-sidebar-ease);
     }
 
         /* Open, it is a control sitting on a boundary with the page behind it, so it carries a
@@ -643,36 +707,78 @@ aside {
             border-color: var(--rpms-border);
         }
 
-    /* Closed, the panel is gone and the edge with it, so the handle rests against the left of the
-       screen: whole rather than half of it hanging off the side, and squared off on that side so
-       it reads as a tab to pull the navigation back out by. */
+    /* Closed, the panel has gone off the left of the screen and the handle goes with it, as far as
+       its own middle: half a disc left showing against the edge, which is a thing to pull. It is
+       the same relationship as when the panel is open, where the handle is centred on the panel's
+       right border. Only the border it is centred on has changed. */
     :root.rpms-sidebar-is-collapsed #sidebar-toggle,
     #sidebar-toggle[aria-expanded="false"] {
         left: 0;
-        margin-left: 0;
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
     }
 
-    /* Room for it, in both states. The handle floats, so anything drawn under it is covered: open,
-       the half that overhangs the border reached into the page's own gutter and clipped the first
-       letter of a heading; closed, the content took the whole width and the handle landed on top of
-       whatever was in that corner. The closed figure is larger because the whole button is on that
-       side, and both are far narrower than the panel they stand in for. */
+        /* Turned to point back at the panel it will bring out, and moved into the half of the
+           handle that is still on the screen, so the arrow is whole even though the handle is
+           not. A quarter of the width is the centre of that half. */
+        :root.rpms-sidebar-is-collapsed .rpms-toggle-chevron,
+        #sidebar-toggle[aria-expanded="false"] .rpms-toggle-chevron {
+            transform: translateX(calc(var(--rpms-handle-width) / 4)) rotate(180deg);
+        }
+
+    /* Room for it. The handle floats, so whatever is drawn under it is covered, and half of it is
+       always over the page: it clipped the first letter of a heading before this. One figure for
+       both states, because half a disc is half a disc wherever the panel happens to be, and a
+       gutter that changed width would make the page shuffle every time the panel moved. */
     .rpms-shell main {
-        padding-left: 24px;
-        transition: padding-left .2s ease;
+        padding-left: 20px;
     }
 
-    :root.rpms-sidebar-is-collapsed .rpms-sidebar + main,
-    .rpms-sidebar.rpms-sidebar-collapsed + main {
-        padding-left: 44px;
+    /* ---------- While the handle is being dragged ----------
+
+       The panel follows the pointer instead of animating, so every transition is off and the same
+       two figures site.js publishes drive all four moving parts: --rpms-drag-width is where the
+       edge is, --rpms-drag-progress is how far open that is, 0 to 1. Letting go puts the classes
+       back and the transitions above carry it the rest of the way. */
+    :root.rpms-sidebar-dragging .rpms-sidebar {
+        width: var(--rpms-drag-width);
+        border-right-width: 1px;
+        visibility: visible;
+        transition: none;
+    }
+
+    :root.rpms-sidebar-dragging .rpms-sidebar-inner {
+        opacity: var(--rpms-drag-progress, 1);
+        transform: translateX(calc((var(--rpms-drag-progress, 1) - 1) * 16px));
+        transition: none;
+        /* Dragging the panel open sweeps the pointer straight across the menu, and letting go
+           over a link would follow it. Nothing under the handle answers a pointer mid-drag. */
+        pointer-events: none;
+    }
+
+    :root.rpms-sidebar-dragging .rpms-shell main {
+        pointer-events: none;
+    }
+
+    :root.rpms-sidebar-dragging #sidebar-toggle {
+        left: var(--rpms-drag-width);
+        margin-left: calc(var(--rpms-handle-width) / -2);
+        transition: none;
+    }
+
+    /* Dragging a panel about should not be selecting the text it passes over, and the cursor says
+       which way it is going to go. */
+    :root.rpms-sidebar-dragging,
+    :root.rpms-sidebar-dragging body {
+        cursor: ew-resize;
+        user-select: none;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
     #sidebar-toggle,
-    .rpms-sidebar {
+    .rpms-toggle-chevron,
+    .rpms-sidebar,
+    .rpms-sidebar-inner,
+    .rpms-shell main {
         transition: none;
     }
 }
