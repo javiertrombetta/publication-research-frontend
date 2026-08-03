@@ -157,15 +157,22 @@
         // Pressed and released without moving: an ordinary click, and the click handler has it.
         if (!dragged) return;
 
-        // Let go past halfway and it opens, short of it and it shuts. The click that follows a
-        // drag would otherwise undo the decision that was just made by hand.
+        // The click that follows a drag would otherwise undo the decision just made by hand.
         suppressClick = true;
-        root.classList.remove('rpms-sidebar-dragging');
 
+        // Both measurements before anything changes. openWidth reads a computed style, which makes
+        // the browser work out the current one there and then, and where that happens matters: a
+        // transition starts from the last value worked out rather than from the last one drawn.
+        // Between letting go of the panel and saying where it should end up, that value is the
+        // width the panel has when nobody is dragging it, which is wide open. Reading it there put
+        // the page back where it had been before the drag and slid it shut from scratch.
         var full = openWidth();
         var width = parseFloat(root.style.getPropertyValue('--rpms-drag-width'));
 
+        // Let go past halfway and it opens, short of it and it shuts. Said first, and only then is
+        // the drag let go of, so the panel carries on from where the hand left it.
         setCollapsed(!(width >= full / 2));
+        root.classList.remove('rpms-sidebar-dragging');
     }
 
     toggle.addEventListener('pointerup', endDrag);
