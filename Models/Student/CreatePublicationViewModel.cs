@@ -46,5 +46,18 @@ namespace ResearchPublicationManagementSystem.Models
             Status is null
             or Infrastructure.Api.Dto.PublicationStatus.Draft
             or Infrastructure.Api.Dto.PublicationStatus.RevisionsRequested;
+
+        /// <summary>
+        /// What has been said about this paper so far, newest first.
+        ///
+        /// Shown while it is still the student's, because a paper sent back for revisions arrives
+        /// with a status and nothing else. "Revisions requested" does not say what to revise, and
+        /// the comments were being written for a reader who never saw them.
+        /// </summary>
+        public IReadOnlyList<Infrastructure.Api.Dto.ReviewDto> Reviews { get; set; } = [];
+
+        /// <summary>True when this paper has come back from a review for the student to work on.</summary>
+        public bool IsRevision =>
+            Status is Infrastructure.Api.Dto.PublicationStatus.RevisionsRequested;
     }
 }
