@@ -148,9 +148,11 @@ else
                     }
                 </p>
 
-                @* Both go to the same screen. It asks for whichever decision the stage has reached,
-                   so the queue does not have to keep two routes in step with the workflow. *@
-                <a asp-controller="Supervisor" asp-action="Review_Ethic_assessmentchecklist"
+                @* Each decision has a screen of its own: the ruling on the declaration, and the
+                   read of the documents. Both rows used to open the ruling, which for a set of
+                   documents is a screen with nothing on it to decide. *@
+                <a asp-controller="Supervisor"
+                   asp-action="@(isRuling ? "Review_Ethic_assessmentchecklist" : "Ethic_document_review")"
                    asp-route-id="@item.Id" class="btn btn-primary">
                     @(isRuling ? "Make the ruling" : "Check the documents")
                 </a>
