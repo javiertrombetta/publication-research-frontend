@@ -1243,24 +1243,38 @@ aside {
 /* A ghost button keeps its pressed fill while it holds focus, which after a click leaves the switch
    looking permanently lit. It is a control that reports its state through the whole page, so it does
    not need to hold a highlight of its own; the keyboard ring stays. */
-.rpms-theme-button:focus:not(:focus-visible),
-.rpms-theme-button:focus:not(:focus-visible):active {
-    background: transparent;
-    box-shadow: none;
-}
-
-/* Hovering it.
+/* The switch under the pointer, or reached by keyboard.
 
    A ghost button's own hover is a pale wash, and the bar this one sits on is pale too, so on the
    signed-out pages the control barely answered the pointer at all. It takes the inverse of the
    page instead: near-black behind the moon on a light bar, near-white behind the sun on a dark one.
 
    The icon is drawn in currentColor, so setting the colour is what turns the moon's outline white.
-   Without it the outline stays dark and disappears into the fill it is standing on. */
+   Without it the outline stays dark and disappears into the fill it is standing on.
+
+   Pressed and after being pressed are listed with plain hover on purpose. This is one appearance
+   for "the pointer is on it", and clicking must not change it: a click leaves the button focused,
+   and both Tabler's active rule and the reset below carry more weight than a bare :hover, so the
+   fill was being taken away mid-interaction and the inverted icon left standing on the bar's own
+   colour, which is to say invisible. */
 .rpms-theme-button:hover,
+.rpms-theme-button:hover:active,
+.rpms-theme-button:hover:focus,
 .rpms-theme-button:focus-visible {
     background: var(--rpms-text);
     color: var(--rpms-surface);
+}
+
+/* A click never leaves a ring behind. Keyboard focus still gets one: that is :focus-visible, which
+   this does not match. */
+.rpms-theme-button:focus:not(:focus-visible) {
+    box-shadow: none;
+}
+
+/* And once the pointer has gone, the fill goes with it rather than leaving the button lit. Only
+   when it has actually gone, which is what :not(:hover) is doing here. */
+.rpms-theme-button:focus:not(:focus-visible):not(:hover) {
+    background: transparent;
 }
 
 
