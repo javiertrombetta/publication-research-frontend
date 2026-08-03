@@ -39,9 +39,9 @@
     --rpms-sidebar-speed: .45s;
     --rpms-sidebar-ease: cubic-bezier(.22, 1, .36, 1);
 
-    /* The handle on the panel's edge. Upright and narrow, and named here because half of the
-       width is also how far it hangs over whatever it is sitting on. */
-    --rpms-handle-width: 32px;
+    /* The handle on the panel's edge. Only half of it is ever drawn, so the width is twice the
+       tab anybody sees, and that half is also how far it reaches over the page beside it. */
+    --rpms-handle-width: 44px;
     --rpms-handle-height: 76px;
     /* ---------- Navigation ---------- */
 
