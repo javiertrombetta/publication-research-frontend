@@ -63,7 +63,8 @@ public static class EthicsStatus
 /// </summary>
 public record CoordinatorNotRequiredReviewRequestDto(bool RequireDocumentation, string Comments);
 
-public record CoordinatorDocumentReviewRequestDto(bool Approve, string Comments);
+/// <param name="DocumentIds">Which of the documents are being asked for again. Empty, or left out, means all of them. Ignored when approving.</param>
+public record CoordinatorDocumentReviewRequestDto(bool Approve, string Comments, IReadOnlyList<Guid>? DocumentIds = null);
 
 public record CoordinatorFinalDecisionRequestDto(bool Approve, string Comments);
 
@@ -74,7 +75,14 @@ public record CoordinatorFinalDecisionRequestDto(bool Approve, string Comments);
 public record SupervisorRequirementDecisionRequestDto(bool IsRequired, string Comments);
 
 /// <summary>Accepting the student's ethics documents, or sending them back for revision.</summary>
-public record DocumentReviewDecisionRequestDto(bool Accept, string Comments);
+public record DocumentReviewDecisionRequestDto(
+    bool Accept,
+    string Comments,
+    /// <summary>
+    /// Which of the uploaded documents are being asked for again. Empty means all of them, which
+    /// is what a reviewer who has not singled any out is saying. Ignored when accepting.
+    /// </summary>
+    IReadOnlyList<Guid>? DocumentIds = null);
 
 /// <summary>Matches the backend's EthicsDocumentStatus enum values.</summary>
 public static class EthicsDocumentStatus

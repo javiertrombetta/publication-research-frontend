@@ -193,15 +193,20 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SubmitDocumentReview(Guid id, bool accept, string comments)
+        public async Task<IActionResult> SubmitDocumentReview(
+            Guid id, bool accept, string comments, Guid[]? documentIds = null)
         {
+            // Which documents are going back. None ticked means all of them, which is what the
+            // button says when nothing is chosen.
             var result = await ethicsApi.SupervisorReviewAsync(
-                id, new DocumentReviewDecisionRequestDto(accept, comments ?? string.Empty));
+                id, new DocumentReviewDecisionRequestDto(accept, comments ?? string.Empty, documentIds));
 
             TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
                 ? accept
                     ? "Documents accepted. They now go to the coordinator."
-                    : "Sent back to the student with your comments."
+                    : documentIds is { Length: > 0 }
+                        ? $"Sent back. The student has been asked for {documentIds.Length} {(documentIds.Length == 1 ? "document" : "documents")} again, with your comments."
+                        : "Sent back to the student with your comments."
                 : result.ErrorMessage ?? "Could not record your review.";
 
             return result.Success
@@ -287,6 +292,11 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             var documents = await ethicsApi.GetDocumentsAsync(containerId);
             model.Documents = documents.Data ?? [];
+
+            // What was asked for, so the screen can show a document that never arrived as well as
+            // the ones that did.
+            var required = await ethicsApi.GetRequiredDocumentsAsync(containerId);
+            model.Required = required.Data ?? [];
 
             return (model, null);
         }
