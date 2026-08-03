@@ -10,16 +10,6 @@
     <div class="container-fluid px-4 rpms-footer-grid">
 
         <div class="rpms-footer-start">
-            <a asp-controller="Home" asp-action="Privacy" class="text-secondary text-decoration-none">
-                Privacy Policy
-            </a>
-        </div>
-
-        <div class="text-center">
-            &copy; @DateTime.Now.Year @institution.Name. All rights reserved.
-        </div>
-
-        <div class="rpms-footer-links">
             @* Plain text until an address is set under System settings, since a mailto: to a
                made-up address would look like it works and quietly lose whatever was sent. *@
             @if (string.IsNullOrWhiteSpace(itSupportEmail))
@@ -34,6 +24,16 @@
                     Contact IT
                 </a>
             }
+        </div>
+
+        <div class="text-center">
+            &copy; @DateTime.Now.Year @institution.Name. All rights reserved.
+        </div>
+
+        <div class="rpms-footer-links">
+            <a asp-controller="Home" asp-action="Privacy" class="text-secondary text-decoration-none">
+                Privacy Policy
+            </a>
         </div>
 
     </div>
