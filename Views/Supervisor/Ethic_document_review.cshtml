@@ -5,8 +5,10 @@
 }
 
 <div class="mb-4">
-    <a asp-controller="Supervisor" asp-action="SupervisorDashboard" class="text-secondary text-decoration-none small">
-        &larr; Dashboard
+    @* Back to the queue this was opened from, not to the dashboard. Ethics reviews is where the
+       next one is, and the dashboard is a detour on the way to it. *@
+    <a asp-controller="Supervisor" asp-action="Ethic_reviews" class="text-secondary text-decoration-none small">
+        &larr; Ethics reviews
     </a>
     <h1 class="page-title mt-2 mb-1">Ethics documents</h1>
     <div class="text-secondary">@container.DisplayTitle &middot; @container.StudentName</div>
@@ -67,7 +69,7 @@
             <p class="text-secondary mb-4">
                 These documents aren't waiting on you at the moment.
             </p>
-            <a asp-controller="Supervisor" asp-action="SupervisorDashboard" class="btn btn-primary">Back to dashboard</a>
+            <a asp-controller="Supervisor" asp-action="Ethic_reviews" class="btn btn-primary">Back to ethics reviews</a>
         </div>
     </div>
 }

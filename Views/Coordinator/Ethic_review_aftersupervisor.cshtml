@@ -144,10 +144,12 @@ else
                 {
                     <div class="mb-3">
                         <div class="text-secondary small">The student declared</div>
-                        <p class="m-0">
+                        <p class="mb-2">
                             Asked whether their research requires ethical approval, they answered
                             <strong>@Humanise(item.Approval.StudentDeclaration)</strong>.
                         </p>
+
+                        <partial name="_EthicsScreeningAnswers" model="item.Approval.StudentScreening" />
                     </div>
                 }
 

@@ -270,8 +270,21 @@ public abstract class ApiClientBase(HttpClient httpClient)
                     && fieldErrorsEl.ValueKind == JsonValueKind.Object)
                 {
                     var fieldErrors = fieldErrorsEl.Deserialize<Dictionary<string, string[]>>(JsonOpts) ?? new();
-                    var title = doc.RootElement.TryGetProperty("title", out var titleEl) ? titleEl.GetString() : "Validation failed.";
-                    return ApiResult<T>.Fail(title ?? "Validation failed.", statusCode, fieldErrors);
+
+                    // What was actually wrong, not that something was. The title of this shape is
+                    // always "One or more validation errors occurred", which is what a screen with
+                    // nowhere to put field errors ended up showing somebody: true, and no help at
+                    // all. Where the reasons are readable, they are the message.
+                    var reasons = fieldErrors.SelectMany(pair => pair.Value)
+                        .Where(reason => !string.IsNullOrWhiteSpace(reason))
+                        .ToArray();
+
+                    var title = doc.RootElement.TryGetProperty("title", out var titleEl) ? titleEl.GetString() : null;
+                    var message = reasons.Length > 0
+                        ? string.Join(" ", reasons)
+                        : title ?? "Validation failed.";
+
+                    return ApiResult<T>.Fail(message, statusCode, fieldErrors);
                 }
 
                 return ApiResult<T>.Fail($"Unexpected response ({statusCode}).", statusCode);

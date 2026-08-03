@@ -347,7 +347,22 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return View(model);
             }
 
-            var result = await ethicsApi.SubmitDeclarationAsync(model.ContainerId, model.Response!);
+            // Each answer with the sentence it answers. The list lives in one place, so a question
+            // reworded cannot end up filed against a different answer, and the wording goes into
+            // the record: a decision has to still read as it read when it was made.
+            var screening = EthicsScreening.Questions
+                .Select((question, index) => new
+                {
+                    Number = index + 1,
+                    Question = question,
+                    Answer = EthicsScreening.Normalise(
+                        index < model.Screening.Length ? model.Screening[index] : null)
+                })
+                .Where(a => a.Answer is not null)
+                .Select(a => new EthicsScreeningAnswerDto(a.Number, a.Question, a.Answer!))
+                .ToList();
+
+            var result = await ethicsApi.SubmitDeclarationAsync(model.ContainerId, model.Response!, screening);
             if (!result.Success)
             {
                 AddApiErrors(result, "Could not record your declaration.");

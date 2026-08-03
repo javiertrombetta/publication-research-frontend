@@ -1,6 +1,8 @@
 namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
 
-public record EthicsDeclarationRequestDto(string Response);
+public record EthicsDeclarationRequestDto(
+    string Response,
+    IReadOnlyList<EthicsScreeningAnswerDto>? Screening = null);
 
 public record EthicsDeclarationDto(Guid Id, Guid PublicationContainerId, string StudentResponse, DateTime DecidedAt);
 
@@ -23,7 +25,15 @@ public record EthicsApprovalDto(
     /// Unsure, or null before they have said. It is what a supervisor is ruling on.
     /// </summary>
     string? StudentDeclaration = null,
-    DateTime? StudentDeclaredAt = null);
+    DateTime? StudentDeclaredAt = null,
+    /// <summary>
+    /// The twenty screening questions the student worked through on the way to that answer, and
+    /// what they said to each. Null for declarations made before these were kept.
+    /// </summary>
+    IReadOnlyList<EthicsScreeningAnswerDto>? StudentScreening = null);
+
+/// <summary>One screening question as it was put to the student, and their answer.</summary>
+public record EthicsScreeningAnswerDto(int Number, string Question, string Answer);
 
 public record EthicsDocumentDto(
     Guid Id,
