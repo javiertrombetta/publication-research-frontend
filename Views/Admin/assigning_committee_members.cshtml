@@ -63,19 +63,34 @@ else
 
                     @* Stated per publication, not once for the page: each records the committee
                        rules in force when it was opened, and the API rejects a committee that
-                       does not match them. *@
+                       does not match them.
+
+                       Said loudly, and counted as the boxes are ticked, because an administrator
+                       comes to this screen straight from System settings and reasonably expects
+                       the figures they just saved. Those govern publications opened from now on.
+                       This one keeps what it was opened under, so that research under way for
+                       months is not rejudged by a rule agreed after it started. *@
                     <h4 class="mt-3 mb-1">Members</h4>
-                    <p class="text-secondary small">
-                        This publication needs @item.RequiredReviewers reviewers and
-                        @item.RequiredExternal external @(item.RequiredTotal == 1 ? "member" : "members"),
-                        as agreed when it was opened.
-                    </p>
+                    <div class="alert alert-info py-2 px-3 mb-3"
+                         data-rpms-committee-required-reviewers="@item.RequiredReviewers"
+                         data-rpms-committee-required-external="@item.RequiredExternal">
+                        <div>
+                            This publication needs
+                            <strong>@item.RequiredReviewers @(item.RequiredReviewers == 1 ? "reviewer" : "reviewers")</strong>
+                            and
+                            <strong>@item.RequiredExternal external @(item.RequiredExternal == 1 ? "member" : "members")</strong>,
+                            the composition agreed when it was opened. Changing the figures in
+                            System settings governs publications opened after the change, not this one.
+                        </div>
+                        <div class="small mt-1" data-rpms-committee-tally aria-live="polite"></div>
+                    </div>
                     <div class="row g-2 mb-3">
                         @foreach (var member in Model.Members)
                         {
                             <div class="col-12 col-md-6">
                                 <label class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="memberUserIds" value="@member.UserId" />
+                                    <input class="form-check-input" type="checkbox" name="memberUserIds" value="@member.UserId"
+                                           data-rpms-member-external="@(member.Roles.Contains(RoleNames.ExternalCommitteeMember) ? "true" : "false")" />
                                     <span class="form-check-label">
                                         @member.FullName
                                         <span class="d-block text-secondary small">
@@ -116,17 +131,52 @@ else
 
     @section Scripts {
         <script>
-            // The backend rejects an empty committee, and requiring more approvals than there are
-            // members can never be satisfied. Say so here rather than after a round trip.
+            // The backend rejects an empty committee, a composition that does not match what this
+            // publication was opened under, and more approvals than there are members. Said here as
+            // the boxes are ticked, so the count is in front of whoever is choosing rather than
+            // arriving as a refusal after they have finished.
             document.querySelectorAll('form[action*="AssignCommittee"]').forEach(function (form) {
+                var banner = form.querySelector('[data-rpms-committee-required-reviewers]');
+                var tally = form.querySelector('[data-rpms-committee-tally]');
+                var wantedReviewers = parseInt(banner.dataset.rpmsCommitteeRequiredReviewers, 10);
+                var wantedExternal = parseInt(banner.dataset.rpmsCommitteeRequiredExternal, 10);
+
+                function chosen() {
+                    var external = 0, reviewers = 0;
+                    form.querySelectorAll('input[name="memberUserIds"]:checked').forEach(function (box) {
+                        if (box.dataset.rpmsMemberExternal === 'true') external++; else reviewers++;
+                    });
+                    return { external: external, reviewers: reviewers, total: external + reviewers };
+                }
+
+                function draw() {
+                    var have = chosen();
+                    var matches = have.reviewers === wantedReviewers && have.external === wantedExternal;
+                    tally.textContent = 'Chosen: ' + have.reviewers + ' of ' + wantedReviewers + ' reviewers, '
+                        + have.external + ' of ' + wantedExternal + ' external.'
+                        + (matches ? ' That is the composition this publication needs.' : '');
+                    tally.classList.toggle('fw-bold', !matches);
+                }
+
+                form.addEventListener('change', function (event) {
+                    if (event.target.name === 'memberUserIds') draw();
+                });
+                draw();
+
                 form.addEventListener('submit', function (event) {
-                    var chosen = form.querySelectorAll('input[name="memberUserIds"]:checked').length;
-                    var required = parseInt(form.querySelector('input[name="minApprovalsRequired"]').value, 10);
+                    var have = chosen();
+                    var approvals = parseInt(form.querySelector('input[name="minApprovalsRequired"]').value, 10);
 
                     var problems = [];
-                    if (!chosen) problems.push('Choose at least one committee member.');
-                    else if (required > chosen) {
-                        problems.push('You have asked for ' + required + ' approvals but chosen only ' + chosen + ' member' + (chosen === 1 ? '' : 's') + '.');
+                    if (!have.total) {
+                        problems.push('Choose at least one committee member.');
+                    } else if (have.reviewers !== wantedReviewers || have.external !== wantedExternal) {
+                        problems.push('This publication needs ' + wantedReviewers + ' reviewers and ' + wantedExternal
+                            + ' external, the composition it was opened under. You have chosen '
+                            + have.reviewers + ' and ' + have.external + '.');
+                    } else if (approvals > have.total) {
+                        problems.push('You have asked for ' + approvals + ' approvals but chosen only '
+                            + have.total + ' member' + (have.total === 1 ? '' : 's') + '.');
                     }
 
                     if (!problems.length) return;
