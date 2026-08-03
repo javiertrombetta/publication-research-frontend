@@ -450,6 +450,33 @@ window.rpmsToast = (function () {
     }, true);   // capture: `invalid` doesn't bubble
 })();
 
+// A field one button insists on and the others do not.
+//
+// Every review screen has this shape: accepting something that is in order explains itself, and
+// sending it back is nothing but the explanation. `required` on the field cannot say that, since
+// it would stop both buttons, so the button carries the rule instead:
+//
+//     data-rpms-needs-comments="<id of the field>"
+//
+// The API refuses these too. This is so the person is told before losing the page and what they
+// typed, rather than being sent back to the screen to type it again.
+(function () {
+    document.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-rpms-needs-comments]');
+        if (!button) return;
+
+        var field = document.getElementById(button.dataset.rpmsNeedsComments);
+        if (field && field.value.trim().length > 0) return;
+
+        event.preventDefault();
+        if (field) field.focus();
+        window.rpmsToast('error', [
+            button.dataset.rpmsNeedsCommentsMessage ||
+            'Say what needs changing. It is all the student is given to work from.'
+        ]);
+    });
+})();
+
 // Select-all controls for a set of checkboxes.
 //
 // Declared in the markup rather than wired per screen: a button says which group of checkboxes it

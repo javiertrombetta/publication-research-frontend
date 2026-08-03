@@ -193,23 +193,3 @@
     }
 </form>
 
-@section Scripts {
-    <script>
-        // Sending something back without saying why is refused by the API. Caught here so the
-        // supervisor is told before losing the page, and only on that button: accepting needs no
-        // explanation, so the box is not marked required and does not stop it.
-        (function () {
-            var button = document.querySelector('[data-rpms-needs-comments]');
-            if (!button) return;
-
-            button.addEventListener('click', function (event) {
-                var box = document.getElementById(button.getAttribute('data-rpms-needs-comments'));
-                if (box && box.value.trim().length > 0) return;
-
-                event.preventDefault();
-                if (box) box.focus();
-                window.rpmsToast('error', ['Say what needs changing. It is all the student is given to work from.']);
-            });
-        })();
-    </script>
-}
