@@ -210,7 +210,13 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
     /// because the site reads it on every page already, and a page's length has to be known
     /// before the first listing is drawn.
     /// </summary>
-    int RowsPerPage = Common.Paging.DefaultRowsPerPage);
+    int RowsPerPage = Common.Paging.DefaultRowsPerPage,
+    /// <summary>
+    /// Whether the IT desk is offered to people with no account. Rides on this response for the
+    /// same reason as the rest: the pages that have to decide it are the ones nobody has signed
+    /// in on.
+    /// </summary>
+    bool ItSupportShownToVisitors = false);
 
     public record UpdateInstitutionSettingsRequestDto(
         string Name,
@@ -221,7 +227,8 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         string? PrivacyPolicyUrl,
         string? CurrentAcademicCycle,
         string? WebsiteUrl = null,
-        int RowsPerPage = Common.Paging.DefaultRowsPerPage);
+        int RowsPerPage = Common.Paging.DefaultRowsPerPage,
+        bool ItSupportShownToVisitors = false);
 
     /// <summary>How long each stage should take. Zero means nothing is ever reported late.</summary>
     public record DeadlineSettingsDto(int SupervisorResponseDays, int EthicsReviewDays, int CommitteeReviewDays);

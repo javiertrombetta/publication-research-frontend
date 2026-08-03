@@ -370,11 +370,17 @@ namespace ResearchPublicationManagementSystem.Controllers
         public async Task<IActionResult> SaveInstitution(
             string name, string studentEmailDomain, string staffEmailDomain,
             string? itSupportEmail, string? researchEnquiriesEmail, string? privacyPolicyUrl,
-            string? currentAcademicCycle, string? websiteUrl, int rowsPerPage)
+            string? currentAcademicCycle, string? websiteUrl, int rowsPerPage,
+            bool itSupportShownToVisitors = false)
         {
             var result = await settingsApi.UpdateInstitutionAsync(new UpdateInstitutionSettingsRequestDto(
                 name, studentEmailDomain, staffEmailDomain, itSupportEmail, researchEnquiriesEmail,
-                privacyPolicyUrl, currentAcademicCycle, websiteUrl, rowsPerPage));
+                privacyPolicyUrl, currentAcademicCycle, websiteUrl, rowsPerPage,
+                itSupportShownToVisitors));
+
+            // The footer reads this, and it is cached per request for a minute. Without dropping
+            // that, an administrator would tick the box and watch the page below them disagree.
+            institution.Invalidate();
 
             return Done(result.Success, "institution", result.ErrorMessage, "Saved.");
         }

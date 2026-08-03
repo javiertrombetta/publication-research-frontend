@@ -9,20 +9,28 @@
 <footer class="footer rpms-footer border-top text-muted d-print-none">
     <div class="container-fluid px-4 rpms-footer-grid">
 
+        @* To people with an account always, and to visitors only if the institution has said so
+           under System settings. Its own students and staff are who a university IT desk supports,
+           and an address on a page open to the world is an address that will be scraped, so the
+           setting starts off. The column is left standing either way so the copyright does not
+           move. *@
         <div class="rpms-footer-start">
-            @* Plain text until an address is set under System settings, since a mailto: to a
-               made-up address would look like it works and quietly lose whatever was sent. *@
-            @if (string.IsNullOrWhiteSpace(itSupportEmail))
+            @if (User.Identity?.IsAuthenticated == true || institution.ItSupportShownToVisitors)
             {
-                <span class="text-secondary" title="An IT support address has not been set up yet">
-                    Contact IT
-                </span>
-            }
-            else
-            {
-                <a href="mailto:@itSupportEmail" class="text-secondary text-decoration-none">
-                    Contact IT
-                </a>
+                @* Plain text until an address is set under System settings, since a mailto: to a
+                   made-up address would look like it works and quietly lose whatever was sent. *@
+                if (string.IsNullOrWhiteSpace(itSupportEmail))
+                {
+                    <span class="text-secondary" title="An IT support address has not been set up yet">
+                        Contact IT
+                    </span>
+                }
+                else
+                {
+                    <a href="mailto:@itSupportEmail" class="text-secondary text-decoration-none">
+                        Contact IT
+                    </a>
+                }
             }
         </div>
 
