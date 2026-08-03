@@ -607,6 +607,69 @@ aside {
         border-color: var(--rpms-nav-fill-hover);
     }
 
+/* ---------- Where the burger sits on a wide screen ----------
+
+   Out of the bar and onto the sidebar's own edge, halfway down the list, straddling the border so
+   it never covers a nav item. It is the handle that opens and closes the panel, and putting it on
+   the panel says so better than a button three inches away in the corner.
+
+   Vertically it is placed by --rpms-burger-top, which site.js measures from the list itself: the
+   list is a different height for every role, so the middle of it is not something a stylesheet can
+   work out. The 50vh below is only what is used before that measurement lands.
+
+   Fixed rather than absolute, so the one control that brings the navigation back is reachable from
+   anywhere on a long page.
+
+   Leaving the bar also gives the brand the corner to itself, which is why the logo now starts at
+   the container's own padding rather than a burger's width in from it. */
+@media (min-width: 768px) {
+    #sidebar-toggle {
+        position: fixed;
+        top: var(--rpms-burger-top, 50vh);
+        left: var(--rpms-sidebar-width);
+        /* Half a button back, so it sits centred on the sidebar's edge rather than beside it. */
+        margin-left: -20px;
+        transform: translateY(-50%);
+        z-index: 1035;
+        /* Matches the sidebar's own width transition, so panel and handle move as one thing. */
+        transition: left .2s ease, margin-left .2s ease, background-color .2s ease,
+                    color .2s ease, border-color .2s ease;
+    }
+
+        /* Open, it is a control sitting on a boundary with the page behind it, so it carries a
+           surface of its own. The transparent version only worked inside the bar. */
+        #sidebar-toggle[aria-expanded="true"] {
+            background-color: var(--rpms-surface);
+            border-color: var(--rpms-border);
+        }
+
+    /* Closed, the panel is gone and the edge with it, so the handle rests against the left of the
+       screen: whole rather than half of it hanging off the side, and squared off on that side so
+       it reads as a tab to pull the navigation back out by. */
+    :root.rpms-sidebar-is-collapsed #sidebar-toggle,
+    #sidebar-toggle[aria-expanded="false"] {
+        left: 0;
+        margin-left: 0;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    /* Room for it, in both states. The handle floats, so anything drawn under it is covered: open,
+       the half that overhangs the border reached into the page's own gutter and clipped the first
+       letter of a heading; closed, the content took the whole width and the handle landed on top of
+       whatever was in that corner. The closed figure is larger because the whole button is on that
+       side, and both are far narrower than the panel they stand in for. */
+    .rpms-shell main {
+        padding-left: 24px;
+        transition: padding-left .2s ease;
+    }
+
+    :root.rpms-sidebar-is-collapsed .rpms-sidebar + main,
+    .rpms-sidebar.rpms-sidebar-collapsed + main {
+        padding-left: 44px;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     #sidebar-toggle,
     .rpms-sidebar {
@@ -652,6 +715,15 @@ aside {
 }
 
 /* ---------- Pipeline stage progress bars (publication cards) ---------- */
+
+/* One column per stage, all three the same width whatever their labels say. The basis is 0
+   rather than auto on purpose: with auto, each column starts as wide as its own label and the
+   spare space is shared on top of that, so "Research paper" ended up with a visibly longer bar
+   than "Ethics". The three stages carry equal weight, so their bars are drawn equal. */
+.rpms-stage-column {
+    flex: 1 1 0;
+    min-width: 0;
+}
 
 .rpms-stage-bar {
     height: 4px;
