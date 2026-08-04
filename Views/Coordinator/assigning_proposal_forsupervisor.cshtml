@@ -1,6 +1,9 @@
 @model AssignProposalsViewModel
+@inject ResearchPublicationManagementSystem.Services.IDecisionComments Decisions
 @{
     ViewData["Title"] = "Send proposals to supervisors";
+
+    var sendNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.ProposalSendToSupervisors);
 }
 
 <div class="mb-4">
@@ -142,6 +145,15 @@ else
     }
 
     <form id="send-proposals-form" asp-controller="Coordinator" asp-action="SendToSupervisors" method="post">
+
+        @* Which page of which ordering the coordinator is working on. A send that is refused is
+           redrawn rather than redirected, and without these it would be redrawn as the first page
+           of the default order: a different queue from the one they had just ticked. *@
+        <input type="hidden" name="page" value="@Model.Page" />
+        <input type="hidden" name="sort" value="@Model.Sort" />
+        <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+        <input type="hidden" name="search" value="@Model.Search" />
+        <input type="hidden" name="supervisorSearch" value="@Model.SupervisorSearch" />
 
         @* One line for the whole page, because the common case is sending everything waiting.
            Counting rather than saying "all": a coordinator needs to know how much is about to go
@@ -291,7 +303,7 @@ else
                     {
                         <label class="form-check">
                             <input class="form-check-input" type="checkbox" name="proposalIds"
-                                   value="@proposal.Id" checked
+                                   value="@proposal.Id" checked="@Model.IsProposalChosen(proposal.Id)"
                                    data-rpms-returned="@proposal.CameBack.ToString().ToLowerInvariant()" />
                             <span class="form-check-label">
                                 <strong>@proposal.Title</strong>
@@ -436,7 +448,8 @@ else
                     {
                         <div class="col-12 col-md-6" data-rpms-page-item>
                             <label class="form-check">
-                                <input class="form-check-input" type="checkbox" name="supervisorIds" value="@supervisor.Id" />
+                                <input class="form-check-input" type="checkbox" name="supervisorIds"
+                                       value="@supervisor.Id" checked="@Model.IsSupervisorChosen(supervisor.Id)" />
                                 <span class="form-check-label">
                                     @supervisor.FullName
                                     <span class="d-block text-secondary small">@supervisor.Email</span>
@@ -466,9 +479,10 @@ else
                 }
 
                 <div class="mt-3">
-                    <label for="dispatch-comments" class="form-label">Message to the supervisors</label>
+                    <label for="dispatch-comments" class="form-label @(sendNeedsWhy ? "required" : "")">Message to the supervisors</label>
                     <textarea id="dispatch-comments" name="comments" rows="3" class="form-control"
-                              placeholder="Anything they should know before deciding"></textarea>
+                              placeholder="Anything they should know before deciding">@Model.Comments</textarea>
+                    <small class="form-hint">@DecisionButton.Hint(sendNeedsWhy)</small>
                 </div>
 
                 @* A date the round runs out on, and what happens when it does.
@@ -483,7 +497,7 @@ else
                     <div class="row g-2 align-items-center">
                         <div class="col-12 col-md-auto">
                             <input type="datetime-local" id="respond-by" name="respondBy" required
-                                   class="form-control" value="@Model.SuggestedRespondByValue"
+                                   class="form-control" value="@Model.RespondByValue"
                                    min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" />
                         </div>
                         <div class="col text-secondary small">
@@ -495,7 +509,12 @@ else
                 </div>
             </div>
             <div class="card-footer d-flex justify-content-end">
-                <button type="submit" class="btn btn-primary">Send proposals</button>
+                <button type="submit" class="btn btn-primary"
+                        @DecisionButton.Attributes(sendNeedsWhy, "dispatch-comments",
+                            "Send these proposals out? The supervisors chosen are asked which of them they are willing to supervise.",
+                            "Say something to the supervisors before sending. This institution asks for it.")>
+                    Send proposals
+                </button>
             </div>
         </div>
 

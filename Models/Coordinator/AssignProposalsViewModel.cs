@@ -151,6 +151,46 @@ namespace ResearchPublicationManagementSystem.Models
         /// <summary>Proposals grouped by student, since they are sent out per student.</summary>
         public IEnumerable<IGrouping<Guid, ProposalWithInvitationsDto>> ByPublication =>
             Proposals.GroupBy(p => p.PublicationContainerId);
+
+        // ---------- What the coordinator had chosen when a send was refused ----------
+
+        /// <summary>
+        /// Which page of the queue this is, carried so that a refused send comes back to the page
+        /// the coordinator was working on rather than to the first one.
+        /// </summary>
+        public int Page { get; set; } = 1;
+
+        /// <summary>
+        /// Set only when a send has just been refused. Null on an ordinary visit, which is what
+        /// tells the screen to fall back to its defaults rather than to an empty selection.
+        ///
+        /// A refusal has to leave the screen exactly as it was. Rebuilding a batch of ticks
+        /// across a queue and a supervisor chooser is most of the work of the screen, and losing
+        /// it over a missing sentence is the difference between a correction and starting again.
+        /// </summary>
+        public IReadOnlyList<Guid>? ChosenProposalIds { get; set; }
+        public IReadOnlyList<Guid>? ChosenSupervisorIds { get; set; }
+
+        /// <summary>What was typed in the message, kept for the same reason.</summary>
+        public string? Comments { get; set; }
+
+        /// <summary>The answer-by date as it was filled in, or the suggestion on a first visit.</summary>
+        public DateTime? ChosenRespondBy { get; set; }
+
+        public string RespondByValue =>
+            (ChosenRespondBy ?? SuggestedRespondBy).ToString("yyyy-MM-ddTHH:mm");
+
+        /// <summary>
+        /// Every proposal on the page is ticked to begin with, because sending the whole queue is
+        /// the ordinary case. After a refusal it is what the coordinator had ticked, including
+        /// none of them in a group they had cleared.
+        /// </summary>
+        public bool IsProposalChosen(Guid proposalId) =>
+            ChosenProposalIds is null || ChosenProposalIds.Contains(proposalId);
+
+        /// <summary>Nobody to begin with: who to send to is the coordinator's whole decision here.</summary>
+        public bool IsSupervisorChosen(Guid supervisorId) =>
+            ChosenSupervisorIds is not null && ChosenSupervisorIds.Contains(supervisorId);
     }
 
     /// <summary>Proposals a supervisor has offered to take on, awaiting the coordinator.</summary>
