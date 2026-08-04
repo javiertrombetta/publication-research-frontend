@@ -1,14 +1,20 @@
 @model CoordinatorEthicsViewModel
 @inject ResearchPublicationManagementSystem.Services.IDecisionComments Decisions
+@inject ResearchPublicationManagementSystem.Services.IPipelineSteps PipelineSteps
 @{
     ViewData["Title"] = "Final ethics decision";
+
+    // The Head of Department step can be switched off, in which case publications reach this
+    // screen straight from the coordinator's own approval and nobody has commented on them.
+    var afterHeadOfDepartment = await PipelineSteps.HeadOfDepartmentReviewsEthicsAsync();
 }
 
 <div class="mb-4">
     <h1 class="page-title mb-1">Final ethics decision</h1>
     <div class="text-secondary">
-        The Head of Department has commented. Approving verifies the ethics stage and opens the
-        student's research paper.
+        @(afterHeadOfDepartment
+            ? "The Head of Department has commented. Approving verifies the ethics stage and opens the student's research paper."
+            : "The last word on ethics. Approving verifies the stage and opens the student's research paper.")
     </div>
 </div>
 
@@ -80,8 +86,9 @@ else if (Model.Items.Count == 0)
         <div class="card-body text-center py-5">
             <h3 class="mb-2">Nothing waiting on you</h3>
             <p class="text-secondary mb-4">
-                Publications appear here once the Head of Department has reviewed their ethics
-                documentation.
+                @(afterHeadOfDepartment
+                    ? "Publications appear here once the Head of Department has reviewed their ethics documentation."
+                    : "Publications appear here once you have approved their ethics documentation.")
             </p>
             <a asp-controller="Coordinator" asp-action="Coordinator_dashboard" class="btn btn-primary">Back to dashboard</a>
         </div>

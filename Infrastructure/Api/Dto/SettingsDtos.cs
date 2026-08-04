@@ -240,6 +240,11 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 
     public record UpdateProposalSettingsRequestDto(int MinimumPerRound, int MaximumPerRound);
 
+    /// <summary>Which optional steps of the pipeline this institution runs.</summary>
+    public record EthicsWorkflowSettingsDto(bool HeadOfDepartmentReviews);
+
+    public record UpdateEthicsWorkflowSettingsRequestDto(bool HeadOfDepartmentReviews);
+
     /// <summary>One decision in the pipeline, and whether this institution asks for a comment on it.</summary>
     public record DecisionCommentDto(
         string Key, string Stage, string Name, bool CommentRequired, bool RequiredByDefault);
