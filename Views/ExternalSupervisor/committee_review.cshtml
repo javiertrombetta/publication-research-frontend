@@ -194,12 +194,20 @@ else
                     <input type="hidden" name="committeeId" value="@item.Committee.Id" />
                     <div class="mb-3">
                         <label class="form-label" for="review-@item.Committee.Id">Your comments</label>
+                        @* Required to turn a paper down, and not to pass it: the same rule every
+                           other decision in the pipeline keeps. Marked required, it stopped both
+                           buttons, and a note demanded where there is nothing to say is a note
+                           written to get past the form. *@
                         <textarea id="review-@item.Committee.Id" name="comments" rows="3" class="form-control"
-                                  placeholder="Your assessment of the paper" required></textarea>
+                                  placeholder="Your assessment, required when you do not approve"></textarea>
                     </div>
                     <div class="btn-list">
                         <button type="submit" name="approve" value="true" class="btn btn-primary">Approve</button>
-                        <button type="submit" name="approve" value="false" class="btn btn-outline-danger">Do not approve</button>
+                        <button type="submit" name="approve" value="false" class="btn btn-outline-danger"
+                                data-rpms-needs-comments="review-@item.Committee.Id"
+                                data-rpms-needs-comments-message="Say what is wrong with the paper. Your comments are what the coordinator decides on.">
+                            Do not approve
+                        </button>
                     </div>
                 </form>
             </div>
