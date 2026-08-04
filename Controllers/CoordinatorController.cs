@@ -91,10 +91,21 @@ namespace ResearchPublicationManagementSystem.Controllers
         [HttpGet]
         public async Task<IActionResult> assigning_proposal_forsupervisor(
             int page = 1, string? supervisorSearch = null,
-            string? sort = null, bool desc = false, string? search = null)
+            string? sort = null, bool desc = false, string? search = null) =>
+            View(await LoadDispatchScreenAsync(page, supervisorSearch, sort, desc, search));
+
+        /// <summary>
+        /// The whole dispatch screen, built the same way whether it is being opened or redrawn
+        /// after a send was refused. Refusing has to put back the queue in the order the
+        /// coordinator was reading it, so the listing cannot be rebuilt from the endpoint's
+        /// defaults on the way back.
+        /// </summary>
+        private async Task<AssignProposalsViewModel> LoadDispatchScreenAsync(
+            int page, string? supervisorSearch, string? sort, bool desc, string? search)
         {
             var model = new AssignProposalsViewModel
             {
+                Page = page < 1 ? 1 : page,
                 SupervisorSearch = supervisorSearch,
                 // The default, not null: the bar has to show which column the list is ordered by,
                 // and "none of them" would be a lie about a list that is ordered.
@@ -112,7 +123,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             {
                 TempData["ErrorMessage"] = pending.ErrorMessage ?? "Could not load the proposals waiting to be sent.";
                 model.LoadFailed = true;
-                return View(model);
+                return model;
             }
 
             model.Proposals = pending.Data?.Items ?? [];
@@ -159,7 +170,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.Pager = Paging.PagerFor(pending.Data, "Coordinator", nameof(assigning_proposal_forsupervisor),
                 model.RouteValues());
 
-            return View(model);
+            return model;
         }
 
         /// <summary>
@@ -227,24 +238,39 @@ namespace ResearchPublicationManagementSystem.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendToSupervisors(
-            Guid[] proposalIds, Guid[] supervisorIds, string? comments, DateTime? respondBy)
+            Guid[] proposalIds, Guid[] supervisorIds, string? comments, DateTime? respondBy,
+            int page = 1, string? supervisorSearch = null,
+            string? sort = null, bool desc = false, string? search = null)
         {
+            // Every refusal comes back to the screen as the coordinator left it: the same page of
+            // the same queue in the same order, with the same proposals and supervisors ticked and
+            // the same message still typed. A redirect threw all of that away and re-ticked the
+            // whole page, so a missing sentence cost the coordinator the batch they had built.
+            async Task<IActionResult> RefuseAsync(string why)
+            {
+                var refused = await LoadDispatchScreenAsync(page, supervisorSearch, sort, desc, search);
+                refused.ChosenProposalIds = proposalIds;
+                refused.ChosenSupervisorIds = supervisorIds;
+                refused.Comments = comments;
+                refused.ChosenRespondBy = respondBy;
+
+                TempData["ErrorMessage"] = why;
+                return View(nameof(assigning_proposal_forsupervisor), refused);
+            }
+
             if (proposalIds.Length == 0 || supervisorIds.Length == 0)
             {
-                TempData["ErrorMessage"] = "Choose at least one proposal and at least one supervisor.";
-                return RedirectToAction(nameof(assigning_proposal_forsupervisor));
+                return await RefuseAsync("Choose at least one proposal and at least one supervisor.");
             }
 
             if (respondBy is null)
             {
-                TempData["ErrorMessage"] = "Say when the supervisors have to answer by.";
-                return RedirectToAction(nameof(assigning_proposal_forsupervisor));
+                return await RefuseAsync("Say when the supervisors have to answer by.");
             }
 
             if (respondBy <= DateTime.Now)
             {
-                TempData["ErrorMessage"] = "The date supervisors have to answer by has already passed.";
-                return RedirectToAction(nameof(assigning_proposal_forsupervisor));
+                return await RefuseAsync("The date supervisors have to answer by has already passed.");
             }
 
             // Sent as UTC, because that is what the API stores and compares against. The form is
@@ -256,8 +282,7 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             if (!result.Success)
             {
-                TempData["ErrorMessage"] = result.ErrorMessage ?? "Could not send the proposals.";
-                return RedirectToAction(nameof(assigning_proposal_forsupervisor));
+                return await RefuseAsync(result.ErrorMessage ?? "Could not send the proposals.");
             }
 
             var sentTo = supervisorIds.Length == 1
@@ -268,7 +293,10 @@ namespace ResearchPublicationManagementSystem.Controllers
                 ? sentTo + $" They have until {deadline:dddd d MMMM yyyy, HH:mm} to answer."
                 : sentTo;
 
-            return RedirectToAction(nameof(assigning_proposal_forsupervisor));
+            // A send that went through does redirect, so a refresh cannot repeat it, and it keeps
+            // the coordinator where they were reading.
+            return RedirectToAction(nameof(assigning_proposal_forsupervisor),
+                new { page, supervisorSearch, sort, desc, search });
         }
 
         /// <summary>
