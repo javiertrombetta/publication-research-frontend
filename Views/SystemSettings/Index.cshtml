@@ -54,6 +54,9 @@
                     <a class="@TabClass("proposals")" asp-action="Index" asp-route-tab="proposals">Proposals</a>
                 </li>
                 <li class="nav-item">
+                    <a class="@TabClass("pipeline")" asp-action="Index" asp-route-tab="pipeline">Pipeline steps</a>
+                </li>
+                <li class="nav-item">
                     <a class="@TabClass("decisions")" asp-action="Index" asp-route-tab="decisions">Comments on decisions</a>
                 </li>
                 <li class="nav-item">
@@ -743,6 +746,43 @@
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            if (Model.ActiveTab == "pipeline")
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h3 mb-2">Pipeline steps</h2>
+                        <p class="text-secondary">
+                            Steps some institutions run and others do not. Turning one off takes it
+                            out of the sequence at once, including for ethics approvals already part
+                            way through, so nothing sits waiting on a step that no longer exists.
+                        </p>
+
+                        <form asp-action="SaveEthicsWorkflow" method="post">
+                            <label class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="headOfDepartmentReviews"
+                                       value="true" checked="@Model.EthicsWorkflow.HeadOfDepartmentReviews" />
+                                <input type="hidden" name="headOfDepartmentReviews" value="false" />
+                                <span class="form-check-label">The Head of Department reviews ethics approvals</span>
+                            </label>
+                            <small class="form-hint">
+                                On, the Head of Department reads the documents the coordinator has
+                                approved, comments on them and hands the approval back to the
+                                coordinator, who then closes the stage. Off, the coordinator closes
+                                it themselves as soon as they have approved the documents.
+                            </small>
+
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-primary"
+                                        @DecisionButton.Attributes(false, null,
+                                            "Change who the ethics stage passes through? Approvals already waiting move to whoever decides next.")>
+                                    Save
+                                </button>
                             </div>
                         </form>
                     </div>

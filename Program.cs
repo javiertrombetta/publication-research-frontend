@@ -130,6 +130,7 @@ builder.Services.AddScoped<IInstitutionDetails, InstitutionDetails>();
 // Read by the sidebar on every page, so it caches its answer rather than asking each time.
 builder.Services.AddScoped<ICommitteeEligibility, CommitteeEligibility>();
 builder.Services.AddScoped<IDecisionComments, DecisionComments>();
+builder.Services.AddScoped<IPipelineSteps, PipelineSteps>();
 
 // ---------- Auth bridging services ----------
 builder.Services.AddScoped<IAuthCookieService, AuthCookieService>();

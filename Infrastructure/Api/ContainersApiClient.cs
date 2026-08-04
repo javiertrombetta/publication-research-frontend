@@ -41,6 +41,14 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
         return GetAsync<PagedResultDto<ActivityHistoryEntryDto>>(query, ct);
     }
 
+    /// <summary>
+    /// Changes who is responsible for a publication already under way. Administrators only, and
+    /// always with a reason.
+    /// </summary>
+    public Task<ApiResult<PublicationContainerDto>> ReassignAsync(
+        Guid id, ReassignContainerRequestDto request, CancellationToken ct = default) =>
+        PutJsonAsync<PublicationContainerDto>($"api/containers/{id}/assignments", request, ct);
+
     /// <summary>What this publication's own trail can be filtered by.</summary>
     public Task<ApiResult<ActivityHistoryFiltersDto>> GetActivityHistoryFiltersAsync(
         Guid id, CancellationToken ct = default) =>

@@ -36,19 +36,20 @@ namespace ResearchPublicationManagementSystem.Controllers
             var deadlines = await settingsApi.GetDeadlinesAsync();
             var proposals = await settingsApi.GetProposalsAsync();
             var decisions = await settingsApi.GetDecisionCommentsAsync();
+            var ethicsWorkflow = await settingsApi.GetEthicsWorkflowAsync();
             var storage = await settingsApi.GetStorageAsync();
 
             // One failure fails the screen: showing three groups and a blank fourth would invite
             // someone to "correct" values that are only blank because they did not load.
             if (!committees.Success || !passwords.Success || !notifications.Success || !ethicsDocuments.Success
                 || !access.Success || !uploads.Success || !institution.Success || !deadlines.Success
-                || !proposals.Success || !decisions.Success || !storage.Success)
+                || !proposals.Success || !decisions.Success || !ethicsWorkflow.Success || !storage.Success)
             {
                 TempData["ErrorMessage"] =
                     committees.ErrorMessage ?? passwords.ErrorMessage ?? notifications.ErrorMessage
                     ?? ethicsDocuments.ErrorMessage ?? access.ErrorMessage ?? uploads.ErrorMessage
                     ?? institution.ErrorMessage ?? deadlines.ErrorMessage ?? proposals.ErrorMessage
-                    ?? decisions.ErrorMessage ?? storage.ErrorMessage
+                    ?? decisions.ErrorMessage ?? ethicsWorkflow.ErrorMessage ?? storage.ErrorMessage
                     ?? "Could not load the system settings.";
                 model.LoadFailed = true;
                 return View(model);
@@ -64,6 +65,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.Deadlines = deadlines.Data!;
             model.Proposals = proposals.Data!;
             model.DecisionComments = decisions.Data?.Decisions ?? [];
+            model.EthicsWorkflow = ethicsWorkflow.Data!;
             model.Storage = storage.Data!;
 
             // Who an administrator can leave out of committee work. Only worth fetching on the tab
@@ -417,6 +419,21 @@ namespace ResearchPublicationManagementSystem.Controllers
                 "Saved. It applies to rounds asked for again as well as to first ones.");
         }
 
+        // ---------- Ethics workflow ----------
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveEthicsWorkflow(bool headOfDepartmentReviews)
+        {
+            var result = await settingsApi.UpdateEthicsWorkflowAsync(
+                new UpdateEthicsWorkflowSettingsRequestDto(headOfDepartmentReviews));
+
+            return Done(result.Success, "pipeline", result.ErrorMessage,
+                headOfDepartmentReviews
+                    ? "Saved. Approved documents now go to the Head of Department before the coordinator closes the stage."
+                    : "Saved. The coordinator now closes the ethics stage without the Head of Department.");
+        }
+
         // ---------- Comments on decisions ----------
 
         [HttpPost]
@@ -523,7 +540,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         private static string NormaliseTab(string? tab) => tab switch
         {
             "ethics" or "passwords" or "notifications" or "access" or "uploads"
-                or "institution" or "deadlines" or "proposals" or "decisions"
+                or "institution" or "deadlines" or "proposals" or "pipeline" or "decisions"
                 or "storage" or "departments" => tab,
             _ => "committees"
         };

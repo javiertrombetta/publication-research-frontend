@@ -15,6 +15,7 @@ namespace ResearchPublicationManagementSystem.Controllers
     [Authorize(Roles = RoleNames.Admin)]
     public class AdminController(
         AdminApiClient adminApi,
+        ContainersApiClient containersApi,
         PublicationsApiClient publicationsApi,
         CommitteesApiClient committeesApi,
         UsersApiClient usersApi,
@@ -246,6 +247,64 @@ namespace ResearchPublicationManagementSystem.Controllers
                 : result.ErrorMessage ?? "Could not change the committee.";
 
             return RedirectToAction(nameof(assigning_committee_members));
+        }
+
+        // ---------- Who is responsible for what ----------
+
+        /// <summary>
+        /// Publications still under way and the people carrying them. Every step of the pipeline
+        /// waits on somebody named on the publication, so one who leaves or falls ill stops it,
+        /// and until now nothing could name anybody else.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> assignments(int page = 1, string? search = null)
+        {
+            var model = new AssignmentsViewModel { Search = search };
+
+            var containers = await containersApi.GetAllAsync(status: "InProgress", page: page, search: search);
+            if (!containers.Success)
+            {
+                TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load the publications right now.";
+                model.LoadFailed = true;
+                return View(model);
+            }
+
+            model.Publications = containers.Data?.Items ?? [];
+            model.TotalCount = containers.Data?.TotalCount ?? 0;
+            model.Pager = Paging.PagerFor(containers.Data, "Admin", nameof(assignments), model.RouteValues());
+
+            // Everyone holding each role, not only those free this week: this screen fixes a
+            // publication that is stuck, and leaving somebody out because they marked themselves
+            // busy would hide the very person the work is being moved to.
+            var coordinators = await usersApi.GetAllAsync(role: RoleNames.Coordinator, pageSize: 100);
+            var supervisors = await usersApi.GetAllAsync(role: RoleNames.Supervisor, pageSize: 100);
+
+            model.Coordinators = [.. (coordinators.Data?.Items ?? []).OrderBy(u => u.LastName).ThenBy(u => u.FirstName)];
+            model.Supervisors = [.. (supervisors.Data?.Items ?? []).OrderBy(u => u.LastName).ThenBy(u => u.FirstName)];
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reassign(
+            Guid id, Guid? coordinatorUserId, Guid? supervisorUserId, string? comments, string? search)
+        {
+            if (string.IsNullOrWhiteSpace(comments))
+            {
+                TempData["ErrorMessage"] =
+                    "Say why these assignments are being changed. It stays on the publication's history.";
+                return RedirectToAction(nameof(assignments), new { search });
+            }
+
+            var result = await containersApi.ReassignAsync(id,
+                new ReassignContainerRequestDto(coordinatorUserId, supervisorUserId, comments));
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? "Assignments changed. Whoever now has the work has been told."
+                : result.ErrorMessage ?? "Could not change the assignments.";
+
+            return RedirectToAction(nameof(assignments), new { search });
         }
 
         // ---------- Helpers ----------

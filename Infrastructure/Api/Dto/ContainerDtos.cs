@@ -132,3 +132,12 @@ public record ActivityHistoryFiltersDto(
     IReadOnlyList<ActivityHistoryActorDto> Actors);
 
 public record ActivityHistoryActorDto(Guid UserId, string Name);
+
+/// <summary>
+/// Changing who is responsible for a publication already under way. Null leaves an assignment as
+/// it is; the reason is required and stays on the publication's history.
+/// </summary>
+public record ReassignContainerRequestDto(
+    Guid? CoordinatorUserId,
+    Guid? SupervisorUserId,
+    string Comments);

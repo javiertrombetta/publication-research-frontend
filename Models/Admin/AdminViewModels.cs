@@ -211,4 +211,33 @@ namespace ResearchPublicationManagementSystem.Models
         /// <summary>Every role an administrator can create an account as.</summary>
         public static IReadOnlyList<string> Roles => UserDetailViewModel.AssignableRoles;
     }
+
+    /// <summary>
+    /// Publications still under way, and who is responsible for each.
+    ///
+    /// Every step waits on somebody named on the publication, so a person who leaves or falls ill
+    /// stops it. This is where an administrator names somebody else.
+    /// </summary>
+    public class AssignmentsViewModel
+    {
+        public IReadOnlyList<PublicationContainerDto> Publications { get; set; } = [];
+
+        public int TotalCount { get; set; }
+
+        public PagerViewModel? Pager { get; set; }
+
+        public string? Search { get; set; }
+
+        /// <summary>Who may take each job. Only people who hold the role are offered.</summary>
+        public IReadOnlyList<UserListItemDto> Coordinators { get; set; } = [];
+
+        public IReadOnlyList<UserListItemDto> Supervisors { get; set; } = [];
+
+        public bool LoadFailed { get; set; }
+
+        public Dictionary<string, string?> RouteValues() => new()
+        {
+            ["search"] = Search
+        };
+    }
 }

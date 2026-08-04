@@ -128,6 +128,16 @@ public class SettingsApiClient(HttpClient httpClient) : ApiClientBase(httpClient
         UpdateProposalSettingsRequestDto request, CancellationToken ct = default) =>
         PutJsonAsync<ProposalSettingsDto>("api/settings/proposals", request, ct);
 
+    // ---------- Ethics workflow ----------
+
+    /// <summary>Readable by anyone signed in: the ethics screens have to say who decides next.</summary>
+    public Task<ApiResult<EthicsWorkflowSettingsDto>> GetEthicsWorkflowAsync(CancellationToken ct = default) =>
+        GetAsync<EthicsWorkflowSettingsDto>("api/settings/ethics-workflow", ct);
+
+    public Task<ApiResult<EthicsWorkflowSettingsDto>> UpdateEthicsWorkflowAsync(
+        UpdateEthicsWorkflowSettingsRequestDto request, CancellationToken ct = default) =>
+        PutJsonAsync<EthicsWorkflowSettingsDto>("api/settings/ethics-workflow", request, ct);
+
     // ---------- Comments on decisions ----------
 
     /// <summary>Readable by anyone signed in: every decision screen has to say what it requires.</summary>
