@@ -28,7 +28,16 @@
                             <div class="d-flex justify-content-between align-items-end mb-3 px-2">
                                 <div>
                                     <h1 class="h1 m-0 fw-bold text-dark">Research proposals</h1>
-                                    <p class="text-secondary small m-0">Fill out up to 3 alternative proposals below. Only the first is required.</p>
+                                    @* What the institution asks for, rather than a number written
+                                       into the page. An administrator sets it, and a round asked
+                                       for again is held to the same figures. *@
+                                    <p class="text-secondary small m-0">
+                                        @Model.RoundSize
+                                        @if (Model.Fewest < Model.Most)
+                                        {
+                                            <span>The first @(Model.Fewest == 1 ? "one is" : $"{Model.Fewest} are") required.</span>
+                                        }
+                                    </p>
                                 </div>
                             </div>
 
@@ -39,7 +48,7 @@
                                 </div>
                             }
 
-                            <!-- Interactive Tab Navigation Header for 3 Slots -->
+                            <!-- One tab per proposal this round takes -->
                             <div class="card shadow-sm">
                                 <ul class="nav nav-tabs m-0 bg-light border-bottom" data-bs-toggle="tabs" role="tablist">
                                     @for (var i = 0; i < Model.Slots.Count; i++)

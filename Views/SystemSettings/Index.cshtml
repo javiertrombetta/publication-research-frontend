@@ -51,6 +51,12 @@
                     <a class="@TabClass("deadlines")" asp-action="Index" asp-route-tab="deadlines">Deadlines</a>
                 </li>
                 <li class="nav-item">
+                    <a class="@TabClass("proposals")" asp-action="Index" asp-route-tab="proposals">Proposals</a>
+                </li>
+                <li class="nav-item">
+                    <a class="@TabClass("decisions")" asp-action="Index" asp-route-tab="decisions">Comments on decisions</a>
+                </li>
+                <li class="nav-item">
                     <a class="@TabClass("uploads")" asp-action="Index" asp-route-tab="uploads">Uploads</a>
                 </li>
                 <li class="nav-item">
@@ -704,6 +710,83 @@
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Save deadlines</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            if (Model.ActiveTab == "proposals")
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h3 mb-2">Research proposals</h2>
+                        <p class="text-secondary">
+                            How many proposals a student submits in one round, and so how many a
+                            supervisor is given to choose between. Both figures apply again when a
+                            coordinator sends a student back to write more: a second round is a
+                            round like the first.
+                        </p>
+
+                        <form asp-action="SaveProposals" method="post" class="row g-3">
+                            <div class="col-12 col-sm-4">
+                                <label class="form-label" for="proposals-min">Fewest</label>
+                                <input id="proposals-min" name="minimumPerRound" type="number" min="1" max="20"
+                                       value="@Model.Proposals.MinimumPerRound" class="form-control" required />
+                                <small class="form-hint">One means a student may send a single proposal.</small>
+                            </div>
+                            <div class="col-12 col-sm-4">
+                                <label class="form-label" for="proposals-max">Most</label>
+                                <input id="proposals-max" name="maximumPerRound" type="number" min="1" max="20"
+                                       value="@Model.Proposals.MaximumPerRound" class="form-control" required />
+                                <small class="form-hint">The student's screen stops offering another beyond this.</small>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            if (Model.ActiveTab == "decisions")
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h3 mb-2">Comments on decisions</h2>
+                        <p class="text-secondary">
+                            Every decision in the pipeline that carries a comment. Tick the ones
+                            this institution wants a reason recorded against; leave the rest and a
+                            comment is welcome but not asked for. Every decision is confirmed
+                            before it goes through, whether or not it needs a reason.
+                        </p>
+
+                        <form asp-action="SaveDecisionComments" method="post">
+                            @foreach (var stage in Model.DecisionComments.GroupBy(d => d.Stage))
+                            {
+                                <h3 class="h4 mt-4 mb-2">@stage.Key</h3>
+                                <div class="row g-2">
+                                    @foreach (var decision in stage)
+                                    {
+                                        <div class="col-12 col-lg-6">
+                                            <label class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="required"
+                                                       value="@decision.Key" checked="@decision.CommentRequired" />
+                                                <span class="form-check-label">
+                                                    @decision.Name
+                                                    @if (decision.CommentRequired != decision.RequiredByDefault)
+                                                    {
+                                                        <span class="badge bg-blue-lt ms-1">changed</span>
+                                                    }
+                                                </span>
+                                            </label>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">Save</button>
                             </div>
                         </form>
                     </div>

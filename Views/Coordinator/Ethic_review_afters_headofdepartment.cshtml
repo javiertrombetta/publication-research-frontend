@@ -1,4 +1,5 @@
 @model CoordinatorEthicsViewModel
+@inject ResearchPublicationManagementSystem.Services.IDecisionComments Decisions
 @{
     ViewData["Title"] = "Final ethics decision";
 }
@@ -191,9 +192,17 @@ else
                                   placeholder="Required when sending it back"></textarea>
                     </div>
                     <div class="btn-list">
-                        <button type="submit" name="approve" value="true" class="btn btn-primary">Approve the ethics</button>
+                        @{
+                            var finalApproveNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.EthicsCoordinatorFinalApprove);
+                            var finalReturnNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.EthicsCoordinatorFinalReturn);
+                        }
+                        <button type="submit" name="approve" value="true" class="btn btn-primary"
+                                @DecisionButton.Attributes(finalApproveNeedsWhy, $"final-comments-{item.Container.Id}",
+                                    "Close the ethics stage as approved? It opens the student's research paper.")>Approve the ethics</button>
                         <button type="submit" name="approve" value="false" class="btn btn-outline-danger"
-                                data-rpms-needs-comments="final-comments-@item.Container.Id">Send back for revision</button>
+                                @DecisionButton.Attributes(finalReturnNeedsWhy, $"final-comments-{item.Container.Id}",
+                                    "Send the ethics documents back to the student?",
+                                    "Say what needs changing. It is all the student is given to work from.")>Send back for revision</button>
                     </div>
                 </form>
 

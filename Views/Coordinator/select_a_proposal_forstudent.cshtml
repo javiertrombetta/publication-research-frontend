@@ -1,4 +1,5 @@
 @model SupervisorSelectionsViewModel
+@inject ResearchPublicationManagementSystem.Services.IDecisionComments Decisions
 @{
     ViewData["Title"] = "Supervisor selections";
 }
@@ -199,7 +200,13 @@ else
                     </div>
 
                     <div class="btn-list mt-3">
-                        <button type="submit" class="btn btn-primary">Assign this supervisor</button>
+                        @{
+                            var assignNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.ProposalCoordinatorAssign);
+                            var discardNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.ProposalCoordinatorDiscard);
+                        }
+                        <button type="submit" class="btn btn-primary"
+                                @DecisionButton.Attributes(assignNeedsWhy, $"assign-comments-{item.Proposal.Id}",
+                                    "Appoint this supervisor? It settles which proposal goes ahead and opens the ethics stage.")>Assign this supervisor</button>
 
                         @* Belongs to the form below rather than this one, so the radio this form
                            requires does not stand in the way of turning every offer down. One
@@ -207,9 +214,9 @@ else
                            and which decision it was is what the button says. *@
                         <button type="submit" form="discard-@item.Proposal.Id"
                                 class="btn btn-outline-danger"
-                                data-rpms-needs-comments="assign-comments-@item.Proposal.Id"
-                                data-rpms-needs-comments-message="Say why you are turning these offers down. It is the only record of the decision."
-                                data-rpms-confirm="Turn down every offer on this proposal? It goes back to Send proposals, and the supervisors who replied lose it from their list.">
+                                @DecisionButton.Attributes(discardNeedsWhy, $"assign-comments-{item.Proposal.Id}",
+                                    "Turn down every offer on this proposal? It goes back to Send proposals, and the supervisors who replied lose it from their list.",
+                                    "Say why you are turning these offers down. It is the only record of the decision.")>
                             Discard these offers
                         </button>
                     </div>

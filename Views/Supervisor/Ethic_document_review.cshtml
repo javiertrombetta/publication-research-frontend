@@ -1,6 +1,11 @@
 @using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 @model SupervisorEthicsViewModel
+@inject ResearchPublicationManagementSystem.Services.IDecisionComments Decisions
 @{
+    // What this institution asks for on each of the two answers. Set in System settings, so the
+    // screen states it rather than deciding it.
+    var acceptNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.EthicsSupervisorDocumentsAccept);
+    var returnNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.EthicsSupervisorDocumentsReturn);
     ViewData["Title"] = "Ethics documents";
     var container = Model.Container;
 
@@ -172,17 +177,21 @@
                 <div class="mb-3">
                     <label class="form-label" for="document-comments">What needs changing</label>
                     <textarea id="document-comments" name="comments" rows="3" class="form-control"
-                              placeholder="Required when sending anything back"></textarea>
+                              placeholder="@(returnNeedsWhy ? "Required when sending anything back" : "Your reasoning")"></textarea>
                     <small class="form-hint">
                         It is all the student is given to work from, so name the document and the
-                        problem.
+                        problem. @DecisionButton.Hint(returnNeedsWhy || acceptNeedsWhy)
                     </small>
                 </div>
 
                 <div class="btn-list">
-                    <button type="submit" name="accept" value="true" class="btn btn-primary">Accept the documents</button>
+                    <button type="submit" name="accept" value="true" class="btn btn-primary"
+                            @DecisionButton.Attributes(acceptNeedsWhy, "document-comments",
+                                "Pass these documents to the coordinator?")>Accept the documents</button>
                     <button type="submit" name="accept" value="false" class="btn btn-outline-danger"
-                            data-rpms-needs-comments="document-comments">Send back for revision</button>
+                            @DecisionButton.Attributes(returnNeedsWhy, "document-comments",
+                                "Send these documents back to the student?",
+                                "Say what needs changing. It is all the student is given to work from.")>Send back for revision</button>
                 </div>
 
                 <div class="text-secondary small mt-3">

@@ -1,4 +1,5 @@
 @model HeadOfDepartmentEthicsViewModel
+@inject ResearchPublicationManagementSystem.Services.IDecisionComments Decisions
 @{
     ViewData["Title"] = "Ethics reviews";
 
@@ -224,10 +225,15 @@ else
                     <input type="hidden" name="id" value="@item.Container.Id" />
                     <div class="mb-3">
                         <label class="form-label" for="hod-comments-@item.Container.Id">Your comments</label>
+                        @{ var hodNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.EthicsHeadOfDepartmentReview); }
                         <textarea id="hod-comments-@item.Container.Id" name="comments" rows="3" class="form-control"
-                                  placeholder="What the coordinator should weigh before deciding" required></textarea>
+                                  placeholder="What the coordinator should weigh before deciding"></textarea>
+                        <small class="form-hint">@DecisionButton.Hint(hodNeedsWhy)</small>
                     </div>
-                    <button type="submit" class="btn btn-primary">Submit review</button>
+                    <button type="submit" class="btn btn-primary"
+                            @DecisionButton.Attributes(hodNeedsWhy, $"hod-comments-{item.Container.Id}",
+                                "Send your review to the coordinator?",
+                                "Say what you make of it. The coordinator decides on the strength of this.")>Submit review</button>
                 </form>
 
             </div>

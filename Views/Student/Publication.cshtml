@@ -157,12 +157,17 @@
     {
         <div class="card">
             <div class="table-responsive">
-                <table class="table card-table table-vcenter">
+                @* Sorted where it is read, by clicking a heading. Three proposals at a time is a
+                   short list, but a student who has been sent back to write more comes back to a
+                   longer one, and "which of these has been turned down" is the question they open
+                   this on. The dates carry a sortable value of their own so that a column shown as
+                   "04 Aug 2026" does not order as text. *@
+                <table class="table card-table table-vcenter" data-rpms-sortable-table>
                     <thead>
                         <tr>
-                            <th>Title</th>
-                            <th>Submitted</th>
-                            <th>Status</th>
+                            <th data-rpms-sort-column="0">Title</th>
+                            <th data-rpms-sort-column="1">Submitted</th>
+                            <th data-rpms-sort-column="2">Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -170,7 +175,9 @@
                         {
                             <tr>
                                 <td>@proposal.Title</td>
-                                <td>@(proposal.SubmittedAt?.ToString("dd MMM yyyy") ?? "—")</td>
+                                <td data-rpms-sort-value="@(proposal.SubmittedAt?.ToString("o") ?? "")">
+                                    @(proposal.SubmittedAt?.ToString("dd MMM yyyy") ?? "—")
+                                </td>
                                 <td><span class="badge @StatusBadge(proposal.Status)">@Humanise(proposal.Status)</span></td>
                             </tr>
                         }
@@ -386,6 +393,62 @@
 </div><!-- /progress tab -->
 
 <div class="tab-pane @(historyIsOpen ? "active show" : "")" id="publication-history" role="tabpanel">
+
+    @* The trail of a publication that has been through three stages runs to dozens of entries, and
+       what somebody opens it to answer is "when was it sent back, and by whom". Filtered by the
+       API, so it searches the whole trail rather than the ten entries on this page.
+
+       Only what this publication's own history holds is offered: a fixed list of every action the
+       system can record would be mostly choices matching nothing. *@
+    <div class="card mb-3">
+        <div class="card-body py-3">
+            <form method="get" asp-controller="Student" asp-action="Publication" class="row g-2 align-items-end">
+                <input type="hidden" name="id" value="@Model.Container.Id" />
+                <input type="hidden" name="tab" value="history" />
+
+                <div class="col-6 col-md-2">
+                    <label class="form-label" for="history-from">From</label>
+                    <input id="history-from" name="from" type="date" class="form-control"
+                           value="@Model.HistoryFrom?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label" for="history-to">To</label>
+                    <input id="history-to" name="to" type="date" class="form-control"
+                           value="@Model.HistoryTo?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label" for="history-action">Activity</label>
+                    <select id="history-action" name="activity" class="form-select">
+                        <option value="">Anything</option>
+                        @foreach (var name in Model.HistoryActions)
+                        {
+                            <option value="@name" selected="@(name == Model.HistoryAction)">@Humanise(name)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label" for="history-actor">Who</label>
+                    <select id="history-actor" name="actor" class="form-select">
+                        <option value="">Anyone</option>
+                        @foreach (var person in Model.HistoryActors)
+                        {
+                            <option value="@person.UserId" selected="@(person.UserId == Model.HistoryActor)">@person.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    @if (Model.HistoryIsFiltered)
+                    {
+                        <a asp-controller="Student" asp-action="Publication"
+                           asp-route-id="@Model.Container.Id" asp-route-tab="history"
+                           class="btn btn-outline-secondary">Clear</a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+
     @{
         var historyModel = new ResearchPublicationManagementSystem.Models.ActivityHistoryViewModel
         {

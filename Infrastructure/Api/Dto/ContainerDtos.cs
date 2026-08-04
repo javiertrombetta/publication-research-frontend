@@ -77,9 +77,15 @@ public record PublicationContainerDto(
     /// <summary>
     /// What the user actually sees for this publication. Sorting and searching use it too, so
     /// the resulting order matches the labels on screen rather than the raw nullable Title.
+    ///
+    /// A publication takes its name from the proposal that goes ahead, so before one is chosen
+    /// there is nothing to call it. "Untitled" read as something missing that somebody ought to
+    /// fill in; this says what it is waiting for.
     /// </summary>
+    public const string AwaitingTitle = "Awaiting an approved proposal";
+
     public string DisplayTitle =>
-        string.IsNullOrWhiteSpace(Title) ? "Untitled publication" : Title!;
+        string.IsNullOrWhiteSpace(Title) ? AwaitingTitle : Title!;
 }
 
 /// <summary>
@@ -105,3 +111,10 @@ public static class PipelineStage
     public const int EthicsApproval = 2;
     public const int ResearchPaper = 3;
 }
+
+/// <summary>What a publication's history can be filtered by: only what its own trail holds.</summary>
+public record ActivityHistoryFiltersDto(
+    IReadOnlyList<string> Actions,
+    IReadOnlyList<ActivityHistoryActorDto> Actors);
+
+public record ActivityHistoryActorDto(Guid UserId, string Name);

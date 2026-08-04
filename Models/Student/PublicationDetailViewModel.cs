@@ -56,7 +56,26 @@ namespace ResearchPublicationManagementSystem.Models
         public bool EthicsDocumentsAreComplete =>
             RequiredEthicsDocuments.Count > 0 && RequiredEthicsDocuments.All(d => d.IsSatisfied);
 
-        public string DisplayTitle =>
-            string.IsNullOrWhiteSpace(Container.Title) ? "Untitled publication" : Container.Title!;
+        public string DisplayTitle => Container.DisplayTitle;
+
+        // ---------- Searching the history ----------
+
+        /// <summary>What this publication's own trail can be filtered by.</summary>
+        public IReadOnlyList<string> HistoryActions { get; set; } = [];
+
+        public IReadOnlyList<Infrastructure.Api.Dto.ActivityHistoryActorDto> HistoryActors { get; set; } = [];
+
+        public DateOnly? HistoryFrom { get; set; }
+
+        public DateOnly? HistoryTo { get; set; }
+
+        public string? HistoryAction { get; set; }
+
+        public Guid? HistoryActor { get; set; }
+
+        /// <summary>Whether anything is narrowing the trail, so the screen can offer a way back.</summary>
+        public bool HistoryIsFiltered =>
+            HistoryFrom is not null || HistoryTo is not null
+            || !string.IsNullOrWhiteSpace(HistoryAction) || HistoryActor is not null;
     }
 }

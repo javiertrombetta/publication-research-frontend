@@ -1,4 +1,5 @@
 @model AssignCommitteeViewModel
+@inject ResearchPublicationManagementSystem.Services.IDecisionComments Decisions
 @{
     ViewData["Title"] = "Assign evaluation committees";
 }
@@ -141,7 +142,19 @@ else
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary mt-3">Assign this committee</button>
+                    @{
+                        var assignNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.PaperCommitteeAssign);
+                        var overrideNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.PaperCommitteeAssignOverride);
+                    }
+                    @* Two decisions behind one button: the shape agreed for this publication, or a
+                       different one. Which it is depends on the tick above, so the page script
+                       swaps the requirement over when that changes. *@
+                    <button type="submit" class="btn btn-primary mt-3"
+                            data-rpms-committee-assign
+                            data-rpms-needs-comments-agreed="@(assignNeedsWhy ? $"assign-comments-{item.Paper.Id}" : null)"
+                            data-rpms-needs-comments-override="@(overrideNeedsWhy ? $"assign-comments-{item.Paper.Id}" : null)"
+                            @DecisionButton.Attributes(assignNeedsWhy, $"assign-comments-{item.Paper.Id}",
+                                "Appoint this committee? Its members are asked to evaluate the paper straight away.")>Assign this committee</button>
                 </form>
             </div>
         </div>
@@ -189,10 +202,25 @@ else
                         : 'Recorded on the publication’s history';
                 }
 
+                // One button, two decisions: appointing the agreed shape or a different one. This
+                // institution may ask for a reason on one and not the other, so which field the
+                // button insists on follows the tick.
+                var assign = form.querySelector('[data-rpms-committee-assign]');
+                function applyCommentRule() {
+                    var field = override.checked
+                        ? assign.dataset.rpmsNeedsCommentsOverride
+                        : assign.dataset.rpmsNeedsCommentsAgreed;
+
+                    if (field) assign.setAttribute('data-rpms-needs-comments', field);
+                    else assign.removeAttribute('data-rpms-needs-comments');
+                }
+
                 form.addEventListener('change', function (event) {
                     if (event.target.name === 'memberUserIds' || event.target === override) draw();
+                    if (event.target === override) applyCommentRule();
                 });
                 draw();
+                applyCommentRule();
 
                 form.addEventListener('submit', function (event) {
                     var have = chosen();
