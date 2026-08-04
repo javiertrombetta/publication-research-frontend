@@ -207,6 +207,8 @@ else
                            and which decision it was is what the button says. *@
                         <button type="submit" form="discard-@item.Proposal.Id"
                                 class="btn btn-outline-danger"
+                                data-rpms-needs-comments="assign-comments-@item.Proposal.Id"
+                                data-rpms-needs-comments-message="Say why you are turning these offers down. It is the only record of the decision."
                                 data-rpms-confirm="Turn down every offer on this proposal? It goes back to Send proposals, and the supervisors who replied lose it from their list.">
                             Discard these offers
                         </button>

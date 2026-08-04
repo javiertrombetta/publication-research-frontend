@@ -749,6 +749,10 @@ document.addEventListener('click', function (event) {
     var control = event.target.closest('[data-rpms-confirm]');
     if (!control) return;
 
+    // Something else has already refused this click, a missing reason being the usual one. Asking
+    // to confirm an action that is not going to happen is a question about nothing.
+    if (event.defaultPrevented) return;
+
     if (!window.confirm(control.getAttribute('data-rpms-confirm'))) {
         event.preventDefault();
         event.stopPropagation();
