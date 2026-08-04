@@ -125,7 +125,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// until one is assigned, because the coordinator's final decision is blocked on it.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> assigning_committee_members()
+        public async Task<IActionResult> assigning_committee_members(int inProgressPage = 1)
         {
             var model = new AssignCommitteeViewModel();
 
@@ -159,6 +159,15 @@ namespace ResearchPublicationManagementSystem.Controllers
                 item.RequiredExternal = item.Paper.RequiredExternalCommitteeMembers
                                         ?? currentRules.Data?.ExternalMembers ?? 0;
             }
+
+            // Committees already sitting, so one can be changed after the fact. A failure here is
+            // not worth failing the screen for: appointing new ones still works, and the section
+            // says when it is empty.
+            var inProgress = await committeesApi.GetInProgressAsync(page: inProgressPage);
+            model.InProgress = inProgress.Data?.Items ?? [];
+            model.InProgressTotal = inProgress.Data?.TotalCount ?? 0;
+            model.InProgressPager = Paging.PagerFor(inProgress.Data, "Admin", nameof(assigning_committee_members),
+                pageKey: "inProgressPage");
 
             return View(model);
         }
@@ -201,6 +210,40 @@ namespace ResearchPublicationManagementSystem.Controllers
                   (memberUserIds.Length == 1 ? "member has" : "members have") + " been asked to evaluate the paper."
                   + (overrideComposition ? " The composition you chose, and your reason, are on the publication's history." : string.Empty)
                 : result.ErrorMessage ?? "Could not assign the committee.";
+
+            return RedirectToAction(nameof(assigning_committee_members));
+        }
+
+        /// <summary>
+        /// Changes a committee that is already sitting: who is on it, and how many approvals it
+        /// needs. Always with a reason, and refused by the API once the committee has finished.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateCommittee(
+            Guid committeeId, Guid[] memberUserIds, int minApprovalsRequired, string? comments,
+            bool overrideComposition = false)
+        {
+            if (memberUserIds.Length == 0)
+            {
+                TempData["ErrorMessage"] = "A committee needs at least one member. To end one, the coordinator decides on the paper.";
+                return RedirectToAction(nameof(assigning_committee_members));
+            }
+
+            if (string.IsNullOrWhiteSpace(comments))
+            {
+                TempData["ErrorMessage"] =
+                    "Say why this committee is being changed. It stays on the publication's history.";
+                return RedirectToAction(nameof(assigning_committee_members));
+            }
+
+            var result = await committeesApi.UpdateAsync(committeeId,
+                new UpdateCommitteeRequestDto(memberUserIds, minApprovalsRequired, comments, overrideComposition));
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? $"Committee updated. It now has {memberUserIds.Length} "
+                  + (memberUserIds.Length == 1 ? "member" : "members") + "."
+                : result.ErrorMessage ?? "Could not change the committee.";
 
             return RedirectToAction(nameof(assigning_committee_members));
         }

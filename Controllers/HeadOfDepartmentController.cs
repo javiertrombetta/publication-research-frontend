@@ -173,11 +173,18 @@ namespace ResearchPublicationManagementSystem.Controllers
 
                 var documents = await ethicsApi.GetDocumentsAsync(container.Id);
 
+                // Only what the supervisor accepted. Reading a set is the supervisor's job, and
+                // they have done it: the versions they sent back are already answered, and listing
+                // them here asks this reader to work out which of five rows are the live three.
+                var accepted = (documents.Data ?? [])
+                    .Where(d => d.Status == EthicsDocumentStatus.Accepted)
+                    .ToList();
+
                 model.Items.Add(new HeadOfDepartmentEthicsItem
                 {
                     Container = container,
                     Approval = approval.Data,
-                    Documents = documents.Data ?? []
+                    Documents = accepted
                 });
             }
 

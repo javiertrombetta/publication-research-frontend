@@ -20,6 +20,17 @@ public class CommitteesApiClient(HttpClient httpClient) : ApiClientBase(httpClie
     public Task<ApiResult<bool>> GetMyEligibilityAsync(CancellationToken ct = default) =>
         GetAsync<bool>("api/committees/my-eligibility", ct);
 
+    /// <summary>Every committee still sitting, so an administrator can find one to change.</summary>
+    public Task<ApiResult<PagedResultDto<CommitteeDto>>> GetInProgressAsync(
+        int page = 1, int pageSize = Paging.AsConfigured, CancellationToken ct = default) =>
+        GetAsync<PagedResultDto<CommitteeDto>>(
+            $"api/committees/in-progress?page={Math.Max(1, page)}{Paging.SizeParam(pageSize)}", ct);
+
+    /// <summary>Changes who sits on a committee. Refused once it has finished.</summary>
+    public Task<ApiResult<CommitteeDto>> UpdateAsync(
+        Guid committeeId, UpdateCommitteeRequestDto request, CancellationToken ct = default) =>
+        PutJsonAsync<CommitteeDto>($"api/committees/{committeeId}", request, ct);
+
     /// <summary>The committees the acting member sits on.</summary>
     public Task<ApiResult<PagedResultDto<CommitteeDto>>> GetMyAssignmentsAsync(
         int page = 1, int pageSize = Paging.AsConfigured, string? sort = null, bool descending = false,

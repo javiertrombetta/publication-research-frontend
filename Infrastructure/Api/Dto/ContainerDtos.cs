@@ -50,7 +50,12 @@ public record PublicationContainerDto(
     /// difference matters: two of the steps are the coordinator's and they are separate screens,
     /// so a role alone cannot say which one to send somebody to.
     /// </summary>
-    string? EthicsAwaitingStep = null)
+    string? EthicsAwaitingStep = null,
+    /// <summary>
+    /// True while the student is being asked to upload an ethics document again rather than for
+    /// the first time. The stage says PendingUpload either way.
+    /// </summary>
+    bool EthicsDocumentsReturned = false)
 {
     /// <summary>
     /// True once the paper has cleared review, whether or not its author has yet decided to put
@@ -66,6 +71,15 @@ public record PublicationContainerDto(
     /// </summary>
     public string DisplayStatus =>
         Status == "Completed" || PaperStatus is null ? Status : PaperStatus;
+
+    /// <summary>
+    /// A publication whose ethics documents have been sent back for correction.
+    ///
+    /// It reads as ordinary work in progress otherwise, which is the one thing it is not: it is
+    /// waiting on this student, now, and a student with six publications open could not tell
+    /// which one the request was about.
+    /// </summary>
+    public bool NeedsEthicsDocumentsAgain => EthicsDocumentsReturned;
 
     /// <summary>
     /// Mirrors the backend rule in ContainerService.DeleteOwnAsync: a publication can only be

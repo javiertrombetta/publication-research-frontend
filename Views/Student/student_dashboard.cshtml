@@ -146,6 +146,14 @@ else
                                 <h3 class="m-0">@publication.DisplayTitle</h3>
                                 @* flex-shrink-0 keeps the status badge from being squeezed off the
                                    card by a long title. *@
+                                @* Beside the status rather than instead of it: the publication is
+                                   still in progress, and what has changed is that the next move is
+                                   the student's. It goes when they upload what was asked for,
+                                   because the flag it reads goes with it. *@
+                                @if (publication.NeedsEthicsDocumentsAgain)
+                                {
+                                    <span class="badge bg-orange-lt flex-shrink-0">Ethics documents to re-upload</span>
+                                }
                                 <span class="badge flex-shrink-0 @StatusBadge(publication.DisplayStatus)">@Humanise(publication.DisplayStatus)</span>
                             </div>
 

@@ -450,15 +450,21 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> FinaliseEthics(Guid id, bool approve, string? comments)
+        public async Task<IActionResult> FinaliseEthics(Guid id, bool approve, string? comments, Guid[]? documentIds = null)
         {
+            // Nothing ticked means the whole set, which is what a coordinator who has singled
+            // none of them out is saying. Ignored altogether when approving.
+            var named = approve || documentIds is null ? [] : documentIds;
+
             var result = await ethicsApi.CoordinatorFinalDecisionAsync(
-                id, new CoordinatorFinalDecisionRequestDto(approve, comments ?? string.Empty));
+                id, new CoordinatorFinalDecisionRequestDto(approve, comments ?? string.Empty, named));
 
             TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
                 ? approve
                     ? "Ethics approved. The student can now start their research paper."
-                    : "Sent back to the student with your comments."
+                    : named.Length == 0
+                        ? "Sent back to the student, who has been asked for all of the documents again."
+                        : $"Sent back to the student, who has been asked for {named.Length} of the documents again."
                 : result.ErrorMessage ?? "Could not record your decision.";
 
             return RedirectToAction(nameof(Ethic_review_afters_headofdepartment));
@@ -655,11 +661,18 @@ namespace ResearchPublicationManagementSystem.Controllers
 
                 var documents = await ethicsApi.GetDocumentsAsync(container.Id);
 
+                // Only what the supervisor accepted. Reading a set is the supervisor's job, and
+                // they have done it: the versions they sent back are already answered, and listing
+                // them here asks this reader to work out which of five rows are the live three.
+                var accepted = (documents.Data ?? [])
+                    .Where(d => d.Status == EthicsDocumentStatus.Accepted)
+                    .ToList();
+
                 model.Items.Add(new CoordinatorEthicsItem
                 {
                     Container = container,
                     Approval = approval.Data,
-                    Documents = documents.Data ?? []
+                    Documents = accepted
                 });
             }
 

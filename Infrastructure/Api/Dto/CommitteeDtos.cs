@@ -21,7 +21,11 @@ public record CommitteeDto(
     CommitteePaperDto? Paper,
     string Status,
     int MinApprovalsRequired,
-    IReadOnlyList<CommitteeMemberDto> Members)
+    IReadOnlyList<CommitteeMemberDto> Members,
+    /// <summary>Whose paper it is, so a listing can name the student.</summary>
+    string? StudentName = null,
+    /// <summary>False once it has finished: its decisions are what the coordinator ruled on.</summary>
+    bool CanBeChanged = false)
 {
     public int Approvals => Members.Count(m => m.Decision == CommitteeDecision.Approve);
 
@@ -81,3 +85,10 @@ public record CommitteeCandidateDto(
 {
     public string FullName => $"{FirstName} {LastName}".Trim();
 }
+
+/// <param name="MemberUserIds">The committee as it should now stand, not the people to add. Anyone left out is removed.</param>
+public record UpdateCommitteeRequestDto(
+    IReadOnlyList<Guid> MemberUserIds,
+    int MinApprovalsRequired,
+    string Comments,
+    bool OverrideComposition = false);

@@ -159,7 +159,121 @@ else
             </div>
         </div>
     }
+}
 
+@* Committees already sitting. Kept outside the branch above, because a deployment can perfectly
+   well have no paper waiting for a committee and several committees that need changing, and
+   putting this inside it made the second invisible whenever the first was empty. *@
+@if (Model.InProgress.Count > 0)
+{
+    <h2 class="h2 mt-5 mb-1">Committees under way</h2>
+    <p class="text-secondary mb-3">
+        Already appointed and still sitting. Change who is on one when somebody goes on leave or was
+        appointed by mistake; a member who stays keeps the decision they have recorded. A committee
+        that has finished is not here: its decisions are what the coordinator rules on.
+    </p>
+
+    @foreach (var committee in Model.InProgress)
+    {
+        <div class="card mb-3">
+            <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+                 data-rpms-header-toggle="#committee-@committee.Id"
+                 role="button" tabindex="0" aria-expanded="false" aria-controls="committee-@committee.Id">
+                <span class="rpms-collapse-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
+                         viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M6 9l6 6l6 -6" />
+                    </svg>
+                </span>
+                <div class="me-auto">
+                    <h3 class="card-title m-0">@(committee.Paper?.Title ?? "Untitled paper")</h3>
+                    <div class="text-secondary small">@committee.StudentName</div>
+                </div>
+                <span class="badge bg-primary-lt">
+                    @committee.Decided of @committee.Members.Count decided
+                </span>
+            </div>
+
+            <div class="card-body collapse" id="committee-@committee.Id" data-rpms-collapsible="committee-cards">
+                <form asp-controller="Admin" asp-action="UpdateCommittee" method="post">
+                    <input type="hidden" name="committeeId" value="@committee.Id" />
+
+                    <h4 class="mb-1">Members</h4>
+                    <p class="text-secondary small">
+                        This is the committee as it should stand once you save: anyone unticked is
+                        removed. @committee.Approvals of @committee.MinApprovalsRequired approvals
+                        have been recorded so far.
+                    </p>
+
+                    <div class="row g-2 mb-3">
+                        @foreach (var person in Model.Members)
+                        {
+                            var sitting = committee.Members.FirstOrDefault(m => m.UserId == person.UserId);
+                            <div class="col-12 col-md-6">
+                                <label class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="memberUserIds"
+                                           value="@person.UserId" checked="@(sitting is not null)" />
+                                    <span class="form-check-label">
+                                        @person.FullName
+                                        <span class="d-block text-secondary small">
+                                            @(person.IsExternal ? "External" : "Reviewer")
+                                            @if (sitting is not null && sitting.HasDecided)
+                                            {
+                                                @* Said here because it is what makes removing this
+                                                   person a different act from removing anybody
+                                                   else: their vote goes with them. *@
+                                                <span>&middot; has already decided: @Humanise(sitting.Decision)</span>
+                                            }
+                                        </span>
+                                    </span>
+                                </label>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12 col-sm-4">
+                            <label class="form-label" for="approvals-committee-@committee.Id">Approvals required</label>
+                            <input id="approvals-committee-@committee.Id" name="minApprovalsRequired" type="number"
+                                   min="1" value="@committee.MinApprovalsRequired" class="form-control" required />
+                        </div>
+                        <div class="col-12 col-sm-8">
+                            <label class="form-label" for="change-comments-@committee.Id">Why this change</label>
+                            <input id="change-comments-@committee.Id" name="comments" class="form-control"
+                                   placeholder="Required. Stays on the publication&#x27;s history." />
+                        </div>
+                    </div>
+
+                    <label class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" name="overrideComposition" value="true" />
+                        <span class="form-check-label">
+                            The new composition differs from the one this publication was opened under
+                        </span>
+                    </label>
+
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary"
+                                @DecisionButton.Attributes(true, $"change-comments-{committee.Id}",
+                                    "Change this committee? Anyone added is asked to evaluate the paper, and anyone removed loses it from their list.",
+                                    "Say why this committee is being changed. It stays on the publication&#x27;s history.")>
+                            Save this committee
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+
+    @if (Model.InProgressPager is not null)
+    {
+        <partial name="_Pager" model="Model.InProgressPager" />
+    }
+}
+
+@if (Model.Items.Count > 0 && Model.Members.Count > 0)
+{
     @section Scripts {
         <script>
             // The backend rejects an empty committee, a composition that does not match what this
