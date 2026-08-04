@@ -32,6 +32,17 @@ namespace ResearchPublicationManagementSystem.Models
         /// </summary>
         public CommitteeSettingsDto? CurrentRules { get; set; }
 
+        /// <summary>
+        /// Committees already sitting. The screen used to list only papers with none, so an
+        /// appointed committee left every screen there was and a member who had to be replaced
+        /// needed the database.
+        /// </summary>
+        public IReadOnlyList<CommitteeDto> InProgress { get; set; } = [];
+
+        public int InProgressTotal { get; set; }
+
+        public PagerViewModel? InProgressPager { get; set; }
+
         public bool LoadFailed { get; set; }
     }
 

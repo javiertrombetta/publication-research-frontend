@@ -66,7 +66,9 @@ public record CoordinatorNotRequiredReviewRequestDto(bool RequireDocumentation, 
 /// <param name="DocumentIds">Which of the documents are being asked for again. Empty, or left out, means all of them. Ignored when approving.</param>
 public record CoordinatorDocumentReviewRequestDto(bool Approve, string Comments, IReadOnlyList<Guid>? DocumentIds = null);
 
-public record CoordinatorFinalDecisionRequestDto(bool Approve, string Comments);
+/// <param name="DocumentIds">Which documents are being asked for again. Empty means all of them, and it is ignored when approving.</param>
+public record CoordinatorFinalDecisionRequestDto(
+    bool Approve, string Comments, IReadOnlyList<Guid>? DocumentIds = null);
 
 /// <summary>
 /// The supervisor's ruling on whether the research needs ethics approval documentation at all.

@@ -153,12 +153,28 @@ else
                     </div>
                 }
 
+                <form asp-controller="Coordinator" asp-action="FinaliseEthics" method="post">
+                    <input type="hidden" name="id" value="@item.Container.Id" />
+
+                @* Only what the supervisor accepted and the coordinator has already approved. The
+                   versions sent back on the way here are answered, and listing them would ask this
+                   reader to work out which rows are the live ones.
+
+                   Each can be asked for again: sending the stage back is not always the whole set,
+                   and naming one leaves the rest accepted, so the student is asked for exactly what
+                   is wrong. Nothing ticked asks for all of them. *@
                 @if (item.Documents.Count > 0)
                 {
                     <div class="table-responsive mb-3">
                         <table class="table card-table table-vcenter" data-rpms-sortable-table>
                             <thead>
-                                <tr><th data-rpms-sort-column="0">Document</th><th data-rpms-sort-column="1">File</th><th data-rpms-sort-column="2">Status</th><th></th></tr>
+                                <tr>
+                                    <th data-rpms-sort-column="0">Document</th>
+                                    <th data-rpms-sort-column="1">File</th>
+                                    <th data-rpms-sort-column="2">Status</th>
+                                    <th></th>
+                                    <th class="text-end">Ask again</th>
+                                </tr>
                             </thead>
                             <tbody>
                                 @foreach (var document in item.Documents)
@@ -177,6 +193,11 @@ else
                                                asp-route-containerId="@item.Container.Id"
                                                asp-route-documentId="@document.Id">Download</a>
                                         </td>
+                                        <td class="text-end">
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="documentIds" value="@document.Id"
+                                                   aria-label="Ask for @Humanise(document.DocumentType) again" />
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -184,8 +205,6 @@ else
                     </div>
                 }
 
-                <form asp-controller="Coordinator" asp-action="FinaliseEthics" method="post">
-                    <input type="hidden" name="id" value="@item.Container.Id" />
                     <div class="mb-3">
                         <label class="form-label" for="final-comments-@item.Container.Id">Comments</label>
                         <textarea id="final-comments-@item.Container.Id" name="comments" rows="2" class="form-control"
