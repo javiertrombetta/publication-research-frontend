@@ -603,9 +603,15 @@ window.rpmsToast = (function () {
 // sorted by carries data-rpms-sort-column with the cell index. Headings become buttons; a second
 // click reverses. Without this script the table is a table, which is what it was before.
 (function () {
+    // What a cell sorts by. Usually what it says; where that is written for people to read rather
+    // than to order, the cell can carry the value to use instead (data-rpms-sort-value), which is
+    // how a date shown as "04 Aug 2026" sorts as a date and an empty one sorts to the end.
     function cellText(row, index) {
         var cell = row.children[index];
-        return cell ? cell.textContent.trim() : '';
+        if (!cell) return '';
+
+        var explicit = cell.getAttribute('data-rpms-sort-value');
+        return explicit !== null ? explicit.trim() : cell.textContent.trim();
     }
 
     // Dates and numbers should not sort as text: "9" after "10", "1 Feb" before "1 Jan".

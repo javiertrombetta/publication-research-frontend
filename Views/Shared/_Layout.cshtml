@@ -1,5 +1,14 @@
-﻿<!DOCTYPE html>
-<html lang="en" data-bs-theme="@ResearchPublicationManagementSystem.Services.SiteTheme.For(Context)">
+﻿﻿@{
+    // Whether this page draws a menu at all. A signed-out reader gets none, and the shell must
+    // not go on reserving the width of one: the space it leaves is driven by a number on the root
+    // element, which the script below restores from what somebody chose while they were signed in.
+    // Left alone, the public catalogue opened shifted to the right by the width of a menu that was
+    // not there, for anyone who had signed out with theirs open.
+    var drawsSidebar = ViewData["HideSidebar"] as bool? != true;
+}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="@ResearchPublicationManagementSystem.Services.SiteTheme.For(Context)"
+      class="@(drawsSidebar ? null : "rpms-no-sidebar")">
 
 <head>
 

@@ -1,4 +1,5 @@
 @model CoordinatorPapersViewModel
+@inject ResearchPublicationManagementSystem.Services.IDecisionComments Decisions
 @{
     ViewData["Title"] = "Research papers to decide on";
 }
@@ -178,9 +179,17 @@ else
                                   placeholder="Required when sending it back"></textarea>
                     </div>
                     <div class="btn-list">
-                        <button type="submit" name="accept" value="true" class="btn btn-primary">Accept the paper</button>
+                        @{
+                            var paperAcceptNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.PaperCoordinatorAccept);
+                            var paperReturnNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.PaperCoordinatorReturn);
+                        }
+                        <button type="submit" name="accept" value="true" class="btn btn-primary"
+                                @DecisionButton.Attributes(paperAcceptNeedsWhy, $"paper-comments-{item.Paper.Id}",
+                                    "Accept this paper? The student is then asked whether to publish it.")>Accept the paper</button>
                         <button type="submit" name="accept" value="false" class="btn btn-outline-danger"
-                                data-rpms-needs-comments="paper-comments-@item.Paper.Id">Send back for revision</button>
+                                @DecisionButton.Attributes(paperReturnNeedsWhy, $"paper-comments-{item.Paper.Id}",
+                                    "Send this paper back to the student?",
+                                    "Say what needs changing. It is all the student is given to work from.")>Send back for revision</button>
                     </div>
                 </form>
             </div>

@@ -1,4 +1,5 @@
 @model InvitedProposalsViewModel
+@inject ResearchPublicationManagementSystem.Services.IDecisionComments Decisions
 @{
     ViewData["Title"] = "Proposals sent to you";
 }
@@ -168,7 +169,10 @@ else
                         <textarea id="comments-@proposal.Id" name="comments" rows="2" class="form-control"
                                   placeholder="Why this fits your area, or any conditions"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary">I'm willing to supervise this</button>
+                    @{ var willingNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.ProposalSupervisorSelection); }
+                    <button type="submit" class="btn btn-primary"
+                            @DecisionButton.Attributes(willingNeedsWhy, $"comments-{proposal.Id}",
+                                "Tell the coordinator you are willing to supervise this proposal?")>I'm willing to supervise this</button>
                 </form>
             </div>
         </div>

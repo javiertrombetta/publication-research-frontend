@@ -1,7 +1,15 @@
 @using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 @model CoordinatorEthicsViewModel
+@inject ResearchPublicationManagementSystem.Services.IDecisionComments Decisions
 @{
     ViewData["Title"] = "Ethics awaiting you";
+
+    // Each answer on this screen is its own decision, and this institution says which of them
+    // has to carry a reason. See System settings.
+    var confirmNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.EthicsCoordinatorConfirmNotRequired);
+    var overturnNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.EthicsCoordinatorOverturnNotRequired);
+    var approveNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.EthicsCoordinatorDocumentsApprove);
+    var returnNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.EthicsCoordinatorDocumentsReturn);
 }
 
 <div class="mb-4">
@@ -180,12 +188,15 @@ else
                                       placeholder="Your reasoning"></textarea>
                         </div>
                         <div class="btn-list">
-                            <button type="submit" name="requireDocumentation" value="false" class="btn btn-primary">
+                            <button type="submit" name="requireDocumentation" value="false" class="btn btn-primary"
+                                    @DecisionButton.Attributes(confirmNeedsWhy, $"nr-comments-{item.Container.Id}",
+                                        "Confirm that this research needs no ethics documentation? It closes the ethics stage.")>
                                 Confirm: not required
                             </button>
                             <button type="submit" name="requireDocumentation" value="true" class="btn btn-outline-danger"
-                                    data-rpms-needs-comments="nr-comments-@item.Container.Id"
-                                    data-rpms-needs-comments-message="Say why documentation is needed after all. You are overturning the supervisor's ruling, and this is what the student is given to work from.">
+                                    @DecisionButton.Attributes(overturnNeedsWhy, $"nr-comments-{item.Container.Id}",
+                                        "Overturn the supervisor and ask the student for documentation?",
+                                        "Say why documentation is needed after all. It is what the student is given to work from.")>
                                 Require documentation after all
                             </button>
                         </div>
@@ -258,11 +269,15 @@ else
                                       placeholder="Required when sending the documents back"></textarea>
                         </div>
                         <div class="btn-list">
-                            <button type="submit" name="approve" value="true" class="btn btn-primary">
+                            <button type="submit" name="approve" value="true" class="btn btn-primary"
+                                    @DecisionButton.Attributes(approveNeedsWhy, $"doc-comments-{item.Container.Id}",
+                                        "Send these documents to the Head of Department?")>
                                 Approve and send to the Head of Department
                             </button>
                             <button type="submit" name="approve" value="false" class="btn btn-outline-danger"
-                                    data-rpms-needs-comments="doc-comments-@item.Container.Id">
+                                    @DecisionButton.Attributes(returnNeedsWhy, $"doc-comments-{item.Container.Id}",
+                                        "Send these documents back to the student?",
+                                        "Say what needs changing. It is all the student is given to work from.")>
                                 Send back for revision
                             </button>
                         </div>

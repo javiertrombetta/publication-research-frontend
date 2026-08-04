@@ -43,6 +43,12 @@ namespace ResearchPublicationManagementSystem.Models
 
         public DeadlineSettingsDto Deadlines { get; set; } = new(14, 21, 30);
 
+        /// <summary>How many research proposals a student submits in one round.</summary>
+        public ProposalSettingsDto Proposals { get; set; } = new(1, 3);
+
+        /// <summary>Every decision in the pipeline, and whether this institution asks for a comment on it.</summary>
+        public IReadOnlyList<DecisionCommentDto> DecisionComments { get; set; } = [];
+
         /// <summary>Every department, for the tab that arranges them. Only loaded on that tab.</summary>
         public IReadOnlyList<DepartmentDto> Departments { get; set; } = [];
 

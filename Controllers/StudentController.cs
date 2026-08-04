@@ -19,7 +19,8 @@ namespace ResearchPublicationManagementSystem.Controllers
         ProposalsApiClient proposalsApi,
         EthicsApiClient ethicsApi,
         PublicationsApiClient publicationsApi,
-        UsersApiClient usersApi) : Controller
+        UsersApiClient usersApi,
+        SettingsApiClient settingsApi) : Controller
     {
         private static readonly JsonSerializerOptions ProfileJsonOpts = new()
         {
@@ -110,7 +111,11 @@ namespace ResearchPublicationManagementSystem.Controllers
         private const string HistoryTab = "history";
 
         [HttpGet]
-        public async Task<IActionResult> Publication(Guid id, int historyPage = 1, string? tab = null)
+        public async Task<IActionResult> Publication(
+            Guid id, int historyPage = 1, string? tab = null,
+            // "activity" rather than "action": MVC reserves "action" for routing, so a query
+            // string carrying one was read as a route value and never reached this parameter.
+            DateOnly? from = null, DateOnly? to = null, string? activity = null, Guid? actor = null)
         {
             var (container, redirect) = await GetOwnedContainerAsync(id);
             if (redirect is not null) return redirect;
@@ -143,20 +148,43 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             // Best-effort: a publication is still perfectly usable if its history can't be read,
             // so a failure here shows an empty history tab rather than taking down the page.
-            var historyResult = await containersApi.GetActivityHistoryAsync(id, historyPage);
+            var historyResult = await containersApi.GetActivityHistoryAsync(
+                id, historyPage, from: from, to: to, action: activity, actorUserId: actor);
             model.History = historyResult.Data?.Items ?? [];
             model.HistoryTotal = historyResult.Data?.TotalCount ?? 0;
+
+            // What this publication's trail can be filtered by, and what it is filtered by now.
+            // Only what the trail actually holds, so the screen never offers a choice matching
+            // nothing. Best-effort, like the trail itself.
+            var filters = await containersApi.GetActivityHistoryFiltersAsync(id);
+            model.HistoryActions = filters.Data?.Actions ?? [];
+            model.HistoryActors = filters.Data?.Actors ?? [];
+            model.HistoryFrom = from;
+            model.HistoryTo = to;
+            model.HistoryAction = activity;
+            model.HistoryActor = actor;
 
             // The pager returns to this publication on the tab the trail is on, and turns the
             // parameter this action actually reads. It used to write "page", which this action has
             // never had, so Next reloaded the same page on the first tab.
             model.HistoryPager = Paging.PagerFor(historyResult.Data, "Student", nameof(Publication),
-                new Dictionary<string, string?> { ["id"] = id.ToString(), ["tab"] = HistoryTab },
+                new Dictionary<string, string?>
+                {
+                    ["id"] = id.ToString(),
+                    ["tab"] = HistoryTab,
+                    // Carried, or turning a page would quietly widen the trail back to everything.
+                    ["from"] = from?.ToString("yyyy-MM-dd"),
+                    ["to"] = to?.ToString("yyyy-MM-dd"),
+                    ["activity"] = activity,
+                    ["actor"] = actor?.ToString()
+                },
                 pageKey: "historyPage");
 
             // Which tab to open on. Asked for by name, and taken as read on any page of the trail
             // but the first, because nothing else could have sent somebody there.
-            model.ActiveTab = tab == HistoryTab || historyPage > 1 ? HistoryTab : ProgressTab;
+            model.ActiveTab = tab == HistoryTab || historyPage > 1 || model.HistoryIsFiltered
+                ? HistoryTab
+                : ProgressTab;
 
             return View(model);
         }
@@ -252,7 +280,20 @@ namespace ResearchPublicationManagementSystem.Controllers
             var proposalsResult = await proposalsApi.GetByContainerAsync(id);
             var proposals = proposalsResult.Data ?? [];
 
-            var model = new CreateProposalsViewModel { ContainerId = container!.Id };
+            // How many this round takes. A round already holding more than the current ceiling,
+            // written before an administrator narrowed it, still shows all of them: hiding one a
+            // student has written would look like losing it.
+            var round = await settingsApi.GetProposalsAsync();
+            var fewest = round.Data?.MinimumPerRound ?? 1;
+            var most = Math.Max(round.Data?.MaximumPerRound ?? 3, proposals.Count);
+
+            var model = new CreateProposalsViewModel
+            {
+                ContainerId = container!.Id,
+                Fewest = fewest,
+                Most = most,
+                Slots = [.. Enumerable.Range(0, most).Select(_ => new ProposalSlotViewModel())]
+            };
             for (var i = 0; i < proposals.Count && i < model.Slots.Count; i++)
             {
                 model.Slots[i] = new ProposalSlotViewModel

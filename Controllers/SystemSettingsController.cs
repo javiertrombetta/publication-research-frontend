@@ -34,18 +34,21 @@ namespace ResearchPublicationManagementSystem.Controllers
             var uploads = await settingsApi.GetUploadsAsync();
             var institution = await settingsApi.GetInstitutionAsync();
             var deadlines = await settingsApi.GetDeadlinesAsync();
+            var proposals = await settingsApi.GetProposalsAsync();
+            var decisions = await settingsApi.GetDecisionCommentsAsync();
             var storage = await settingsApi.GetStorageAsync();
 
             // One failure fails the screen: showing three groups and a blank fourth would invite
             // someone to "correct" values that are only blank because they did not load.
             if (!committees.Success || !passwords.Success || !notifications.Success || !ethicsDocuments.Success
                 || !access.Success || !uploads.Success || !institution.Success || !deadlines.Success
-                || !storage.Success)
+                || !proposals.Success || !decisions.Success || !storage.Success)
             {
                 TempData["ErrorMessage"] =
                     committees.ErrorMessage ?? passwords.ErrorMessage ?? notifications.ErrorMessage
                     ?? ethicsDocuments.ErrorMessage ?? access.ErrorMessage ?? uploads.ErrorMessage
-                    ?? institution.ErrorMessage ?? deadlines.ErrorMessage ?? storage.ErrorMessage
+                    ?? institution.ErrorMessage ?? deadlines.ErrorMessage ?? proposals.ErrorMessage
+                    ?? decisions.ErrorMessage ?? storage.ErrorMessage
                     ?? "Could not load the system settings.";
                 model.LoadFailed = true;
                 return View(model);
@@ -59,6 +62,8 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.Uploads = uploads.Data!;
             model.Institution = institution.Data!;
             model.Deadlines = deadlines.Data!;
+            model.Proposals = proposals.Data!;
+            model.DecisionComments = decisions.Data?.Decisions ?? [];
             model.Storage = storage.Data!;
 
             // Who an administrator can leave out of committee work. Only worth fetching on the tab
@@ -399,6 +404,34 @@ namespace ResearchPublicationManagementSystem.Controllers
                 "Saved. Deadlines mark work as overdue; they never stop it being done late.");
         }
 
+        // ---------- Research proposals ----------
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveProposals(int minimumPerRound, int maximumPerRound)
+        {
+            var result = await settingsApi.UpdateProposalsAsync(
+                new UpdateProposalSettingsRequestDto(minimumPerRound, maximumPerRound));
+
+            return Done(result.Success, "proposals", result.ErrorMessage,
+                "Saved. It applies to rounds asked for again as well as to first ones.");
+        }
+
+        // ---------- Comments on decisions ----------
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveDecisionComments(string[]? required)
+        {
+            // The whole set is posted every time, and an unticked box sends nothing, so an empty
+            // list here means "none of them require a comment" rather than "nothing was said".
+            var result = await settingsApi.UpdateDecisionCommentsAsync(
+                new UpdateDecisionCommentSettingsRequestDto(required ?? []));
+
+            return Done(result.Success, "decisions", result.ErrorMessage,
+                "Saved. The screens where these decisions are made follow this within a minute.");
+        }
+
         // ---------- Departments ----------
 
         [HttpPost]
@@ -490,7 +523,8 @@ namespace ResearchPublicationManagementSystem.Controllers
         private static string NormaliseTab(string? tab) => tab switch
         {
             "ethics" or "passwords" or "notifications" or "access" or "uploads"
-                or "institution" or "deadlines" or "storage" or "departments" => tab,
+                or "institution" or "deadlines" or "proposals" or "decisions"
+                or "storage" or "departments" => tab,
             _ => "committees"
         };
     }

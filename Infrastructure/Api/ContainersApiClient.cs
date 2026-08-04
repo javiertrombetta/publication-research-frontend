@@ -23,10 +23,28 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
     public Task<ApiResult<object?>> DeleteAsync(Guid id, CancellationToken ct = default) =>
         DeleteAsync<object?>($"api/containers/{id}", ct);
 
+    /// <param name="from">Inclusive, as a date. <paramref name="to"/> is inclusive too.</param>
+    /// <param name="action">One of the action names the trail records.</param>
+    /// <param name="actorUserId">Whoever did it, or had it done on their behalf.</param>
     public Task<ApiResult<PagedResultDto<ActivityHistoryEntryDto>>> GetActivityHistoryAsync(
-        Guid id, int page = 1, int pageSize = Paging.AsConfigured, CancellationToken ct = default) =>
-        GetAsync<PagedResultDto<ActivityHistoryEntryDto>>(
-            $"api/containers/{id}/activity-history?page={Math.Max(1, page)}{Paging.SizeParam(pageSize)}", ct);
+        Guid id, int page = 1, int pageSize = Paging.AsConfigured,
+        DateOnly? from = null, DateOnly? to = null, string? action = null, Guid? actorUserId = null,
+        CancellationToken ct = default)
+    {
+        var query = $"api/containers/{id}/activity-history?page={Math.Max(1, page)}{Paging.SizeParam(pageSize)}";
+
+        if (from is { } f) query += $"&from={f:yyyy-MM-dd}";
+        if (to is { } t) query += $"&to={t:yyyy-MM-dd}";
+        if (!string.IsNullOrWhiteSpace(action)) query += $"&action={Uri.EscapeDataString(action)}";
+        if (actorUserId is { } who) query += $"&actorUserId={who}";
+
+        return GetAsync<PagedResultDto<ActivityHistoryEntryDto>>(query, ct);
+    }
+
+    /// <summary>What this publication's own trail can be filtered by.</summary>
+    public Task<ApiResult<ActivityHistoryFiltersDto>> GetActivityHistoryFiltersAsync(
+        Guid id, CancellationToken ct = default) =>
+        GetAsync<ActivityHistoryFiltersDto>($"api/containers/{id}/activity-history/filters", ct);
 
     /// <summary>
     /// Containers filtered server-side. A Coordinator passes their own id so the listing is

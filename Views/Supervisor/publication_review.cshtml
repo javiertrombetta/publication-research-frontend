@@ -1,4 +1,5 @@
 @model SupervisorPapersViewModel
+@inject ResearchPublicationManagementSystem.Services.IDecisionComments Decisions
 @{
     ViewData["Title"] = "Research papers to review";
 }
@@ -166,12 +167,20 @@ else
                                   placeholder="Your assessment, required when sending it back"></textarea>
                     </div>
 
+                    @{
+                        var acceptNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.PaperSupervisorAccept);
+                        var returnNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.PaperSupervisorReturn);
+                    }
                     <div class="btn-list">
-                        <button type="submit" name="accept" value="true" class="btn btn-primary">
+                        <button type="submit" name="accept" value="true" class="btn btn-primary"
+                                @DecisionButton.Attributes(acceptNeedsWhy, $"review-{paper.Id}",
+                                    "Accept this paper and send it to the evaluation committee?")>
                             Accept and send to the committee
                         </button>
                         <button type="submit" name="accept" value="false" class="btn btn-outline-danger"
-                                data-rpms-needs-comments="review-@paper.Id">
+                                @DecisionButton.Attributes(returnNeedsWhy, $"review-{paper.Id}",
+                                    "Send this paper back to the student?",
+                                    "Say what needs changing. It is all the student is given to work from.")>
                             Send back for revision
                         </button>
                     </div>

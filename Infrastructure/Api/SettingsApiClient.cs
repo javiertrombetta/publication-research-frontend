@@ -117,4 +117,24 @@ public class SettingsApiClient(HttpClient httpClient) : ApiClientBase(httpClient
     public Task<ApiResult<DeadlineSettingsDto>> UpdateDeadlinesAsync(
         UpdateDeadlineSettingsRequestDto request, CancellationToken ct = default) =>
         PutJsonAsync<DeadlineSettingsDto>("api/settings/deadlines", request, ct);
+
+    // ---------- Research proposals ----------
+
+    /// <summary>Anonymous on the API: the student's own screen has to say what it asks for.</summary>
+    public Task<ApiResult<ProposalSettingsDto>> GetProposalsAsync(CancellationToken ct = default) =>
+        GetAsync<ProposalSettingsDto>("api/settings/proposals", ct);
+
+    public Task<ApiResult<ProposalSettingsDto>> UpdateProposalsAsync(
+        UpdateProposalSettingsRequestDto request, CancellationToken ct = default) =>
+        PutJsonAsync<ProposalSettingsDto>("api/settings/proposals", request, ct);
+
+    // ---------- Comments on decisions ----------
+
+    /// <summary>Readable by anyone signed in: every decision screen has to say what it requires.</summary>
+    public Task<ApiResult<DecisionCommentSettingsDto>> GetDecisionCommentsAsync(CancellationToken ct = default) =>
+        GetAsync<DecisionCommentSettingsDto>("api/settings/decision-comments", ct);
+
+    public Task<ApiResult<DecisionCommentSettingsDto>> UpdateDecisionCommentsAsync(
+        UpdateDecisionCommentSettingsRequestDto request, CancellationToken ct = default) =>
+        PutJsonAsync<DecisionCommentSettingsDto>("api/settings/decision-comments", request, ct);
 }

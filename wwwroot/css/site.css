@@ -379,6 +379,14 @@ aside {
         --rpms-shell-inset: 0px;
     }
 
+    /* A page drawn without a menu, which is every page a signed-out reader sees. The inset is
+       remembered per browser, not per session, so somebody who signed out with theirs open came
+       back to a public catalogue pushed aside by a panel that was no longer there. */
+    :root.rpms-no-sidebar {
+        --rpms-shell-inset: 0px;
+        transition: none;
+    }
+
     /* Under the hand there is nothing to animate: the number is being set outright, many times a
        second, and a transition would make each of those the start of another one. */
     :root.rpms-sidebar-dragging {

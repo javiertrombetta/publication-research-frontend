@@ -235,6 +235,20 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 
     public record UpdateDeadlineSettingsRequestDto(int SupervisorResponseDays, int EthicsReviewDays, int CommitteeReviewDays);
 
+    /// <summary>How many research proposals a student submits in one round.</summary>
+    public record ProposalSettingsDto(int MinimumPerRound, int MaximumPerRound);
+
+    public record UpdateProposalSettingsRequestDto(int MinimumPerRound, int MaximumPerRound);
+
+    /// <summary>One decision in the pipeline, and whether this institution asks for a comment on it.</summary>
+    public record DecisionCommentDto(
+        string Key, string Stage, string Name, bool CommentRequired, bool RequiredByDefault);
+
+    public record DecisionCommentSettingsDto(IReadOnlyList<DecisionCommentDto> Decisions);
+
+    /// <summary>The whole set is posted every time: a key left out is a decision made optional.</summary>
+    public record UpdateDecisionCommentSettingsRequestDto(IReadOnlyList<string> Required);
+
     /// <summary>An invitation as an administrator sees it. The token is never returned.</summary>
     public record UserInvitationDto(
         Guid Id,
