@@ -1,3 +1,6 @@
+@* For the EthicsReviewOrder constants; kept local rather than in _ViewImports so the DTO
+   namespace does not shadow anything in the other views. *@
+@using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 @model SystemSettingsViewModel
 @{
     ViewData["Title"] = "System settings";
@@ -764,7 +767,7 @@
                         </p>
 
                         <form asp-action="SaveEthicsWorkflow" method="post">
-                            <h3 class="h4 mb-1">Who reads the ethics documentation</h3>
+                            <h3 class="h4 mb-1">Who reads the ethics documentation, and in what order</h3>
                             <p class="text-secondary mb-3">
                                 The student uploads, and the readings below happen in this order
                                 before the coordinator closes the stage. Any of them can go, but not
@@ -772,11 +775,29 @@
                                 left in it is refused.
                             </p>
 
+                            @{ var coordinatorFirst = Model.EthicsWorkflow.DocumentReviewOrder == EthicsReviewOrder.CoordinatorFirst; }
+                            <div class="mb-3">
+                                <label class="form-label" for="review-order">Which of them reads first</label>
+                                <select id="review-order" name="documentReviewOrder" class="form-select">
+                                    <option value="@EthicsReviewOrder.SupervisorFirst" selected="@(!coordinatorFirst)">
+                                        The supervisor, then the coordinator
+                                    </option>
+                                    <option value="@EthicsReviewOrder.CoordinatorFirst" selected="@coordinatorFirst">
+                                        The coordinator, then the supervisor
+                                    </option>
+                                </select>
+                                <small class="form-hint">
+                                    Both read the same files, so either order works. Whichever comes
+                                    second waits for the first, and a reading switched off below is
+                                    simply not part of the sequence.
+                                </small>
+                            </div>
+
                             <label class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="supervisorReviewsDocuments"
                                        value="true" checked="@Model.EthicsWorkflow.SupervisorReviewsDocuments" />
                                 <input type="hidden" name="supervisorReviewsDocuments" value="false" />
-                                <span class="form-check-label">The supervisor reads them first</span>
+                                <span class="form-check-label">The supervisor reads them</span>
                             </label>
                             <small class="form-hint mb-3 d-block">
                                 Off, an uploaded set goes straight to whoever reads next, and the
@@ -787,7 +808,7 @@
                                 <input class="form-check-input" type="checkbox" name="coordinatorReviewsDocuments"
                                        value="true" checked="@Model.EthicsWorkflow.CoordinatorReviewsDocuments" />
                                 <input type="hidden" name="coordinatorReviewsDocuments" value="false" />
-                                <span class="form-check-label">The coordinator reads them next</span>
+                                <span class="form-check-label">The coordinator reads them</span>
                             </label>
                             <small class="form-hint mb-4 d-block">
                                 Off, the coordinator still closes the stage at the end; they simply

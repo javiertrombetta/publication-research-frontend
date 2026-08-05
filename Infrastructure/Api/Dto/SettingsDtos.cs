@@ -249,13 +249,22 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         bool HeadOfDepartmentReviews,
         bool HeadOfDepartmentReviewsWhenNotRequired,
         bool SupervisorReviewsDocuments = true,
-        bool CoordinatorReviewsDocuments = true);
+        bool CoordinatorReviewsDocuments = true,
+        string DocumentReviewOrder = EthicsReviewOrder.SupervisorFirst);
 
     public record UpdateEthicsWorkflowSettingsRequestDto(
         bool HeadOfDepartmentReviews,
         bool HeadOfDepartmentReviewsWhenNotRequired,
         bool SupervisorReviewsDocuments = true,
-        bool CoordinatorReviewsDocuments = true);
+        bool CoordinatorReviewsDocuments = true,
+        string DocumentReviewOrder = EthicsReviewOrder.SupervisorFirst);
+
+    /// <summary>Which of the two reads the ethics documents first.</summary>
+    public static class EthicsReviewOrder
+    {
+        public const string SupervisorFirst = "SupervisorFirst";
+        public const string CoordinatorFirst = "CoordinatorFirst";
+    }
 
     /// <summary>One decision in the pipeline, and whether this institution asks for a comment on it.</summary>
     public record DecisionCommentDto(

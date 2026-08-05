@@ -425,12 +425,14 @@ namespace ResearchPublicationManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SaveEthicsWorkflow(
             bool headOfDepartmentReviews, bool headOfDepartmentReviewsWhenNotRequired,
-            bool supervisorReviewsDocuments, bool coordinatorReviewsDocuments)
+            bool supervisorReviewsDocuments, bool coordinatorReviewsDocuments,
+            string? documentReviewOrder)
         {
             var result = await settingsApi.UpdateEthicsWorkflowAsync(
                 new UpdateEthicsWorkflowSettingsRequestDto(
                     headOfDepartmentReviews, headOfDepartmentReviewsWhenNotRequired,
-                    supervisorReviewsDocuments, coordinatorReviewsDocuments));
+                    supervisorReviewsDocuments, coordinatorReviewsDocuments,
+                    documentReviewOrder ?? EthicsReviewOrder.SupervisorFirst));
 
             return Done(result.Success, "pipeline", result.ErrorMessage,
                 (headOfDepartmentReviews, headOfDepartmentReviewsWhenNotRequired) switch
