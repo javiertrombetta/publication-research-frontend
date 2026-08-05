@@ -95,8 +95,6 @@ public class ProposalsApiClient(HttpClient httpClient) : ApiClientBase(httpClien
     public Task<ApiResult<object?>> RequestResubmissionAsync(Guid containerId, CommentsRequestDto request, CancellationToken ct = default) =>
         PostJsonAsync<object?>($"api/containers/{containerId}/proposals/request-resubmission", request, ct);
 
-    public Task<ApiResult<object?>> DeferToNextCycleAsync(Guid containerId, CommentsRequestDto request, CancellationToken ct = default) =>
-        PostJsonAsync<object?>($"api/containers/{containerId}/proposals/defer-to-next-cycle", request, ct);
 
     // ---------- Supervisor ----------
 

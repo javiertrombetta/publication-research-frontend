@@ -50,7 +50,7 @@ namespace ResearchPublicationManagementSystem.Common
             // papers use RevisionsRequested, ethics documents RevisionRequested. Revoked is an
             // invitation an administrator withdrew, a decision against it, and the one state on
             // that screen someone might need to notice at a glance.
-            "Rejected" or "DeferredToNextCycle" or "RevisionsRequested" or "RevisionRequested"
+            "Rejected" or "RevisionsRequested" or "RevisionRequested"
                 or "Reject" or "RequestRevision" or "Revoked"
                 => "danger",
 

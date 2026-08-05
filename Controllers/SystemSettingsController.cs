@@ -381,12 +381,12 @@ namespace ResearchPublicationManagementSystem.Controllers
         public async Task<IActionResult> SaveInstitution(
             string name, string studentEmailDomain, string staffEmailDomain,
             string? itSupportEmail, string? researchEnquiriesEmail, string? privacyPolicyUrl,
-            string? currentAcademicCycle, string? websiteUrl, int rowsPerPage,
+            string? websiteUrl, int rowsPerPage,
             bool itSupportShownToVisitors = false)
         {
             var result = await settingsApi.UpdateInstitutionAsync(new UpdateInstitutionSettingsRequestDto(
                 name, studentEmailDomain, staffEmailDomain, itSupportEmail, researchEnquiriesEmail,
-                privacyPolicyUrl, currentAcademicCycle, websiteUrl, rowsPerPage,
+                privacyPolicyUrl, websiteUrl, rowsPerPage,
                 itSupportShownToVisitors));
 
             // The footer reads this, and it is cached per request for a minute. Without dropping
@@ -401,10 +401,12 @@ namespace ResearchPublicationManagementSystem.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SaveDeadlines(
-            int supervisorResponseDays, int ethicsReviewDays, int committeeReviewDays)
+            int supervisorResponseDays, int ethicsReviewDays, int committeeReviewDays,
+            int supervisorResponseWarningDays, int ethicsReviewWarningDays, int committeeReviewWarningDays)
         {
             var result = await settingsApi.UpdateDeadlinesAsync(new UpdateDeadlineSettingsRequestDto(
-                supervisorResponseDays, ethicsReviewDays, committeeReviewDays));
+                supervisorResponseDays, ethicsReviewDays, committeeReviewDays,
+                supervisorResponseWarningDays, ethicsReviewWarningDays, committeeReviewWarningDays));
 
             return Done(result.Success, "deadlines", result.ErrorMessage,
                 "Saved. Deadlines mark work as overdue; they never stop it being done late.");

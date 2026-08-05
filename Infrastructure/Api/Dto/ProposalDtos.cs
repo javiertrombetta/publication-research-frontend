@@ -64,7 +64,6 @@ public static class ProposalStatus
     public const string UnderSupervisorReview = "UnderSupervisorReview";
     public const string Assigned = "Assigned";
     public const string Rejected = "Rejected";
-    public const string DeferredToNextCycle = "DeferredToNextCycle";
 }
 
 /// <summary>A supervisor saying they are willing to take a proposal on. Comments are optional.</summary>
