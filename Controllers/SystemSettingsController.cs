@@ -451,13 +451,16 @@ namespace ResearchPublicationManagementSystem.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SavePaperWorkflow(
-            bool supervisorReviews, bool committeeEvaluates, bool coordinatorDecides)
+            bool supervisorReviews, bool committeeEvaluates, bool coordinatorDecides, bool ethicsBeforePaper)
         {
             var result = await settingsApi.UpdatePaperWorkflowAsync(
-                new UpdatePaperWorkflowSettingsRequestDto(supervisorReviews, committeeEvaluates, coordinatorDecides));
+                new UpdatePaperWorkflowSettingsRequestDto(
+                    supervisorReviews, committeeEvaluates, coordinatorDecides, ethicsBeforePaper));
 
             return Done(result.Success, "pipeline", result.ErrorMessage,
-                "Saved. Whichever reading is last now accepts the paper, including for papers already under way.");
+                ethicsBeforePaper
+                    ? "Saved. Ethics is cleared before the research paper begins."
+                    : "Saved. The research paper is judged first, and ethics is settled before it can be published.");
         }
 
         // ---------- Comments on decisions ----------

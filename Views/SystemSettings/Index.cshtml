@@ -875,6 +875,24 @@
                         </p>
 
                         <form asp-action="SavePaperWorkflow" method="post">
+                            <div class="mb-3">
+                                <label class="form-label" for="stage-order">Which stage comes first</label>
+                                <select id="stage-order" name="ethicsBeforePaper" class="form-select">
+                                    <option value="true" selected="@Model.PaperWorkflow.EthicsBeforePaper">
+                                        Ethics approval, then the research paper
+                                    </option>
+                                    <option value="false" selected="@(!Model.PaperWorkflow.EthicsBeforePaper)">
+                                        The research paper, then ethics approval
+                                    </option>
+                                </select>
+                                <small class="form-hint">
+                                    Research proposals stay first either way, because assigning one
+                                    is what names the supervisor both later stages wait on. Second,
+                                    ethics is settled after the paper is accepted and before it can
+                                    be published.
+                                </small>
+                            </div>
+
                             <label class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="supervisorReviews"
                                        value="true" checked="@Model.PaperWorkflow.SupervisorReviews" />
