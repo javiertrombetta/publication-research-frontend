@@ -77,9 +77,6 @@ public class ProposalsApiClient(HttpClient httpClient) : ApiClientBase(httpClien
     public Task<ApiResult<object?>> SendToSupervisorsAsync(SendToSupervisorsRequestDto request, CancellationToken ct = default) =>
         PostJsonAsync<object?>("api/proposals/send-to-supervisors", request, ct);
 
-    /// <summary>Which supervisors were invited to a proposal, and which of them accepted it.</summary>
-    public Task<ApiResult<IReadOnlyList<SupervisorInvitationDto>>> GetSelectionsAsync(Guid proposalId, CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<SupervisorInvitationDto>>($"api/proposals/{proposalId}/selections", ct);
 
     public Task<ApiResult<object?>> AssignSupervisorAsync(Guid proposalId, AssignSupervisorRequestDto request, CancellationToken ct = default) =>
         PostJsonAsync<object?>($"api/proposals/{proposalId}/assign-supervisor", request, ct);

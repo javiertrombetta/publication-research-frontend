@@ -35,6 +35,19 @@ namespace ResearchPublicationManagementSystem.Models
         public int AwaitingTotal { get; set; }
 
         /// <summary>
+        /// Everything assigned to this person, whatever the search says.
+        ///
+        /// The dashboard's two figures are about them rather than about the listing underneath, so
+        /// they cannot be read off a count the search has narrowed: searching for one title would
+        /// otherwise leave the card claiming they had been given one paper in total. Only set where
+        /// a search is on; the listing's own count stays in <see cref="TotalCount"/>.
+        /// </summary>
+        public int? AssignedTotal { get; set; }
+
+        /// <summary>What the counting cards describe: the whole of it, never the search.</summary>
+        public int DecidedTotal => (AssignedTotal ?? TotalCount) - AwaitingTotal;
+
+        /// <summary>
         /// Which of the two screens this is. Both list the same assignments, so the pager, the
         /// search box and the column headings all have to point back at the one being read.
         /// </summary>

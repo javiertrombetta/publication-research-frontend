@@ -1,7 +1,22 @@
 @using ResearchPublicationManagementSystem.Common
+@using System.Text.Json
 @model ResearchPublicationManagementSystem.Infrastructure.Api.Dto.UserDetailDto
 @{
     ViewData["Title"] = "My account";
+
+    // The role-specific half of an account arrives as loose JSON, because what it holds depends on
+    // which profile the person has. Read by name and forgiving of an absence: a supervisor has no
+    // programme and a student no areas of expertise, and neither is an error.
+    string Detail(string property) =>
+        Model?.Profile is { } profile
+        && profile.ValueKind == JsonValueKind.Object
+        && profile.TryGetProperty(property, out var value)
+        && value.ValueKind == JsonValueKind.String
+            ? value.GetString() ?? string.Empty
+            : string.Empty;
+
+    var isStudent = Model is not null && Model.Roles.Contains(RoleNames.Student);
+    var isSupervisor = Model is not null && Model.Roles.Contains(RoleNames.Supervisor);
 
     // Only where it means something. This governs what somebody is offered next, so it is shown
     // to the people the system actually offers things to.
@@ -97,6 +112,64 @@
                             </form>
                         }
                     </div>
+
+                    @* Your own account of yourself. Everybody signs themselves up, so everybody can
+                       mistype their own name, and until now only an administrator could put it
+                       right. What is not here is not an oversight: the address is what you sign in
+                       with, and the department and the roles are the institution's to decide. *@
+                    <form asp-controller="Profile" asp-action="SaveProfile" method="post"
+                          class="row g-3 mb-4 pb-4 border-bottom">
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label" for="me-first-name">First name</label>
+                            <input id="me-first-name" name="firstName" class="form-control"
+                                   value="@Model.FirstName" required />
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label" for="me-last-name">Last name</label>
+                            <input id="me-last-name" name="lastName" class="form-control"
+                                   value="@Model.LastName" required />
+                        </div>
+
+                        @if (isStudent)
+                        {
+                            <div class="col-12 col-sm-4">
+                                <label class="form-label" for="me-programme">Programme</label>
+                                <input id="me-programme" name="programme" class="form-control"
+                                       value="@Detail("programme")" />
+                            </div>
+                            <div class="col-12 col-sm-4">
+                                <label class="form-label" for="me-cohort">Cohort</label>
+                                <input id="me-cohort" name="cohort" class="form-control"
+                                       value="@Detail("cohort")" />
+                            </div>
+                            <div class="col-12 col-sm-4">
+                                <label class="form-label" for="me-orcid">ORCID</label>
+                                <input id="me-orcid" name="orcid" class="form-control"
+                                       value="@Detail("orcid")" placeholder="0000-0000-0000-0000" />
+                            </div>
+                        }
+
+                        @if (isSupervisor)
+                        {
+                            <div class="col-12 col-md-6">
+                                <label class="form-label" for="me-expertise">Areas of expertise</label>
+                                <textarea id="me-expertise" name="areasOfExpertise" rows="2"
+                                          class="form-control">@Detail("areasOfExpertise")</textarea>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label" for="me-interests">Research interests</label>
+                                <textarea id="me-interests" name="researchInterests" rows="2"
+                                          class="form-control">@Detail("researchInterests")</textarea>
+                            </div>
+                        }
+
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">Save my details</button>
+                            <span class="text-secondary small ms-2">
+                                Your email address, department and roles are set by the institution.
+                            </span>
+                        </div>
+                    </form>
 
                     @if (Model.Roles.Count == 0 || Model.Roles.All(r => r == ResearchPublicationManagementSystem.Common.RoleNames.Staff))
                     {

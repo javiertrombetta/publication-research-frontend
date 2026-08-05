@@ -222,6 +222,14 @@ namespace ResearchPublicationManagementSystem.Models
             return values;
         }
 
+        /// <summary>
+        /// A heading that orders the trail by its own column.
+        ///
+        /// The keys are named here rather than taken from the default pair, because this screen
+        /// binds a query object of its own and that object reads sortBy and sortDescending. Under
+        /// the default names the heading wrote sort and desc, nothing bound them, and every click
+        /// returned the same page in the same order: a control that answers without doing anything.
+        /// </summary>
         public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
         {
             Controller = "AuditLogs",
@@ -231,16 +239,10 @@ namespace ResearchPublicationManagementSystem.Models
             CurrentSort = Query.SortBy,
             CurrentDescending = Query.SortDescending,
             DescendingFirst = descendingFirst,
+            SortKey = "sortBy",
+            DescendingKey = "sortDescending",
             RouteValues = Filters()
         };
-    }
-
-    /// <summary>How many committee members of each type a publication needs by default.</summary>
-    public class CommitteeSettingsViewModel
-    {
-        public IReadOnlyList<CommitteeRoleConfigDto> Config { get; set; } = [];
-
-        public bool LoadFailed { get; set; }
     }
 
     /// <summary>The new-account form, with the departments a student or coordinator can belong to.</summary>

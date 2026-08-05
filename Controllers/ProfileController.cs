@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ResearchPublicationManagementSystem.Common;
 using ResearchPublicationManagementSystem.Infrastructure.Api;
 using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
 using ResearchPublicationManagementSystem.Models;
@@ -30,6 +31,56 @@ namespace ResearchPublicationManagementSystem.Controllers
         {
             var result = await usersApi.GetMeAsync();
             return View(result.Data);
+        }
+
+        /// <summary>
+        /// The person correcting their own details.
+        ///
+        /// Everybody signs themselves up, so everybody can mistype their own name, programme or
+        /// cohort, and until now nobody could put it right: the screen showed the details and
+        /// offered no way to change them, so a typo needed an administrator. The API has taken
+        /// this since the beginning and nothing called it.
+        ///
+        /// What it does not take is deliberate. The address is what they sign in with, the
+        /// department is the institution's to say, and the roles are the administrator's; each of
+        /// those is somebody else's decision about them rather than their own account of
+        /// themselves. The API refuses them too, so this is not the only thing holding the line.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveProfile(
+            string firstName, string lastName, string? programme, string? cohort, string? orcid,
+            string? areasOfExpertise, string? researchInterests)
+        {
+            if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
+            {
+                TempData["ErrorMessage"] = "Your name cannot be left blank.";
+                return RedirectToAction(nameof(Me));
+            }
+
+            // The API reads null as "leave this as it was", so what decides whether a field is sent
+            // is whether the form showed it, not whether it came back empty. Judged by role, the
+            // same way the form decides what to draw: a supervisor's request must not carry a
+            // programme, and a student who clears their ORCID must be able to clear it rather than
+            // find it silently kept.
+            var student = User.IsInRole(RoleNames.Student);
+            var supervisor = User.IsInRole(RoleNames.Supervisor);
+
+            var result = await usersApi.UpdateMeAsync(new UpdateMyProfileRequestDto(
+                firstName.Trim(), lastName.Trim(),
+                student ? (programme ?? string.Empty).Trim() : null,
+                student ? (cohort ?? string.Empty).Trim() : null,
+                null,
+                student ? (orcid ?? string.Empty).Trim() : null,
+                null,
+                supervisor ? (areasOfExpertise ?? string.Empty).Trim() : null,
+                supervisor ? (researchInterests ?? string.Empty).Trim() : null));
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? "Your details are saved."
+                : result.ErrorMessage ?? "Could not save your details.";
+
+            return RedirectToAction(nameof(Me));
         }
 
         /// <summary>
