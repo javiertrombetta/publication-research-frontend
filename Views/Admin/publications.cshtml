@@ -92,7 +92,7 @@ else
                         var byWaiting = Model.Column("waiting", "Waiting on");
                         var byStarted = Model.Column("started", "Opened", descendingFirst: true);
                     }
-                    <thead>
+                    <thead id="@byTitle.Anchor">
                         <tr>
                             <th scope="col"><partial name="_SortableHeader" model="byTitle" /></th>
                             <th scope="col"><partial name="_SortableHeader" model="byStudent" /></th>

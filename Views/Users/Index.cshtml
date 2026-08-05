@@ -97,7 +97,7 @@ else
                     var byAvailable = Model.Column("available", "Taking work on");
                     var byJoined = Model.Column("created", "Joined", descendingFirst: true);
                 }
-                <thead>
+                <thead id="@byName.Anchor">
                     <tr>
                         <th scope="col"><partial name="_SortableHeader" model="byName" /></th>
                         <th scope="col"><partial name="_SortableHeader" model="byEmail" /></th>

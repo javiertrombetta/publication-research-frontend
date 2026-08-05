@@ -44,6 +44,18 @@ namespace ResearchPublicationManagementSystem.Models
         /// <summary>The page key to drop when the order changes, for the same reason.</summary>
         public string PageKey { get; init; } = "page";
 
+        /// <summary>
+        /// The listing this heading belongs to, so clicking it returns the reader to that listing
+        /// rather than to the top of the document. Named after the key the column writes, which is
+        /// enough wherever a screen's listings each have their own ordering.
+        ///
+        /// Two screens hold two listings ordered together by one key, and there the name has to be
+        /// given: an id used twice is not an id, and the browser goes to whichever it meets first.
+        /// </summary>
+        public string? Listing { get; init; }
+
+        public string Anchor => $"rpms-list-{Listing ?? SortKey}";
+
         public bool IsActive =>
             string.Equals(CurrentSort, Column, StringComparison.OrdinalIgnoreCase);
 

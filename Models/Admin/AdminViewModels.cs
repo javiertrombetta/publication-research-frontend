@@ -339,7 +339,7 @@ namespace ResearchPublicationManagementSystem.Models
         public Dictionary<string, string?> ClearSearchRoute() =>
             RouteValues().Where(v => v.Key != "search").ToDictionary(v => v.Key, v => v.Value);
 
-        public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
+        public SortableColumnViewModel Column(string column, string label, string listing, bool descendingFirst = false) => new()
         {
             Controller = "Admin",
             Action = "catalogue",
@@ -348,6 +348,7 @@ namespace ResearchPublicationManagementSystem.Models
             CurrentSort = Sort,
             CurrentDescending = Descending,
             DescendingFirst = descendingFirst,
+            Listing = listing,
             RouteValues = HasSearch ? new Dictionary<string, string?> { ["search"] = Search } : []
         };
     }
