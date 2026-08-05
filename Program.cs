@@ -243,6 +243,43 @@ app.UseRequestLocalization(new RequestLocalizationOptions
 // Before anything that inspects the scheme or the client address.
 app.UseForwardedHeaders();
 
+// What the browser is told to refuse. The site sets these itself rather than relying on what a
+// host happens to add: the SAMEORIGIN header seen while developing comes from the development
+// pipeline and is not there once the application is published.
+//
+// The policy names 'self' and nothing else because the site loads nothing else: Tabler, the
+// stylesheet and the one script are all served from here. Inline script and inline style are
+// allowed because the views use both, and rewriting twenty script blocks around nonces would buy
+// little while there is nowhere for injected markup to come out unescaped. What it does buy is
+// real: no script from another origin, no posting a form of ours to somewhere else, no rewriting
+// what relative URLs mean, and no framing the site inside a page that overlays it with a button
+// that says something different from the one being pressed.
+app.Use(async (context, next) =>
+{
+    var headers = context.Response.Headers;
+
+    headers["Content-Security-Policy"] =
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline'; " +
+        "style-src 'self' 'unsafe-inline'; " +
+        "img-src 'self' data:; " +
+        "font-src 'self' data:; " +
+        "connect-src 'self'; " +
+        "form-action 'self'; " +
+        "base-uri 'self'; " +
+        "frame-ancestors 'none'";
+
+    // Says the same as frame-ancestors, for anything too old to read the policy above.
+    headers["X-Frame-Options"] = "DENY";
+    headers["X-Content-Type-Options"] = "nosniff";
+
+    // The reset link carries its token in the query string, and a referrer would hand that token
+    // to whatever the page loaded next.
+    headers["Referrer-Policy"] = "no-referrer";
+
+    await next();
+});
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
