@@ -1,0 +1,24 @@
+@using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
+@model PublicationDetailViewModel
+@{ ViewData["Title"] = Model.Container.DisplayTitle; }
+
+@* A publication as a whole, to read. The coordinator's decisions each have their own screen,
+   where the choice is put with what it is about; this is for the times they need to see what a
+   publication holds rather than act on it, and everything in it can be downloaded. *@
+
+<div class="mb-4">
+    <a asp-controller="Coordinator" asp-action="Coordinator_dashboard" class="text-secondary">
+        &larr; Dashboard
+    </a>
+    <h1 class="page-title mt-2 mb-1">@Model.Container.DisplayTitle</h1>
+    <div class="text-secondary">
+        @Model.Container.StudentName
+        @if (!string.IsNullOrWhiteSpace(Model.Container.StudentDepartmentName))
+        {
+            <text>&middot; @Model.Container.StudentDepartmentName</text>
+        }
+        &middot; started @Model.Container.CreatedAt.ToLocalTime().ToString("d MMM yyyy")
+    </div>
+</div>
+
+<partial name="_PublicationRecord" model="Model" />
