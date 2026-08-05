@@ -42,6 +42,14 @@ namespace ResearchPublicationManagementSystem.Models
         public IReadOnlyList<RequiredEthicsDocumentDto> RequiredEthicsDocuments { get; set; } = [];
 
         /// <summary>
+        /// What was actually uploaded, and every version of the paper. Filled in where a screen
+        /// shows the whole of a publication rather than the part its reader is working on.
+        /// </summary>
+        public IReadOnlyList<EthicsDocumentDto> EthicsDocuments { get; set; } = [];
+
+        public IReadOnlyList<PublicationVersionDto> PaperVersions { get; set; } = [];
+
+        /// <summary>
         /// Whether the proposals have left the student's hands. A draft or a rejected proposal is
         /// still theirs to work on; anything else has been submitted and is locked, which is the
         /// same rule Create_proposals applies to its own form.

@@ -1,0 +1,269 @@
+@using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
+@model PublicationDetailViewModel
+@{
+    ViewData["Title"] = Model.Container.DisplayTitle;
+
+    string TabClass(string tab) => Model.ActiveTab == tab ? "nav-link active" : "nav-link";
+}
+
+@* Read only, deliberately. An administrator needs to see what a publication holds before deciding
+   whether to move somebody off it; changing any of it is the job of whoever the pipeline named,
+   and putting their controls here would let an administrator answer for them. *@
+
+<div class="mb-4 d-flex flex-wrap align-items-start gap-2">
+    <div class="me-auto">
+        <h1 class="page-title mb-1">@Model.Container.DisplayTitle</h1>
+        <div class="text-secondary">
+            @Model.Container.StudentName
+            @if (!string.IsNullOrWhiteSpace(Model.Container.StudentDepartmentName))
+            {
+                <text>&middot; @Model.Container.StudentDepartmentName</text>
+            }
+            &middot; started @Model.Container.CreatedAt.ToLocalTime().ToString("d MMM yyyy")
+        </div>
+    </div>
+    <a asp-controller="Admin" asp-action="assignments" class="btn btn-outline-secondary">Back to assignments</a>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-12 col-md-3">
+                <div class="text-secondary small">Stage</div>
+                <div>
+                    @(Model.Container.CurrentPipeline switch
+                    {
+                        PipelineStage.ResearchProposals => "Research proposals",
+                        PipelineStage.EthicsApproval => "Ethics approval",
+                        _ => "Research paper"
+                    })
+                </div>
+            </div>
+            <div class="col-12 col-md-3">
+                <div class="text-secondary small">Coordinator</div>
+                <div>@Model.Container.CoordinatorName</div>
+            </div>
+            <div class="col-12 col-md-3">
+                <div class="text-secondary small">Supervisor</div>
+                <div>@(Model.Container.AssignedSupervisorName ?? "None yet")</div>
+            </div>
+            <div class="col-12 col-md-3">
+                <div class="text-secondary small">Waiting on</div>
+                <div>
+                    @(Model.Container.EthicsAwaitingRole
+                      ?? Model.Container.PaperAwaitingRole
+                      ?? "Nobody")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="@TabClass("progress")" asp-action="publication" asp-route-id="@Model.Container.Id">Contents</a>
+    </li>
+    <li class="nav-item">
+        <a class="@TabClass("history")" asp-action="publication" asp-route-id="@Model.Container.Id"
+           asp-route-tab="history">Activity history</a>
+    </li>
+</ul>
+
+@if (Model.ActiveTab == "history")
+{
+    <div class="card">
+        <div class="card-body">
+            <h2 class="h3 mb-3">Activity history</h2>
+            @if (Model.History.Count == 0)
+            {
+                <p class="text-secondary m-0">Nothing has been recorded against this publication yet.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table card-table table-vcenter">
+                        <thead>
+                            <tr><th>When</th><th>What</th><th>Who</th><th>Comments</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var entry in Model.History)
+                            {
+                                <tr>
+                                    <td class="text-nowrap">@entry.CreatedAt.ToLocalTime().ToString("d MMM yyyy, HH:mm")</td>
+                                    <td>@Humanise(entry.Action)</td>
+                                    <td>@entry.ActorName</td>
+                                    <td>@entry.Comments</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (Model.HistoryPager is not null)
+    {
+        <partial name="_Pager" model="Model.HistoryPager" />
+    }
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h3 mb-3">Research proposals</h2>
+            @if (Model.Proposals.Count == 0)
+            {
+                <p class="text-secondary m-0">This student has not written any proposals yet.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table card-table table-vcenter">
+                        <thead>
+                            <tr><th>Title</th><th>Status</th><th>Submitted</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var proposal in Model.Proposals)
+                            {
+                                <tr>
+                                    <td>
+                                        @proposal.Title
+                                        <span class="d-block text-secondary small">@proposal.Abstract</span>
+                                    </td>
+                                    <td><span class="badge @StatusBadge(proposal.Status)">@Humanise(proposal.Status)</span></td>
+                                    <td class="text-nowrap">
+                                        @(proposal.SubmittedAt?.ToLocalTime().ToString("d MMM yyyy") ?? "Not sent")
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h3 mb-3">Ethics</h2>
+            @if (Model.EthicsApproval is null)
+            {
+                <p class="text-secondary m-0">This publication has not reached its ethics stage.</p>
+            }
+            else
+            {
+                <div class="mb-3">
+                    <span class="badge @StatusBadge(Model.EthicsApproval.Status)">@Humanise(Model.EthicsApproval.Status)</span>
+                    @if (!string.IsNullOrWhiteSpace(Model.Container.EthicsHeadOfDepartmentName))
+                    {
+                        <span class="text-secondary small ms-2">
+                            Put to @Model.Container.EthicsHeadOfDepartmentName
+                        </span>
+                    }
+                </div>
+
+                @foreach (var (label, said) in new[]
+                {
+                    ("The supervisor said", Model.EthicsApproval.SupervisorDecisionComments),
+                    ("The coordinator said", Model.EthicsApproval.CoordinatorDecisionComments),
+                    ("The Head of Department said", Model.EthicsApproval.HeadOfDepartmentComments)
+                })
+                {
+                    @if (!string.IsNullOrWhiteSpace(said))
+                    {
+                        <div class="mb-3">
+                            <div class="text-secondary small">@label</div>
+                            <p class="m-0">@said</p>
+                        </div>
+                    }
+                }
+
+                @if (Model.EthicsDocuments.Count == 0)
+                {
+                    <p class="text-secondary m-0">No ethics documentation was uploaded.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table card-table table-vcenter">
+                            <thead>
+                                <tr><th>Document</th><th>File</th><th>Version</th><th>Status</th><th class="w-1"></th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var document in Model.EthicsDocuments)
+                                {
+                                    <tr>
+                                        <td>@Humanise(document.DocumentType)</td>
+                                        <td>@document.FileName</td>
+                                        <td>@document.Version</td>
+                                        <td><span class="badge @StatusBadge(document.Status)">@Humanise(document.Status)</span></td>
+                                        <td class="text-end">
+                                            <a class="btn btn-sm btn-outline-primary"
+                                               asp-controller="Downloads" asp-action="EthicsDocument"
+                                               asp-route-containerId="@Model.Container.Id"
+                                               asp-route-documentId="@document.Id">Download</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h2 class="h3 mb-3">Research paper</h2>
+            @if (Model.Publication is null)
+            {
+                <p class="text-secondary m-0">This publication has not reached its research paper stage.</p>
+            }
+            else
+            {
+                <div class="mb-3">
+                    <h3 class="h4 mb-1">@Model.Publication.Title</h3>
+                    <span class="badge @StatusBadge(Model.Publication.Status)">@Humanise(Model.Publication.Status)</span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Publication.Abstract))
+                {
+                    <p class="text-secondary">@Model.Publication.Abstract</p>
+                }
+
+                @if (Model.PaperVersions.Count == 0)
+                {
+                    <p class="text-secondary m-0">No version has been uploaded yet.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table card-table table-vcenter">
+                            <thead>
+                                <tr><th>Version</th><th>File</th><th>Uploaded</th><th class="w-1"></th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var version in Model.PaperVersions.OrderByDescending(v => v.VersionNumber))
+                                {
+                                    <tr>
+                                        <td>@version.VersionNumber</td>
+                                        <td>@version.FileName</td>
+                                        <td class="text-nowrap">@version.UploadedAt.ToLocalTime().ToString("d MMM yyyy")</td>
+                                        <td class="text-end">
+                                            <a class="btn btn-sm btn-outline-primary"
+                                               asp-controller="Downloads" asp-action="Paper"
+                                               asp-route-publicationId="@Model.Publication.Id"
+                                               asp-route-versionId="@version.Id">Download</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}
