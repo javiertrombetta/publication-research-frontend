@@ -26,7 +26,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      # SDK 10 while the project targets net8.0 — the same pairing the team develops with, so
+      # SDK 10 while the project targets net8.0, the same pairing the team develops with, so
       # the compiler that passes here is the one that passed on their machine.
       - name: Set up .NET
         uses: actions/setup-dotnet@v6
@@ -70,7 +70,7 @@ jobs:
   build-and-push:
     name: Build & push Docker image
     # Deliberately not `needs: build`. The image build compiles the very same project, so a
-    # compile error fails it too — waiting for the other job first only added its time to every
+    # compile error fails it too, and waiting for the other job first only added its time to every
     # push. The Build job still stands on its own as the check that runs for pull requests,
     # where nothing is published.
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
@@ -116,8 +116,8 @@ jobs:
           provenance: false
           # Stamps the assembly so a running container can report its own version.
           #
-          # Only on a tag. On a branch push meta.outputs.version is the primary tag's name —
-          # "latest" for main — which is not a version number and makes the SDK reject the
+          # Only on a tag. On a branch push meta.outputs.version is the primary tag's name,
+          # "latest" for main, which is not a version number and makes the SDK reject the
           # build outright. An untagged build is not a release, so it gets 0.0.0.
           build-args: |
             VERSION=${{ startsWith(github.ref, 'refs/tags/v') && steps.meta.outputs.version || '0.0.0' }}

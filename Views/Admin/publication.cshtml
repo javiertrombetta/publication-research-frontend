@@ -91,16 +91,62 @@
     <div class="card">
         <div class="card-body">
             <h2 class="h3 mb-3">Activity history</h2>
-            @if (Model.History.Count == 0)
+
+            @* Over what the trail says in words: the action, the person, and the comment they
+               left. The same search the coordinator and the head of department read this record
+               with, because it is the same record. *@
+            <form method="get" asp-action="publication" class="row g-2 align-items-center mb-3">
+                <input type="hidden" name="id" value="@Model.Container.Id" />
+                <input type="hidden" name="tab" value="history" />
+                <input type="hidden" name="from" value="@Model.CameFrom" />
+                <input type="hidden" name="historySort" value="@Model.HistorySort" />
+                <input type="hidden" name="historyDesc" value="@Model.HistoryDescending.ToString().ToLowerInvariant()" />
+
+                <div class="col-12 col-md">
+                    <input type="search" name="historySearch" value="@Model.HistorySearch" class="form-control"
+                           placeholder="Search the history by action, person or comment" aria-label="Search the history" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.HistorySearch))
+                {
+                    <div class="col-auto">
+                        <a asp-action="publication" asp-route-id="@Model.Container.Id" asp-route-tab="history"
+                           asp-route-from="@Model.CameFrom" class="btn btn-outline-secondary">Clear</a>
+                    </div>
+                }
+            </form>
+
+            @if (Model.History.Count == 0 && !string.IsNullOrWhiteSpace(Model.HistorySearch))
+            {
+                <p class="text-secondary m-0">Nothing in this publication's history matches &ldquo;@Model.HistorySearch&rdquo;.</p>
+            }
+            else if (Model.History.Count == 0)
             {
                 <p class="text-secondary m-0">Nothing has been recorded against this publication yet.</p>
             }
             else
             {
+                @* Built here rather than inline: a tag helper's model attribute is delimited by
+                   double quotes, so a call with string arguments cannot be written inside one. *@
+                var byWhen = Model.HistoryColumn("when", "When", descendingFirst: true);
+                var byWhat = Model.HistoryColumn("what", "What");
+                var byWho = Model.HistoryColumn("who", "Who");
+                var byComment = Model.HistoryColumn("comments", "Comments");
+
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter">
-                        <thead>
-                            <tr><th scope="col">When</th><th scope="col">What</th><th scope="col">Who</th><th scope="col">Comments</th></tr>
+                        <thead id="@byWhen.Anchor">
+                            @* Ordered by the API, over the whole trail rather than the page in
+                               hand: the oldest entry is on the last page, and sorting ten rows
+                               would never bring it into view. *@
+                            <tr>
+                                <th scope="col"><partial name="_SortableHeader" model="byWhen" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byWhat" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byWho" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byComment" /></th>
+                            </tr>
                         </thead>
                         <tbody>
                             @foreach (var entry in Model.History)
@@ -135,13 +181,20 @@ else
             }
             else
             {
+                @* Ordered by the API over the whole listing. There is no pager on these: a round
+                   holds three proposals, a committee three seats, and the ethics stage asks for a
+                   fixed set, so a second page would never come. They are still worth ordering. *@
+                var byTitle = Model.ProposalsColumn("title", "Title");
+                var byStatus = Model.ProposalsColumn("status", "Status");
+                var bySubmitted = Model.ProposalsColumn("submitted", "Submitted", descendingFirst: true);
+
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter">
-                        <thead>
+                        <thead id="@byTitle.Anchor">
                             <tr>
-                                <th scope="col">Title</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Submitted</th>
+                                <th scope="col"><partial name="_SortableHeader" model="byTitle" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byStatus" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="bySubmitted" /></th>
                                 @if (!settled)
                                 {
                                     <th scope="col">Why you are changing it</th>
@@ -284,12 +337,18 @@ else
                 {
                     <div class="table-responsive">
                         <table class="table card-table table-vcenter">
-                            <thead>
+                            @{
+                                var byDocument = Model.DocumentsColumn("document", "Document");
+                                var byFile = Model.DocumentsColumn("file", "File");
+                                var byVersion = Model.DocumentsColumn("version", "Version", descendingFirst: true);
+                                var byStatus = Model.DocumentsColumn("status", "Status");
+                            }
+                            <thead id="@byDocument.Anchor">
                                 <tr>
-                                    <th scope="col">Document</th>
-                                    <th scope="col">File</th>
-                                    <th scope="col">Version</th>
-                                    <th scope="col">Status</th>
+                                    <th scope="col"><partial name="_SortableHeader" model="byDocument" /></th>
+                                    <th scope="col"><partial name="_SortableHeader" model="byFile" /></th>
+                                    <th scope="col"><partial name="_SortableHeader" model="byVersion" /></th>
+                                    <th scope="col"><partial name="_SortableHeader" model="byStatus" /></th>
                                     @if (!settled)
                                     {
                                         <th scope="col">Why you are removing it</th>
@@ -418,11 +477,16 @@ else
                 {
                     <div class="table-responsive">
                         <table class="table card-table table-vcenter">
-                            <thead>
+                            @{
+                                var byVersionNumber = Model.VersionsColumn("version", "Version", descendingFirst: true);
+                                var byVersionFile = Model.VersionsColumn("file", "File");
+                                var byUploaded = Model.VersionsColumn("uploaded", "Uploaded", descendingFirst: true);
+                            }
+                            <thead id="@byVersionNumber.Anchor">
                                 <tr>
-                                    <th scope="col">Version</th>
-                                    <th scope="col">File</th>
-                                    <th scope="col">Uploaded</th>
+                                    <th scope="col"><partial name="_SortableHeader" model="byVersionNumber" /></th>
+                                    <th scope="col"><partial name="_SortableHeader" model="byVersionFile" /></th>
+                                    <th scope="col"><partial name="_SortableHeader" model="byUploaded" /></th>
                                     @if (!settled && Model.PaperVersions.Count > 1)
                                     {
                                         <th scope="col">Why you are removing it</th>
@@ -431,7 +495,10 @@ else
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var version in Model.PaperVersions.OrderByDescending(v => v.VersionNumber))
+                                @* Not re-sorted here: the API returns them in the order the reader
+                                   asked the heading for, and sorting them again in the view would
+                                   make every heading but Version look broken. *@
+                                @foreach (var version in Model.PaperVersions)
                                 {
                                     <tr>
                                         <td>@version.VersionNumber</td>
