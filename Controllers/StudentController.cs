@@ -700,6 +700,8 @@ namespace ResearchPublicationManagementSystem.Controllers
                 model.DepartmentName = studentProfile.DepartmentName;
                 model.Programme = studentProfile.Programme;
                 model.Cohort = studentProfile.Cohort;
+                model.Orcid = studentProfile.Orcid;
+                model.ResearchAreas = studentProfile.ResearchAreas;
             }
 
             return model;

@@ -22,5 +22,18 @@ namespace ResearchPublicationManagementSystem.Models
         public string? DepartmentName { get; set; }
         public string? Programme { get; set; }
         public string? Cohort { get; set; }
+
+        /// <summary>
+        /// The student's own registration with ORCID, where they have one. Not everybody has, so
+        /// this is blank rather than absent, and the screen says so instead of hiding the row.
+        /// </summary>
+        public string? Orcid { get; set; }
+
+        /// <summary>
+        /// What this student says they work on. The API has returned these all along and no screen
+        /// read them, so the tags a supervisor would actually match a proposal against were
+        /// invisible to everybody including the student who chose them.
+        /// </summary>
+        public IReadOnlyList<string> ResearchAreas { get; set; } = [];
     }
 }
