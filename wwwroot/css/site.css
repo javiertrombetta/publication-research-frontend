@@ -10,7 +10,7 @@
 
 :root {
     --tblr-primary: var(--rpms-primary);
-    --tblr-primary-rgb: 229,57,53;
+    --tblr-primary-rgb: 211,47,47;
 }
 /* ==========================================================
    RPMS Theme
@@ -19,7 +19,17 @@
 :root {
     /* ---------- Brand Colours ---------- */
 
-    --rpms-primary: #E53935;
+    /* Two reds, because one cannot do both jobs.
+
+       The first is a fill, and what sits on it is white: #E53935 carried white at 4.23, under the
+       4.5 that ordinary text has to reach, and it is the fill of every primary button, the active
+       item in the menu and the count on the bell. A shade down carries white at 4.98.
+
+       The second is the red used as text, on a page rather than on a fill, and it cannot be the
+       same value in both themes: dark enough to read on white is too dark to read on near-black.
+       Light names one here; the dark theme names its own further down. */
+    --rpms-primary: #D32F2F;
+    --rpms-primary-text: #C62828;
     --rpms-primary-dark: #C62828;
     --rpms-secondary: #206BC4;
     --rpms-success: #2FB344;
@@ -135,6 +145,10 @@
     --rpms-shadow-colour: rgba(0, 0, 0, .5);
     --rpms-shadow-colour-strong: rgba(0, 0, 0, .6);
     --rpms-shadow: 0 .125rem .25rem rgba(0, 0, 0, .4);
+
+    /* The red as text, lightened for this theme. The one light uses reaches 2.95 here, which is
+       not readable; this reaches 4.5 on the surfaces it actually appears on. */
+    --rpms-primary-text: #EC6C6A;
 }
 
 /* ==========================================================
@@ -626,7 +640,7 @@ aside {
        say "you could go here" about the page already being looked at. */
     .rpms-sidebar-inner .nav-link:not(.active):not(.rpms-nav-link-selected):hover {
         background: var(--rpms-brand-tint);
-        color: var(--rpms-primary);
+        color: var(--rpms-primary-text);
     }
 
     /* The open item, painted by CSS from the very first frame.
@@ -772,12 +786,12 @@ aside {
 .nav-tabs .nav-link.active,
 .nav-tabs .nav-link.active:hover,
 .nav-tabs .nav-link.active:focus {
-    color: var(--rpms-primary);
-    border-bottom-color: var(--rpms-primary);
+    color: var(--rpms-primary-text);
+    border-bottom-color: var(--rpms-primary-text);
 }
 
 .nav-tabs .nav-link:hover {
-    color: var(--rpms-primary);
+    color: var(--rpms-primary-text);
 }
 
 /* ==========================================================
@@ -1491,7 +1505,7 @@ aside {
 /* Colour is the signal, not just the count: the bell has to read as "something is waiting"
    at a glance, before anyone reads a number. */
 .rpms-bell-unread {
-    color: var(--rpms-primary);
+    color: var(--rpms-primary-text);
 }
 
 .rpms-bell {
@@ -1548,13 +1562,13 @@ aside {
 }
 
     .rpms-sort:hover {
-        color: var(--rpms-primary);
+        color: var(--rpms-primary-text);
     }
 
     /* Colour alone, deliberately. Bold marked the sorted column a third time and cost a few pixels
        of text width doing it, which was enough to shift every column beside it. */
     .rpms-sort-active {
-        color: var(--rpms-primary);
+        color: var(--rpms-primary-text);
     }
 
 /* Always in the layout, visible only on the column being sorted by. Rendering it only when active
@@ -1580,11 +1594,11 @@ aside {
 }
 
     .rpms-sort-clickable:hover {
-        color: var(--rpms-primary);
+        color: var(--rpms-primary-text);
     }
 
     .rpms-sort-clickable[data-rpms-sorted] {
-        color: var(--rpms-primary);
+        color: var(--rpms-primary-text);
     }
 
     /* Reserved, then revealed. Both arrows have the same advance width, so the heading measures the
@@ -1799,7 +1813,7 @@ aside {
 
 .rpms-tally:hover,
 .rpms-tally:focus-visible {
-    color: var(--rpms-primary);
+    color: var(--rpms-primary-text);
 }
 
 /* The smaller counts beside and beneath it, which are links too. */
@@ -1811,7 +1825,7 @@ aside {
 
 .card-body .text-secondary > a:hover,
 .card-body .text-secondary > a:focus-visible {
-    color: var(--rpms-primary);
+    color: var(--rpms-primary-text);
 }
 
 /* A badge holding somebody's data may wrap; Tabler's never does.
@@ -1860,4 +1874,109 @@ aside {
    ringed for it. Anything focused inside it still is. */
 #main-content:focus {
     outline: none;
+}
+
+/* ==========================================================
+   Badge and tint text, so a status can be read
+   ==========================================================
+
+   Tabler's -lt variants take one colour for the text and that same colour at a tenth for the
+   fill. It is a good-looking convention and it does not carry: a mid-green on a wash of itself
+   comes to 2.5 against a white card, and these are 12px labels saying whether a paper is finished.
+
+   The fill is left alone, so the palette still reads as the palette. Only the text moves, and it
+   moves in opposite directions in the two themes: down towards black over a light tint, up
+   towards white over a dark one. Each value here is the first shade along that line that reaches
+   4.5 against the tint it sits on, measured in the browser rather than guessed. */
+/* !important because Tabler ships these utilities with it, and a utility that shouts is only
+   answered by shouting back. Kept to this one block so it stays the exception it is. */
+.bg-primary-lt   { color: #CA322F !important; }
+.bg-secondary-lt { color: #676D7B !important; }
+.bg-success-lt   { color: #217F30 !important; }
+.bg-blue-lt      { color: #066CCB !important; }
+.bg-danger-lt    { color: #C73535 !important; }
+.bg-orange-lt    { color: #B94D05 !important; }
+.bg-warning-lt   { color: #946000 !important; }
+.bg-azure-lt     { color: #3273A9 !important; }
+
+[data-bs-theme="dark"] .bg-primary-lt { color: #EC6C6A !important; }
+[data-bs-theme="dark"] .bg-blue-lt    { color: #519ADF !important; }
+[data-bs-theme="dark"] .bg-danger-lt  { color: #E27272 !important; }
+[data-bs-theme="dark"] .bg-orange-lt  { color: #F76F13 !important; }
+[data-bs-theme="dark"] .bg-azure-lt   { color: #4FA0E3 !important; }
+
+/* These three carried on their own against a dark tint, so the dark theme puts Tabler's values
+   back rather than keeping the darkened ones above, which were chosen for a white page and are
+   too dark to read here. Named rather than left out: without them the light values apply to both. */
+[data-bs-theme="dark"] .bg-secondary-lt { color: #9CA3AF !important; }
+[data-bs-theme="dark"] .bg-success-lt   { color: #2FB344 !important; }
+[data-bs-theme="dark"] .bg-warning-lt   { color: #F59F00 !important; }
+
+/* The footer bar takes Tabler's secondary grey, which was picked against a white page and comes
+   to 3.5 against this one in the dark theme. Ours already knows which theme it is in. */
+.rpms-footer,
+.rpms-footer .text-secondary {
+    color: var(--rpms-text-muted);
+}
+
+/* An outline button is red text on the page rather than white on a red fill, so it takes the
+   text red and follows the theme with it. Hovered it fills, and there white sits on the fill red,
+   which is what that value is for. */
+.btn-outline-primary {
+    --tblr-btn-color: var(--rpms-primary-text);
+    --tblr-btn-border-color: var(--rpms-primary-text);
+    --tblr-btn-hover-bg: var(--rpms-primary);
+    --tblr-btn-hover-border-color: var(--rpms-primary);
+    --tblr-btn-active-bg: var(--rpms-primary);
+    --tblr-btn-active-border-color: var(--rpms-primary);
+}
+
+/* ==========================================================
+   Text that follows the theme
+   ==========================================================
+
+   The dark theme was added over a palette chosen against a white page, and these are the places
+   where that shows: a grey and a red that read well on white and come to around 3 against
+   near-black. Each value below is the first shade towards white that reaches 4.5, measured on the
+   surface it actually sits on. The light theme keeps what it had, because there it already
+   carries.
+
+   !important only where Tabler's own declaration has it. */
+
+/* Body links are the brand red used as text, so they follow it. Tabler builds them from a
+   triplet rather than a colour. */
+:root {
+    --tblr-link-color: var(--rpms-primary-text);
+    --tblr-link-color-rgb: 198,40,40;
+}
+
+[data-bs-theme="dark"] {
+    --tblr-link-color: var(--rpms-primary-text);
+    --tblr-link-color-rgb: 236,108,106;
+}
+
+[data-bs-theme="dark"] .text-danger { color: #E06A6A !important; }
+[data-bs-theme="dark"] .text-muted { color: #8A909B !important; }
+
+/* The tab that is not the current one. Loud enough to be read, still quieter than the one that is. */
+[data-bs-theme="dark"] .nav-tabs .nav-link:not(.active) { color: #8A909B; }
+
+/* A link drawn as a button: blue on the page in both themes, and a shade off in each. */
+.btn-link { --tblr-btn-color: #0776DE; }
+[data-bs-theme="dark"] .btn-link { --tblr-btn-color: #3192EE; }
+
+/* Tabler puts its off-white on a danger button, which lands at 4.46. Plain white clears it. */
+.btn-danger { --tblr-btn-color: #FFFFFF; }
+
+/* Tabler paints .btn-link with a literal rather than through its own variable, so this has to
+   answer in kind. */
+.btn-link { color: #0776DE; }
+[data-bs-theme="dark"] .btn-link { color: #3192EE; }
+
+/* "Page 2 of 5" sits in the pager but is not a control: it is the only part that tells you
+   anything, so it reads as text rather than as something switched off. */
+.rpms-pager-position .page-link {
+    color: var(--rpms-text);
+    background: transparent;
+    cursor: default;
 }

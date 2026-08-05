@@ -106,7 +106,9 @@ else
     {
         ("col-12 col-md-6", Model.Column("title", "Paper")),
         ("col-6 col-md-3", Model.Column("student", "Student")),
-        ("col-6 col-md-3", Model.Column("decision", "Your decision"))
+        @* Ends where its column does. The badge below sits against the right edge of this column,
+           so a heading against the left edge stood over the gap rather than over the thing. *@
+        ("col-6 col-md-3 text-md-end", Model.Column("decision", "Your decision"))
     };
 
     <partial name="_QueueColumns" model="columns" />

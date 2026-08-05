@@ -122,8 +122,10 @@ else
        so a call with string arguments cannot be written inside one. *@
     var columns = new List<(string, SortableColumnViewModel)>
     {
-        ("col-12 col-md-5", Model.Column("student", "Student")),
-        ("col-6 col-md-2", Model.Column("title", "Proposal")),
+        @* Widths taken from the card header below, so each heading stands over what it names.
+           The card leads with the proposal and carries the student under it, so the proposal is
+           what this column is, and ordering by student sorted a column that was never there. *@
+        ("col-12 col-md-7", Model.Column("title", "Proposal")),
         ("col-6 col-md-3", Model.Column("due", "Due", descendingFirst: true))
     };
 

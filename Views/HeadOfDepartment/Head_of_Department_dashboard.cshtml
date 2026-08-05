@@ -82,10 +82,17 @@ else
                         </div>
                     }
 
-                    <a asp-controller="HeadOfDepartment" asp-action="Headofdepartment_feedback"
-                       class="btn btn-primary btn-sm mt-3 align-self-start mt-auto">
-                        Ethics reviews
-                    </a>
+                    @* Wrapped, so the button keeps a line's worth of space above it however much
+                       this card has to say. mt-auto alone gives it whatever is left over, and on
+                       the one card with a fourth line that was nothing: the button sat against the
+                       text while the other two had room above theirs. The wrapper still falls to
+                       the foot of the card, so all three buttons stay on the same line. *@
+                    <div class="mt-auto pt-3">
+                        <a asp-controller="HeadOfDepartment" asp-action="Headofdepartment_feedback"
+                           class="btn btn-primary btn-sm">
+                            Ethics reviews
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -140,11 +147,6 @@ else
                            asp-all-route-data="Model.ClearSearchRoute()"
                            class="btn btn-outline-secondary">Clear</a>
                     </div>
-                    <div class="col-12 col-md-auto ms-md-auto text-secondary small">
-                        <strong>@Model.TotalCount</strong>
-                        @(Model.TotalCount == 1 ? "publication" : "publications"),
-                        @Model.Publications.Count on this page.
-                    </div>
                 </form>
             </div>
         </div>
@@ -163,6 +165,19 @@ else
         }
         else
         {
+            @* The count in a card of its own between the search and the listing, as the
+               coordinator's dashboard has it. Tucked against the right of the search row it read
+               as part of the search rather than as a statement about the list under it. *@
+            <div class="card mb-3">
+                <div class="card-body py-3">
+                    <span class="text-secondary">
+                        <strong>@Model.TotalCount</strong>
+                        @(Model.TotalCount == 1 ? "publication" : "publications") in your department,
+                        @Model.Publications.Count on this page.
+                    </span>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="table-responsive">
                     @{
