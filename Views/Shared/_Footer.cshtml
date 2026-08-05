@@ -6,7 +6,10 @@
 }
 
 @* Shared by _Layout (signed in) and _AuthLayout (signed out) so both stay identical. *@
-<footer class="footer rpms-footer border-top text-muted d-print-none">
+@* No text-muted: Tabler declares that one !important, in a grey picked against a white page, and
+   it came to 3.5 against the dark one. The colour comes from .rpms-footer, which has a value for
+   each theme. *@
+<footer class="footer rpms-footer border-top d-print-none">
     <div class="container-fluid px-4 rpms-footer-grid">
 
         @* To people with an account always, and to visitors only if the institution has said so

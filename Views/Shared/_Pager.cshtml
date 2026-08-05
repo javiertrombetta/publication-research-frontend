@@ -9,7 +9,9 @@
                asp-all-route-data="Model.RouteValuesFor(Model.Page - 1)">Previous</a>
         </li>
 
-        <li class="page-item disabled">
+        @* Not a control, so not disabled: it is the one part of the pager that says something,
+           and Tabler greys a disabled page-link to the point where it cannot be read. *@
+        <li class="page-item rpms-pager-position">
             <span class="page-link">Page @Model.Page of @Model.TotalPages</span>
         </li>
 
