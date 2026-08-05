@@ -49,8 +49,6 @@ public class CommitteesApiClient(HttpClient httpClient) : ApiClientBase(httpClie
         return GetAsync<PagedResultDto<CommitteeDto>>(query, ct);
     }
 
-    public Task<ApiResult<CommitteeDto>> GetByPublicationAsync(Guid publicationId, CancellationToken ct = default) =>
-        GetAsync<CommitteeDto>($"api/publications/{publicationId}/committee", ct);
 
     public Task<ApiResult<object?>> MemberReviewAsync(
         Guid committeeId, CommitteeMemberReviewRequestDto request, CancellationToken ct = default) =>

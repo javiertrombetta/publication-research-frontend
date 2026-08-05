@@ -47,13 +47,6 @@ public class AdminApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
         return QueryHelpers.AddQueryString(path, parameters.Where(p => !string.IsNullOrWhiteSpace(p.Value)));
     }
 
-    /// <summary>How many committee members of each type a publication needs by default.</summary>
-    public Task<ApiResult<IReadOnlyList<CommitteeRoleConfigDto>>> GetDefaultCommitteeConfigAsync(CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<CommitteeRoleConfigDto>>("api/settings/default-committee", ct);
-
-    public Task<ApiResult<object?>> SetDefaultCommitteeConfigAsync(
-        SetCommitteeRoleConfigRequestDto request, CancellationToken ct = default) =>
-        PutJsonAsync<object?>("api/settings/default-committee", request, ct);
 }
 
 /// <summary>Audit-log filters, carried in the query string so a filtered view can be linked to.</summary>

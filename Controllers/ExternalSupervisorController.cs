@@ -24,11 +24,20 @@ namespace ResearchPublicationManagementSystem.Controllers
     public class ExternalSupervisorController(
         CommitteesApiClient committeesApi) : Controller
     {
+        /// <summary>
+        /// Everything this member sits on, however it was decided.
+        ///
+        /// Searchable like the listing beside it and like every other queue on the site. The
+        /// ordering and the paging were here already, and a member who has voted on enough papers
+        /// for the list to need paging is exactly the one who cannot find a title by reading down
+        /// it, so a listing with two of the three controls was the odd one out.
+        /// </summary>
         [HttpGet]
         public async Task<IActionResult> External_Supervisor_Dashboard(
-            int page = 1, string? sort = null, bool desc = false)
+            int page = 1, string? sort = null, bool desc = false, string? search = null)
         {
-            var (model, failed) = await LoadAssignmentsAsync(page, sort, desc, action: nameof(External_Supervisor_Dashboard));
+            var (model, failed) = await LoadAssignmentsAsync(
+                page, sort, desc, search, action: nameof(External_Supervisor_Dashboard));
 
             if (!failed)
             {
@@ -37,6 +46,14 @@ namespace ResearchPublicationManagementSystem.Controllers
                 // about this page rather than about them, and it is the first thing the card says.
                 var awaiting = await committeesApi.GetMyAssignmentsAsync(pageSize: 1, awaitingMe: true);
                 model.AwaitingTotal = awaiting.Data?.TotalCount ?? 0;
+
+                // And the whole of it, when a search has narrowed the listing. The cards count what
+                // this person has been given; the search belongs to the list below them.
+                if (model.HasSearch)
+                {
+                    var everything = await committeesApi.GetMyAssignmentsAsync(pageSize: 1);
+                    model.AssignedTotal = everything.Data?.TotalCount ?? 0;
+                }
             }
 
             return View(model);

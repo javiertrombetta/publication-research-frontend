@@ -26,7 +26,7 @@
         </div>
     </div>
 }
-else if (Model.Items.Count == 0)
+else if (Model.Items.Count == 0 && !Model.HasSearch)
 {
     <div class="card">
         <div class="card-body text-center py-5">
@@ -57,10 +57,46 @@ else
             <div class="card h-100">
                 <div class="card-body">
                     <div class="text-secondary mb-1">Already decided</div>
-                    <div class="h1 m-0">@(Model.TotalCount - Model.AwaitingTotal)</div>
+                    @* Everything assigned to this person, never the search: the cards above the
+                       listing count what they have been given, and the listing counts itself. *@
+                    <div class="h1 m-0">@Model.DecidedTotal</div>
                     <div class="text-secondary">papers you have voted on</div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    @* The same search the listing beside this one carries, applied by the API so it covers
+       everything assigned to this person rather than the page in hand. *@
+    <div class="card mb-3">
+        <div class="card-body py-3">
+            <form method="get" asp-controller="ExternalSupervisor" asp-action="External_Supervisor_Dashboard"
+                  class="row g-2 align-items-center">
+
+                <input type="hidden" name="sort" value="@Model.Sort" />
+                <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+
+                <div class="col-12 col-md">
+                    <input type="search" name="search" value="@Model.Search" class="form-control"
+                           placeholder="Search by paper or student" aria-label="Search" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                <div class="col-auto">
+                    <a asp-controller="ExternalSupervisor" asp-action="External_Supervisor_Dashboard"
+                       asp-all-route-data="Model.ClearSearchRoute()"
+                       class="btn btn-outline-secondary">Clear</a>
+                </div>
+
+            </form>
+
+            @if (Model.HasSearch)
+            {
+                <div class="text-secondary small mt-2">
+                    @Model.TotalCount @(Model.TotalCount == 1 ? "paper matches" : "papers match") &ldquo;@Model.Search&rdquo;.
+                </div>
+            }
         </div>
     </div>
 
@@ -72,6 +108,20 @@ else
     var byCommittee = Model.Column("committee", "Committee");
     var byDecision = Model.Column("decision", "Your decision");
 
+    if (Model.Items.Count == 0)
+    {
+        @* A search that found nothing is a different thing from an empty queue. *@
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <h3 class="mb-2">Nothing matches that search</h3>
+                <p class="text-secondary mb-4">Try part of a paper's title, or the student's name.</p>
+                <a asp-controller="ExternalSupervisor" asp-action="External_Supervisor_Dashboard"
+                   asp-all-route-data="Model.ClearSearchRoute()" class="btn btn-outline-secondary">Clear the search</a>
+            </div>
+        </div>
+    }
+    else
+    {
     <div class="card">
         <div class="table-responsive">
             <table class="table card-table table-vcenter">
@@ -125,5 +175,6 @@ else
     @if (Model.Pager is not null)
     {
         <partial name="_Pager" model="Model.Pager" />
+    }
     }
 }
