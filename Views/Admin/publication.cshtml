@@ -6,9 +6,9 @@
     string TabClass(string tab) => Model.ActiveTab == tab ? "nav-link active" : "nav-link";
 }
 
-@* Read only, deliberately. An administrator needs to see what a publication holds before deciding
-   whether to move somebody off it; changing any of it is the job of whoever the pipeline named,
-   and putting their controls here would let an administrator answer for them. *@
+@* The decisions stay where the pipeline put them: nothing here approves, sends back or accepts on
+   anybody's behalf. What an administrator can do is correct what the publication holds and say
+   where it should stand afterwards, both with a reason on the record. *@
 
 <div class="mb-4 d-flex flex-wrap align-items-start gap-2">
     <div class="me-auto">
@@ -181,7 +181,7 @@ else
 
                 @if (Model.EthicsDocuments.Count == 0)
                 {
-                    <p class="text-secondary m-0">No ethics documentation was uploaded.</p>
+                    <p class="text-secondary mb-3">No ethics documentation was uploaded.</p>
                 }
                 else
                 {
@@ -203,6 +203,17 @@ else
                                                asp-controller="Downloads" asp-action="EthicsDocument"
                                                asp-route-containerId="@Model.Container.Id"
                                                asp-route-documentId="@document.Id">Download</a>
+
+                                            <form asp-action="RemoveEthicsDocument" method="post" class="d-inline">
+                                                <input type="hidden" name="id" value="@Model.Container.Id" />
+                                                <input type="hidden" name="documentId" value="@document.Id" />
+                                                <input type="text" name="comments" class="form-control form-control-sm d-inline-block w-auto ms-1"
+                                                       id="remove-doc-@document.Id" placeholder="Why" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                        @DecisionButton.Attributes(true, $"remove-doc-{document.Id}",
+                                                            "Remove this document? The file goes with it. Check where the stage stands afterwards.",
+                                                            "Say why this document is being removed.")>Remove</button>
+                                            </form>
                                         </td>
                                     </tr>
                                 }
@@ -210,11 +221,40 @@ else
                         </table>
                     </div>
                 }
+                @if (Model.EthicsRequirements.Count > 0)
+                {
+                    <form asp-action="AddEthicsDocument" method="post" enctype="multipart/form-data"
+                          class="row g-2 align-items-end mt-3 pt-3 border-top">
+                        <input type="hidden" name="id" value="@Model.Container.Id" />
+                        <div class="col-12 col-md-3">
+                            <label class="form-label" for="add-doc-type">Add a document</label>
+                            <select id="add-doc-type" name="documentType" class="form-select">
+                                @foreach (var requirement in Model.EthicsRequirements)
+                                {
+                                    <option value="@requirement.Id">@requirement.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <input type="file" name="file" class="form-control" required />
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <input type="text" name="comments" id="add-doc-comments" class="form-control"
+                                   placeholder="Why you are adding it" />
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-outline-primary"
+                                    @DecisionButton.Attributes(true, "add-doc-comments",
+                                        "Add this document? It goes on unread, which puts the stage on whoever reads first. Set where it should stand below.",
+                                        "Say why this document is being added.")>Add</button>
+                        </div>
+                    </form>
+                }
             }
         </div>
     </div>
 
-    <div class="card">
+    <div class="card mb-3">
         <div class="card-body">
             <h2 class="h3 mb-3">Research paper</h2>
             @if (Model.Publication is null)
@@ -256,6 +296,24 @@ else
                                                asp-controller="Downloads" asp-action="Paper"
                                                asp-route-publicationId="@Model.Publication.Id"
                                                asp-route-versionId="@version.Id">Download</a>
+
+                                            @if (Model.PaperVersions.Count > 1)
+                                            {
+                                                @* Not on the only one there is: every reviewer's
+                                                   screen offers the newest version, and with none
+                                                   there would be nothing to offer. *@
+                                                <form asp-action="RemovePaperVersion" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="@Model.Container.Id" />
+                                                    <input type="hidden" name="publicationId" value="@Model.Publication.Id" />
+                                                    <input type="hidden" name="versionId" value="@version.Id" />
+                                                    <input type="text" name="comments" class="form-control form-control-sm d-inline-block w-auto ms-1"
+                                                           id="remove-version-@version.Id" placeholder="Why" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                            @DecisionButton.Attributes(true, $"remove-version-{version.Id}",
+                                                                "Remove this version? The file goes with it and the paper does not move.",
+                                                                "Say why this version is being removed.")>Remove</button>
+                                                </form>
+                                            }
                                         </td>
                                     </tr>
                                 }
@@ -263,7 +321,95 @@ else
                         </table>
                     </div>
                 }
+
+                <form asp-action="AddPaperVersion" method="post" enctype="multipart/form-data"
+                      class="row g-2 align-items-end mt-3 pt-3 border-top">
+                    <input type="hidden" name="id" value="@Model.Container.Id" />
+                    <input type="hidden" name="publicationId" value="@Model.Publication.Id" />
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="add-version">Add a version</label>
+                        <input type="file" id="add-version" name="file" class="form-control" required />
+                    </div>
+                    <div class="col-12 col-md-5">
+                        <input type="text" name="comments" id="add-version-comments" class="form-control"
+                               placeholder="Why you are adding it" />
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-outline-primary"
+                                @DecisionButton.Attributes(true, "add-version-comments",
+                                    "Add this version? The paper does not move; set where it should stand below.",
+                                    "Say why this version is being added.")>Add</button>
+                    </div>
+                </form>
             }
+        </div>
+    </div>
+
+    @* The decision that actually unsticks people. Separate from everything above, because a
+       document put right is no use while the stage still says whoever needed it has had their
+       turn. *@
+    <div class="card">
+        <div class="card-body">
+            <h2 class="h3 mb-2">Where this publication stands</h2>
+            <p class="text-secondary">
+                Which step it is waiting at, and so who picks it up next. Whoever that turns out to
+                be is told. Marks that belong to steps after the one chosen are cleared, because
+                otherwise it would land further on than you asked for.
+            </p>
+
+            <form asp-action="MovePublication" method="post" class="row g-3">
+                <input type="hidden" name="id" value="@Model.Container.Id" />
+
+                <div class="col-12 col-md-4">
+                    <label class="form-label" for="move-stage">Stage</label>
+                    <select id="move-stage" name="stage" class="form-select">
+                        <option value="1" selected="@(Model.Container.CurrentPipeline == PipelineStage.ResearchProposals)">Research proposals</option>
+                        <option value="2" selected="@(Model.Container.CurrentPipeline == PipelineStage.EthicsApproval)">Ethics approval</option>
+                        <option value="3" selected="@(Model.Container.CurrentPipeline == PipelineStage.ResearchPaper)">Research paper</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label class="form-label" for="move-ethics">Ethics step</label>
+                    <select id="move-ethics" name="ethicsStep" class="form-select">
+                        <option value="">Leave as it is</option>
+                        <option value="@EthicsSteps.SupervisorDecision">Supervisor: rule whether documentation is needed</option>
+                        <option value="@EthicsSteps.CoordinatorConfirmation">Coordinator: confirm none is needed</option>
+                        <option value="@EthicsSteps.StudentUpload">Student: upload the documents</option>
+                        <option value="@EthicsSteps.SupervisorDocumentReview">Supervisor: read the documents</option>
+                        <option value="@EthicsSteps.CoordinatorDocumentReview">Coordinator: approve the documents</option>
+                        <option value="@EthicsSteps.HeadOfDepartmentReview">Head of Department: comment</option>
+                        <option value="@EthicsSteps.CoordinatorFinalDecision">Coordinator: close the stage</option>
+                    </select>
+                    <small class="form-hint">Only applied on the ethics stage.</small>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label class="form-label" for="move-paper">Paper status</label>
+                    <select id="move-paper" name="paperStatus" class="form-select">
+                        <option value="">Leave as it is</option>
+                        <option value="Draft">Draft, with the student</option>
+                        <option value="UnderReview">Under review</option>
+                        <option value="RevisionsRequested">Sent back for revision</option>
+                        <option value="Resubmitted">Resubmitted</option>
+                        <option value="Accepted">Accepted</option>
+                    </select>
+                    <small class="form-hint">Only applied on the paper stage. Publishing stays the author's.</small>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label" for="move-comments">Why this change</label>
+                    <input type="text" id="move-comments" name="comments" class="form-control"
+                           placeholder="Required. Stays on the publication&#x27;s history." />
+                </div>
+
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary"
+                            @DecisionButton.Attributes(true, "move-comments",
+                                "Move this publication? Whoever it then waits on is told, and marks belonging to later steps are cleared.",
+                                "Say why this publication is being moved.")>Save where it stands</button>
+                </div>
+            </form>
         </div>
     </div>
 }

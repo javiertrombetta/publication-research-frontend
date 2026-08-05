@@ -149,6 +149,16 @@ public record ActivityHistoryActorDto(Guid UserId, string Name);
 /// Changing who is responsible for a publication already under way. Null leaves an assignment as
 /// it is; the reason is required and stays on the publication's history.
 /// </summary>
+/// <summary>
+/// Where a publication should stand. Correcting what it holds and correcting where it stands are
+/// separate acts, and the second is the one that lets people carry on.
+/// </summary>
+public record MoveContainerRequestDto(
+    int Stage,
+    string Comments,
+    string? EthicsStep = null,
+    string? PaperStatus = null);
+
 public record ReassignContainerRequestDto(
     Guid? CoordinatorUserId,
     Guid? SupervisorUserId,

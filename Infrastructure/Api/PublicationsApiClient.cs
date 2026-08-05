@@ -33,6 +33,23 @@ public class PublicationsApiClient(HttpClient httpClient) : ApiClientBase(httpCl
         Guid publicationId, Guid versionId, CancellationToken ct = default) =>
         GetFileAsync($"api/publications/{publicationId}/versions/{versionId}/download", ct);
 
+    /// <summary>
+    /// Admin-only: adds a version to a paper whatever step it has reached, and removes one. Both
+    /// carry the reason, which the API records on the publication's history.
+    /// </summary>
+    public Task<ApiResult<PublicationVersionDto>> AdminUploadVersionAsync(
+        Guid publicationId, IFormFile file, string comments, CancellationToken ct = default) =>
+        PostMultipartAsync<PublicationVersionDto>(
+            $"api/publications/{publicationId}/versions/admin",
+            [("file", file)],
+            [("comments", comments)],
+            ct);
+
+    public Task<ApiResult<object?>> AdminRemoveVersionAsync(
+        Guid publicationId, Guid versionId, string comments, CancellationToken ct = default) =>
+        DeleteJsonAsync<object?>(
+            $"api/publications/{publicationId}/versions/{versionId}", new CommentsRequestDto(comments), ct);
+
     public Task<ApiResult<IReadOnlyList<PublicationVersionDto>>> GetVersionsAsync(Guid publicationId, CancellationToken ct = default) =>
         GetAsync<IReadOnlyList<PublicationVersionDto>>($"api/publications/{publicationId}/versions", ct);
 
