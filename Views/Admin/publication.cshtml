@@ -4,25 +4,30 @@
     ViewData["Title"] = Model.Container.DisplayTitle;
 
     string TabClass(string tab) => Model.ActiveTab == tab ? "nav-link active" : "nav-link";
+
+    // Once the paper has been accepted, what this publication holds is the record of what was
+    // judged. Correcting it then does not unstick anybody; it makes the record disagree with the
+    // decision taken on it. Every control that changes the material is withdrawn together, and the
+    // API refuses each of them as well, because a screen is not a rule.
+    var settled = Model.Publication is not null
+                  && (Model.Publication.Status == "Accepted" || Model.Publication.Status == "Published");
 }
 
 @* The decisions stay where the pipeline put them: nothing here approves, sends back or accepts on
    anybody's behalf. What an administrator can do is correct what the publication holds and say
    where it should stand afterwards, both with a reason on the record. *@
 
-<div class="mb-4 d-flex flex-wrap align-items-start gap-2">
-    <div class="me-auto">
-        <h1 class="page-title mb-1">@Model.Container.DisplayTitle</h1>
-        <div class="text-secondary">
-            @Model.Container.StudentName
-            @if (!string.IsNullOrWhiteSpace(Model.Container.StudentDepartmentName))
-            {
-                <text>&middot; @Model.Container.StudentDepartmentName</text>
-            }
-            &middot; started @Model.Container.CreatedAt.ToLocalTime().ToString("d MMM yyyy")
-        </div>
+<div class="mb-4">
+    <a asp-controller="Admin" asp-action="assignments" class="text-secondary">&larr; Assignments</a>
+    <h1 class="page-title mt-2 mb-1">@Model.Container.DisplayTitle</h1>
+    <div class="text-secondary">
+        @Model.Container.StudentName
+        @if (!string.IsNullOrWhiteSpace(Model.Container.StudentDepartmentName))
+        {
+            <text>&middot; @Model.Container.StudentDepartmentName</text>
+        }
+        &middot; started @Model.Container.CreatedAt.ToLocalTime().ToString("d MMM yyyy")
     </div>
-    <a asp-controller="Admin" asp-action="assignments" class="btn btn-outline-secondary">Back to assignments</a>
 </div>
 
 <div class="card mb-3">
@@ -121,7 +126,16 @@ else
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter">
                         <thead>
-                            <tr><th>Title</th><th>Status</th><th>Submitted</th></tr>
+                            <tr>
+                                <th>Title</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                @if (!settled)
+                                {
+                                    <th>Why you are changing it</th>
+                                    <th class="w-1"></th>
+                                }
+                            </tr>
                         </thead>
                         <tbody>
                             @foreach (var proposal in Model.Proposals)
@@ -135,11 +149,81 @@ else
                                     <td class="text-nowrap">
                                         @(proposal.SubmittedAt?.ToLocalTime().ToString("d MMM yyyy") ?? "Not sent")
                                     </td>
+
+                                    @* The reason has a column of its own, and the button sits
+                                       outside the form and points at it by id. Put inside the
+                                       action cell the field pushed the button off the end of the
+                                       row on anything narrower than a desktop. *@
+                                    @if (!settled)
+                                    {
+                                        <td>
+                                            @if (proposal.Status != "Assigned")
+                                            {
+                                                <form asp-action="ChangeAssignedProposal" method="post"
+                                                      id="assign-proposal-@proposal.Id">
+                                                    <input type="hidden" name="id" value="@Model.Container.Id" />
+                                                    <input type="hidden" name="proposalId" value="@proposal.Id" />
+                                                    <input type="text" name="comments" class="form-control form-control-sm"
+                                                           id="assign-proposal-comments-@proposal.Id"
+                                                           placeholder="Required. Stays on the history." />
+                                                </form>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            @if (proposal.Status == "Assigned")
+                                            {
+                                                <span class="text-secondary small text-nowrap">Running on this one</span>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" form="assign-proposal-@proposal.Id"
+                                                        class="btn btn-sm btn-outline-primary text-nowrap"
+                                                        @DecisionButton.Attributes(true, $"assign-proposal-comments-{proposal.Id}",
+                                                            "Run this publication on that proposal instead? Its title changes everywhere, and the student, the supervisor and the coordinator are all told.",
+                                                            "Say why the publication is changing proposal.")>
+                                                    Run on this
+                                                </button>
+                                            }
+                                        </td>
+                                    }
                                 </tr>
                             }
                         </tbody>
                     </table>
                 </div>
+            }
+
+            @if (settled)
+            {
+                <p class="text-secondary small mb-0 mt-3">
+                    The research paper has been accepted, so the proposal it was written from is
+                    part of the record and is left as it is.
+                </p>
+            }
+            else
+            {
+                @* Two different acts, deliberately apart. Above, one of these proposals becomes the
+                   one the publication runs on. Here, all of them are thrown away and the student
+                   starts again. *@
+                <form asp-action="RequestNewProposals" method="post"
+                      class="row g-2 align-items-end mt-3 pt-3 border-top">
+                    <input type="hidden" name="id" value="@Model.Container.Id" />
+                    <div class="col-12 col-md-8">
+                        <label class="form-label" for="new-proposals-comments">
+                            Ask the student for a new set of proposals
+                        </label>
+                        <input type="text" name="comments" id="new-proposals-comments" class="form-control"
+                               placeholder="Required. The student is told, and it stays on the history." />
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-outline-danger"
+                                @DecisionButton.Attributes(true, "new-proposals-comments",
+                                    "Ask for a new set of proposals? Every proposal on this publication is turned down and the student writes again from scratch.",
+                                    "Say why a new set is being asked for.")>
+                            Ask for new proposals
+                        </button>
+                    </div>
+                </form>
             }
         </div>
     </div>
@@ -188,7 +272,17 @@ else
                     <div class="table-responsive">
                         <table class="table card-table table-vcenter">
                             <thead>
-                                <tr><th>Document</th><th>File</th><th>Version</th><th>Status</th><th class="w-1"></th></tr>
+                                <tr>
+                                    <th>Document</th>
+                                    <th>File</th>
+                                    <th>Version</th>
+                                    <th>Status</th>
+                                    @if (!settled)
+                                    {
+                                        <th>Why you are removing it</th>
+                                    }
+                                    <th class="w-1"></th>
+                                </tr>
                             </thead>
                             <tbody>
                                 @foreach (var document in Model.EthicsDocuments)
@@ -198,22 +292,39 @@ else
                                         <td>@document.FileName</td>
                                         <td>@document.Version</td>
                                         <td><span class="badge @StatusBadge(document.Status)">@Humanise(document.Status)</span></td>
-                                        <td class="text-end">
+
+                                        @* A column of its own, and the button outside the form
+                                           pointing at it by id. Sharing the action cell, the field
+                                           was squeezed between the two buttons and pushed hard
+                                           against the left of a cell aligned to the right. *@
+                                        @if (!settled)
+                                        {
+                                            <td>
+                                                <form asp-action="RemoveEthicsDocument" method="post"
+                                                      id="remove-doc-form-@document.Id">
+                                                    <input type="hidden" name="id" value="@Model.Container.Id" />
+                                                    <input type="hidden" name="documentId" value="@document.Id" />
+                                                    <input type="text" name="comments" class="form-control form-control-sm"
+                                                           id="remove-doc-@document.Id"
+                                                           placeholder="Required. Stays on the history." />
+                                                </form>
+                                            </td>
+                                        }
+
+                                        <td class="text-end text-nowrap">
                                             <a class="btn btn-sm btn-outline-primary"
                                                asp-controller="Downloads" asp-action="EthicsDocument"
                                                asp-route-containerId="@Model.Container.Id"
                                                asp-route-documentId="@document.Id">Download</a>
 
-                                            <form asp-action="RemoveEthicsDocument" method="post" class="d-inline">
-                                                <input type="hidden" name="id" value="@Model.Container.Id" />
-                                                <input type="hidden" name="documentId" value="@document.Id" />
-                                                <input type="text" name="comments" class="form-control form-control-sm d-inline-block w-auto ms-1"
-                                                       id="remove-doc-@document.Id" placeholder="Why" />
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            @if (!settled)
+                                            {
+                                                <button type="submit" form="remove-doc-form-@document.Id"
+                                                        class="btn btn-sm btn-outline-danger ms-1"
                                                         @DecisionButton.Attributes(true, $"remove-doc-{document.Id}",
                                                             "Remove this document? The file goes with it. Check where the stage stands afterwards.",
                                                             "Say why this document is being removed.")>Remove</button>
-                                            </form>
+                                            }
                                         </td>
                                     </tr>
                                 }
@@ -221,7 +332,15 @@ else
                         </table>
                     </div>
                 }
-                @if (Model.EthicsRequirements.Count > 0)
+
+                @if (settled)
+                {
+                    <p class="text-secondary small mb-0">
+                        The research paper has been accepted, so this documentation is part of the
+                        record of what was judged and cannot be changed from here.
+                    </p>
+                }
+                else if (Model.EthicsRequirements.Count > 0)
                 {
                     <form asp-action="AddEthicsDocument" method="post" enctype="multipart/form-data"
                           class="row g-2 align-items-end mt-3 pt-3 border-top">
@@ -282,7 +401,16 @@ else
                     <div class="table-responsive">
                         <table class="table card-table table-vcenter">
                             <thead>
-                                <tr><th>Version</th><th>File</th><th>Uploaded</th><th class="w-1"></th></tr>
+                                <tr>
+                                    <th>Version</th>
+                                    <th>File</th>
+                                    <th>Uploaded</th>
+                                    @if (!settled && Model.PaperVersions.Count > 1)
+                                    {
+                                        <th>Why you are removing it</th>
+                                    }
+                                    <th class="w-1"></th>
+                                </tr>
                             </thead>
                             <tbody>
                                 @foreach (var version in Model.PaperVersions.OrderByDescending(v => v.VersionNumber))
@@ -291,28 +419,38 @@ else
                                         <td>@version.VersionNumber</td>
                                         <td>@version.FileName</td>
                                         <td class="text-nowrap">@version.UploadedAt.ToLocalTime().ToString("d MMM yyyy")</td>
-                                        <td class="text-end">
+
+                                        @* Not on the only one there is: every reviewer's screen
+                                           offers the newest version, and with none there would be
+                                           nothing to offer. *@
+                                        @if (!settled && Model.PaperVersions.Count > 1)
+                                        {
+                                            <td>
+                                                <form asp-action="RemovePaperVersion" method="post"
+                                                      id="remove-version-form-@version.Id">
+                                                    <input type="hidden" name="id" value="@Model.Container.Id" />
+                                                    <input type="hidden" name="publicationId" value="@Model.Publication.Id" />
+                                                    <input type="hidden" name="versionId" value="@version.Id" />
+                                                    <input type="text" name="comments" class="form-control form-control-sm"
+                                                           id="remove-version-@version.Id"
+                                                           placeholder="Required. Stays on the history." />
+                                                </form>
+                                            </td>
+                                        }
+
+                                        <td class="text-end text-nowrap">
                                             <a class="btn btn-sm btn-outline-primary"
                                                asp-controller="Downloads" asp-action="Paper"
                                                asp-route-publicationId="@Model.Publication.Id"
                                                asp-route-versionId="@version.Id">Download</a>
 
-                                            @if (Model.PaperVersions.Count > 1)
+                                            @if (!settled && Model.PaperVersions.Count > 1)
                                             {
-                                                @* Not on the only one there is: every reviewer's
-                                                   screen offers the newest version, and with none
-                                                   there would be nothing to offer. *@
-                                                <form asp-action="RemovePaperVersion" method="post" class="d-inline">
-                                                    <input type="hidden" name="id" value="@Model.Container.Id" />
-                                                    <input type="hidden" name="publicationId" value="@Model.Publication.Id" />
-                                                    <input type="hidden" name="versionId" value="@version.Id" />
-                                                    <input type="text" name="comments" class="form-control form-control-sm d-inline-block w-auto ms-1"
-                                                           id="remove-version-@version.Id" placeholder="Why" />
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                            @DecisionButton.Attributes(true, $"remove-version-{version.Id}",
-                                                                "Remove this version? The file goes with it and the paper does not move.",
-                                                                "Say why this version is being removed.")>Remove</button>
-                                                </form>
+                                                <button type="submit" form="remove-version-form-@version.Id"
+                                                        class="btn btn-sm btn-outline-danger ms-1"
+                                                        @DecisionButton.Attributes(true, $"remove-version-{version.Id}",
+                                                            "Remove this version? The file goes with it and the paper does not move.",
+                                                            "Say why this version is being removed.")>Remove</button>
                                             }
                                         </td>
                                     </tr>
@@ -322,25 +460,35 @@ else
                     </div>
                 }
 
-                <form asp-action="AddPaperVersion" method="post" enctype="multipart/form-data"
-                      class="row g-2 align-items-end mt-3 pt-3 border-top">
-                    <input type="hidden" name="id" value="@Model.Container.Id" />
-                    <input type="hidden" name="publicationId" value="@Model.Publication.Id" />
-                    <div class="col-12 col-md-4">
-                        <label class="form-label" for="add-version">Add a version</label>
-                        <input type="file" id="add-version" name="file" class="form-control" required />
-                    </div>
-                    <div class="col-12 col-md-5">
-                        <input type="text" name="comments" id="add-version-comments" class="form-control"
-                               placeholder="Why you are adding it" />
-                    </div>
-                    <div class="col-auto">
-                        <button type="submit" class="btn btn-outline-primary"
-                                @DecisionButton.Attributes(true, "add-version-comments",
-                                    "Add this version? The paper does not move; set where it should stand below.",
-                                    "Say why this version is being added.")>Add</button>
-                    </div>
-                </form>
+                @if (settled)
+                {
+                    <p class="text-secondary small mb-0 mt-3">
+                        This paper has been accepted. Its versions are the record of what was
+                        judged, so nothing is added to them or taken away from here.
+                    </p>
+                }
+                else
+                {
+                    <form asp-action="AddPaperVersion" method="post" enctype="multipart/form-data"
+                          class="row g-2 align-items-end mt-3 pt-3 border-top">
+                        <input type="hidden" name="id" value="@Model.Container.Id" />
+                        <input type="hidden" name="publicationId" value="@Model.Publication.Id" />
+                        <div class="col-12 col-md-4">
+                            <label class="form-label" for="add-version">Add a version</label>
+                            <input type="file" id="add-version" name="file" class="form-control" required />
+                        </div>
+                        <div class="col-12 col-md-5">
+                            <input type="text" name="comments" id="add-version-comments" class="form-control"
+                                   placeholder="Why you are adding it" />
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-outline-primary"
+                                    @DecisionButton.Attributes(true, "add-version-comments",
+                                        "Add this version? The paper does not move; set where it should stand below.",
+                                        "Say why this version is being added.")>Add</button>
+                        </div>
+                    </form>
+                }
             }
         </div>
     </div>

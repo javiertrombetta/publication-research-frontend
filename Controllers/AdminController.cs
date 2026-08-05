@@ -540,6 +540,50 @@ namespace ResearchPublicationManagementSystem.Controllers
                 "Document removed. Check where the publication now stands below.");
         }
 
+        // ---------- Correcting which proposal a publication runs on ----------
+
+        /// <summary>
+        /// Throws away every proposal on the publication and asks the student for a new set.
+        ///
+        /// The coordinator has this on their own screen, but only while the publication is still
+        /// choosing. Once a proposal is assigned it leaves that screen for good, and a set that
+        /// turns out to be wrong afterwards had nobody who could do anything about it.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RequestNewProposals(Guid id, string? comments)
+        {
+            if (string.IsNullOrWhiteSpace(comments))
+            {
+                return Refuse(id, "Say why a new set of proposals is being asked for.");
+            }
+
+            var result = await proposalsApi.RequestResubmissionAsync(id, new CommentsRequestDto(comments));
+
+            return Done(id, result.Success, result.ErrorMessage,
+                "The student has been asked for a new set of proposals, and told why.");
+        }
+
+        /// <summary>
+        /// Settles the publication on a different one of its proposals. Who supervises it is
+        /// unchanged: that is Assignments, above.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangeAssignedProposal(Guid id, Guid proposalId, string? comments)
+        {
+            if (string.IsNullOrWhiteSpace(comments))
+            {
+                return Refuse(id, "Say why the publication is changing proposal.");
+            }
+
+            var result = await proposalsApi.ChangeAssignedProposalAsync(
+                proposalId, new CommentsRequestDto(comments));
+
+            return Done(id, result.Success, result.ErrorMessage,
+                "This publication now runs on that proposal. Everyone working on it has been told.");
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RequestSizeLimit(200_000_000)]

@@ -78,5 +78,17 @@ namespace ResearchPublicationManagementSystem.Common
         /// sitting in Draft shows an orange bar next to its orange badge rather than a red one.
         /// </summary>
         public static string StatusBar(string? status) => "rpms-stage-" + StatusColour(status);
+
+        /// <summary>
+        /// A pipeline stage in words. The DTO carries it as a number, so a screen that passed it
+        /// through Humanise printed the number: "2" rather than "Ethics approval".
+        /// </summary>
+        public static string StageName(int stage) => stage switch
+        {
+            Infrastructure.Api.Dto.PipelineStage.ResearchProposals => "Research proposals",
+            Infrastructure.Api.Dto.PipelineStage.EthicsApproval => "Ethics approval",
+            Infrastructure.Api.Dto.PipelineStage.ResearchPaper => "Research paper",
+            _ => "—"
+        };
     }
 }

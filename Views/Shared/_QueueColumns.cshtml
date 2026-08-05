@@ -1,0 +1,25 @@
+@model IReadOnlyList<(string Width, SortableColumnViewModel Column)>
+
+@* The column titles, once, above the cards they describe.
+
+   A queue drawn as collapsible cards has no header row to click, so the sortable headings a table
+   would carry sit here instead, laid out on the same grid the card headers below use, and each
+   heading stands over its own column. Written once here because six screens carry the same row and
+   six copies of it is how they stop agreeing with each other.
+
+   Hidden where a card stack is a stack rather than a grid, which is what the width classes do on
+   their own: on a phone the headings would be a list of links above a list of cards, describing
+   columns that are no longer side by side. *@
+@if (Model.Count > 0)
+{
+    <div class="card mb-2 rpms-queue-columns">
+        <div class="card-body py-2">
+            <div class="row g-2 align-items-center text-secondary small text-uppercase">
+                @foreach (var (width, column) in Model)
+                {
+                    <div class="@width"><partial name="_SortableHeader" model="column" /></div>
+                }
+            </div>
+        </div>
+    </div>
+}

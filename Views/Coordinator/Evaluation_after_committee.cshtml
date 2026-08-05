@@ -68,9 +68,6 @@ else
                        asp-all-route-data="Model.ClearDecisionSearchRoute()"
                        class="btn btn-outline-secondary">Clear</a>
                 </div>
-
-                @{ var decisionSort = Model.DecisionSortBar; }
-                <partial name="_SortInline" model="decisionSort" />
             </form>
         </div>
     </div>
@@ -101,6 +98,16 @@ else
                         data-rpms-collapse-all="paper-cards">Collapse all</button>
             </div>
         </div>
+
+        @* Built in a code block rather than inline: a tag helper's model attribute is delimited by
+           double quotes, so a call with string arguments cannot be written inside one. *@
+        var columns = new List<(string, SortableColumnViewModel)>
+        {
+            ("col-12 col-md-6", Model.Column("student", "Student")),
+            ("col-12 col-md-6", Model.Column("started", "Date", descendingFirst: true))
+        };
+
+        <partial name="_QueueColumns" model="columns" />
     }
 
     @foreach (var item in Model.ReadyForDecision)
@@ -234,19 +241,27 @@ else
                            asp-all-route-data="Model.ClearProgressSearchRoute()"
                            class="btn btn-outline-secondary">Clear</a>
                     </div>
-
-                    @{ var progressSort = Model.ProgressSortBar; }
-                    <partial name="_SortInline" model="progressSort" />
                 </form>
             </div>
         </div>
 
 
+        var progressByTitle = Model.ProgressColumn("title", "Paper");
+        var progressByStudent = Model.ProgressColumn("student", "Author");
+
         <div class="card">
             <div class="table-responsive">
-                <table class="table card-table table-vcenter" data-rpms-sortable-table>
+                <table class="table card-table table-vcenter">
                     <thead>
-                        <tr><th data-rpms-sort-column="0">Paper</th><th data-rpms-sort-column="1">Author</th><th data-rpms-sort-column="2">Waiting on</th></tr>
+                        @* Ordered by the API, so a heading orders every paper in progress rather
+                           than the rows on this page. The third is not sortable: what a paper is
+                           waiting on is worked out as the row is drawn, so there is nothing behind
+                           it to order by. *@
+                        <tr>
+                            <th><partial name="_SortableHeader" model="progressByTitle" /></th>
+                            <th><partial name="_SortableHeader" model="progressByStudent" /></th>
+                            <th>Waiting on</th>
+                        </tr>
                     </thead>
                     <tbody>
                         @foreach (var item in Model.InProgress)

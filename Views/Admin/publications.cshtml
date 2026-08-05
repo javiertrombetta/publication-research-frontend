@@ -113,7 +113,7 @@ else
                                         @Humanise(publication.PaperStatus ?? publication.Status)
                                     </span>
                                     <span class="d-block text-secondary small">
-                                        @Humanise(publication.CurrentPipeline.ToString())
+                                        @StageName(publication.CurrentPipeline)
                                     </span>
                                 </td>
                                 <td>

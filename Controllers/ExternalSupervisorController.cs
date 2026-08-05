@@ -25,9 +25,20 @@ namespace ResearchPublicationManagementSystem.Controllers
         CommitteesApiClient committeesApi) : Controller
     {
         [HttpGet]
-        public async Task<IActionResult> External_Supervisor_Dashboard()
+        public async Task<IActionResult> External_Supervisor_Dashboard(
+            int page = 1, string? sort = null, bool desc = false)
         {
-            var (model, _) = await LoadAssignmentsAsync();
+            var (model, failed) = await LoadAssignmentsAsync(page, sort, desc, action: nameof(External_Supervisor_Dashboard));
+
+            if (!failed)
+            {
+                // How many are still theirs to vote on, counted by the API across everything
+                // assigned to them. Worked out from the rows in hand it would have been a figure
+                // about this page rather than about them, and it is the first thing the card says.
+                var awaiting = await committeesApi.GetMyAssignmentsAsync(pageSize: 1, awaitingMe: true);
+                model.AwaitingTotal = awaiting.Data?.TotalCount ?? 0;
+            }
+
             return View(model);
         }
 
@@ -89,10 +100,18 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         // ---------- Helpers ----------
 
+        /// <param name="action">
+        /// Which of the two screens is asking. Both list the same assignments, and a pager built
+        /// for the wrong one turns the page on a screen the reader is not looking at.
+        /// </param>
         private async Task<(CommitteeDashboardViewModel Model, bool Failed)> LoadAssignmentsAsync(
-            int page = 1, string? sort = null, bool desc = false, string? search = null)
+            int page = 1, string? sort = null, bool desc = false, string? search = null,
+            string action = nameof(committee_review))
         {
-            var model = new CommitteeDashboardViewModel { Sort = sort, Descending = desc, Search = search };
+            var model = new CommitteeDashboardViewModel
+            {
+                Sort = sort, Descending = desc, Search = search, Action = action
+            };
 
             var assignments = await committeesApi.GetMyAssignmentsAsync(
                 page, sort: sort, descending: desc, search: search);
@@ -104,8 +123,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             }
 
             model.TotalCount = assignments.Data?.TotalCount ?? 0;
-            model.Pager = Paging.PagerFor(assignments.Data, "ExternalSupervisor", nameof(committee_review),
-                model.RouteValues());
+            model.Pager = Paging.PagerFor(assignments.Data, "ExternalSupervisor", action, model.RouteValues());
 
             var me = CurrentUserId();
 
