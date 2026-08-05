@@ -413,7 +413,12 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// what is sitting unread on their desk. Nothing here can be changed from this screen.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> publication(Guid id, int historyPage = 1, string? tab = null, string? from = null)
+        public async Task<IActionResult> publication(
+            Guid id, string? tab = null, string? from = null,
+            int historyPage = 1, string? historySearch = null, string? historySort = null, bool historyDesc = false,
+            string? proposalsSort = null, bool proposalsDesc = false,
+            string? documentsSort = null, bool documentsDesc = false,
+            string? versionsSort = null, bool versionsDesc = false)
         {
             var container = await containersApi.GetByIdAsync(id);
             if (!container.Success || container.Data is null)
@@ -426,10 +431,20 @@ namespace ResearchPublicationManagementSystem.Controllers
             {
                 Container = container.Data,
                 ActiveTab = tab ?? "progress",
-                CameFrom = from
+                Controller = "Admin",
+                CameFrom = from,
+                HistorySearch = historySearch,
+                HistorySort = historySort,
+                HistoryDescending = historyDesc,
+                ProposalsSort = proposalsSort,
+                ProposalsDescending = proposalsDesc,
+                DocumentsSort = documentsSort,
+                DocumentsDescending = documentsDesc,
+                VersionsSort = versionsSort,
+                VersionsDescending = versionsDesc
             };
 
-            var proposals = await proposalsApi.GetByContainerAsync(id);
+            var proposals = await proposalsApi.GetByContainerAsync(id, proposalsSort, proposalsDesc);
             model.Proposals = proposals.Data ?? [];
 
             if (container.Data.CurrentPipeline >= PipelineStage.EthicsApproval)
@@ -437,7 +452,7 @@ namespace ResearchPublicationManagementSystem.Controllers
                 var ethics = await ethicsApi.GetApprovalAsync(id);
                 if (ethics.Success) model.EthicsApproval = ethics.Data;
 
-                var documents = await ethicsApi.GetDocumentsAsync(id);
+                var documents = await ethicsApi.GetDocumentsAsync(id, documentsSort, documentsDesc);
                 model.EthicsDocuments = documents.Data ?? [];
             }
 
@@ -448,7 +463,7 @@ namespace ResearchPublicationManagementSystem.Controllers
 
                 if (model.Publication is { } written)
                 {
-                    var versions = await publicationsApi.GetVersionsAsync(written.Id);
+                    var versions = await publicationsApi.GetVersionsAsync(written.Id, versionsSort, versionsDesc);
                     model.PaperVersions = versions.Data ?? [];
                 }
             }
@@ -460,11 +475,23 @@ namespace ResearchPublicationManagementSystem.Controllers
             var requirements = await settingsApi.GetEthicsDocumentsAsync();
             model.EthicsRequirements = [.. (requirements.Data ?? []).Where(r => r.IsActive)];
 
-            var history = await containersApi.GetActivityHistoryAsync(id, historyPage);
+            var history = await containersApi.GetActivityHistoryAsync(
+                id, historyPage, search: historySearch, sort: historySort, descending: historyDesc);
             model.History = history.Data?.Items ?? [];
             model.HistoryTotal = history.Data?.TotalCount ?? 0;
+
+            // The pager keeps whatever narrowed or ordered the trail, or turning a page would
+            // quietly hand back the unfiltered first one.
             model.HistoryPager = Paging.PagerFor(history.Data, "Admin", nameof(publication),
-                new Dictionary<string, string?> { ["id"] = id.ToString(), ["tab"] = "history", ["from"] = from },
+                new Dictionary<string, string?>
+                {
+                    ["id"] = id.ToString(),
+                    ["tab"] = "history",
+                    ["from"] = from,
+                    ["historySearch"] = historySearch,
+                    ["historySort"] = historySort,
+                    ["historyDesc"] = historyDesc ? "true" : null
+                },
                 "historyPage");
 
             return View(model);
