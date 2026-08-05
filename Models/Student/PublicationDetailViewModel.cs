@@ -134,6 +134,22 @@ namespace ResearchPublicationManagementSystem.Models
 
             if (!string.IsNullOrWhiteSpace(HistorySearch)) route["historySearch"] = HistorySearch;
 
+            // Everything the reader has already asked of the other listings, carried along, or
+            // ordering one of them would put the rest back to their defaults.
+            foreach (var (key, value, descending) in new[]
+            {
+                ("history", HistorySort, HistoryDescending),
+                ("proposals", ProposalsSort, ProposalsDescending),
+                ("documents", DocumentsSort, DocumentsDescending),
+                ("versions", VersionsSort, VersionsDescending),
+                ("reviews", ReviewsSort, ReviewsDescending)
+            })
+            {
+                if (key == listing || string.IsNullOrWhiteSpace(value)) continue;
+                route[key + "Sort"] = value;
+                route[key + "Desc"] = descending.ToString().ToLowerInvariant();
+            }
+
             return new SortableColumnViewModel
             {
                 Controller = Controller,
@@ -151,5 +167,35 @@ namespace ResearchPublicationManagementSystem.Models
 
         public SortableColumnViewModel HistoryColumn(string column, string label, bool descendingFirst = false) =>
             SortColumn("history", column, label, HistorySort, HistoryDescending, descendingFirst);
+
+        /// <summary>
+        /// The four listings on the Contents tab. Each is returned whole rather than a page at a
+        /// time, because each is bounded by the process rather than by the database: a round holds
+        /// three proposals, a committee has three seats, the ethics stage asks for a fixed set. A
+        /// pager on them would never show a second page. They are still worth ordering.
+        /// </summary>
+        public string? ProposalsSort { get; set; }
+        public bool ProposalsDescending { get; set; }
+
+        public string? DocumentsSort { get; set; }
+        public bool DocumentsDescending { get; set; }
+
+        public string? VersionsSort { get; set; }
+        public bool VersionsDescending { get; set; }
+
+        public string? ReviewsSort { get; set; }
+        public bool ReviewsDescending { get; set; }
+
+        public SortableColumnViewModel ProposalsColumn(string column, string label, bool descendingFirst = false) =>
+            SortColumn("proposals", column, label, ProposalsSort, ProposalsDescending, descendingFirst);
+
+        public SortableColumnViewModel DocumentsColumn(string column, string label, bool descendingFirst = false) =>
+            SortColumn("documents", column, label, DocumentsSort, DocumentsDescending, descendingFirst);
+
+        public SortableColumnViewModel VersionsColumn(string column, string label, bool descendingFirst = false) =>
+            SortColumn("versions", column, label, VersionsSort, VersionsDescending, descendingFirst);
+
+        public SortableColumnViewModel ReviewsColumn(string column, string label, bool descendingFirst = false) =>
+            SortColumn("reviews", column, label, ReviewsSort, ReviewsDescending, descendingFirst);
     }
 }

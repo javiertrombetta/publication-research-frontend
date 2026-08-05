@@ -51,8 +51,9 @@ public class PublicationsApiClient(HttpClient httpClient) : ApiClientBase(httpCl
         DeleteJsonAsync<object?>(
             $"api/publications/{publicationId}/versions/{versionId}", new CommentsRequestDto(comments), ct);
 
-    public Task<ApiResult<IReadOnlyList<PublicationVersionDto>>> GetVersionsAsync(Guid publicationId, CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<PublicationVersionDto>>($"api/publications/{publicationId}/versions", ct);
+    public Task<ApiResult<IReadOnlyList<PublicationVersionDto>>> GetVersionsAsync(
+        Guid publicationId, string? sort = null, bool descending = false, CancellationToken ct = default) =>
+        GetAsync<IReadOnlyList<PublicationVersionDto>>($"api/publications/{publicationId}/versions{Sort(sort, descending)}", ct);
 
     public Task<ApiResult<object?>> SubmitAsync(Guid publicationId, CancellationToken ct = default) =>
         PostAsync<object?>($"api/publications/{publicationId}/submit", ct);
@@ -75,8 +76,9 @@ public class PublicationsApiClient(HttpClient httpClient) : ApiClientBase(httpCl
         PostJsonAsync<object?>($"api/publications/{publicationId}/coordinator-final-decision", request, ct);
 
     /// <summary>Every review recorded against a paper, newest first.</summary>
-    public Task<ApiResult<IReadOnlyList<ReviewDto>>> GetReviewsAsync(Guid publicationId, CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<ReviewDto>>($"api/publications/{publicationId}/reviews", ct);
+    public Task<ApiResult<IReadOnlyList<ReviewDto>>> GetReviewsAsync(
+        Guid publicationId, string? sort = null, bool descending = false, CancellationToken ct = default) =>
+        GetAsync<IReadOnlyList<ReviewDto>>($"api/publications/{publicationId}/reviews{Sort(sort, descending)}", ct);
 
     // ---------- Supervisor ----------
 

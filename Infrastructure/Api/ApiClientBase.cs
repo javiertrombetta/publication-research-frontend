@@ -42,6 +42,16 @@ public abstract class ApiClientBase(HttpClient httpClient)
         ["pageSize"] = Paging.SizeValue(pageSize)
     };
 
+    /// <summary>
+    /// The ordering, as a query string, for the listings that are returned whole rather than a
+    /// page at a time. Empty when nothing was asked for, so the URL stays as it was and the API
+    /// keeps its own default order.
+    /// </summary>
+    protected static string Sort(string? sort, bool descending) =>
+        string.IsNullOrWhiteSpace(sort)
+            ? string.Empty
+            : $"?sortBy={Uri.EscapeDataString(sort)}&sortDescending={descending.ToString().ToLowerInvariant()}";
+
     protected Task<ApiResult<T>> GetAsync<T>(string url, CancellationToken ct = default) =>
         SendAsync<T>(Replayable(new HttpRequestMessage(HttpMethod.Get, url)), ct);
 

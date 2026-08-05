@@ -1996,3 +1996,25 @@ td > .badge,
 td > * > .badge {
     white-space: nowrap;
 }
+
+/* One line per row, and an ellipsis where it does not fit.
+
+   These listings are scanned rather than read: a title that wrapped to two lines made its row
+   twice the height of its neighbours, and a page of ten rows came out ragged. Every row is now
+   the height of one line, so the eye can run down a column.
+
+   Only the listings drawn on the fixed grid, which is what rpms-table-stable marks. The record's
+   own tables are left alone: there the text is the content rather than a label on it, and an
+   abstract or a reviewer's comment cut off at the first line would be worth nothing. The full
+   text stays in the markup either way, so a screen reader still reads all of it. */
+.rpms-table-stable tbody td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    /* One line settles the text, and this settles the rest: a row whose last cell holds a small
+       button was still taller than its neighbours. Tall enough for the button, so every row in
+       the listing is the same height whatever it happens to carry. On a cell this is a floor
+       rather than a ceiling, which is what it should be. */
+    height: 3.25rem;
+}
