@@ -1,6 +1,11 @@
 @model StudentDashboardViewModel
+@inject ResearchPublicationManagementSystem.Services.IPipelineSteps PipelineSteps
 @{
     ViewData["Title"] = "My publications";
+
+    // The stages in the order this institution runs them. Drawn 1, 2, 3 regardless, a publication
+    // on the second stage showed the first as finished even where the first had not happened yet.
+    var stageOrder = await PipelineSteps.StageOrderAsync();
 
     string StageLabel(int stage) => stage switch
     {
@@ -171,10 +176,15 @@ else
                             <!-- Stage progress -->
                             <div class="mb-3">
                                 <div class="d-flex gap-2">
-                                    @for (var stage = 1; stage <= 3; stage++)
+                                    @{ var reached = stageOrder.ToList().IndexOf(publication.CurrentPipeline); }
+                                    @for (var position = 0; position < stageOrder.Count; position++)
                                     {
-                                        var state = stagesFinished || publication.CurrentPipeline > stage ? "done"
-                                            : publication.CurrentPipeline == stage ? "current" : "todo";
+                                        var stage = stageOrder[position];
+
+                                        // By position in the order, not by the stage's own number:
+                                        // those only agree while the stages run in numeric order.
+                                        var state = stagesFinished || (reached >= 0 && position < reached) ? "done"
+                                            : position == reached ? "current" : "todo";
 
                                         @* The stage under way is coloured by the status shown on the
                                            badge above, so the two never say different things. *@
