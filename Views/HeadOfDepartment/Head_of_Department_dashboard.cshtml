@@ -180,16 +180,20 @@ else
                         var byStage = Model.Column("stage", "Stage");
                         var byStatus = Model.Column("status", "Status");
                         var byWaiting = Model.Column("waiting", "Waiting on");
+                        // Newest first when picked up: this column is clicked to find what has
+                        // gone quiet.
+                        var byActivity = Model.Column("activity", "Last activity", descendingFirst: true);
                     }
                     <table class="table card-table table-vcenter rpms-table-stable">
                         @* Declared once so the columns do not resize themselves around whichever
                            ten rows a sort happens to bring onto the page. *@
                         <colgroup>
-                            <col style="width: 18%" />
-                            <col style="width: 34%" />
-                            <col style="width: 16%" />
+                            <col style="width: 15%" />
+                            <col style="width: 27%" />
                             <col style="width: 14%" />
-                            <col style="width: 18%" />
+                            <col style="width: 12%" />
+                            <col style="width: 15%" />
+                            <col style="width: 17%" />
                         </colgroup>
                         <thead>
                             <tr>
@@ -197,6 +201,7 @@ else
                                 <th scope="col"><partial name="_SortableHeader" model="byStarted" /></th>
                                 <th scope="col"><partial name="_SortableHeader" model="byStage" /></th>
                                 <th scope="col"><partial name="_SortableHeader" model="byStatus" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byActivity" /></th>
                                 @* Ordered like the rest of the row, from its own heading. The API
                                    ranks it the way the pipeline runs, student first and nobody's
                                    turn last, so one click gathers everything held up at the same
@@ -221,6 +226,11 @@ else
                                         <span class="badge @StatusBadge(publication.DisplayStatus)">
                                             @Humanise(publication.DisplayStatus)
                                         </span>
+                                    </td>
+                                    <td class="text-nowrap">
+                                        @(publication.LastActivityAt is { } when
+                                            ? when.ToLocalTime().ToString("d MMM yyyy, HH:mm")
+                                            : "Nothing yet")
                                     </td>
                                     <td>
                                         @if (publication.EthicsAwaitingRole == RoleNames.HeadOfDepartment)
