@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.WebUtilities;
+using ResearchPublicationManagementSystem.Common;
 using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
 
 namespace ResearchPublicationManagementSystem.Infrastructure.Api;
@@ -9,8 +11,29 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api;
 /// </summary>
 public class InvitationsApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
 {
-    public Task<ApiResult<IReadOnlyList<UserInvitationDto>>> GetAllAsync(CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<UserInvitationDto>>("api/invitations", ct);
+    /// <summary>
+    /// One page of invitations. <paramref name="state"/> is "Pending" or "Settled", which is how
+    /// the screen's two blocks each get a page of their own instead of sharing one and each
+    /// showing whatever part of it happened to belong to them.
+    /// </summary>
+    public Task<ApiResult<PagedResultDto<UserInvitationDto>>> GetAllAsync(
+        string? state = null, int page = 1, string? search = null,
+        string? sort = null, bool descending = false, CancellationToken ct = default)
+    {
+        var parameters = Page(page, Paging.AsConfigured);
+        parameters["state"] = state;
+        parameters["search"] = search;
+
+        if (!string.IsNullOrWhiteSpace(sort))
+        {
+            parameters["sortBy"] = sort;
+            parameters["sortDescending"] = descending ? "true" : "false";
+        }
+
+        return GetAsync<PagedResultDto<UserInvitationDto>>(
+            QueryHelpers.AddQueryString("api/invitations",
+                parameters.Where(p => !string.IsNullOrWhiteSpace(p.Value))), ct);
+    }
 
     public Task<ApiResult<UserInvitationDto>> CreateAsync(
         CreateInvitationRequestDto request, CancellationToken ct = default) =>

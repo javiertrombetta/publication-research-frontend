@@ -55,6 +55,22 @@
     </div>
 </form>
 
+@* Everything the filters above select, not the page on screen, and in the order the screen is in.
+   A file that disagreed with the page it was exported from would be a second document to
+   reconcile rather than a copy of this one. *@
+@if (!Model.LoadFailed && Model.Results.TotalCount > 0)
+{
+    <div class="mb-4 d-flex flex-wrap align-items-center gap-2">
+        <span class="text-secondary me-auto">
+            Showing @Model.Results.FirstItemNumber&ndash;@Model.Results.LastItemNumber of @Model.Results.TotalCount entries
+        </span>
+        <a asp-controller="AuditLogs" asp-action="Export" asp-all-route-data="Model.RouteValues()"
+           class="btn btn-outline-primary">
+            Export @(Model.HasFiltersApplied ? "these" : "all") @Model.Results.TotalCount to CSV
+        </a>
+    </div>
+}
+
 @if (Model.LoadFailed)
 {
     <div class="card">
@@ -78,21 +94,27 @@ else if (results.TotalCount == 0)
 }
 else
 {
-    <div class="text-secondary mb-3">
-        Showing @results.FirstItemNumber&ndash;@results.LastItemNumber of @results.TotalCount entries
-    </div>
-
     <div class="card">
         <div class="table-responsive">
             <table class="table card-table table-vcenter">
+                @{
+                    // Built here rather than inline: a tag helper's model attribute is delimited by
+                    // double quotes, so a call with string arguments cannot be written inside one.
+                    var byWhen = Model.Column("when", "When", descendingFirst: true);
+                    var byWho = Model.Column("who", "Who");
+                    var byAction = Model.Column("action", "Action");
+                    var byEntity = Model.Column("entity", "Entity");
+                    var byComments = Model.Column("comments", "Comments");
+                }
                 <thead>
                     <tr>
-                        <th>When</th>
-                        <th>Who</th>
-                        <th>Action</th>
-                        <th>Entity</th>
+                        <th><partial name="_SortableHeader" model="byWhen" /></th>
+                        <th><partial name="_SortableHeader" model="byWho" /></th>
+                        <th><partial name="_SortableHeader" model="byAction" /></th>
+                        <th><partial name="_SortableHeader" model="byEntity" /></th>
+                        @* Two values drawn as one, so there is no single thing to order by. *@
                         <th>Change</th>
-                        <th>Comments</th>
+                        <th><partial name="_SortableHeader" model="byComments" /></th>
                     </tr>
                 </thead>
                 <tbody>

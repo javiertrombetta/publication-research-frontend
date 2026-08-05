@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using ResearchPublicationManagementSystem.Common;
 using Microsoft.AspNetCore.Http;
 using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
 
@@ -28,6 +29,17 @@ public abstract class ApiClientBase(HttpClient httpClient)
     {
         PropertyNameCaseInsensitive = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
+    /// <summary>
+    /// The page parameters every paged listing carries. Here rather than repeated in each client:
+    /// leaving the size out is what lets the API apply the institution's own figure, and that is
+    /// too easy to forget one client at a time.
+    /// </summary>
+    protected static Dictionary<string, string?> Page(int page, int pageSize = Paging.AsConfigured) => new()
+    {
+        ["page"] = Math.Max(1, page).ToString(),
+        ["pageSize"] = Paging.SizeValue(pageSize)
     };
 
     protected Task<ApiResult<T>> GetAsync<T>(string url, CancellationToken ct = default) =>

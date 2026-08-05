@@ -12,6 +12,30 @@
     </div>
 </div>
 
+@* Applied by the API, so it searches every paper waiting for a committee rather than the page in
+   hand. The same control the other queues carry. *@
+@if (!Model.LoadFailed && (Model.WaitingTotal > 0 || Model.HasSearch))
+{
+    <div class="card mb-3">
+        <div class="card-body py-3">
+            <form method="get" asp-controller="Admin" asp-action="assigning_committee_members"
+                  class="row g-2 align-items-center">
+                <div class="col-12 col-md">
+                    <input type="search" name="search" value="@Model.Search" class="form-control"
+                           placeholder="Search by paper or student" aria-label="Search" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                <div class="col-auto">
+                    <a asp-controller="Admin" asp-action="assigning_committee_members"
+                       class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
 @if (Model.LoadFailed)
 {
     <div class="card">
@@ -19,6 +43,19 @@
             <h3 class="mb-2">We couldn't load them</h3>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="Admin" asp-action="assigning_committee_members" class="btn btn-primary">Retry</a>
+        </div>
+    </div>
+}
+else if (Model.Items.Count == 0 && Model.HasSearch)
+{
+    @* A search that found nothing is a different thing from an empty queue. *@
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+            <p class="text-secondary mb-4">No paper waiting for a committee has that title or student.</p>
+            <a asp-controller="Admin" asp-action="assigning_committee_members" class="btn btn-primary">
+                Show them all
+            </a>
         </div>
     </div>
 }
@@ -46,17 +83,49 @@ else if (Model.Members.Count == 0)
 }
 else
 {
+    @* Collapsed to start with, like every other queue here. Appointing a committee means reading
+       one paper and ticking a list of names, and eight of those forms open at once is a page
+       nobody can find their way down. *@
+    <div class="card mb-3">
+        <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
+            <span class="text-secondary me-auto">
+                <strong>@Model.WaitingTotal</strong>
+                @(Model.WaitingTotal == 1 ? "paper needs" : "papers need") a committee.
+            </span>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-rpms-expand-all="awaiting-committee-cards">Expand all</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    data-rpms-collapse-all="awaiting-committee-cards">Collapse all</button>
+        </div>
+    </div>
+
     @foreach (var item in Model.Items)
     {
         <div class="card mb-3">
-            <div class="card-header">
-                <div>
+            <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+                 data-rpms-header-toggle="#awaiting-@item.Paper.Id"
+                 role="button" tabindex="0" aria-expanded="false" aria-controls="awaiting-@item.Paper.Id">
+                @* Part of the header rather than a control of its own, so clicking it does not
+                   leave an icon looking selected in the middle of a row. *@
+                <span class="rpms-collapse-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
+                         viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M6 9l6 6l6 -6" />
+                    </svg>
+                </span>
+                <div class="me-auto">
                     <h3 class="card-title m-0">@item.Paper.Title</h3>
                     <div class="text-secondary small">@item.Paper.StudentName</div>
                 </div>
+                <span class="badge bg-primary-lt">
+                    @item.RequiredReviewers + @item.RequiredExternal needed
+                </span>
             </div>
 
-            <div class="card-body">
+            <div class="card-body collapse" id="awaiting-@item.Paper.Id"
+                 data-rpms-collapsible="awaiting-committee-cards">
                 <p class="text-secondary rpms-preserve-lines">@item.Paper.Abstract</p>
 
                 <form asp-controller="Admin" asp-action="AssignCommittee" method="post">
@@ -158,6 +227,11 @@ else
                 </form>
             </div>
         </div>
+    }
+
+    @if (Model.WaitingPager is not null)
+    {
+        <partial name="_Pager" model="Model.WaitingPager" />
     }
 }
 

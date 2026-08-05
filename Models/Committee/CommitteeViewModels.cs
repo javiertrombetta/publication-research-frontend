@@ -59,6 +59,14 @@ namespace ResearchPublicationManagementSystem.Models
 
         public IReadOnlyList<CommitteeAssignmentItem> Decided =>
             Items.Where(i => i.HasDecided).ToList();
+
+        /// <summary>
+        /// How many of this page are still waiting on this person. The listing shows every paper
+        /// assigned to them, decided or not: the page is cut by the API, so throwing the decided
+        /// ones away here left short pages and, on a member who had worked through their queue,
+        /// empty ones with a pager still promising more.
+        /// </summary>
+        public int AwaitingCount => AwaitingMe.Count;
     }
 
     /// <summary>One paper this member has been asked to evaluate.</summary>

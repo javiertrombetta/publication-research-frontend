@@ -51,11 +51,51 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
     /// </summary>
     /// <summary>Every publication whose paper is at the status named.</summary>
     public Task<ApiResult<PagedResultDto<PublicationContainerDto>>> GetByPaperStatusAsync(
-        string paperStatus, int page = 1, string? search = null, CancellationToken ct = default)
+        string paperStatus, int page = 1, string? search = null,
+        string? sort = null, bool descending = false, CancellationToken ct = default)
     {
         var parameters = Page(page, Paging.AsConfigured);
         parameters["paperStatus"] = paperStatus;
         parameters["search"] = search;
+
+        if (!string.IsNullOrWhiteSpace(sort))
+        {
+            parameters["sortBy"] = sort;
+            parameters["sortDescending"] = descending ? "true" : "false";
+        }
+
+        return GetAsync<PagedResultDto<PublicationContainerDto>>(
+            QueryHelpers.AddQueryString("api/containers",
+                parameters.Where(p => !string.IsNullOrWhiteSpace(p.Value))), ct);
+    }
+
+    /// <summary>
+    /// One page of the publications a figure on the administrator's dashboard counts.
+    ///
+    /// Every one of those counts is a number with nothing behind it, and each of these narrows the
+    /// same listing to exactly what it counted, so the figure becomes a way in rather than a
+    /// statement. Whichever filter is set applies; passing none is the whole institution.
+    /// </summary>
+    public Task<ApiResult<PagedResultDto<PublicationContainerDto>>> GetByTallyAsync(
+        string? status = null, string? pipeline = null, string? paperStatus = null,
+        string? ethicsStatus = null, string? committeeDecision = null, string? reviewDecision = null,
+        int page = 1, string? search = null, string? sort = null, bool descending = false,
+        CancellationToken ct = default)
+    {
+        var parameters = Page(page, Paging.AsConfigured);
+        parameters["status"] = status;
+        parameters["pipeline"] = pipeline;
+        parameters["paperStatus"] = paperStatus;
+        parameters["ethicsStatus"] = ethicsStatus;
+        parameters["committeeDecision"] = committeeDecision;
+        parameters["reviewDecision"] = reviewDecision;
+        parameters["search"] = search;
+
+        if (!string.IsNullOrWhiteSpace(sort))
+        {
+            parameters["sortBy"] = sort;
+            parameters["sortDescending"] = descending ? "true" : "false";
+        }
 
         return GetAsync<PagedResultDto<PublicationContainerDto>>(
             QueryHelpers.AddQueryString("api/containers",
@@ -115,14 +155,6 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
 
         return GetAsync<PagedResultDto<PublicationContainerDto>>(url, ct);
     }
-
-    /// <summary>The page parameters every listing here carries.</summary>
-    private static Dictionary<string, string?> Page(int page, int pageSize) => new()
-    {
-        ["page"] = Math.Max(1, page).ToString(),
-        // Absent unless a caller named one, so the API applies the institution's figure.
-        ["pageSize"] = Paging.SizeValue(pageSize)
-    };
 
     /// <summary>The publications this supervisor has been assigned to, newest first.</summary>
     public Task<ApiResult<PagedResultDto<PublicationContainerDto>>> GetSupervisingAsync(

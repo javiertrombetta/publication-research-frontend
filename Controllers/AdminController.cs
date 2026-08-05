@@ -116,8 +116,9 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             model.Summary = summary.Data;
 
-            var awaiting = await FindPapersAwaitingCommitteeAsync();
-            model.PapersAwaitingCommittee = awaiting.Count;
+            // The figure alone: this card is a link to the queue, not the queue.
+            var awaiting = await FindPapersAwaitingCommitteeAsync(pageSize: 1);
+            model.PapersAwaitingCommittee = awaiting.Page?.TotalCount ?? 0;
 
             return View(model);
         }
@@ -129,12 +130,14 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// until one is assigned, because the coordinator's final decision is blocked on it.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> assigning_committee_members(int inProgressPage = 1)
+        public async Task<IActionResult> assigning_committee_members(
+            int page = 1, int inProgressPage = 1, string? search = null)
         {
-            var model = new AssignCommitteeViewModel();
+            var model = new AssignCommitteeViewModel { Search = search };
 
-            var items = await FindPapersAwaitingCommitteeAsync();
+            var (items, waiting) = await FindPapersAwaitingCommitteeAsync(page, search);
             model.Items = items;
+            model.WaitingTotal = waiting?.TotalCount ?? 0;
 
             // Asked for as a list of candidates rather than assembled here from the whole directory.
             // Who may be appointed is a rule with several parts, and an administrator now chooses
@@ -170,8 +173,14 @@ namespace ResearchPublicationManagementSystem.Controllers
             var inProgress = await committeesApi.GetInProgressAsync(page: inProgressPage);
             model.InProgress = inProgress.Data?.Items ?? [];
             model.InProgressTotal = inProgress.Data?.TotalCount ?? 0;
+
+            // Two listings on one screen, so each pager turns a key of its own. Sharing one would
+            // mean paging the queue also paged the committees already sitting.
+            model.WaitingPager = Paging.PagerFor(waiting, "Admin", nameof(assigning_committee_members),
+                model.RouteValues());
+
             model.InProgressPager = Paging.PagerFor(inProgress.Data, "Admin", nameof(assigning_committee_members),
-                pageKey: "inProgressPage");
+                model.RouteValues(), pageKey: "inProgressPage");
 
             return View(model);
         }
@@ -301,6 +310,70 @@ namespace ResearchPublicationManagementSystem.Controllers
         }
 
         /// <summary>
+        /// The publications behind one figure on the dashboard.
+        ///
+        /// Every count there was a number and nothing else, so an administrator who saw six papers
+        /// waiting on a committee had no way from that six to the six. Each figure now links here
+        /// with its own filter, and every row from here opens the publication itself, where
+        /// documents go on and off and the step is set, exactly as from Assignments.
+        /// </summary>
+        /// <param name="heading">
+        /// What the figure was called on the dashboard, carried so this screen says what it is
+        /// showing in the words the reader clicked. Display only; the filter is what selects.
+        /// </param>
+        [HttpGet]
+        public async Task<IActionResult> publications(
+            string? status = null, string? pipeline = null, string? paperStatus = null,
+            string? ethicsStatus = null, string? committeeDecision = null, string? reviewDecision = null,
+            string? heading = null, int page = 1, string? search = null, string? sort = null, bool desc = false)
+        {
+            var model = new PublicationsAdminViewModel
+            {
+                Status = status,
+                Pipeline = pipeline,
+                PaperStatus = paperStatus,
+                EthicsStatus = ethicsStatus,
+                CommitteeDecision = committeeDecision,
+                ReviewDecision = reviewDecision,
+                Heading = string.IsNullOrWhiteSpace(heading) ? "Publications" : heading,
+                Search = search,
+                Sort = sort,
+                Descending = desc,
+
+                // Two of the dashboard's figures count something other than publications, and this
+                // listing can only show publications, so the two will not agree. Said here rather
+                // than left for somebody to notice: an unexplained mismatch between a figure and
+                // the list it opened reads as a bug, and doubt about one number is doubt about all
+                // of them.
+                Description = !string.IsNullOrWhiteSpace(reviewDecision)
+                    ? "That figure counts reviews. A paper read by three people counts three times "
+                      + "there and appears once here."
+                    : !string.IsNullOrWhiteSpace(committeeDecision)
+                      && !string.Equals(committeeDecision, "Any", StringComparison.OrdinalIgnoreCase)
+                        ? "That figure counts committee members. A committee of three counts three "
+                          + "times there and appears once here."
+                        : null
+            };
+
+            var result = await containersApi.GetByTallyAsync(
+                status, pipeline, paperStatus, ethicsStatus, committeeDecision, reviewDecision,
+                page, search, sort, desc);
+
+            if (!result.Success || result.Data is null)
+            {
+                TempData["ErrorMessage"] = result.ErrorMessage ?? "Could not load those publications right now.";
+                model.LoadFailed = true;
+                return View(model);
+            }
+
+            model.Publications = result.Data.Items;
+            model.TotalCount = result.Data.TotalCount;
+            model.Pager = Paging.PagerFor(result.Data, "Admin", nameof(publications), model.RouteValues());
+
+            return View(model);
+        }
+
+        /// <summary>
         /// What a publication actually holds, read only: its proposals, its ethics decision and
         /// documents, its paper and versions, and everything that has happened to it.
         ///
@@ -375,12 +448,13 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// do. Both cost a reason.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> catalogue(int page = 1, string? search = null)
+        public async Task<IActionResult> catalogue(
+            int page = 1, int acceptedPage = 1, string? search = null, string? sort = null, bool desc = false)
         {
-            var model = new CatalogueAdminViewModel { Search = search };
+            var model = new CatalogueAdminViewModel { Search = search, Sort = sort, Descending = desc };
 
-            var published = await containersApi.GetByPaperStatusAsync("Published", page, search);
-            var accepted = await containersApi.GetByPaperStatusAsync("Accepted", 1, search);
+            var published = await containersApi.GetByPaperStatusAsync("Published", page, search, sort, desc);
+            var accepted = await containersApi.GetByPaperStatusAsync("Accepted", acceptedPage, search, sort, desc);
 
             if (!published.Success || !accepted.Success)
             {
@@ -392,14 +466,21 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             model.Published = published.Data?.Items ?? [];
             model.Unpublished = accepted.Data?.Items ?? [];
+            model.PublishedTotal = published.Data?.TotalCount ?? 0;
+            model.UnpublishedTotal = accepted.Data?.TotalCount ?? 0;
+
+            // Each listing turns its own key, or paging one would page the other with it.
             model.Pager = Paging.PagerFor(published.Data, "Admin", nameof(catalogue), model.RouteValues());
+            model.UnpublishedPager = Paging.PagerFor(accepted.Data, "Admin", nameof(catalogue), model.RouteValues(),
+                pageKey: "acceptedPage");
 
             return View(model);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> WithdrawFromCatalogue(Guid publicationId, string? comments, string? search)
+        public async Task<IActionResult> WithdrawFromCatalogue(
+            Guid publicationId, string? comments, string? search, string? sort, bool desc)
         {
             var result = await publicationsApi.UnpublishAsync(publicationId, new CommentsRequestDto(comments ?? string.Empty));
 
@@ -407,12 +488,13 @@ namespace ResearchPublicationManagementSystem.Controllers
                 ? "Withdrawn. The paper stays accepted and is no longer in the public catalogue."
                 : result.ErrorMessage ?? "Could not withdraw that paper.";
 
-            return RedirectToAction(nameof(catalogue), new { search });
+            return RedirectToAction(nameof(catalogue), new { search, sort, desc });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> PublishOnBehalf(Guid publicationId, string? comments, string? search)
+        public async Task<IActionResult> PublishOnBehalf(
+            Guid publicationId, string? comments, string? search, string? sort, bool desc)
         {
             var result = await publicationsApi.PublishDecisionAsync(publicationId,
                 new PublishDecisionRequestDto(true, comments ?? string.Empty));
@@ -421,7 +503,7 @@ namespace ResearchPublicationManagementSystem.Controllers
                 ? "Published. It is in the public catalogue, and the history records that you did it."
                 : result.ErrorMessage ?? "Could not publish that paper.";
 
-            return RedirectToAction(nameof(catalogue), new { search });
+            return RedirectToAction(nameof(catalogue), new { search, sort, desc });
         }
 
         // ---------- Correcting what a publication holds, and where it stands ----------
@@ -550,11 +632,18 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// supervisor has approved, so papers they had not yet looked at were offered for a
         /// committee and the assignment was then refused.
         /// </summary>
-        private async Task<List<AwaitingCommitteeItem>> FindPapersAwaitingCommitteeAsync()
+        /// <summary>
+        /// One page of the papers with no committee yet, and how many there are altogether. The
+        /// dashboard needs only the figure, so it asks for the shortest page there is rather than
+        /// fetching a queue it is not going to draw.
+        /// </summary>
+        private async Task<(List<AwaitingCommitteeItem> Items, PagedResultDto<AwaitingCommitteeDto>? Page)>
+            FindPapersAwaitingCommitteeAsync(int page = 1, string? search = null, int pageSize = Paging.AsConfigured)
         {
-            var awaiting = await publicationsApi.GetAwaitingCommitteeAsync();
+            var awaiting = await publicationsApi.GetAwaitingCommitteeAsync(page, search, pageSize);
 
-            return [.. (awaiting.Data ?? []).Select(paper => new AwaitingCommitteeItem { Paper = paper })];
+            return ([.. (awaiting.Data?.Items ?? []).Select(paper => new AwaitingCommitteeItem { Paper = paper })],
+                awaiting.Data);
         }
     }
 }

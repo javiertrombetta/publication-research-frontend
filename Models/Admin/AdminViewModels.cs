@@ -43,7 +43,23 @@ namespace ResearchPublicationManagementSystem.Models
 
         public PagerViewModel? InProgressPager { get; set; }
 
+        /// <summary>How many papers are waiting altogether, and which page of them this is.</summary>
+        public int WaitingTotal { get; set; }
+
+        public PagerViewModel? WaitingPager { get; set; }
+
+        /// <summary>
+        /// One term across the paper and its author, applied by the API so it covers the whole
+        /// queue rather than the page in hand.
+        /// </summary>
+        public string? Search { get; set; }
+
+        public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
+
         public bool LoadFailed { get; set; }
+
+        public Dictionary<string, string?> RouteValues() =>
+            HasSearch ? new Dictionary<string, string?> { ["search"] = Search } : [];
     }
 
     public class AwaitingCommitteeItem
@@ -181,16 +197,42 @@ namespace ResearchPublicationManagementSystem.Models
         /// <summary>The filters as route values, so paging keeps the current view.</summary>
         public Dictionary<string, string?> RouteValues(int? page = null)
         {
+            var values = Filters();
+
+            if (!string.IsNullOrWhiteSpace(Query.SortBy)) values["sortBy"] = Query.SortBy;
+            if (Query.SortDescending) values["sortDescending"] = "true";
+            if (page is not null && page > 1) values["page"] = page.Value.ToString();
+
+            return values;
+        }
+
+        /// <summary>
+        /// The filters alone, without the ordering. What a column heading carries: it sets the
+        /// ordering itself, and passing the current one along would fight with that.
+        /// </summary>
+        public Dictionary<string, string?> Filters()
+        {
             var values = new Dictionary<string, string?>();
 
             if (!string.IsNullOrWhiteSpace(Query.EntityType)) values["entityType"] = Query.EntityType;
             if (Query.UserId is not null) values["userId"] = Query.UserId.ToString();
             if (Query.From is not null) values["from"] = Query.From.Value.ToString("yyyy-MM-dd");
             if (Query.To is not null) values["to"] = Query.To.Value.ToString("yyyy-MM-dd");
-            if (page is not null && page > 1) values["page"] = page.Value.ToString();
 
             return values;
         }
+
+        public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
+        {
+            Controller = "AuditLogs",
+            Action = "Index",
+            Column = column,
+            Label = label,
+            CurrentSort = Query.SortBy,
+            CurrentDescending = Query.SortDescending,
+            DescendingFirst = descendingFirst,
+            RouteValues = Filters()
+        };
     }
 
     /// <summary>How many committee members of each type a publication needs by default.</summary>
@@ -223,16 +265,139 @@ namespace ResearchPublicationManagementSystem.Models
     /// decision differs: taking a paper out of the catalogue, and putting one in on the author's
     /// behalf where they have not done it themselves.
     /// </summary>
+    /// <summary>
+    /// What is in the public catalogue and what could be. Two listings, each a page of its own
+    /// from the API, so a long catalogue cannot bury the handful of papers waiting to go into it.
+    /// </summary>
     public class CatalogueAdminViewModel
     {
         public IReadOnlyList<PublicationContainerDto> Published { get; set; } = [];
         public IReadOnlyList<PublicationContainerDto> Unpublished { get; set; } = [];
 
+        public int PublishedTotal { get; set; }
+        public int UnpublishedTotal { get; set; }
+
         public PagerViewModel? Pager { get; set; }
+        public PagerViewModel? UnpublishedPager { get; set; }
+
         public string? Search { get; set; }
+        public string? Sort { get; set; }
+        public bool Descending { get; set; }
         public bool LoadFailed { get; set; }
 
-        public Dictionary<string, string?> RouteValues() => new() { ["search"] = Search };
+        public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
+
+        public Dictionary<string, string?> RouteValues()
+        {
+            var values = new Dictionary<string, string?>();
+            if (HasSearch) values["search"] = Search;
+            if (!string.IsNullOrWhiteSpace(Sort)) values["sort"] = Sort;
+            if (Descending) values["desc"] = "true";
+            return values;
+        }
+
+        public Dictionary<string, string?> ClearSearchRoute() =>
+            RouteValues().Where(v => v.Key != "search").ToDictionary(v => v.Key, v => v.Value);
+
+        public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
+        {
+            Controller = "Admin",
+            Action = "catalogue",
+            Column = column,
+            Label = label,
+            CurrentSort = Sort,
+            CurrentDescending = Descending,
+            DescendingFirst = descendingFirst,
+            RouteValues = HasSearch ? new Dictionary<string, string?> { ["search"] = Search } : []
+        };
+    }
+
+    /// <summary>
+    /// The publications behind one figure on the dashboard.
+    ///
+    /// Every count there used to be a number and nothing else, so an administrator who saw six
+    /// papers waiting on a committee had no way from that six to the six. This is where each of
+    /// them leads: the same listing, narrowed by whichever filter the figure stands for, and every
+    /// row opens the publication itself, where documents go on and off and the step is set.
+    /// </summary>
+    public class PublicationsAdminViewModel
+    {
+        public IReadOnlyList<PublicationContainerDto> Publications { get; set; } = [];
+
+        public int TotalCount { get; set; }
+        public PagerViewModel? Pager { get; set; }
+
+        public bool LoadFailed { get; set; }
+
+        /// <summary>What the figure was called on the dashboard, so the screen can say what it is showing.</summary>
+        public string Heading { get; set; } = "Publications";
+
+        public string? Description { get; set; }
+
+        /// <summary>
+        /// The filter itself, carried whole. Which one is set is the dashboard's business; this
+        /// screen only has to hand it back to the API and put it in its own links.
+        /// </summary>
+        public string? Status { get; set; }
+        public string? Pipeline { get; set; }
+        public string? PaperStatus { get; set; }
+        public string? EthicsStatus { get; set; }
+        public string? CommitteeDecision { get; set; }
+        public string? ReviewDecision { get; set; }
+
+        public string? Search { get; set; }
+        public string? Sort { get; set; }
+        public bool Descending { get; set; }
+
+        public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
+
+        /// <summary>The filter alone, which every link on this screen has to carry or it stops being this listing.</summary>
+        public Dictionary<string, string?> Filter()
+        {
+            var values = new Dictionary<string, string?>();
+
+            void Add(string key, string? value)
+            {
+                if (!string.IsNullOrWhiteSpace(value)) values[key] = value;
+            }
+
+            Add("status", Status);
+            Add("pipeline", Pipeline);
+            Add("paperStatus", PaperStatus);
+            Add("ethicsStatus", EthicsStatus);
+            Add("committeeDecision", CommitteeDecision);
+            Add("reviewDecision", ReviewDecision);
+            Add("heading", Heading);
+
+            return values;
+        }
+
+        public Dictionary<string, string?> RouteValues()
+        {
+            var values = Filter();
+            if (HasSearch) values["search"] = Search;
+            if (!string.IsNullOrWhiteSpace(Sort)) values["sort"] = Sort;
+            if (Descending) values["desc"] = "true";
+            return values;
+        }
+
+        public Dictionary<string, string?> ClearSearchRoute() =>
+            RouteValues().Where(v => v.Key != "search").ToDictionary(v => v.Key, v => v.Value);
+
+        public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
+        {
+            Controller = "Admin",
+            Action = "publications",
+            Column = column,
+            Label = label,
+            CurrentSort = Sort,
+            CurrentDescending = Descending,
+            DescendingFirst = descendingFirst,
+            RouteValues = HasSearch
+                ? Filter().Concat([new KeyValuePair<string, string?>("search", Search)])
+                    .ToDictionary(v => v.Key, v => v.Value)
+                : Filter()
+        };
     }
 
     public class AssignmentsViewModel

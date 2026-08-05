@@ -92,6 +92,7 @@ else
                     // double quotes, so a call with string arguments cannot be written inside one.
                     var byName = Model.Column("name", "Name");
                     var byEmail = Model.Column("email", "Email");
+                    var byRoles = Model.Column("roles", "Roles");
                     var byStatus = Model.Column("status", "Status");
                     var byAvailable = Model.Column("available", "Taking work on");
                     var byJoined = Model.Column("created", "Joined", descendingFirst: true);
@@ -100,8 +101,9 @@ else
                     <tr>
                         <th><partial name="_SortableHeader" model="byName" /></th>
                         <th><partial name="_SortableHeader" model="byEmail" /></th>
-                        @* Roles is a list per account, so there is nothing to order by. *@
-                        <th>Roles</th>
+                        @* An account can hold several roles, so this orders by the first of them
+                           alphabetically, which is the one the cell leads with. *@
+                        <th><partial name="_SortableHeader" model="byRoles" /></th>
                         <th><partial name="_SortableHeader" model="byStatus" /></th>
                         @* Beside Status because the two are read together and are not the same
                            thing: an account can be enabled and still be turning work away. *@

@@ -13,7 +13,20 @@ public class AdminApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
         GetAsync<DashboardSummaryDto>("api/dashboard/summary", ct);
 
     public Task<ApiResult<PagedResultDto<AuditLogEntryDto>>> GetAuditLogAsync(
-        AuditLogQuery query, CancellationToken ct = default)
+        AuditLogQuery query, CancellationToken ct = default) =>
+        GetAsync<PagedResultDto<AuditLogEntryDto>>(AuditLogUrl("api/audit-log", query), ct);
+
+    /// <summary>
+    /// The same trail as a CSV file, filtered and ordered exactly as the screen is. The whole of
+    /// it, not the page in hand: somebody exporting a filtered view wants the filter's results,
+    /// and handing them ten rows of it would be worse than useless.
+    /// </summary>
+    public Task<(byte[] Content, string ContentType, string FileName)?> ExportAuditLogAsync(
+        AuditLogQuery query, CancellationToken ct = default) =>
+        GetFileAsync(AuditLogUrl("api/audit-log/export", query), ct);
+
+    /// <summary>The filters and ordering as a query string, so the page and the file always agree.</summary>
+    private static string AuditLogUrl(string path, AuditLogQuery query)
     {
         var parameters = new Dictionary<string, string?>
         {
@@ -25,10 +38,13 @@ public class AdminApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
             ["pageSize"] = Common.Paging.SizeValue(query.PageSize)
         };
 
-        var url = QueryHelpers.AddQueryString("api/audit-log",
-            parameters.Where(p => !string.IsNullOrWhiteSpace(p.Value)));
+        if (!string.IsNullOrWhiteSpace(query.SortBy))
+        {
+            parameters["sortBy"] = query.SortBy;
+            parameters["sortDescending"] = query.SortDescending ? "true" : "false";
+        }
 
-        return GetAsync<PagedResultDto<AuditLogEntryDto>>(url, ct);
+        return QueryHelpers.AddQueryString(path, parameters.Where(p => !string.IsNullOrWhiteSpace(p.Value)));
     }
 
     /// <summary>How many committee members of each type a publication needs by default.</summary>
@@ -52,6 +68,15 @@ public class AuditLogQuery
     public DateTime? To { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = DefaultPageSize;
+
+    /// <summary>
+    /// Which column the trail is ordered by, and which way. Applied by the API before the page is
+    /// cut, so clicking a heading orders the whole trail rather than the twenty rows on screen.
+    /// </summary>
+    public string? SortBy { get; set; }
+
+    /// <inheritdoc cref="SortBy"/>
+    public bool SortDescending { get; set; }
 
     public bool HasFilters =>
         UserId is not null || !string.IsNullOrWhiteSpace(EntityType) || From is not null || To is not null;
