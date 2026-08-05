@@ -45,7 +45,7 @@ public class PipelineSteps(SettingsApiClient settingsApi, IMemoryCache cache) : 
         // still in force hides a decision somebody is waiting to make.
         if (!result.Success || result.Data is null)
         {
-            return new EthicsWorkflowSettingsDto(true, true);
+            return new EthicsWorkflowSettingsDto(true, true, true, true);
         }
 
         cache.Set(CacheKey, result.Data, TimeSpan.FromMinutes(1));

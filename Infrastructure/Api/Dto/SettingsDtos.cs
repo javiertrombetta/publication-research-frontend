@@ -245,9 +245,17 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
     /// because ethics reaches its close by two routes and an institution may want the Head of
     /// Department on one of them and not the other.
     /// </summary>
-    public record EthicsWorkflowSettingsDto(bool HeadOfDepartmentReviews, bool HeadOfDepartmentReviewsWhenNotRequired);
+    public record EthicsWorkflowSettingsDto(
+        bool HeadOfDepartmentReviews,
+        bool HeadOfDepartmentReviewsWhenNotRequired,
+        bool SupervisorReviewsDocuments = true,
+        bool CoordinatorReviewsDocuments = true);
 
-    public record UpdateEthicsWorkflowSettingsRequestDto(bool HeadOfDepartmentReviews, bool HeadOfDepartmentReviewsWhenNotRequired);
+    public record UpdateEthicsWorkflowSettingsRequestDto(
+        bool HeadOfDepartmentReviews,
+        bool HeadOfDepartmentReviewsWhenNotRequired,
+        bool SupervisorReviewsDocuments = true,
+        bool CoordinatorReviewsDocuments = true);
 
     /// <summary>One decision in the pipeline, and whether this institution asks for a comment on it.</summary>
     public record DecisionCommentDto(
