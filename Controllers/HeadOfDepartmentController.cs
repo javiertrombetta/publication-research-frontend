@@ -182,7 +182,9 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// one meant knowing in advance which of them to look in.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> Publication(Guid id, int historyPage = 1, string? tab = null)
+        public async Task<IActionResult> Publication(
+            Guid id, string? tab = null,
+            int historyPage = 1, string? historySearch = null, string? historySort = null, bool historyDesc = false)
         {
             var container = await containersApi.GetByIdAsync(id);
             if (!container.Success || container.Data is null)
@@ -194,7 +196,11 @@ namespace ResearchPublicationManagementSystem.Controllers
             var model = new PublicationDetailViewModel
             {
                 Container = container.Data,
-                ActiveTab = tab ?? "progress"
+                ActiveTab = tab ?? "progress",
+                Controller = "HeadOfDepartment",
+                HistorySearch = historySearch,
+                HistorySort = historySort,
+                HistoryDescending = historyDesc
             };
 
             var proposals = await proposalsApi.GetByContainerAsync(id);
@@ -226,11 +232,23 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             // Best-effort, as on every other screen that shows a trail: a publication is still
             // worth reading when its history cannot be.
-            var history = await containersApi.GetActivityHistoryAsync(id, historyPage);
+            var history = await containersApi.GetActivityHistoryAsync(
+                id, historyPage, search: historySearch, sort: historySort, descending: historyDesc);
             model.History = history.Data?.Items ?? [];
             model.HistoryTotal = history.Data?.TotalCount ?? 0;
+            // The pager keeps whatever narrowed or ordered the trail, or turning a page would
+            // quietly hand back the unfiltered first one.
+            var historyRoute = new Dictionary<string, string?>
+            {
+                ["id"] = id.ToString(),
+                ["tab"] = "history",
+                ["historySearch"] = historySearch,
+                ["historySort"] = historySort,
+                ["historyDesc"] = historyDesc ? "true" : null
+            };
+
             model.HistoryPager = Paging.PagerFor(history.Data, "HeadOfDepartment", nameof(Publication),
-                new Dictionary<string, string?> { ["id"] = id.ToString(), ["tab"] = "history" }, "historyPage");
+                historyRoute, "historyPage");
 
             return View(model);
         }

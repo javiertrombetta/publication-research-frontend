@@ -84,20 +84,60 @@
     <div class="card">
         <div class="card-body">
             <h2 class="h3 mb-3">Activity history</h2>
-            @if (Model.History.Count == 0)
+
+            @* Over what the trail says in words: the action, the person, and the comment they
+               left. A long publication's trail runs to dozens of entries, and the thing somebody
+               is looking for is usually half a phrase out of one of them. *@
+            <form method="get" asp-action="Publication" class="row g-2 align-items-center mb-3">
+                <input type="hidden" name="id" value="@Model.Container.Id" />
+                <input type="hidden" name="tab" value="history" />
+                <input type="hidden" name="historySort" value="@Model.HistorySort" />
+                <input type="hidden" name="historyDesc" value="@Model.HistoryDescending.ToString().ToLowerInvariant()" />
+
+                <div class="col-12 col-md">
+                    <input type="search" name="historySearch" value="@Model.HistorySearch" class="form-control"
+                           placeholder="Search the history by action, person or comment" aria-label="Search the history" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.HistorySearch))
+                {
+                    <div class="col-auto">
+                        <a asp-action="Publication" asp-route-id="@Model.Container.Id" asp-route-tab="history"
+                           class="btn btn-outline-secondary">Clear</a>
+                    </div>
+                }
+            </form>
+
+            @if (Model.History.Count == 0 && !string.IsNullOrWhiteSpace(Model.HistorySearch))
+            {
+                <p class="text-secondary m-0">Nothing in this publication's history matches &ldquo;@Model.HistorySearch&rdquo;.</p>
+            }
+            else if (Model.History.Count == 0)
             {
                 <p class="text-secondary m-0">Nothing has been recorded against this publication yet.</p>
             }
             else
             {
+                @* Built here rather than inline: a tag helper's model attribute is delimited by
+                   double quotes, so a call with string arguments cannot be written inside one. *@
+                var byWhen = Model.HistoryColumn("when", "When", descendingFirst: true);
+                var byWhat = Model.HistoryColumn("what", "What");
+                var byWho = Model.HistoryColumn("who", "Who");
+                var byComment = Model.HistoryColumn("comments", "Comments");
+
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter">
                         <thead>
                             <tr>
-                                <th scope="col">When</th>
-                                <th scope="col">What</th>
-                                <th scope="col">Who</th>
-                                <th scope="col">Comments</th>
+                                @* Ordered by the API, over the whole trail rather than the page in
+                                   hand: the oldest entry is on the last page, and sorting ten rows
+                                   would never bring it into view. *@
+                                <th scope="col"><partial name="_SortableHeader" model="byWhen" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byWhat" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byWho" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byComment" /></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -176,7 +216,13 @@ else
                     <span class="badge @StatusBadge(Model.EthicsApproval.Status)">@Humanise(Model.EthicsApproval.Status)</span>
                     @if (!string.IsNullOrWhiteSpace(Model.Container.EthicsHeadOfDepartmentName))
                     {
-                        <span class="text-secondary small ms-2">Put to @Model.Container.EthicsHeadOfDepartmentName</span>
+                        @* Who the coordinator asked to comment on this publication's ethics, which
+                           is a step of the workflow and not a status. "Put to Rangi Patel" said
+                           neither what had been put nor why, and read as an aside about a name. *@
+                        <span class="text-secondary small ms-2">
+                            Ethics comments were asked of @Model.Container.EthicsHeadOfDepartmentName,
+                            as Head of Department
+                        </span>
                     }
                 </div>
 

@@ -29,6 +29,7 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
     public Task<ApiResult<PagedResultDto<ActivityHistoryEntryDto>>> GetActivityHistoryAsync(
         Guid id, int page = 1, int pageSize = Paging.AsConfigured,
         DateOnly? from = null, DateOnly? to = null, string? action = null, Guid? actorUserId = null,
+        string? search = null, string? sort = null, bool descending = false,
         CancellationToken ct = default)
     {
         var query = $"api/containers/{id}/activity-history?page={Math.Max(1, page)}{Paging.SizeParam(pageSize)}";
@@ -37,6 +38,8 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
         if (to is { } t) query += $"&to={t:yyyy-MM-dd}";
         if (!string.IsNullOrWhiteSpace(action)) query += $"&action={Uri.EscapeDataString(action)}";
         if (actorUserId is { } who) query += $"&actorUserId={who}";
+        if (!string.IsNullOrWhiteSpace(search)) query += $"&search={Uri.EscapeDataString(search)}";
+        if (!string.IsNullOrWhiteSpace(sort)) query += $"&sortBy={Uri.EscapeDataString(sort)}&sortDescending={descending.ToString().ToLowerInvariant()}";
 
         return GetAsync<PagedResultDto<ActivityHistoryEntryDto>>(query, ct);
     }
