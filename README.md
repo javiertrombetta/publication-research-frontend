@@ -209,6 +209,15 @@ the team's bookmarks both point at, so it keeps the name and this paragraph expl
 - **Tabs and filters are server-rendered where the state should survive a reload.** System settings
   puts its tab in the query string for that reason: a rejected mail server should not throw you
   back to the first tab.
+- **The site names its own restrictions to the browser.** A content security policy, `nosniff`,
+  `X-Frame-Options: DENY` and `Referrer-Policy: no-referrer` are set for every response in every
+  environment, not left to whatever a host adds: the `SAMEORIGIN` header visible while developing
+  comes from the development pipeline and is gone once the application is published. The policy
+  names `'self'` and nothing else because the site loads nothing else, everything down to Tabler
+  being served from here. Inline script and style are permitted, since the views use both. What
+  the policy is really buying is that no script may be fetched from another origin, no form of
+  ours may be posted somewhere else, and no page anywhere may put this site in a frame under a
+  layer of its own.
 - **Rules an administrator controls are not restated here.** Password length and complexity,
   upload size and permitted file types all come from the API, so a form that duplicated them
   would go stale the first time they changed, and would reject input the server would have
