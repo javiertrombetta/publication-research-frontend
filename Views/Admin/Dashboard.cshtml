@@ -1,3 +1,4 @@
+@using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 @model AdminDashboardViewModel
 @{
     ViewData["Title"] = "Admin dashboard";
@@ -168,4 +169,134 @@ else
             </div>
         }
     </div>
+
+    @* Every publication in the institution, under the cards that count them. An administrator
+       arrives knowing a student's name or half a title, not which of the screens above the
+       publication would be sitting on. Paged, searched and ordered by the API rather than in the
+       page already in hand, so it holds up against a whole institution. *@
+    <div class="card mb-3 mt-4">
+        <div class="card-body py-3">
+            <form method="get" asp-controller="Admin" asp-action="Dashboard" class="row g-2 align-items-center">
+                @* The order survives a search, so narrowing the list does not silently reorder it. *@
+                <input type="hidden" name="sort" value="@Model.Sort" />
+                <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+
+                <div class="col-12 col-md">
+                    <input type="search" name="search" value="@Model.Search" class="form-control"
+                           placeholder="Search every publication by student or title" aria-label="Search publications" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                @if (Model.HasSearch)
+                {
+                    <div class="col-auto">
+                        <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-outline-secondary">Clear</a>
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+
+    @if (Model.Publications.Count == 0)
+    {
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <h2 class="h3 mb-2">
+                    @(Model.HasSearch ? $"Nothing matches \u201C{Model.Search}\u201D" : "No publications yet")
+                </h2>
+                <p class="text-secondary m-0">
+                    @(Model.HasSearch
+                        ? "No publication in the institution has that student or title."
+                        : "Publications appear here as students start them.")
+                </p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card mb-3">
+            <div class="card-body py-3">
+                <span class="text-secondary">
+                    <strong>@Model.PublicationsTotal</strong>
+                    @(Model.PublicationsTotal == 1 ? "publication" : "publications") in the institution,
+                    @Model.Publications.Count on this page.
+                </span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="table-responsive">
+                @{
+                    var byStudent = Model.Column("student", "Student");
+                    var byStarted = Model.Column("started", "Publication", descendingFirst: true);
+                    var byStage = Model.Column("stage", "Stage");
+                    var byStatus = Model.Column("status", "Status");
+                    var byActivity = Model.Column("activity", "Last activity", descendingFirst: true);
+                    var byWaiting = Model.Column("waiting", "Waiting on");
+                }
+                <table class="table card-table table-vcenter rpms-table-stable">
+                    @* Declared once so the columns do not resize themselves around whichever ten
+                       rows a sort happens to bring onto the page. *@
+                    <colgroup>
+                        <col style="width: 15%" />
+                        <col style="width: 27%" />
+                        <col style="width: 14%" />
+                        <col style="width: 12%" />
+                        <col style="width: 15%" />
+                        <col style="width: 17%" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th scope="col"><partial name="_SortableHeader" model="byStudent" /></th>
+                            <th scope="col"><partial name="_SortableHeader" model="byStarted" /></th>
+                            <th scope="col"><partial name="_SortableHeader" model="byStage" /></th>
+                            <th scope="col"><partial name="_SortableHeader" model="byStatus" /></th>
+                            <th scope="col"><partial name="_SortableHeader" model="byActivity" /></th>
+                            <th scope="col"><partial name="_SortableHeader" model="byWaiting" /></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var publication in Model.Publications)
+                        {
+                            <tr>
+                                <td>@publication.StudentName</td>
+                                <td>
+                                    <a asp-controller="Admin" asp-action="publication" asp-route-id="@publication.Id"
+                                       class="text-reset text-decoration-none fw-medium">@publication.DisplayTitle</a>
+                                </td>
+                                <td>
+                                    @(publication.CurrentPipeline switch
+                                    {
+                                        PipelineStage.ResearchProposals => "Research proposals",
+                                        PipelineStage.EthicsApproval => "Ethics approval",
+                                        PipelineStage.ResearchPaper => "Research paper",
+                                        _ => "\u2014"
+                                    })
+                                </td>
+                                <td>
+                                    <span class="badge @StatusBadge(publication.DisplayStatus)">
+                                        @Humanise(publication.DisplayStatus)
+                                    </span>
+                                </td>
+                                <td class="text-nowrap">
+                                    @(publication.LastActivityAt is { } when
+                                        ? when.ToLocalTime().ToString("d MMM yyyy, HH:mm")
+                                        : "Nothing yet")
+                                </td>
+                                <td>
+                                    @(publication.EthicsAwaitingRole is { } ethics ? Humanise(ethics)
+                                      : publication.PaperAwaitingRole is { } paper ? Humanise(paper)
+                                      : publication.Status == "Completed" ? "Nobody, it is finished"
+                                      : "Nobody")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <partial name="_Pager" model="Model.Pager" />
+    }
 }
