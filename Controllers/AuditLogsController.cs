@@ -33,5 +33,27 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.Results = result.Data;
             return View(model);
         }
+
+        /// <summary>
+        /// The filtered trail as a CSV file, for handing to somebody who is not going to be given
+        /// an account: an auditor, or a committee asking how a decision was reached.
+        ///
+        /// Everything the filters select, not the page on screen. The file is fetched from the API
+        /// and passed straight through rather than redirected to, because the API wants a bearer
+        /// token and the browser has only this site's cookie.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> Export([FromQuery] AuditLogQuery query)
+        {
+            var file = await adminApi.ExportAuditLogAsync(query);
+
+            if (file is not { } csv)
+            {
+                TempData["ErrorMessage"] = "Could not export the audit log. Try again in a moment.";
+                return RedirectToAction(nameof(Index), new AuditLogViewModel { Query = query }.RouteValues());
+            }
+
+            return File(csv.Content, csv.ContentType, csv.FileName);
+        }
     }
 }

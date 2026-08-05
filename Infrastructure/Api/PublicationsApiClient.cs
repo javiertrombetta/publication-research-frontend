@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.AspNetCore.Http;
 using ResearchPublicationManagementSystem.Common;
 using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
@@ -97,8 +98,16 @@ public class PublicationsApiClient(HttpClient httpClient) : ApiClientBase(httpCl
     /// administrator's queue, answered in one request rather than reconstructed from the containers
     /// list, which could not see whether the supervisor had approved.
     /// </summary>
-    public Task<ApiResult<IReadOnlyList<AwaitingCommitteeDto>>> GetAwaitingCommitteeAsync(CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<AwaitingCommitteeDto>>("api/publications/awaiting-committee", ct);
+    public Task<ApiResult<PagedResultDto<AwaitingCommitteeDto>>> GetAwaitingCommitteeAsync(
+        int page = 1, string? search = null, int pageSize = Paging.AsConfigured, CancellationToken ct = default)
+    {
+        var parameters = Page(page, pageSize);
+        parameters["search"] = search;
+
+        return GetAsync<PagedResultDto<AwaitingCommitteeDto>>(
+            QueryHelpers.AddQueryString("api/publications/awaiting-committee",
+                parameters.Where(p => !string.IsNullOrWhiteSpace(p.Value))), ct);
+    }
 
     public Task<ApiResult<object?>> SupervisorReviewAsync(
         Guid publicationId, PaperReviewDecisionRequestDto request, CancellationToken ct = default) =>

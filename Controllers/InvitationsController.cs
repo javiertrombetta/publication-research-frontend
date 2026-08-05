@@ -20,26 +20,49 @@ namespace ResearchPublicationManagementSystem.Controllers
         InvitationsApiClient invitationsApi,
         DepartmentsApiClient departmentsApi) : Controller
     {
+        /// <summary>
+        /// Outstanding invitations and settled ones, each a page of its own so neither can crowd
+        /// the other out. The search and the ordering apply to both, because somebody hunting for
+        /// an address does not know in advance whether that person ever replied.
+        /// </summary>
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+            int page = 1, int settledPage = 1, string? search = null, string? sort = null, bool desc = false)
         {
-            var model = new InvitationsViewModel();
+            var model = new InvitationsViewModel { Search = search, Sort = sort, Descending = desc };
 
-            var invitations = await invitationsApi.GetAllAsync();
-            if (!invitations.Success)
+            var pending = await invitationsApi.GetAllAsync(PendingState, page, search, sort, desc);
+            var settled = await invitationsApi.GetAllAsync(SettledState, settledPage, search, sort, desc);
+
+            if (!pending.Success || !settled.Success)
             {
-                TempData["ErrorMessage"] = invitations.ErrorMessage ?? "Could not load the invitations.";
+                TempData["ErrorMessage"] =
+                    pending.ErrorMessage ?? settled.ErrorMessage ?? "Could not load the invitations.";
                 model.LoadFailed = true;
                 return View(model);
             }
 
-            model.Invitations = invitations.Data ?? [];
+            model.Pending = pending.Data?.Items ?? [];
+            model.Settled = settled.Data?.Items ?? [];
+            model.PendingTotal = pending.Data?.TotalCount ?? 0;
+            model.SettledTotal = settled.Data?.TotalCount ?? 0;
+
+            // Each pager turns its own key, or paging one block would page the other with it.
+            model.PendingPager = Paging.PagerFor(pending.Data, "Invitations", nameof(Index), model.RouteValues());
+            model.SettledPager = Paging.PagerFor(settled.Data, "Invitations", nameof(Index), model.RouteValues(),
+                pageKey: "settledPage");
 
             var departments = await departmentsApi.GetAllAsync();
             model.Departments = departments.Data ?? [];
 
             return View(model);
         }
+
+        /// <summary>What the API calls the two states. Named here so the two calls above cannot drift apart.</summary>
+        private const string PendingState = "Pending";
+
+        /// <inheritdoc cref="PendingState"/>
+        private const string SettledState = "Settled";
 
         [HttpPost]
         [ValidateAntiForgeryToken]

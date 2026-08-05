@@ -279,8 +279,21 @@ namespace ResearchPublicationManagementSystem.Controllers
         // GET: /Auth/VerifyEmail?userId=..&token=..
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> VerifyEmail(Guid userId, string token)
+        public async Task<IActionResult> VerifyEmail(Guid userId, string? token)
         {
+            // A link with nothing on the end of it is the commonest way this action is reached
+            // after the real one: an email client that wrapped the URL, or an address typed by
+            // hand. Answered as a bad link, which is what it is. Passed through, the missing token
+            // reached Uri.EscapeDataString and threw, so the page was a server error rather than
+            // the sentence telling the reader to ask for a new link.
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                ViewData["Success"] = false;
+                ViewData["Message"] = "This verification link is incomplete. "
+                                      + "Open the link in the email again, or ask for a new one.";
+                return View();
+            }
+
             var result = await authApiClient.VerifyEmailAsync(userId, token);
             ViewData["Success"] = result.Success;
             ViewData["Message"] = result.Success

@@ -28,9 +28,18 @@
 }
 else
 {
+    @* Built here rather than inline: a tag helper's model attribute is delimited by double quotes,
+       so a call with string arguments cannot be written inside one. One set for both tables: they
+       hold the same kind of row and are ordered by the same API. *@
+    var byTitle = Model.Column("title", "Publication");
+    var byStudent = Model.Column("student", "Student");
+
     <div class="card mb-3">
         <div class="card-body py-3">
             <form method="get" asp-action="catalogue" class="row g-2 align-items-center">
+                <input type="hidden" name="sort" value="@Model.Sort" />
+                <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
+
                 <div class="col-12 col-md">
                     <input type="search" name="search" value="@Model.Search" class="form-control"
                            placeholder="Search by student or title" aria-label="Search" />
@@ -39,7 +48,8 @@ else
                     <button type="submit" class="btn btn-primary">Search</button>
                 </div>
                 <div class="col-auto">
-                    <a asp-action="catalogue" class="btn btn-outline-secondary">Clear</a>
+                    <a asp-action="catalogue" asp-all-route-data="Model.ClearSearchRoute()"
+                       class="btn btn-outline-secondary">Clear</a>
                 </div>
             </form>
         </div>
@@ -47,7 +57,10 @@ else
 
     <div class="card mb-3">
         <div class="card-body">
-            <h2 class="h3 mb-2">In the catalogue</h2>
+            <h2 class="h3 mb-2">
+                In the catalogue
+                <span class="badge bg-primary-lt ms-2">@Model.PublishedTotal</span>
+            </h2>
             <p class="text-secondary">
                 Withdrawing leaves the paper accepted: the judgement it earned stands, and only its
                 place in the catalogue changes. The author can publish it again themselves.
@@ -55,14 +68,21 @@ else
 
             @if (Model.Published.Count == 0)
             {
-                <p class="text-secondary m-0">Nothing is published yet.</p>
+                <p class="text-secondary m-0">
+                    @(Model.HasSearch ? "No published paper matches that." : "Nothing is published yet.")
+                </p>
             }
             else
             {
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter">
                         <thead>
-                            <tr><th>Publication</th><th>Student</th><th>Why you are withdrawing it</th><th class="w-1"></th></tr>
+                            <tr>
+                                <th><partial name="_SortableHeader" model="byTitle" /></th>
+                                <th><partial name="_SortableHeader" model="byStudent" /></th>
+                                <th>Why you are withdrawing it</th>
+                                <th class="w-1"></th>
+                            </tr>
                         </thead>
                         <tbody>
                             @foreach (var publication in Model.Published)
@@ -74,6 +94,8 @@ else
                                         <form asp-action="WithdrawFromCatalogue" method="post" class="d-flex gap-2" id="withdraw-@publication.Id">
                                             <input type="hidden" name="publicationId" value="@publication.PaperId" />
                                             <input type="hidden" name="search" value="@Model.Search" />
+                                            <input type="hidden" name="sort" value="@Model.Sort" />
+                                            <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
                                             <input type="text" name="comments" class="form-control form-control-sm"
                                                    id="withdraw-comments-@publication.Id"
                                                    placeholder="@DecisionButton.Hint(withdrawNeedsWhy)" />
@@ -92,18 +114,21 @@ else
                         </tbody>
                     </table>
                 </div>
+
+                @if (Model.Pager is not null)
+                {
+                    <partial name="_Pager" model="Model.Pager" />
+                }
             }
         </div>
     </div>
 
-    @if (Model.Pager is not null)
-    {
-        <partial name="_Pager" model="Model.Pager" />
-    }
-
     <div class="card">
         <div class="card-body">
-            <h2 class="h3 mb-2">Accepted, not published</h2>
+            <h2 class="h3 mb-2">
+                Accepted, not published
+                <span class="badge bg-secondary-lt ms-2">@Model.UnpublishedTotal</span>
+            </h2>
             <p class="text-secondary">
                 These earned their place and their author has not put them in the catalogue. Doing
                 it for them is an administrator's last resort, and the history records who did it.
@@ -111,14 +136,23 @@ else
 
             @if (Model.Unpublished.Count == 0)
             {
-                <p class="text-secondary m-0">Every accepted paper is already in the catalogue.</p>
+                <p class="text-secondary m-0">
+                    @(Model.HasSearch
+                        ? "No accepted paper waiting to be published matches that."
+                        : "Every accepted paper is already in the catalogue.")
+                </p>
             }
             else
             {
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter">
                         <thead>
-                            <tr><th>Publication</th><th>Student</th><th>Why you are publishing it</th><th class="w-1"></th></tr>
+                            <tr>
+                                <th><partial name="_SortableHeader" model="byTitle" /></th>
+                                <th><partial name="_SortableHeader" model="byStudent" /></th>
+                                <th>Why you are publishing it</th>
+                                <th class="w-1"></th>
+                            </tr>
                         </thead>
                         <tbody>
                             @foreach (var publication in Model.Unpublished)
@@ -130,6 +164,8 @@ else
                                         <form asp-action="PublishOnBehalf" method="post" class="d-flex gap-2" id="publish-@publication.Id">
                                             <input type="hidden" name="publicationId" value="@publication.PaperId" />
                                             <input type="hidden" name="search" value="@Model.Search" />
+                                            <input type="hidden" name="sort" value="@Model.Sort" />
+                                            <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
                                             <input type="text" name="comments" class="form-control form-control-sm"
                                                    id="publish-comments-@publication.Id"
                                                    placeholder="@DecisionButton.Hint(publishNeedsWhy)" />
@@ -148,6 +184,11 @@ else
                         </tbody>
                     </table>
                 </div>
+
+                @if (Model.UnpublishedPager is not null)
+                {
+                    <partial name="_Pager" model="Model.UnpublishedPager" />
+                }
             }
         </div>
     </div>

@@ -2,11 +2,21 @@
 @{
     ViewData["Title"] = "Admin dashboard";
     var s = Model.Summary;
+
+    // Every figure on this page is a way into the publications it counts. Written once, here,
+    // because the alternative is the same six route values copied into a dozen anchors and one of
+    // them quietly disagreeing with the count above it.
+    Dictionary<string, string?> To(string heading, string key, string? value) =>
+        new() { [key] = value, ["heading"] = heading };
 }
 
 <div class="mb-4">
     <h1 class="page-title mb-1">Admin dashboard</h1>
-    <div class="text-secondary">The institution's research activity at a glance.</div>
+    <div class="text-secondary">
+        The institution's research activity at a glance. Every figure here opens the publications
+        it counts, where an administrator can see what one holds, correct its documents and set
+        the step it waits at.
+    </div>
 </div>
 
 @if (Model.LoadFailed || s is null)
@@ -47,8 +57,15 @@ else
             <div class="card h-100">
                 <div class="card-body">
                     <div class="text-secondary mb-1">Publications</div>
-                    <div class="h1 m-0">@s.TotalContainers</div>
-                    <div class="text-secondary">@s.ContainersInProgress in progress &middot; @s.ContainersCompleted completed</div>
+                    <a class="rpms-tally" asp-controller="Admin" asp-action="publications"
+                       asp-all-route-data='To("All publications", "status", null)'>@s.TotalContainers</a>
+                    <div class="text-secondary">
+                        <a asp-controller="Admin" asp-action="publications"
+                           asp-all-route-data='To("Publications in progress", "status", "InProgress")'>@s.ContainersInProgress in progress</a>
+                        &middot;
+                        <a asp-controller="Admin" asp-action="publications"
+                           asp-all-route-data='To("Completed publications", "status", "Completed")'>@s.ContainersCompleted completed</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -56,7 +73,8 @@ else
             <div class="card h-100">
                 <div class="card-body">
                     <div class="text-secondary mb-1">In the public catalogue</div>
-                    <div class="h1 m-0">@s.PublishedPublicationsCount</div>
+                    <a class="rpms-tally" asp-controller="Admin" asp-action="publications"
+                       asp-all-route-data='To("In the public catalogue", "paperStatus", "Published")'>@s.PublishedPublicationsCount</a>
                     <div class="text-secondary">papers published</div>
                 </div>
             </div>
@@ -65,8 +83,19 @@ else
             <div class="card h-100">
                 <div class="card-body">
                     <div class="text-secondary mb-1">Committee reviews</div>
-                    <div class="h1 m-0">@s.PendingCommitteeReviews</div>
-                    <div class="text-secondary">pending &middot; @s.CompletedCommitteeReviews completed</div>
+                    @* These count seats on committees, not committees: three votes outstanding can
+                       be three publications or one. The listing shows the publications those seats
+                       belong to, and says so. *@
+                    <a class="rpms-tally" asp-controller="Admin" asp-action="publications"
+                       asp-all-route-data='To("Committees with a vote outstanding", "committeeDecision", "Pending")'>@s.PendingCommitteeReviews</a>
+                    <div class="text-secondary">
+                        votes outstanding &middot;
+                        <a asp-controller="Admin" asp-action="publications"
+                           asp-all-route-data='To("Committees with votes recorded", "committeeDecision", "Decided")'>@s.CompletedCommitteeReviews recorded</a>
+                    </div>
+                    <div class="text-secondary small mt-1">
+                        Counted per member, so a committee of three counts three times.
+                    </div>
                 </div>
             </div>
         </div>
@@ -74,21 +103,23 @@ else
             <div class="card h-100">
                 <div class="card-body">
                     <div class="text-secondary mb-1">Ethics approvals</div>
-                    <div class="h1 m-0">@s.EthicsApprovalsByStatus.Values.Sum()</div>
+                    <a class="rpms-tally" asp-controller="Admin" asp-action="publications"
+                       asp-all-route-data='To("Ethics approvals", "ethicsStatus", "Any")'>@s.EthicsApprovalsByStatus.Values.Sum()</a>
                     <div class="text-secondary">across all stages</div>
                 </div>
             </div>
         </div>
     </div>
 
-    @* The breakdowns are keyed by enum name, so a new status appears here on its own. *@
+    @* The breakdowns are keyed by enum name, so a new status appears here on its own, and each row
+       carries the filter that reproduces exactly what it counted. *@
     <div class="row row-cards">
-        @foreach (var (heading, counts) in new (string, IReadOnlyDictionary<string, int>)[]
+        @foreach (var (heading, counts, key) in new (string, IReadOnlyDictionary<string, int>, string)[]
         {
-            ("Publications by stage", s.ContainersByPipelineStage),
-            ("Papers by status", s.PublicationsByStatus),
-            ("Ethics by status", s.EthicsApprovalsByStatus),
-            ("Review decisions", s.ReviewDecisionCounts)
+            ("Publications by stage", s.ContainersByPipelineStage, "pipeline"),
+            ("Papers by status", s.PublicationsByStatus, "paperStatus"),
+            ("Ethics by status", s.EthicsApprovalsByStatus, "ethicsStatus"),
+            ("Review decisions", s.ReviewDecisionCounts, "reviewDecision")
         })
         {
             <div class="col-12 col-md-6">
@@ -101,14 +132,31 @@ else
                         }
                         else
                         {
+                            @if (key == "reviewDecision")
+                            {
+                                @* Said plainly, because this one tally counts something other than
+                                   publications and the listing it opens will not always match it. *@
+                                <p class="text-secondary small">
+                                    These count reviews. A paper read twice appears once in the listing
+                                    and twice here.
+                                </p>
+                            }
                             <div class="table-responsive">
                                 <table class="table card-table table-vcenter">
                                     <tbody>
-                                        @foreach (var (key, count) in counts.OrderByDescending(c => c.Value))
+                                        @foreach (var (name, count) in counts.OrderByDescending(c => c.Value))
                                         {
                                             <tr>
-                                                <td><span class="badge @StatusBadge(key)">@Humanise(key)</span></td>
-                                                <td class="text-end fw-bold">@count</td>
+                                                <td>
+                                                    <a asp-controller="Admin" asp-action="publications"
+                                                       asp-all-route-data='To($"{heading}: {Humanise(name)}", key, name)'>
+                                                        <span class="badge @StatusBadge(name)">@Humanise(name)</span>
+                                                    </a>
+                                                </td>
+                                                <td class="text-end fw-bold">
+                                                    <a asp-controller="Admin" asp-action="publications"
+                                                       asp-all-route-data='To($"{heading}: {Humanise(name)}", key, name)'>@count</a>
+                                                </td>
                                             </tr>
                                         }
                                     </tbody>

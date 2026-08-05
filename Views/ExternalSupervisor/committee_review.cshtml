@@ -14,7 +14,7 @@
 
 @* Search and order are applied by the API, so they cover everything assigned to this person
    rather than the page in hand. The same controls the other reviewer queues carry. *@
-@if (!Model.LoadFailed && (Model.AwaitingMe.Count > 0 || Model.HasSearch))
+@if (!Model.LoadFailed && (Model.Items.Count > 0 || Model.HasSearch))
 {
     <div class="card mb-3">
         <div class="card-body py-3">
@@ -70,7 +70,7 @@
         </div>
     </div>
 }
-else if (Model.AwaitingMe.Count == 0 && Model.HasSearch)
+else if (Model.Items.Count == 0 && Model.HasSearch)
 {
     @* A search that found nothing is a different thing from an empty queue. *@
     <div class="card">
@@ -83,12 +83,12 @@ else if (Model.AwaitingMe.Count == 0 && Model.HasSearch)
         </div>
     </div>
 }
-else if (Model.AwaitingMe.Count == 0)
+else if (Model.Items.Count == 0)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing waiting on you</h3>
-            <p class="text-secondary mb-4">You have decided on every paper assigned to you.</p>
+            <h3 class="mb-2">Nothing assigned to you</h3>
+            <p class="text-secondary mb-4">You are not on any evaluation committee at the moment.</p>
             <a asp-controller="ExternalSupervisor" asp-action="External_Supervisor_Dashboard" class="btn btn-primary">
                 Back to dashboard
             </a>
@@ -100,9 +100,9 @@ else
     <div class="card mb-3">
         <div class="card-body py-3 d-flex flex-wrap align-items-center gap-2">
             <span class="text-secondary me-auto">
-                <strong>@Model.AwaitingMe.Count</strong>
-                @(Model.AwaitingMe.Count == 1 ? "paper" : "papers") waiting on you,
-                of @Model.TotalCount assigned.
+                <strong>@Model.AwaitingCount</strong> of these
+                @(Model.AwaitingCount == 1 ? "is" : "are") waiting on you,
+                out of @Model.TotalCount assigned to you altogether.
             </span>
             <button type="button" class="btn btn-sm btn-outline-secondary"
                     data-rpms-expand-all="evaluation-cards">Expand all</button>
@@ -111,7 +111,7 @@ else
         </div>
     </div>
 
-    @foreach (var item in Model.AwaitingMe)
+    @foreach (var item in Model.Items)
     {
         <div class="card mb-3">
             <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
@@ -151,9 +151,22 @@ else
                         </div>
                     }
                 </div>
+
+                @* What this member owes on this paper, said on the header so a queue of a dozen can
+                   be read without opening any of them. *@
+                @if (item.HasDecided)
+                {
+                    <span class="badge bg-secondary-lt">You decided: @Humanise(item.Me!.Decision)</span>
+                }
+                else
+                {
+                    <span class="badge bg-primary-lt">Waiting on you</span>
+                }
             </div>
 
-            <div class="card-body collapse show" id="evaluation-@item.Committee.Id"
+            @* The ones still owed start open, the ones already answered start closed: a member
+               opens this screen to do the work that is left, not to reread what they have done. *@
+            <div class="card-body collapse @(item.HasDecided ? "" : "show")" id="evaluation-@item.Committee.Id"
                  data-rpms-collapsible="evaluation-cards">
                 @if (item.Paper is null)
                 {
@@ -191,33 +204,53 @@ else
                     @(item.Committee.MinApprovalsRequired == 1 ? "approval" : "approvals") to pass.
                 </div>
 
-                <form asp-controller="ExternalSupervisor" asp-action="SubmitDecision" method="post">
-                    <input type="hidden" name="committeeId" value="@item.Committee.Id" />
-                    <div class="mb-3">
-                        <label class="form-label" for="review-@item.Committee.Id">Your comments</label>
-                        @* Required to turn a paper down, and not to pass it: the same rule every
-                           other decision in the pipeline keeps. Marked required, it stopped both
-                           buttons, and a note demanded where there is nothing to say is a note
-                           written to get past the form. *@
-                        <textarea id="review-@item.Committee.Id" name="comments" rows="3" class="form-control"
-                                  placeholder="Your assessment, required when you do not approve"></textarea>
+                @if (item.HasDecided)
+                {
+                    @* A decision is recorded once and cannot be changed, so there is no form here.
+                       What is worth showing is what this person said, because they are going to be
+                       asked about it. *@
+                    <div class="alert alert-secondary mb-0">
+                        <div class="fw-bold mb-1">You decided: @Humanise(item.Me!.Decision)</div>
+                        @if (!string.IsNullOrWhiteSpace(item.Me.DecisionComments))
+                        {
+                            <div class="rpms-preserve-lines">@item.Me.DecisionComments</div>
+                        }
+                        <div class="text-secondary small mt-1">
+                            A committee decision is recorded once and cannot be changed. Ask the
+                            coordinator if something needs revisiting.
+                        </div>
                     </div>
-                    @{
-                        var approveNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.PaperCommitteeApprove);
-                        var rejectNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.PaperCommitteeReject);
-                    }
-                    <div class="btn-list">
-                        <button type="submit" name="approve" value="true" class="btn btn-primary"
-                                @DecisionButton.Attributes(approveNeedsWhy, $"review-{item.Committee.Id}",
-                                    "Record your approval of this paper? It cannot be changed afterwards.")>Approve</button>
-                        <button type="submit" name="approve" value="false" class="btn btn-outline-danger"
-                                @DecisionButton.Attributes(rejectNeedsWhy, $"review-{item.Committee.Id}",
-                                    "Record that you do not approve this paper? It cannot be changed afterwards.",
-                                    "Say what is wrong with the paper. Your comments are what the coordinator decides on.")>
-                            Do not approve
-                        </button>
-                    </div>
-                </form>
+                }
+                else
+                {
+                    <form asp-controller="ExternalSupervisor" asp-action="SubmitDecision" method="post">
+                        <input type="hidden" name="committeeId" value="@item.Committee.Id" />
+                        <div class="mb-3">
+                            <label class="form-label" for="review-@item.Committee.Id">Your comments</label>
+                            @* Required to turn a paper down, and not to pass it: the same rule every
+                               other decision in the pipeline keeps. Marked required, it stopped both
+                               buttons, and a note demanded where there is nothing to say is a note
+                               written to get past the form. *@
+                            <textarea id="review-@item.Committee.Id" name="comments" rows="3" class="form-control"
+                                      placeholder="Your assessment, required when you do not approve"></textarea>
+                        </div>
+                        @{
+                            var approveNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.PaperCommitteeApprove);
+                            var rejectNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.PaperCommitteeReject);
+                        }
+                        <div class="btn-list">
+                            <button type="submit" name="approve" value="true" class="btn btn-primary"
+                                    @DecisionButton.Attributes(approveNeedsWhy, $"review-{item.Committee.Id}",
+                                        "Record your approval of this paper? It cannot be changed afterwards.")>Approve</button>
+                            <button type="submit" name="approve" value="false" class="btn btn-outline-danger"
+                                    @DecisionButton.Attributes(rejectNeedsWhy, $"review-{item.Committee.Id}",
+                                        "Record that you do not approve this paper? It cannot be changed afterwards.",
+                                        "Say what is wrong with the paper. Your comments are what the coordinator decides on.")>
+                                Do not approve
+                            </button>
+                        </div>
+                    </form>
+                }
             </div>
         </div>
     }

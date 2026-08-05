@@ -239,6 +239,34 @@ body {
     min-width: 0;
 }
 
+/* A word with nowhere to break must wrap rather than push the page sideways.
+
+   The other half of the same problem. The rule above stops a wide table dragging the column with
+   it; this stops a single long token doing the same. Real data is full of them: a DOI, an author's
+   address, an uploaded filename, a title with a URL in it. None of them has a space, so a browser
+   will happily lay one out 600px wide inside a 375px phone, and everything above and below it
+   scrolls along behind.
+
+   Inherited from the body, so it covers headings, prose, badges and cells alike, and it only acts
+   on words that genuinely do not fit: ordinary text is untouched. Cells that have asked not to
+   wrap still do not, because they sit inside a listing that scrolls on its own, which is where a
+   long value belongs.
+
+   `anywhere` rather than `break-word`, which is the whole point. The two break a line in the same
+   places; only `anywhere` counts that break when the browser works out how narrow the element is
+   allowed to get. With `break-word` the heading still reported itself as 600px wide, the column
+   grew to fit, and the page scrolled sideways exactly as before. */
+body,
+/* Bootstrap sets `word-wrap: break-word` on the card itself, and `word-wrap` is only the old name
+   for this property, so every card in the site quietly put the weaker value back and the rule
+   above stopped at the card's edge. Almost everything here lives in a card, so without this line
+   the fix reached nothing that mattered. */
+.card,
+.popover,
+.tooltip {
+    overflow-wrap: anywhere;
+}
+
 /* ---------- Footer ---------- */
 
 /* Tabler's .footer ships 2rem of vertical padding, which makes the bar far taller than the
@@ -1754,4 +1782,48 @@ aside {
        the theme's rather than the fixed one behind Bootstrap's own shadow class, which stayed a
        pale grey against a dark page. */
     box-shadow: 0 -.125rem .25rem var(--rpms-shadow-colour);
+}
+
+/* A figure on the administrator's dashboard, which is also the way into what it counts.
+   Styled as the number it replaced rather than as a link: underlining every count would turn a
+   page meant to be read at a glance into a wall of blue. The hover says it is clickable, and so
+   does the cursor. */
+.rpms-tally {
+    display: inline-block;
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: inherit;
+    text-decoration: none;
+}
+
+.rpms-tally:hover,
+.rpms-tally:focus-visible {
+    color: var(--rpms-primary);
+}
+
+/* The smaller counts beside and beneath it, which are links too. */
+.card-body .text-secondary > a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px dotted currentColor;
+}
+
+.card-body .text-secondary > a:hover,
+.card-body .text-secondary > a:focus-visible {
+    color: var(--rpms-primary);
+}
+
+/* A badge holding somebody's data may wrap; Tabler's never does.
+
+   Most badges here are a status name we wrote, and those are one or two words that always fit.
+   A few are not: the keywords on a paper are typed by the student, and a group's name by the
+   coordinator who made it. Tabler pins .badge to white-space: nowrap, which no amount of
+   overflow-wrap can override, so one long keyword pushed the whole page sideways on a phone.
+
+   Wrapping rather than truncating, because a keyword cut off at the ellipsis is a keyword the
+   reader cannot check the paper against. */
+.badge {
+    white-space: normal;
+    max-width: 100%;
 }
