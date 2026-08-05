@@ -114,12 +114,14 @@ else
     @foreach (var item in Model.Items)
     {
         <div class="card mb-3">
-            <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+            <div class="card-header rpms-collapse-header"
                  data-rpms-header-toggle="#evaluation-@item.Committee.Id"
                  role="button" tabindex="0"
                  aria-expanded="true" aria-controls="evaluation-@item.Committee.Id">
                 @* Part of the header rather than a control of its own, so clicking it does not
                    leave an icon looking selected in the middle of a row. *@
+<div class="row g-2 align-items-center w-100">
+                <div class="col-12 col-md-6 d-flex align-items-center gap-2">
                 <span class="rpms-collapse-icon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
                          viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
@@ -151,17 +153,27 @@ else
                         </div>
                     }
                 </div>
+                </div>
+
+                @* Whose paper it is, in the column that orders by it. It was only ever in the small
+                   print under the title, so the Student heading stood over nothing. *@
+                <div class="col-6 col-md-3 text-secondary small">
+                    <span class="text-nowrap">@(item.Paper?.StudentName ?? "—")</span>
+                </div>
 
                 @* What this member owes on this paper, said on the header so a queue of a dozen can
-                   be read without opening any of them. *@
-                @if (item.HasDecided)
-                {
-                    <span class="badge bg-secondary-lt">You decided: @Humanise(item.Me!.Decision)</span>
-                }
-                else
-                {
-                    <span class="badge bg-primary-lt">Waiting on you</span>
-                }
+                   be read without opening any of them, and under the column that orders by it. *@
+                <div class="col-6 col-md-3 d-flex align-items-center justify-content-md-end">
+                    @if (item.HasDecided)
+                    {
+                        <span class="badge bg-secondary-lt text-nowrap">You decided: @Humanise(item.Me!.Decision)</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-primary-lt text-nowrap">Waiting on you</span>
+                    }
+                </div>
+                </div>
             </div>
 
             @* The ones still owed start open, the ones already answered start closed: a member

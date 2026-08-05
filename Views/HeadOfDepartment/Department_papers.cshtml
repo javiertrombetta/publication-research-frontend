@@ -118,10 +118,12 @@ else
         @foreach (var publication in Model.Publications)
         {
             <div class="card mb-3">
-                <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+                <div class="card-header rpms-collapse-header"
                      data-rpms-header-toggle="#paper-@publication.Id"
                      role="button" tabindex="0"
                      aria-expanded="true" aria-controls="paper-@publication.Id">
+<div class="row g-2 align-items-center w-100">
+                    <div class="col-12 col-md-6 d-flex align-items-center gap-2">
                     <span class="rpms-collapse-icon" aria-hidden="true">
                         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
                              viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
@@ -133,12 +135,22 @@ else
 
                     <div class="me-auto">
                         <h3 class="card-title m-0">@publication.DisplayTitle</h3>
-                        <div class="text-secondary small">@publication.StudentName</div>
+                    </div>
                     </div>
 
-                    <span class="badge @StatusBadge(publication.DisplayStatus)">
-                        @Humanise(publication.DisplayStatus)
-                    </span>
+                    @* The student and the status in the columns that order by them. Both were in
+                       the card already, one as small print under the title and one as a badge on
+                       the far right, so neither heading stood over what it ordered. *@
+                    <div class="col-6 col-md-3 text-secondary small">
+                        <span class="text-nowrap">@publication.StudentName</span>
+                    </div>
+
+                    <div class="col-6 col-md-3 d-flex align-items-center justify-content-md-end">
+                        <span class="badge text-nowrap @StatusBadge(publication.DisplayStatus)">
+                            @Humanise(publication.DisplayStatus)
+                        </span>
+                    </div>
+                </div>
                 </div>
 
                 <div class="card-body collapse show" id="paper-@publication.Id"

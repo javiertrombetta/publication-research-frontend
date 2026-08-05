@@ -536,6 +536,22 @@ window.rpmsToast = (function () {
         refreshCounts();
     });
 
+    // The other side of the same coin: everything except what came back. A coordinator who has
+    // just dealt with the returned ones wants the rest, and picking them out by hand on a page of
+    // twenty is the work this screen exists to save.
+    document.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-rpms-check-not-returned]');
+        if (!button) return;
+
+        var name = button.getAttribute('data-rpms-check-not-returned');
+
+        Array.prototype.forEach.call(boxes(name, button.getAttribute('data-rpms-scope')), function (box) {
+            box.checked = box.getAttribute('data-rpms-returned') !== 'true';
+        });
+
+        refreshCounts();
+    });
+
     // Any individual tick has to move the counter too, or it goes stale the moment somebody
     // adjusts the selection by hand after using a button.
     document.addEventListener('change', function (event) {
@@ -1243,4 +1259,45 @@ document.addEventListener('submit', function (event) {
         select.form.submit();
     });
 
+})();
+
+
+// Which groups of a queue are on screen: all of them, only the ones that came back, or everything
+// except those.
+//
+// One button rather than three, because the three are one choice and only one can be true at a
+// time. Three buttons would leave somebody working out which they had last pressed; a single
+// button that says what is being shown always describes the list underneath it.
+//
+// The label is the state, not the next action. A control that says "Show only the returned" while
+// showing everything is telling you about a click you have not made yet, and reads as a claim
+// about what is on screen.
+//
+// Declared in the markup: the button names the group of cards it filters
+// (data-rpms-show-cycle="student-groups"), and each card header carries whether it is one that came
+// back (data-rpms-returned-group="true"). The words are in the markup too, so the view owns them.
+(function () {
+    document.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-rpms-show-cycle]');
+        if (!button) return;
+
+        var labels = (button.getAttribute('data-rpms-show-labels') || '').split('|');
+        if (labels.length < 2) return;
+
+        var step = (parseInt(button.getAttribute('data-rpms-show-state') || '0', 10) + 1) % labels.length;
+        button.setAttribute('data-rpms-show-state', String(step));
+        button.textContent = labels[step];
+
+        // 0 is everything, 1 only what came back, 2 everything else. Read off the position rather
+        // than the words, so the wording can change without the behaviour following it.
+        document.querySelectorAll('[data-rpms-returned-group]').forEach(function (header) {
+            var returned = header.getAttribute('data-rpms-returned-group') === 'true';
+            var show = step === 0 || (step === 1 ? returned : !returned);
+
+            // The whole card, not the header: hiding the header alone would leave its proposals
+            // sitting on the page under nothing.
+            var card = header.closest('.card') || header;
+            card.classList.toggle('d-none', !show);
+        });
+    });
 })();

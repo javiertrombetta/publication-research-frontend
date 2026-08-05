@@ -110,10 +110,12 @@ else
         var isRuling = SupervisorEthicsQueueViewModel.IsRuling(item);
 
         <div class="card mb-3">
-            <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+            <div class="card-header rpms-collapse-header"
                  data-rpms-header-toggle="#ethics-@item.Id"
                  role="button" tabindex="0"
                  aria-expanded="true" aria-controls="ethics-@item.Id">
+                <div class="row g-2 align-items-center w-100">
+                <div class="col-12 col-md-6 d-flex align-items-center gap-2">
                 <span class="rpms-collapse-icon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
                          viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
@@ -127,6 +129,15 @@ else
                     <h3 class="card-title m-0">@item.DisplayTitle</h3>
                     <div class="text-secondary small">@item.StudentName</div>
                 </div>
+                </div>
+
+                @* The date the listing orders by. Without it the heading above ordered by
+                   something the row never showed, which reads as a fault rather than an order. *@
+                <div class="col-6 col-md-3 text-secondary small">
+                    <span class="text-nowrap" title="The date this publication was opened">@item.CreatedAt.ToLocalTime().ToString("d MMM yyyy")</span>
+                </div>
+
+                <div class="col-6 col-md-3 d-flex flex-wrap align-items-center justify-content-md-end gap-2">
 
                 @* Which of the two decisions this is, readable with the card shut, because the two
                    are different work and a supervisor deciding what to open next is choosing
@@ -134,6 +145,8 @@ else
                 <span class="badge @(isRuling ? "bg-primary-lt" : "bg-azure-lt")">
                     @(isRuling ? "Needs your ruling" : "Documents to check")
                 </span>
+                </div>
+                </div>
             </div>
 
             <div class="card-body collapse show" id="ethics-@item.Id"

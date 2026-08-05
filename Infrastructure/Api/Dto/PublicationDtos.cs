@@ -17,7 +17,13 @@ public record PublicationDto(
     /// the queues that ask somebody else to judge a paper, which let them search and order by the
     /// student and so have to be able to name one.
     /// </summary>
-    string? StudentName = null);
+    string? StudentName = null,
+    /// <summary>
+    /// When the paper last changed. The reviewer queues order by it and call it the submission
+    /// date, which for a paper under review is what it is: submitting, resubmitting and every
+    /// revision move it.
+    /// </summary>
+    DateTime? UpdatedAt = null);
 
 public record UpdatePublicationMetadataRequestDto(
     string Title,
