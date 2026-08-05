@@ -33,8 +33,11 @@ namespace ResearchPublicationManagementSystem.Controllers
             {
                 Search = search,
                 // The default, spelled out rather than left null, so the heading in force is the
-                // one marked as active. Oldest first, as on every other queue.
-                Sort = sort ?? "started",
+                // one marked as active. Whose turn it is, first: the whole reason for opening this screen is to find
+                // what is waiting on you, and sorted by date those rows were scattered down a list
+                // that starts with publications nobody is waiting on. Ascending, because the API
+                // ranks this column the way the pipeline runs and puts "nobody" last.
+                Sort = sort ?? "waiting",
                 Descending = desc
             };
 
@@ -43,7 +46,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             // is what is left to do; leaving them in pushed the live ones onto later pages.
             var containers = await containersApi.GetAllAsync(
                 coordinatorId: CurrentUserId(), status: "InProgress", page: page,
-                sort: sort ?? "started", descending: desc, search: search);
+                sort: sort ?? "waiting", descending: desc, search: search);
             if (!containers.Success)
             {
                 TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your publications right now.";
