@@ -56,6 +56,14 @@ public class PublicationsApiClient(HttpClient httpClient) : ApiClientBase(httpCl
     public Task<ApiResult<object?>> SubmitAsync(Guid publicationId, CancellationToken ct = default) =>
         PostAsync<object?>($"api/publications/{publicationId}/submit", ct);
 
+    /// <summary>
+    /// Admin-only: takes a published paper back out of the public catalogue. Its own call rather
+    /// than a publish decision of "no": declining is the author's answer before it ever appeared,
+    /// and this is an administrator removing one that is already out.
+    /// </summary>
+    public Task<ApiResult<object?>> UnpublishAsync(Guid publicationId, CommentsRequestDto request, CancellationToken ct = default) =>
+        PostJsonAsync<object?>($"api/publications/{publicationId}/unpublish", request, ct);
+
     public Task<ApiResult<object?>> PublishDecisionAsync(Guid publicationId, PublishDecisionRequestDto request, CancellationToken ct = default) =>
         PostJsonAsync<object?>($"api/publications/{publicationId}/publish", request, ct);
 

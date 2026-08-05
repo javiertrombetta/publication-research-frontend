@@ -236,9 +236,15 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
     public record UpdateDeadlineSettingsRequestDto(int SupervisorResponseDays, int EthicsReviewDays, int CommitteeReviewDays);
 
     /// <summary>How many research proposals a student submits in one round.</summary>
-    public record ProposalSettingsDto(int MinimumPerRound, int MaximumPerRound);
+    public record ProposalSettingsDto(
+        int MinimumPerRound,
+        int MaximumPerRound,
+        bool SupervisorsExpressInterest = true);
 
-    public record UpdateProposalSettingsRequestDto(int MinimumPerRound, int MaximumPerRound);
+    public record UpdateProposalSettingsRequestDto(
+        int MinimumPerRound,
+        int MaximumPerRound,
+        bool SupervisorsExpressInterest = true);
 
     /// <summary>
     /// Which optional steps of the pipeline this institution runs. Two switches rather than one,

@@ -1229,4 +1229,18 @@ document.addEventListener('submit', function (event) {
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape' && lifted) drop(false);
     });
+
+    // A menu that navigates when a choice is made, with its own submit button as the fallback for
+    // anyone without scripting. The button is hidden here rather than in the markup, so it is
+    // still there when this never runs.
+    document.querySelectorAll('[data-rpms-hide-with-script]').forEach(function (el) {
+        el.hidden = true;
+    });
+
+    document.addEventListener('change', function (event) {
+        var select = event.target.closest('[data-rpms-go-on-change]');
+        if (!select || !select.form) return;
+        select.form.submit();
+    });
+
 })();

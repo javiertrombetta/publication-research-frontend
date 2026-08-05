@@ -49,6 +49,19 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
     /// Admin-only: sets which step of which stage a publication waits at, so whoever should act
     /// next actually sees it.
     /// </summary>
+    /// <summary>Every publication whose paper is at the status named.</summary>
+    public Task<ApiResult<PagedResultDto<PublicationContainerDto>>> GetByPaperStatusAsync(
+        string paperStatus, int page = 1, string? search = null, CancellationToken ct = default)
+    {
+        var parameters = Page(page, Paging.AsConfigured);
+        parameters["paperStatus"] = paperStatus;
+        parameters["search"] = search;
+
+        return GetAsync<PagedResultDto<PublicationContainerDto>>(
+            QueryHelpers.AddQueryString("api/containers",
+                parameters.Where(p => !string.IsNullOrWhiteSpace(p.Value))), ct);
+    }
+
     public Task<ApiResult<PublicationContainerDto>> MoveAsync(
         Guid id, MoveContainerRequestDto request, CancellationToken ct = default) =>
         PutJsonAsync<PublicationContainerDto>($"api/containers/{id}/position", request, ct);

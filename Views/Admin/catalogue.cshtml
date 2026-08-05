@@ -1,0 +1,154 @@
+@model CatalogueAdminViewModel
+@inject ResearchPublicationManagementSystem.Services.IDecisionComments Decisions
+@{
+    ViewData["Title"] = "Published papers";
+
+    var withdrawNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.PaperWithdrawFromCatalogue);
+    var publishNeedsWhy = await Decisions.IsRequiredAsync(DecisionPoints.PaperPublishOnBehalf);
+}
+
+<div class="mb-4">
+    <h1 class="page-title mb-1">Published papers</h1>
+    <div class="text-secondary">
+        What the world can see, and what could be there. Publishing is the author's decision and
+        stays theirs; this is for the paper whose author has gone, and for taking one back out,
+        which only an administrator can do.
+    </div>
+</div>
+
+@if (Model.LoadFailed)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-2">We couldn't load the catalogue</h3>
+            <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
+            <a asp-action="catalogue" class="btn btn-primary">Retry</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-body py-3">
+            <form method="get" asp-action="catalogue" class="row g-2 align-items-center">
+                <div class="col-12 col-md">
+                    <input type="search" name="search" value="@Model.Search" class="form-control"
+                           placeholder="Search by student or title" aria-label="Search" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </div>
+                <div class="col-auto">
+                    <a asp-action="catalogue" class="btn btn-outline-secondary">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h3 mb-2">In the catalogue</h2>
+            <p class="text-secondary">
+                Withdrawing leaves the paper accepted: the judgement it earned stands, and only its
+                place in the catalogue changes. The author can publish it again themselves.
+            </p>
+
+            @if (Model.Published.Count == 0)
+            {
+                <p class="text-secondary m-0">Nothing is published yet.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table card-table table-vcenter">
+                        <thead>
+                            <tr><th>Publication</th><th>Student</th><th>Why you are withdrawing it</th><th class="w-1"></th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var publication in Model.Published)
+                            {
+                                <tr>
+                                    <td>@publication.DisplayTitle</td>
+                                    <td class="text-nowrap">@publication.StudentName</td>
+                                    <td>
+                                        <form asp-action="WithdrawFromCatalogue" method="post" class="d-flex gap-2" id="withdraw-@publication.Id">
+                                            <input type="hidden" name="publicationId" value="@publication.PaperId" />
+                                            <input type="hidden" name="search" value="@Model.Search" />
+                                            <input type="text" name="comments" class="form-control form-control-sm"
+                                                   id="withdraw-comments-@publication.Id"
+                                                   placeholder="@DecisionButton.Hint(withdrawNeedsWhy)" />
+                                        </form>
+                                    </td>
+                                    <td class="text-end">
+                                        <button type="submit" form="withdraw-@publication.Id" class="btn btn-sm btn-outline-danger"
+                                                @DecisionButton.Attributes(withdrawNeedsWhy, $"withdraw-comments-{publication.Id}",
+                                                    "Take this paper out of the public catalogue? It stays accepted, and the author can publish it again.",
+                                                    "Say why it is being withdrawn. It stays on the publication's history.")>
+                                            Withdraw
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (Model.Pager is not null)
+    {
+        <partial name="_Pager" model="Model.Pager" />
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <h2 class="h3 mb-2">Accepted, not published</h2>
+            <p class="text-secondary">
+                These earned their place and their author has not put them in the catalogue. Doing
+                it for them is an administrator's last resort, and the history records who did it.
+            </p>
+
+            @if (Model.Unpublished.Count == 0)
+            {
+                <p class="text-secondary m-0">Every accepted paper is already in the catalogue.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table card-table table-vcenter">
+                        <thead>
+                            <tr><th>Publication</th><th>Student</th><th>Why you are publishing it</th><th class="w-1"></th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var publication in Model.Unpublished)
+                            {
+                                <tr>
+                                    <td>@publication.DisplayTitle</td>
+                                    <td class="text-nowrap">@publication.StudentName</td>
+                                    <td>
+                                        <form asp-action="PublishOnBehalf" method="post" class="d-flex gap-2" id="publish-@publication.Id">
+                                            <input type="hidden" name="publicationId" value="@publication.PaperId" />
+                                            <input type="hidden" name="search" value="@Model.Search" />
+                                            <input type="text" name="comments" class="form-control form-control-sm"
+                                                   id="publish-comments-@publication.Id"
+                                                   placeholder="@DecisionButton.Hint(publishNeedsWhy)" />
+                                        </form>
+                                    </td>
+                                    <td class="text-end">
+                                        <button type="submit" form="publish-@publication.Id" class="btn btn-sm btn-outline-primary"
+                                                @DecisionButton.Attributes(publishNeedsWhy, $"publish-comments-{publication.Id}",
+                                                    "Publish this paper on the author's behalf? It appears in the public catalogue under their name.",
+                                                    "Say why you are publishing it for them. It stays on the publication's history.")>
+                                            Publish
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+}

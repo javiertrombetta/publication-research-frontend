@@ -218,6 +218,23 @@ namespace ResearchPublicationManagementSystem.Models
     /// Every step waits on somebody named on the publication, so a person who leaves or falls ill
     /// stops it. This is where an administrator names somebody else.
     /// </summary>
+    /// <summary>
+    /// What is in the public catalogue and what could be. Two lists rather than one, because the
+    /// decision differs: taking a paper out of the catalogue, and putting one in on the author's
+    /// behalf where they have not done it themselves.
+    /// </summary>
+    public class CatalogueAdminViewModel
+    {
+        public IReadOnlyList<PublicationContainerDto> Published { get; set; } = [];
+        public IReadOnlyList<PublicationContainerDto> Unpublished { get; set; } = [];
+
+        public PagerViewModel? Pager { get; set; }
+        public string? Search { get; set; }
+        public bool LoadFailed { get; set; }
+
+        public Dictionary<string, string?> RouteValues() => new() { ["search"] = Search };
+    }
+
     public class AssignmentsViewModel
     {
         public IReadOnlyList<PublicationContainerDto> Publications { get; set; } = [];

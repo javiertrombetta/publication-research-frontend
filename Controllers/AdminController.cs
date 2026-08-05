@@ -364,6 +364,66 @@ namespace ResearchPublicationManagementSystem.Controllers
             return View(model);
         }
 
+        // ---------- What is in the public catalogue ----------
+
+        /// <summary>
+        /// Which accepted papers are in the public catalogue and which are not, with the controls
+        /// to move one either way.
+        ///
+        /// Publishing is the author's decision, and it stays theirs: this is here for the paper
+        /// whose author has left, and for taking one out again, which only an administrator can
+        /// do. Both cost a reason.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> catalogue(int page = 1, string? search = null)
+        {
+            var model = new CatalogueAdminViewModel { Search = search };
+
+            var published = await containersApi.GetByPaperStatusAsync("Published", page, search);
+            var accepted = await containersApi.GetByPaperStatusAsync("Accepted", 1, search);
+
+            if (!published.Success || !accepted.Success)
+            {
+                TempData["ErrorMessage"] =
+                    published.ErrorMessage ?? accepted.ErrorMessage ?? "Could not load the catalogue right now.";
+                model.LoadFailed = true;
+                return View(model);
+            }
+
+            model.Published = published.Data?.Items ?? [];
+            model.Unpublished = accepted.Data?.Items ?? [];
+            model.Pager = Paging.PagerFor(published.Data, "Admin", nameof(catalogue), model.RouteValues());
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> WithdrawFromCatalogue(Guid publicationId, string? comments, string? search)
+        {
+            var result = await publicationsApi.UnpublishAsync(publicationId, new CommentsRequestDto(comments ?? string.Empty));
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? "Withdrawn. The paper stays accepted and is no longer in the public catalogue."
+                : result.ErrorMessage ?? "Could not withdraw that paper.";
+
+            return RedirectToAction(nameof(catalogue), new { search });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PublishOnBehalf(Guid publicationId, string? comments, string? search)
+        {
+            var result = await publicationsApi.PublishDecisionAsync(publicationId,
+                new PublishDecisionRequestDto(true, comments ?? string.Empty));
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? "Published. It is in the public catalogue, and the history records that you did it."
+                : result.ErrorMessage ?? "Could not publish that paper.";
+
+            return RedirectToAction(nameof(catalogue), new { search });
+        }
+
         // ---------- Correcting what a publication holds, and where it stands ----------
 
         /// <summary>

@@ -414,13 +414,16 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveProposals(int minimumPerRound, int maximumPerRound)
+        public async Task<IActionResult> SaveProposals(
+            int minimumPerRound, int maximumPerRound, bool supervisorsExpressInterest)
         {
             var result = await settingsApi.UpdateProposalsAsync(
-                new UpdateProposalSettingsRequestDto(minimumPerRound, maximumPerRound));
+                new UpdateProposalSettingsRequestDto(minimumPerRound, maximumPerRound, supervisorsExpressInterest));
 
-            return Done(result.Success, "proposals", result.ErrorMessage,
-                "Saved. It applies to rounds asked for again as well as to first ones.");
+            return Done(result.Success, "pipeline", result.ErrorMessage,
+                supervisorsExpressInterest
+                    ? "Saved. Proposals go out to supervisors before the coordinator appoints one."
+                    : "Saved. The coordinator now appoints a supervisor directly, without sending the proposals out.");
         }
 
         // ---------- Ethics workflow ----------
