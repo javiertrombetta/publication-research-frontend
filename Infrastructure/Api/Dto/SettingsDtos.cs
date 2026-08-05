@@ -188,8 +188,7 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         string? ItSupportEmail,
         string? ResearchEnquiriesEmail,
         string? PrivacyPolicyUrl,
-        string? CurrentAcademicCycle,
-        /// <summary>
+            /// <summary>
         /// The institution's own website, where somebody who cannot be given an enquiries address
         /// can find how to get in touch.
         /// </summary>
@@ -225,15 +224,29 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         string? ItSupportEmail,
         string? ResearchEnquiriesEmail,
         string? PrivacyPolicyUrl,
-        string? CurrentAcademicCycle,
-        string? WebsiteUrl = null,
+            string? WebsiteUrl = null,
         int RowsPerPage = Common.Paging.DefaultRowsPerPage,
         bool ItSupportShownToVisitors = false);
 
-    /// <summary>How long each stage should take. Zero means nothing is ever reported late.</summary>
-    public record DeadlineSettingsDto(int SupervisorResponseDays, int EthicsReviewDays, int CommitteeReviewDays);
+    /// <summary>
+    /// How long each stage should take, and how far ahead of each the person who owes the work is
+    /// reminded. Zero means nothing is ever reported late, or nobody is ever reminded.
+    /// </summary>
+    public record DeadlineSettingsDto(
+        int SupervisorResponseDays,
+        int EthicsReviewDays,
+        int CommitteeReviewDays,
+        int SupervisorResponseWarningDays = 3,
+        int EthicsReviewWarningDays = 3,
+        int CommitteeReviewWarningDays = 5);
 
-    public record UpdateDeadlineSettingsRequestDto(int SupervisorResponseDays, int EthicsReviewDays, int CommitteeReviewDays);
+    public record UpdateDeadlineSettingsRequestDto(
+        int SupervisorResponseDays,
+        int EthicsReviewDays,
+        int CommitteeReviewDays,
+        int SupervisorResponseWarningDays,
+        int EthicsReviewWarningDays,
+        int CommitteeReviewWarningDays);
 
     /// <summary>How many research proposals a student submits in one round.</summary>
     public record ProposalSettingsDto(

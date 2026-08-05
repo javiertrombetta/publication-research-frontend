@@ -695,6 +695,13 @@
                             supervisor from responding would only strand the student waiting.
                             Use 0 where nothing should ever be reported late.
                         </p>
+                        <p class="text-secondary">
+                            Each one also carries a reminder, sent that many days before the
+                            deadline to whoever still owes the work. It has to be shorter than the
+                            deadline it belongs to, or it would be sent before the work arrived.
+                            Use 0 to send none. Reminders go to the person's notifications, and by
+                            email as well wherever email is switched on.
+                        </p>
 
                         <form asp-action="SaveDeadlines" method="post" class="row g-3">
                             <div class="col-12 col-sm-4">
@@ -704,7 +711,10 @@
                                            value="@Model.Deadlines.SupervisorResponseDays" class="form-control" required />
                                     <span class="input-group-text">days</span>
                                 </div>
-                                <small class="form-hint">From a proposal being sent to them.</small>
+                                <small class="form-hint">
+                                    From a proposal being sent to them. When it passes, proposals
+                                    nobody offered to supervise go back to the coordinator.
+                                </small>
                             </div>
                             <div class="col-12 col-sm-4">
                                 <label class="form-label" for="ethics-days">Ethics review</label>
@@ -713,7 +723,10 @@
                                            value="@Model.Deadlines.EthicsReviewDays" class="form-control" required />
                                     <span class="input-group-text">days</span>
                                 </div>
-                                <small class="form-hint">From the documentation being submitted.</small>
+                                <small class="form-hint">
+                                    From the review landing on somebody. When it passes, the
+                                    coordinator is told the time has gone and who has not acted.
+                                </small>
                             </div>
                             <div class="col-12 col-sm-4">
                                 <label class="form-label" for="committee-days">Committee review</label>
@@ -722,8 +735,40 @@
                                            value="@Model.Deadlines.CommitteeReviewDays" class="form-control" required />
                                     <span class="input-group-text">days</span>
                                 </div>
-                                <small class="form-hint">From the committee being assigned.</small>
+                                <small class="form-hint">
+                                    From the committee being assigned. When it passes, the
+                                    coordinator is told which members have still not decided.
+                                </small>
                             </div>
+
+                            <div class="col-12 col-sm-4">
+                                <label class="form-label" for="supervisor-warning-days">Remind the supervisor</label>
+                                <div class="input-group">
+                                    <input id="supervisor-warning-days" name="supervisorResponseWarningDays"
+                                           type="number" min="0" max="365"
+                                           value="@Model.Deadlines.SupervisorResponseWarningDays" class="form-control" required />
+                                    <span class="input-group-text">days before</span>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-4">
+                                <label class="form-label" for="ethics-warning-days">Remind whoever owes the review</label>
+                                <div class="input-group">
+                                    <input id="ethics-warning-days" name="ethicsReviewWarningDays"
+                                           type="number" min="0" max="365"
+                                           value="@Model.Deadlines.EthicsReviewWarningDays" class="form-control" required />
+                                    <span class="input-group-text">days before</span>
+                                </div>
+                            </div>
+                            <div class="col-12 col-sm-4">
+                                <label class="form-label" for="committee-warning-days">Remind the committee</label>
+                                <div class="input-group">
+                                    <input id="committee-warning-days" name="committeeReviewWarningDays"
+                                           type="number" min="0" max="365"
+                                           value="@Model.Deadlines.CommitteeReviewWarningDays" class="form-control" required />
+                                    <span class="input-group-text">days before</span>
+                                </div>
+                            </div>
+
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Save deadlines</button>
                             </div>
@@ -1456,27 +1501,6 @@
                                 <small class="form-hint">
                                     Where a member of the public is sent for contact details when no
                                     research enquiries address has been published.
-                                </small>
-                            </div>
-
-                            <div class="col-12 col-sm-6">
-                                <label class="form-label" for="academic-cycle">Current academic cycle</label>
-                                <input id="academic-cycle" name="currentAcademicCycle"
-                                       value="@Model.Institution.CurrentAcademicCycle" class="form-control"
-                                       placeholder="2026 Semester 2" />
-                                <small class="form-hint">
-                                    What a proposal deferred to the next cycle is being deferred from.
-                                </small>
-                            </div>
-
-                            <div class="col-12 col-sm-6">
-                                <label class="form-label" for="rows-per-page">Rows per page</label>
-                                <input id="rows-per-page" name="rowsPerPage" type="number"
-                                       value="@Model.Institution.RowsPerPage" class="form-control"
-                                       min="5" max="100" step="1" required />
-                                <small class="form-hint">
-                                    How many rows every listing on the site shows before it pages.
-                                    Between 5 and 100.
                                 </small>
                             </div>
 

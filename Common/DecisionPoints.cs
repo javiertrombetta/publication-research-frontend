@@ -16,7 +16,6 @@ namespace ResearchPublicationManagementSystem.Common
         public const string ProposalCoordinatorAssign = "proposal.coordinator-assign";
         public const string ProposalCoordinatorDiscard = "proposal.coordinator-discard";
         public const string ProposalRequestNewRound = "proposal.request-new-round";
-        public const string ProposalDeferToNextCycle = "proposal.defer-to-next-cycle";
 
         public const string EthicsSupervisorRuling = "ethics.supervisor-ruling";
         public const string EthicsSupervisorDocumentsAccept = "ethics.supervisor-documents-accept";
