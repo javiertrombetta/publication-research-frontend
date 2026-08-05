@@ -11,8 +11,9 @@ public class ProposalsApiClient(HttpClient httpClient) : ApiClientBase(httpClien
     public Task<ApiResult<ProposalDto>> UpdateAsync(Guid proposalId, SaveProposalRequestDto request, CancellationToken ct = default) =>
         PutJsonAsync<ProposalDto>($"api/proposals/{proposalId}", request, ct);
 
-    public Task<ApiResult<IReadOnlyList<ProposalDto>>> GetByContainerAsync(Guid containerId, CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<ProposalDto>>($"api/containers/{containerId}/proposals", ct);
+    public Task<ApiResult<IReadOnlyList<ProposalDto>>> GetByContainerAsync(
+        Guid containerId, string? sort = null, bool descending = false, CancellationToken ct = default) =>
+        GetAsync<IReadOnlyList<ProposalDto>>($"api/containers/{containerId}/proposals{Sort(sort, descending)}", ct);
 
     public Task<ApiResult<object?>> FinishSubmissionAsync(Guid containerId, CancellationToken ct = default) =>
         PostAsync<object?>($"api/containers/{containerId}/proposals/finish-submission", ct);

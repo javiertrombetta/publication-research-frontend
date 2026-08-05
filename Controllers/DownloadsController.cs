@@ -29,7 +29,7 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             if (resolved is null)
             {
-                var versions = await publicationsApi.GetVersionsAsync(publicationId, cancellationToken);
+                var versions = await publicationsApi.GetVersionsAsync(publicationId, ct: cancellationToken);
                 resolved = versions.Data?
                     .OrderByDescending(v => v.VersionNumber)
                     .Select(v => (Guid?)v.Id)

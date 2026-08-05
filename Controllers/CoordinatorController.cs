@@ -100,7 +100,11 @@ namespace ResearchPublicationManagementSystem.Controllers
         [HttpGet]
         public async Task<IActionResult> Publication(
             Guid id, string? tab = null,
-            int historyPage = 1, string? historySearch = null, string? historySort = null, bool historyDesc = false)
+            int historyPage = 1, string? historySearch = null, string? historySort = null, bool historyDesc = false,
+            string? proposalsSort = null, bool proposalsDesc = false,
+            string? documentsSort = null, bool documentsDesc = false,
+            string? versionsSort = null, bool versionsDesc = false,
+            string? reviewsSort = null, bool reviewsDesc = false)
         {
             var container = await containersApi.GetByIdAsync(id);
             if (!container.Success || container.Data is null)
@@ -116,10 +120,18 @@ namespace ResearchPublicationManagementSystem.Controllers
                 Controller = "Coordinator",
                 HistorySearch = historySearch,
                 HistorySort = historySort,
-                HistoryDescending = historyDesc
+                HistoryDescending = historyDesc,
+                ProposalsSort = proposalsSort,
+                ProposalsDescending = proposalsDesc,
+                DocumentsSort = documentsSort,
+                DocumentsDescending = documentsDesc,
+                VersionsSort = versionsSort,
+                VersionsDescending = versionsDesc,
+                ReviewsSort = reviewsSort,
+                ReviewsDescending = reviewsDesc
             };
 
-            var proposals = await proposalsApi.GetByContainerAsync(id);
+            var proposals = await proposalsApi.GetByContainerAsync(id, proposalsSort, proposalsDesc);
             model.Proposals = proposals.Data ?? [];
 
             if (container.Data.CurrentPipeline >= PipelineStage.EthicsApproval)
@@ -127,7 +139,7 @@ namespace ResearchPublicationManagementSystem.Controllers
                 var ethics = await ethicsApi.GetApprovalAsync(id);
                 if (ethics.Success) model.EthicsApproval = ethics.Data;
 
-                var documents = await ethicsApi.GetDocumentsAsync(id);
+                var documents = await ethicsApi.GetDocumentsAsync(id, documentsSort, documentsDesc);
                 model.EthicsDocuments = documents.Data ?? [];
             }
 
@@ -138,10 +150,10 @@ namespace ResearchPublicationManagementSystem.Controllers
 
                 if (model.Publication is { } written)
                 {
-                    var versions = await publicationsApi.GetVersionsAsync(written.Id);
+                    var versions = await publicationsApi.GetVersionsAsync(written.Id, versionsSort, versionsDesc);
                     model.PaperVersions = versions.Data ?? [];
 
-                    var reviews = await publicationsApi.GetReviewsAsync(written.Id);
+                    var reviews = await publicationsApi.GetReviewsAsync(written.Id, reviewsSort, reviewsDesc);
                     model.Reviews = reviews.Data ?? [];
                 }
             }

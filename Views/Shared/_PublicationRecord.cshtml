@@ -173,13 +173,17 @@ else
             }
             else
             {
+                var byTitle = Model.ProposalsColumn("title", "Title");
+                var byProposalStatus = Model.ProposalsColumn("status", "Status");
+                var bySubmitted = Model.ProposalsColumn("submitted", "Submitted", descendingFirst: true);
+
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter">
                         <thead>
                             <tr>
-                                <th scope="col">Title</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Submitted</th>
+                                <th scope="col"><partial name="_SortableHeader" model="byTitle" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byProposalStatus" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="bySubmitted" /></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -248,14 +252,19 @@ else
                 }
                 else
                 {
+                    var byDocument = Model.DocumentsColumn("document", "Document");
+                    var byDocumentFile = Model.DocumentsColumn("file", "File");
+                    var byDocumentVersion = Model.DocumentsColumn("version", "Version", descendingFirst: true);
+                    var byDocumentStatus = Model.DocumentsColumn("status", "Status");
+
                     <div class="table-responsive">
                         <table class="table card-table table-vcenter">
                             <thead>
                                 <tr>
-                                    <th scope="col">Document</th>
-                                    <th scope="col">File</th>
-                                    <th scope="col">Version</th>
-                                    <th scope="col">Status</th>
+                                    <th scope="col"><partial name="_SortableHeader" model="byDocument" /></th>
+                                    <th scope="col"><partial name="_SortableHeader" model="byDocumentFile" /></th>
+                                    <th scope="col"><partial name="_SortableHeader" model="byDocumentVersion" /></th>
+                                    <th scope="col"><partial name="_SortableHeader" model="byDocumentStatus" /></th>
                                     <th scope="col" class="w-1"></th>
                                 </tr>
                             </thead>
@@ -308,13 +317,17 @@ else
                 }
                 else
                 {
+                    var byVersion = Model.VersionsColumn("version", "Version", descendingFirst: true);
+                    var byVersionFile = Model.VersionsColumn("file", "File");
+                    var byUploaded = Model.VersionsColumn("uploaded", "Uploaded", descendingFirst: true);
+
                     <div class="table-responsive">
                         <table class="table card-table table-vcenter">
                             <thead>
                                 <tr>
-                                    <th scope="col">Version</th>
-                                    <th scope="col">File</th>
-                                    <th scope="col">Uploaded</th>
+                                    <th scope="col"><partial name="_SortableHeader" model="byVersion" /></th>
+                                    <th scope="col"><partial name="_SortableHeader" model="byVersionFile" /></th>
+                                    <th scope="col"><partial name="_SortableHeader" model="byUploaded" /></th>
                                     <th scope="col" class="w-1"></th>
                                 </tr>
                             </thead>
@@ -348,15 +361,23 @@ else
         <div class="card">
             <div class="card-body">
                 <h2 class="h3 mb-3">What the committee said</h2>
+                @{
+                    var byReviewer = Model.ReviewsColumn("reviewer", "Reviewer");
+                    var bySeat = Model.ReviewsColumn("seat", "Seat");
+                    var byDecision = Model.ReviewsColumn("decision", "Decision");
+                    var byReviewComment = Model.ReviewsColumn("comments", "Comments");
+                    var byWhenReviewed = Model.ReviewsColumn("when", "When", descendingFirst: true);
+                }
+
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter">
                         <thead>
                             <tr>
-                                <th scope="col">Reviewer</th>
-                                <th scope="col">Seat</th>
-                                <th scope="col">Decision</th>
-                                <th scope="col">Comments</th>
-                                <th scope="col">When</th>
+                                <th scope="col"><partial name="_SortableHeader" model="byReviewer" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="bySeat" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byDecision" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byReviewComment" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byWhenReviewed" /></th>
                             </tr>
                         </thead>
                         <tbody>

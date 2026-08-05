@@ -63,8 +63,9 @@ public class EthicsApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
         GetFileAsync($"api/containers/{containerId}/ethics/documents/{documentId}/download", ct);
 
 
-    public Task<ApiResult<IReadOnlyList<EthicsDocumentDto>>> GetDocumentsAsync(Guid containerId, CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<EthicsDocumentDto>>($"api/containers/{containerId}/ethics/documents", ct);
+    public Task<ApiResult<IReadOnlyList<EthicsDocumentDto>>> GetDocumentsAsync(
+        Guid containerId, string? sort = null, bool descending = false, CancellationToken ct = default) =>
+        GetAsync<IReadOnlyList<EthicsDocumentDto>>($"api/containers/{containerId}/ethics/documents{Sort(sort, descending)}", ct);
 
     // ---------- Coordinator ----------
 

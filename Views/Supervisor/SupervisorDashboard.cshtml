@@ -23,6 +23,11 @@
 
         if (c.PaperAwaitingRole == RoleNames.Supervisor) return ("publication_review", "Review the paper");
 
+        // A proposal sent to them and not yet answered. This listing holds what they supervise and
+        // what is waiting on their reply, and nothing they supervise is still at the proposal
+        // stage, so a row here at that stage is an invitation of theirs.
+        if (c.CurrentPipeline == PipelineStage.ResearchProposals) return ("proposal_review", "Read the proposals");
+
         return null;
     }
 }
@@ -197,12 +202,12 @@ else
                         @* Declared once so the columns do not resize themselves around whichever
                            ten rows a sort happens to bring onto the page. *@
                         <colgroup>
-                            <col style="width: 15%" />
-                            <col style="width: 29%" />
-                            <col style="width: 14%" />
-                            <col style="width: 11%" />
-                            <col style="width: 15%" />
-                            <col style="width: 16%" />
+                            <col style="width: 13%" />
+                            <col style="width: 25%" />
+                            <col style="width: 13%" />
+                            <col style="width: 10%" />
+                            <col style="width: 19%" />
+                            <col style="width: 20%" />
                         </colgroup>
                         <thead>
                             <tr>
