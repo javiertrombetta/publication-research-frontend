@@ -189,16 +189,20 @@ else
                         // Ascending brings the ones needing this supervisor to the top, which is
                         // the question the column answers.
                         var byWaiting = Model.Column("waiting", "Waiting on you");
+                        // Newest first when picked up: this column is clicked to find what has
+                        // gone quiet.
+                        var byActivity = Model.Column("activity", "Last activity", descendingFirst: true);
                     }
                     <table class="table card-table table-vcenter rpms-table-stable">
                         @* Declared once so the columns do not resize themselves around whichever
                            ten rows a sort happens to bring onto the page. *@
                         <colgroup>
-                            <col style="width: 18%" />
-                            <col style="width: 36%" />
+                            <col style="width: 15%" />
+                            <col style="width: 29%" />
+                            <col style="width: 14%" />
+                            <col style="width: 11%" />
+                            <col style="width: 15%" />
                             <col style="width: 16%" />
-                            <col style="width: 13%" />
-                            <col style="width: 17%" />
                         </colgroup>
                         <thead>
                             <tr>
@@ -206,6 +210,7 @@ else
                                 <th scope="col"><partial name="_SortableHeader" model="byStarted" /></th>
                                 <th scope="col"><partial name="_SortableHeader" model="byStage" /></th>
                                 <th scope="col"><partial name="_SortableHeader" model="byStatus" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byActivity" /></th>
                                 <th scope="col"><partial name="_SortableHeader" model="byWaiting" /></th>
                             </tr>
                         </thead>
@@ -221,6 +226,11 @@ else
                                         <span class="badge @StatusBadge(publication.DisplayStatus)">
                                             @Humanise(publication.DisplayStatus)
                                         </span>
+                                    </td>
+                                    <td class="text-nowrap">
+                                        @(publication.LastActivityAt is { } when
+                                            ? when.ToLocalTime().ToString("d MMM yyyy, HH:mm")
+                                            : "Nothing yet")
                                     </td>
                                     <td>
                                         @if (action is null)

@@ -3,10 +3,19 @@
 @* Drawn only when there is somewhere to go. A single page of results needs no controls. *@
 @if (Model.TotalPages > 1)
 {
-    <ul class="pagination mt-4">
+    @* Turning a page is a fresh request, and a fresh request arrives at the top of the document:
+       somebody reading the foot of a listing was put back above the heading, the cards and the
+       search, and had to scroll down again for every page. The links point at this pager, so the
+       browser lands where the reader already was.
+
+       Named after the key this pager turns, because a screen with two listings has two of these
+       and one id between them would send both to the first. *@
+    var anchor = $"rpms-pager-{Model.PageKey}";
+
+    <ul class="pagination mt-4" id="@anchor">
         <li class="page-item @(Model.HasPrevious ? "" : "disabled")">
             <a class="page-link" asp-controller="@Model.Controller" asp-action="@Model.Action"
-               asp-all-route-data="Model.RouteValuesFor(Model.Page - 1)">Previous</a>
+               asp-all-route-data="Model.RouteValuesFor(Model.Page - 1)" asp-fragment="@anchor">Previous</a>
         </li>
 
         @* Not a control, so not disabled: it is the one part of the pager that says something,
@@ -17,7 +26,7 @@
 
         <li class="page-item @(Model.HasNext ? "" : "disabled")">
             <a class="page-link" asp-controller="@Model.Controller" asp-action="@Model.Action"
-               asp-all-route-data="Model.RouteValuesFor(Model.Page + 1)">Next</a>
+               asp-all-route-data="Model.RouteValuesFor(Model.Page + 1)" asp-fragment="@anchor">Next</a>
         </li>
     </ul>
 }

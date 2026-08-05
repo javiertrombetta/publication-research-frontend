@@ -72,7 +72,12 @@ public record PublicationContainerDto(
     /// The research paper's own id, where one exists. The endpoints that act on a paper take it,
     /// and a screen listing publications would otherwise fetch each one just to find it.
     /// </summary>
-    Guid? PaperId = null)
+    Guid? PaperId = null,
+    /// <summary>
+    /// When anything last happened to this publication, taken from its own trail. Null only where
+    /// nothing has been recorded against it yet.
+    /// </summary>
+    DateTime? LastActivityAt = null)
 {
     /// <summary>
     /// True once the paper has cleared review, whether or not its author has yet decided to put
