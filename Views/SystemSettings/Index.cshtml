@@ -250,10 +250,17 @@
                                             ? "Nobody heads it yet."
                                             : $"Headed by {department.HeadOfDepartmentName}.")
                                     </small>
-                                    <form asp-action="RemoveDepartment" method="post"
-                                          onsubmit="return confirm('Remove @department.Name? This only works while nobody belongs to it.');">
+                                    @* The name goes in an attribute that is read as text, not into a
+                                       string inside a script. Razor escapes an apostrophe to &#x27;,
+                                       which the browser turns back into one before JavaScript sees
+                                       it, so a department called Owner's Studies closed the quote
+                                       early and left the handler a syntax error. A broken handler is
+                                       no handler: the form went straight through and deleting a
+                                       department stopped asking. *@
+                                    <form asp-action="RemoveDepartment" method="post">
                                         <input type="hidden" name="id" value="@department.Id" />
-                                        <button type="submit" class="btn btn-link link-secondary p-0">Remove</button>
+                                        <button type="submit" class="btn btn-link link-secondary p-0"
+                                                data-rpms-confirm="Remove @department.Name? This only works while nobody belongs to it.">Remove</button>
                                     </form>
                                 </div>
                             </div>
