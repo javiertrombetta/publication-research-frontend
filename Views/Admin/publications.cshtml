@@ -136,7 +136,7 @@ else
                                 <td class="text-nowrap">@publication.CreatedAt.ToLocalTime().ToString("d MMM yyyy")</td>
                                 <td class="text-end">
                                     <a asp-controller="Admin" asp-action="publication"
-                                       asp-route-id="@publication.Id" class="btn btn-sm btn-outline-primary">
+                                       asp-route-id="@publication.Id" asp-route-from="publications" class="btn btn-sm btn-outline-primary">
                                         Open
                                     </a>
                                 </td>

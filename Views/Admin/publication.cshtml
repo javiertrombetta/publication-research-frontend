@@ -17,8 +17,19 @@
    anybody's behalf. What an administrator can do is correct what the publication holds and say
    where it should stand afterwards, both with a reason on the record. *@
 
+@{
+    // Back to wherever this was opened from. Three screens link to this record, and a link that
+    // always went to Assignments sent most readers to a screen they had not been on.
+    var (backAction, backLabel) = Model.CameFrom switch
+    {
+        "dashboard" => ("Dashboard", "Dashboard"),
+        "publications" => ("publications", "Publications"),
+        _ => ("assignments", "Assignments")
+    };
+}
+
 <div class="mb-4">
-    <a asp-controller="Admin" asp-action="assignments" class="text-secondary">&larr; Assignments</a>
+    <a asp-controller="Admin" asp-action="@backAction" class="text-secondary">&larr; @backLabel</a>
     <h1 class="page-title mt-2 mb-1">@Model.Container.DisplayTitle</h1>
     <div class="text-secondary">
         @Model.Container.StudentName
@@ -66,11 +77,12 @@
 
 <ul class="nav nav-tabs mb-4">
     <li class="nav-item">
-        <a class="@TabClass("progress")" asp-action="publication" asp-route-id="@Model.Container.Id">Contents</a>
+        <a class="@TabClass("progress")" asp-action="publication" asp-route-id="@Model.Container.Id"
+           asp-route-from="@Model.CameFrom">Contents</a>
     </li>
     <li class="nav-item">
         <a class="@TabClass("history")" asp-action="publication" asp-route-id="@Model.Container.Id"
-           asp-route-tab="history">Activity history</a>
+           asp-route-tab="history" asp-route-from="@Model.CameFrom">Activity history</a>
     </li>
 </ul>
 

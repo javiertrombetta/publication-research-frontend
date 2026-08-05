@@ -108,6 +108,13 @@ namespace ResearchPublicationManagementSystem.Models
         /// </summary>
         public string Controller { get; set; } = "Coordinator";
 
+        /// <summary>
+        /// Which screen the reader arrived from, so the way back returns there. Three of the
+        /// administrator's screens open the same record, and a back link that always went to one
+        /// of them sent two thirds of its readers somewhere they had not been.
+        /// </summary>
+        public string? CameFrom { get; set; }
+
         /// <summary>Free text over the trail: what happened, who did it, what they wrote.</summary>
         public string? HistorySearch { get; set; }
 
@@ -133,6 +140,7 @@ namespace ResearchPublicationManagementSystem.Models
             };
 
             if (!string.IsNullOrWhiteSpace(HistorySearch)) route["historySearch"] = HistorySearch;
+            if (!string.IsNullOrWhiteSpace(CameFrom)) route["from"] = CameFrom;
 
             // Everything the reader has already asked of the other listings, carried along, or
             // ordering one of them would put the rest back to their defaults.

@@ -409,7 +409,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// what is sitting unread on their desk. Nothing here can be changed from this screen.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> publication(Guid id, int historyPage = 1, string? tab = null)
+        public async Task<IActionResult> publication(Guid id, int historyPage = 1, string? tab = null, string? from = null)
         {
             var container = await containersApi.GetByIdAsync(id);
             if (!container.Success || container.Data is null)
@@ -421,7 +421,8 @@ namespace ResearchPublicationManagementSystem.Controllers
             var model = new PublicationDetailViewModel
             {
                 Container = container.Data,
-                ActiveTab = tab ?? "progress"
+                ActiveTab = tab ?? "progress",
+                CameFrom = from
             };
 
             var proposals = await proposalsApi.GetByContainerAsync(id);
@@ -459,7 +460,8 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.History = history.Data?.Items ?? [];
             model.HistoryTotal = history.Data?.TotalCount ?? 0;
             model.HistoryPager = Paging.PagerFor(history.Data, "Admin", nameof(publication),
-                new Dictionary<string, string?> { ["id"] = id.ToString(), ["tab"] = "history" }, "historyPage");
+                new Dictionary<string, string?> { ["id"] = id.ToString(), ["tab"] = "history", ["from"] = from },
+                "historyPage");
 
             return View(model);
         }
