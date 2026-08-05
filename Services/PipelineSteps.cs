@@ -18,18 +18,51 @@ public interface IPipelineSteps
 
     /// <summary>The same, where the ruling was that no documentation is needed at all.</summary>
     Task<bool> HeadOfDepartmentReviewsWhenNotRequiredAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// The two later stages in the order this institution runs them. Screens that draw a
+    /// publication's progress have to follow it, or a stage that has not happened yet is shown
+    /// as finished.
+    /// </summary>
+    Task<IReadOnlyList<int>> StageOrderAsync(CancellationToken ct = default);
 }
 
 /// <inheritdoc cref="IPipelineSteps"/>
 public class PipelineSteps(SettingsApiClient settingsApi, IMemoryCache cache) : IPipelineSteps
 {
     private const string CacheKey = "ethics-workflow";
+    private const string PaperCacheKey = "paper-workflow";
 
     public async Task<bool> HeadOfDepartmentReviewsEthicsAsync(CancellationToken ct = default) =>
         (await LoadAsync(ct)).HeadOfDepartmentReviews;
 
     public async Task<bool> HeadOfDepartmentReviewsWhenNotRequiredAsync(CancellationToken ct = default) =>
         (await LoadAsync(ct)).HeadOfDepartmentReviewsWhenNotRequired;
+
+    public async Task<IReadOnlyList<int>> StageOrderAsync(CancellationToken ct = default)
+    {
+        if (cache.TryGetValue(PaperCacheKey, out PaperWorkflowSettingsDto? cached) && cached is not null)
+        {
+            return Order(cached);
+        }
+
+        var result = await settingsApi.GetPaperWorkflowAsync(ct);
+
+        // Nothing cached on a failure, and the answer is the order as it ships.
+        if (!result.Success || result.Data is null)
+        {
+            return [PipelineStage.ResearchProposals, PipelineStage.EthicsApproval, PipelineStage.ResearchPaper];
+        }
+
+        cache.Set(PaperCacheKey, result.Data, TimeSpan.FromMinutes(1));
+        return Order(result.Data);
+
+        // Research proposals are always first; only the two after it can swap.
+        static IReadOnlyList<int> Order(PaperWorkflowSettingsDto paper) =>
+            paper.EthicsBeforePaper
+                ? [PipelineStage.ResearchProposals, PipelineStage.EthicsApproval, PipelineStage.ResearchPaper]
+                : [PipelineStage.ResearchProposals, PipelineStage.ResearchPaper, PipelineStage.EthicsApproval];
+    }
 
     private async Task<EthicsWorkflowSettingsDto> LoadAsync(CancellationToken ct)
     {
