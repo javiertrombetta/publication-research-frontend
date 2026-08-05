@@ -96,6 +96,60 @@ namespace ResearchPublicationManagementSystem.Models
         /// <summary>Whether anything is narrowing the trail, so the screen can offer a way back.</summary>
         public bool HistoryIsFiltered =>
             HistoryFrom is not null || HistoryTo is not null
-            || !string.IsNullOrWhiteSpace(HistoryAction) || HistoryActor is not null;
+            || !string.IsNullOrWhiteSpace(HistoryAction) || HistoryActor is not null
+            || !string.IsNullOrWhiteSpace(HistorySearch);
+
+        // ---------- What the reader has asked of this record ----------
+
+        /// <summary>
+        /// Which controller is drawing this. The record itself is one shared view read by a
+        /// coordinator and by a Head of Department, and every link it writes has to come back to
+        /// whichever of them the reader arrived through.
+        /// </summary>
+        public string Controller { get; set; } = "Coordinator";
+
+        /// <summary>Free text over the trail: what happened, who did it, what they wrote.</summary>
+        public string? HistorySearch { get; set; }
+
+        public string? HistorySort { get; set; }
+        public bool HistoryDescending { get; set; }
+
+        /// <summary>
+        /// A heading that orders one of this record's listings.
+        ///
+        /// Every listing here names its own query keys. A record shows five at once, and a single
+        /// pair of "sort" and "desc" would mean ordering the proposals reordered the trail as
+        /// well. The tab travels with them, so ordering something does not put the reader back on
+        /// the tab they came from.
+        /// </summary>
+        public SortableColumnViewModel SortColumn(
+            string listing, string column, string label, string? currentSort, bool currentDescending,
+            bool descendingFirst = false)
+        {
+            var route = new Dictionary<string, string?>
+            {
+                ["id"] = Container.Id.ToString(),
+                ["tab"] = ActiveTab
+            };
+
+            if (!string.IsNullOrWhiteSpace(HistorySearch)) route["historySearch"] = HistorySearch;
+
+            return new SortableColumnViewModel
+            {
+                Controller = Controller,
+                Action = "Publication",
+                Column = column,
+                Label = label,
+                CurrentSort = currentSort,
+                CurrentDescending = currentDescending,
+                DescendingFirst = descendingFirst,
+                RouteValues = route,
+                SortKey = listing + "Sort",
+                DescendingKey = listing + "Desc"
+            };
+        }
+
+        public SortableColumnViewModel HistoryColumn(string column, string label, bool descendingFirst = false) =>
+            SortColumn("history", column, label, HistorySort, HistoryDescending, descendingFirst);
     }
 }
