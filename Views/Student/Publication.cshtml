@@ -56,7 +56,7 @@
         <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-body text-center py-4">
-                    <h3>Delete this publication?</h3>
+                    <h2 class="h3">Delete this publication?</h2>
                     <div class="text-secondary">
                         It has no research proposals yet, so nothing is lost. This can't be undone,
                         and once you add a proposal it can no longer be deleted.
@@ -135,7 +135,7 @@
 <!-- Proposals -->
 <div class="mb-4">
     <div class="d-flex align-items-center justify-content-between mb-2">
-        <h3 class="m-0 text-secondary">Research Proposals</h3>
+        <h2 class="h3 m-0 text-secondary">Research Proposals</h2>
         @if (container.CurrentPipeline == 1)
         {
             @* Once the proposals have been submitted they are locked and with the coordinator, so
@@ -165,9 +165,9 @@
                 <table class="table card-table table-vcenter" data-rpms-sortable-table>
                     <thead>
                         <tr>
-                            <th data-rpms-sort-column="0">Title</th>
-                            <th data-rpms-sort-column="1">Submitted</th>
-                            <th data-rpms-sort-column="2">Status</th>
+                            <th scope="col" data-rpms-sort-column="0">Title</th>
+                            <th scope="col" data-rpms-sort-column="1">Submitted</th>
+                            <th scope="col" data-rpms-sort-column="2">Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -191,7 +191,7 @@
 <!-- Ethics -->
 <div class="mb-4">
     <div class="d-flex align-items-center justify-content-between mb-2">
-        <h3 class="m-0 text-secondary">Ethics Approval</h3>
+        <h2 class="h3 m-0 text-secondary">Ethics Approval</h2>
         @if (container.CurrentPipeline >= 2)
         {
             <div class="btn-list">
@@ -264,7 +264,7 @@
 <!-- Research paper -->
 <div class="mb-4">
     <div class="d-flex align-items-center justify-content-between mb-2">
-        <h3 class="m-0 text-secondary">Research Paper</h3>
+        <h2 class="h3 m-0 text-secondary">Research Paper</h2>
         @if (container.CurrentPipeline >= 3)
         {
             @* "Continue" only while there is something to continue. Once the paper has been
@@ -328,7 +328,7 @@
 {
     <div class="card border-primary mb-4">
         <div class="card-body">
-            <h3 class="mb-1">Your paper has been accepted</h3>
+            <h2 class="h3 mb-1">Your paper has been accepted</h2>
             <p class="text-secondary">
                 You decide whether it appears in the public catalogue, where anyone can find and
                 read it. Keeping it out does not affect its acceptance. The paper stays on your
@@ -351,7 +351,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-body py-4">
-                    <h3 class="mb-2">Publish to the public catalogue?</h3>
+                    <h2 class="h3 mb-2">Publish to the public catalogue?</h2>
                     <div class="text-secondary">
                         Your paper and its abstract become publicly readable, and this can't be
                         undone from here. Only an Administrator can remove a published paper.
@@ -372,7 +372,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-body py-4">
-                    <h3 class="mb-2">Keep it out of the catalogue?</h3>
+                    <h2 class="h3 mb-2">Keep it out of the catalogue?</h2>
                     <div class="text-secondary">
                         Your paper stays accepted and on your record, but it won't be publicly
                         listed. This closes the publication.

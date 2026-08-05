@@ -71,6 +71,12 @@
 
 <body>
 
+    @* First thing a keyboard reaches, and the only thing that gets it past the navigation.
+       Every signed-in page carries the same sidebar, so without this the way to the content
+       is to tab through every item of it, on every page, before reading a word. Out of sight
+       until it is focused, which is the point: it is there for the people who need it. *@
+    <a href="#main-content" class="rpms-skip-link">Skip to the content</a>
+
     @* Column layout so the footer sits below navbar + (sidebar | content) at full width,
        and is pushed to the bottom of the viewport on short pages. *@
     <div class="page rpms-shell">
@@ -91,7 +97,9 @@
             }
 
             <!-- Page Content -->
-            <main class="flex-fill">
+            @* tabindex="-1" so that following the skip link actually moves the focus here, and
+               not only the scroll position: a main element is not focusable on its own. *@
+            <main id="main-content" tabindex="-1" class="flex-fill">
 
                 <div class="page-body">
 

@@ -23,7 +23,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load the summary</h3>
+            <h2 class="h3 mb-2">We couldn't load the summary</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-primary">Retry</a>
         </div>
@@ -37,10 +37,10 @@ else
         <div class="card border-primary mb-4">
             <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
                 <div>
-                    <h3 class="mb-1">
+                    <h2 class="h3 mb-1">
                         @Model.PapersAwaitingCommittee
                         @(Model.PapersAwaitingCommittee == 1 ? "paper needs" : "papers need") an evaluation committee
-                    </h3>
+                    </h2>
                     <div class="text-secondary">
                         A coordinator cannot make the final decision until a committee has reviewed the paper.
                     </div>
@@ -125,7 +125,7 @@ else
             <div class="col-12 col-md-6">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h3 class="mb-3">@heading</h3>
+                        <h2 class="h3 mb-3">@heading</h2>
                         @if (counts.Count == 0)
                         {
                             <p class="text-secondary m-0">Nothing recorded yet.</p>

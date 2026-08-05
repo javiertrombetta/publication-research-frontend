@@ -36,7 +36,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load them</h3>
+            <h2 class="h3 mb-2">We couldn't load them</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="Admin" asp-action="assignments" class="btn btn-primary">Retry</a>
         </div>
@@ -46,9 +46,9 @@ else if (Model.Publications.Count == 0)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">
+            <h2 class="h3 mb-2">
                 @(string.IsNullOrWhiteSpace(Model.Search) ? "Nothing under way" : $"Nothing matches “{Model.Search}”")
-            </h3>
+            </h2>
             <p class="text-secondary mb-4">
                 @(string.IsNullOrWhiteSpace(Model.Search)
                     ? "Every publication has finished. Assignments can only be changed while one is still running."
@@ -89,7 +89,7 @@ else
                 </span>
 
                 <div class="me-auto">
-                    <h3 class="card-title m-0">@publication.DisplayTitle</h3>
+                    <h2 class="card-title m-0">@publication.DisplayTitle</h2>
                     <div class="text-secondary small">
                         @publication.StudentName
                         @if (!string.IsNullOrWhiteSpace(publication.StudentDepartmentName))
@@ -133,7 +133,7 @@ else
                                 @* Both posts belong to a department, so the choice is that student's
                                    department and nowhere else. Nobody in it means there is nothing
                                    to choose between rather than a field that would be refused. *@
-                                <input class="form-control" disabled
+                                <input class="form-control" id="coordinator-@publication.Id" disabled
                                        value="@publication.CoordinatorName (no other coordinator in this department)" />
                             }
                             else
@@ -157,7 +157,7 @@ else
                                 @* Choosing the first supervisor settles which proposal goes ahead,
                                    which is the coordinator's decision and not an administrative
                                    fix. The API refuses it here for the same reason. *@
-                                <input class="form-control" value="Appointed by the coordinator with a proposal" disabled />
+                                <input class="form-control" id="supervisor-@publication.Id" value="Appointed by the coordinator with a proposal" disabled />
                             }
                             else
                             {
@@ -179,12 +179,12 @@ else
                                 @* Named when the coordinator hands the ethics decision on, by
                                    whichever head of the department is carrying the fewest. Before
                                    that there is nothing to move. *@
-                                <input class="form-control" disabled
+                                <input class="form-control" id="head-@publication.Id" disabled
                                        value="Named when the ethics stage reaches the Head of Department" />
                             }
                             else if (heads.Count == 0)
                             {
-                                <input class="form-control" disabled value="@publication.EthicsHeadOfDepartmentName" />
+                                <input class="form-control" id="head-@publication.Id" disabled value="@publication.EthicsHeadOfDepartmentName" />
                             }
                             else
                             {

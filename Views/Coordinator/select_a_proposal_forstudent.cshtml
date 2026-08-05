@@ -62,7 +62,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load the selections</h3>
+            <h2 class="h3 mb-2">We couldn't load the selections</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="Coordinator" asp-action="select_a_proposal_forstudent" class="btn btn-primary">Retry</a>
         </div>
@@ -74,7 +74,7 @@ else if (Model.Items.Count == 0 && Model.HasSearch)
        dashboard" here would be answering a question nobody asked. *@
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+            <h2 class="h3 mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h2>
             <p class="text-secondary mb-4">
                 No proposal waiting on you has that student, title or supervisor.
             </p>
@@ -88,7 +88,7 @@ else if (Model.Items.Count == 0)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing to assign yet</h3>
+            <h2 class="h3 mb-2">Nothing to assign yet</h2>
             <p class="text-secondary mb-4">
                 No supervisor has offered to take a proposal on so far. They appear here as replies come in.
             </p>
@@ -152,7 +152,7 @@ else
                 </span>
 
                 <div class="me-auto">
-                    <h3 class="card-title m-0">@item.Proposal.Title</h3>
+                    <h2 class="card-title m-0">@item.Proposal.Title</h2>
                     <div class="text-secondary small">@item.StudentName</div>
                 </div>
                 </div>
@@ -190,7 +190,7 @@ else
                 @* Two ways to reach the same appointment. Where supervisors are asked first the
                    choice is between the people who offered; where they are not, nobody ever
                    offers, so it is a choice between everybody who could take it on. *@
-                <h4 class="mt-3 mb-2">@(Model.SupervisorsExpressInterest ? "Willing to supervise" : "Appoint a supervisor")</h4>
+                <h3 class="h4 mt-3 mb-2">@(Model.SupervisorsExpressInterest ? "Willing to supervise" : "Appoint a supervisor")</h3>
                 <form asp-controller="Coordinator" asp-action="AssignSupervisor" method="post">
                     <input type="hidden" name="proposalId" value="@item.Proposal.Id" />
 

@@ -209,6 +209,14 @@ the team's bookmarks both point at, so it keeps the name and this paragraph expl
 - **Tabs and filters are server-rendered where the state should survive a reload.** System settings
   puts its tab in the query string for that reason: a rejected mail server should not throw you
   back to the first tab.
+- **Read the page without seeing it.** Five rules, checked against the rendered HTML of 156 pages
+  across every role rather than against the views: one `<main>` per page and a skip link ahead of
+  it, so a keyboard is not made to walk the sidebar again on each screen; one `<h1>` and no level
+  skipped, since the heading levels are how a screen reader offers to jump about; every header
+  cell says `scope`; and every field carries a name, whether from a `<label>` that points at it,
+  from sitting inside one, or from `aria-label` where the design gives a row of controls a single
+  visible label. Section titles are written `<h2 class="h3">`: the level is what it is, the size is
+  what it looks like. A placeholder is not a label.
 - **The site names its own restrictions to the browser.** A content security policy, `nosniff`,
   `X-Frame-Options: DENY` and `Referrer-Policy: no-referrer` are set for every response in every
   environment, not left to whatever a host adds: the `SAMEORIGIN` header visible while developing

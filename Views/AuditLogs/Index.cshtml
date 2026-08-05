@@ -75,7 +75,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load the audit log</h3>
+            <h2 class="h3 mb-2">We couldn't load the audit log</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="AuditLogs" asp-action="Index" class="btn btn-primary">Retry</a>
         </div>
@@ -85,7 +85,7 @@ else if (results.TotalCount == 0)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing recorded</h3>
+            <h2 class="h3 mb-2">Nothing recorded</h2>
             <p class="text-secondary m-0">
                 @(Model.HasFiltersApplied ? "No entries match these filters." : "The audit log is empty.")
             </p>
@@ -108,13 +108,13 @@ else
                 }
                 <thead>
                     <tr>
-                        <th><partial name="_SortableHeader" model="byWhen" /></th>
-                        <th><partial name="_SortableHeader" model="byWho" /></th>
-                        <th><partial name="_SortableHeader" model="byAction" /></th>
-                        <th><partial name="_SortableHeader" model="byEntity" /></th>
+                        <th scope="col"><partial name="_SortableHeader" model="byWhen" /></th>
+                        <th scope="col"><partial name="_SortableHeader" model="byWho" /></th>
+                        <th scope="col"><partial name="_SortableHeader" model="byAction" /></th>
+                        <th scope="col"><partial name="_SortableHeader" model="byEntity" /></th>
                         @* Two values drawn as one, so there is no single thing to order by. *@
-                        <th>Change</th>
-                        <th><partial name="_SortableHeader" model="byComments" /></th>
+                        <th scope="col">Change</th>
+                        <th scope="col"><partial name="_SortableHeader" model="byComments" /></th>
                     </tr>
                 </thead>
                 <tbody>

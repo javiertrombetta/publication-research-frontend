@@ -37,7 +37,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load the groups</h3>
+            <h2 class="h3 mb-2">We couldn't load the groups</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="Admin" asp-action="supervisor_groups" class="btn btn-primary">Retry</a>
         </div>
@@ -47,7 +47,7 @@ else if (Model.Groups.Count == 0 && Model.HasSearch)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+            <h2 class="h3 mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h2>
             <p class="text-secondary mb-4">
                 No group has that name, that owner or that member.
             </p>
@@ -59,7 +59,7 @@ else if (Model.Groups.Count == 0)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">No groups yet</h3>
+            <h2 class="h3 mb-2">No groups yet</h2>
             <p class="text-secondary m-0">
                 Groups appear here as coordinators save them on Send proposals.
             </p>
@@ -129,7 +129,7 @@ else
                 </span>
 
                 <div class="me-auto">
-                    <h3 class="card-title m-0">@group.Name</h3>
+                    <h2 class="card-title m-0">@group.Name</h2>
                     <div class="text-secondary small">@group.OwnerName</div>
                 </div>
 

@@ -1827,3 +1827,37 @@ aside {
     white-space: normal;
     max-width: 100%;
 }
+
+/* Skip to the content.
+
+   Kept out of the way rather than hidden: display:none or visibility:hidden would take it out of
+   the tab order too, which is the one thing it exists to be in. It sits above the top edge until
+   it is focused, and then comes down over the navbar where it can be read and pressed. */
+.rpms-skip-link {
+    position: absolute;
+    top: 0;
+    left: 1rem;
+    z-index: 1080;
+    transform: translateY(-120%);
+    padding: .55rem 1rem;
+    border-radius: 0 0 .35rem .35rem;
+    background: var(--rpms-primary);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    transition: transform .15s ease-in-out;
+}
+
+.rpms-skip-link:focus,
+.rpms-skip-link:focus-visible {
+    transform: translateY(0);
+    color: #fff;
+    outline: 2px solid #fff;
+    outline-offset: -4px;
+}
+
+/* Following the link moves focus to the main region, which is not a control and should not be
+   ringed for it. Anything focused inside it still is. */
+#main-content:focus {
+    outline: none;
+}

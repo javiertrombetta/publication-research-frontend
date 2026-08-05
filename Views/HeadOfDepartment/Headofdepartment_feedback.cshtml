@@ -69,7 +69,7 @@ else if (!Model.LoadFailed && (Model.Items.Count > 0 || Model.HasSearch))
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load them</h3>
+            <h2 class="h3 mb-2">We couldn't load them</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="HeadOfDepartment" asp-action="Headofdepartment_feedback" class="btn btn-primary">Retry</a>
         </div>
@@ -79,7 +79,7 @@ else if (Model.Items.Count == 0 && Model.HasSearch)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+            <h2 class="h3 mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h2>
             <p class="text-secondary mb-4">No publication waiting on you has that student or title.</p>
             <a asp-controller="HeadOfDepartment" asp-action="Headofdepartment_feedback" class="btn btn-primary">
                 Show them all
@@ -91,7 +91,7 @@ else if (Model.Items.Count == 0)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing waiting on you</h3>
+            <h2 class="h3 mb-2">Nothing waiting on you</h2>
             <p class="text-secondary mb-4">
                 Ethics decisions appear here once a coordinator has made one and passed it on.
             </p>
@@ -165,7 +165,7 @@ else
                     </div>
 
                     <div class="col-12 col-md-6">
-                        <h3 class="card-title m-0">@item.Container.DisplayTitle</h3>
+                        <h2 class="card-title m-0">@item.Container.DisplayTitle</h2>
                     </div>
 
                     <div class="col-12 col-md-3 text-secondary">
@@ -207,7 +207,7 @@ else
                     <div class="table-responsive mb-3">
                         <table class="table card-table table-vcenter">
                             <thead>
-                                <tr><th>Document</th><th>File</th><th>Status</th><th class="w-1"></th></tr>
+                                <tr><th scope="col">Document</th><th scope="col">File</th><th scope="col">Status</th><th scope="col" class="w-1"></th></tr>
                             </thead>
                             <tbody>
                                 @foreach (var document in item.Documents)

@@ -63,7 +63,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load the directory</h3>
+            <h2 class="h3 mb-2">We couldn't load the directory</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="Users" asp-action="Index" class="btn btn-primary">Retry</a>
         </div>
@@ -73,7 +73,7 @@ else if (Model.Users.Count == 0)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">No accounts match</h3>
+            <h2 class="h3 mb-2">No accounts match</h2>
             <p class="text-secondary m-0">
                 @(Model.HasFilters ? "Try a broader filter." : "There are no accounts yet.")
             </p>
@@ -99,17 +99,17 @@ else
                 }
                 <thead>
                     <tr>
-                        <th><partial name="_SortableHeader" model="byName" /></th>
-                        <th><partial name="_SortableHeader" model="byEmail" /></th>
+                        <th scope="col"><partial name="_SortableHeader" model="byName" /></th>
+                        <th scope="col"><partial name="_SortableHeader" model="byEmail" /></th>
                         @* An account can hold several roles, so this orders by the first of them
                            alphabetically, which is the one the cell leads with. *@
-                        <th><partial name="_SortableHeader" model="byRoles" /></th>
-                        <th><partial name="_SortableHeader" model="byStatus" /></th>
+                        <th scope="col"><partial name="_SortableHeader" model="byRoles" /></th>
+                        <th scope="col"><partial name="_SortableHeader" model="byStatus" /></th>
                         @* Beside Status because the two are read together and are not the same
                            thing: an account can be enabled and still be turning work away. *@
-                        <th><partial name="_SortableHeader" model="byAvailable" /></th>
-                        <th><partial name="_SortableHeader" model="byJoined" /></th>
-                        <th></th>
+                        <th scope="col"><partial name="_SortableHeader" model="byAvailable" /></th>
+                        <th scope="col"><partial name="_SortableHeader" model="byJoined" /></th>
+                        <th scope="col"></th>
                     </tr>
                 </thead>
                 <tbody>

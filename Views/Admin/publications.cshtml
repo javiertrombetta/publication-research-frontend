@@ -20,7 +20,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load them</h3>
+            <h2 class="h3 mb-2">We couldn't load them</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="Admin" asp-action="publications" asp-all-route-data="Model.RouteValues()"
                class="btn btn-primary">Retry</a>
@@ -65,7 +65,7 @@ else
     {
         <div class="card">
             <div class="card-body text-center py-5">
-                <h3 class="mb-2">Nothing here</h3>
+                <h2 class="h3 mb-2">Nothing here</h2>
                 <p class="text-secondary m-0">
                     @(Model.HasSearch
                         ? $"No publication in this group matches “{Model.Search}”."
@@ -94,12 +94,12 @@ else
                     }
                     <thead>
                         <tr>
-                            <th><partial name="_SortableHeader" model="byTitle" /></th>
-                            <th><partial name="_SortableHeader" model="byStudent" /></th>
-                            <th><partial name="_SortableHeader" model="byStatus" /></th>
-                            <th><partial name="_SortableHeader" model="byWaiting" /></th>
-                            <th><partial name="_SortableHeader" model="byStarted" /></th>
-                            <th class="w-1"></th>
+                            <th scope="col"><partial name="_SortableHeader" model="byTitle" /></th>
+                            <th scope="col"><partial name="_SortableHeader" model="byStudent" /></th>
+                            <th scope="col"><partial name="_SortableHeader" model="byStatus" /></th>
+                            <th scope="col"><partial name="_SortableHeader" model="byWaiting" /></th>
+                            <th scope="col"><partial name="_SortableHeader" model="byStarted" /></th>
+                            <th scope="col" class="w-1"></th>
                         </tr>
                     </thead>
                     <tbody>

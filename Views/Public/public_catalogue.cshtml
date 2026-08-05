@@ -68,7 +68,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">The catalogue is unavailable</h3>
+            <h2 class="h3 mb-2">The catalogue is unavailable</h2>
             <p class="text-secondary mb-4">
                 This is a temporary problem reaching the server. Try again in a moment.
             </p>
@@ -82,13 +82,13 @@ else if (results.TotalCount == 0)
         <div class="card-body text-center py-5">
             @if (search.HasFilters)
             {
-                <h3 class="mb-2">Nothing matches your search</h3>
+                <h2 class="h3 mb-2">Nothing matches your search</h2>
                 <p class="text-secondary mb-4">Try fewer or broader filters.</p>
                 <a asp-controller="Public" asp-action="public_catalogue" class="btn btn-primary">Clear filters</a>
             }
             else
             {
-                <h3 class="mb-2">Nothing published yet</h3>
+                <h2 class="h3 mb-2">Nothing published yet</h2>
                 <p class="text-secondary m-0">
                     Research appears here once its author chooses to publish it.
                 </p>
@@ -110,10 +110,10 @@ else
                 <div class="card">
                     <div class="card-body">
 
-                        <h3 class="mb-1">
+                        <h2 class="h3 mb-1">
                             <a asp-controller="Public" asp-action="published_detail" asp-route-id="@entry.Id"
                                class="text-reset text-decoration-none">@entry.Title</a>
-                        </h3>
+                        </h2>
 
                         @{
                             // Author and year only, matching what the detail page publishes.
