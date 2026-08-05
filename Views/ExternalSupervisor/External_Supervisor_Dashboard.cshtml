@@ -20,7 +20,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load your assignments</h3>
+            <h2 class="h3 mb-2">We couldn't load your assignments</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="ExternalSupervisor" asp-action="External_Supervisor_Dashboard" class="btn btn-primary">Retry</a>
         </div>
@@ -30,7 +30,7 @@ else if (Model.Items.Count == 0 && !Model.HasSearch)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">You have no assignments</h3>
+            <h2 class="h3 mb-2">You have no assignments</h2>
             <p class="text-secondary m-0">
                 Papers appear here once an Administrator puts you on an evaluation committee.
             </p>
@@ -113,7 +113,7 @@ else
         @* A search that found nothing is a different thing from an empty queue. *@
         <div class="card">
             <div class="card-body text-center py-5">
-                <h3 class="mb-2">Nothing matches that search</h3>
+                <h2 class="h3 mb-2">Nothing matches that search</h2>
                 <p class="text-secondary mb-4">Try part of a paper's title, or the student's name.</p>
                 <a asp-controller="ExternalSupervisor" asp-action="External_Supervisor_Dashboard"
                    asp-all-route-data="Model.ClearSearchRoute()" class="btn btn-outline-secondary">Clear the search</a>
@@ -127,11 +127,11 @@ else
             <table class="table card-table table-vcenter">
                 <thead>
                     <tr>
-                        <th><partial name="_SortableHeader" model="byTitle" /></th>
-                        <th><partial name="_SortableHeader" model="byStudent" /></th>
-                        <th><partial name="_SortableHeader" model="byCommittee" /></th>
-                        <th><partial name="_SortableHeader" model="byDecision" /></th>
-                        <th></th>
+                        <th scope="col"><partial name="_SortableHeader" model="byTitle" /></th>
+                        <th scope="col"><partial name="_SortableHeader" model="byStudent" /></th>
+                        <th scope="col"><partial name="_SortableHeader" model="byCommittee" /></th>
+                        <th scope="col"><partial name="_SortableHeader" model="byDecision" /></th>
+                        <th scope="col"></th>
                     </tr>
                 </thead>
                 <tbody>

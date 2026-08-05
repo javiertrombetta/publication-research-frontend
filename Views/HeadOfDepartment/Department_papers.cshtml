@@ -26,7 +26,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load your department's papers</h3>
+            <h2 class="h3 mb-2">We couldn't load your department's papers</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="HeadOfDepartment" asp-action="Department_papers" class="btn btn-primary">Retry</a>
         </div>
@@ -66,7 +66,7 @@ else
     {
         <div class="card">
             <div class="card-body text-center py-5">
-                <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+                <h2 class="h3 mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h2>
                 <p class="text-secondary mb-4">No paper in your department has that student or title.</p>
                 <a asp-controller="HeadOfDepartment" asp-action="Department_papers" class="btn btn-primary">
                     Show them all
@@ -78,7 +78,7 @@ else
     {
         <div class="card">
             <div class="card-body text-center py-5">
-                <h3 class="mb-2">No papers yet</h3>
+                <h2 class="h3 mb-2">No papers yet</h2>
                 <p class="text-secondary mb-4">
                     A publication reaches this stage once its ethics approval has been settled.
                 </p>
@@ -134,7 +134,7 @@ else
                     </span>
 
                     <div class="me-auto">
-                        <h3 class="card-title m-0">@publication.DisplayTitle</h3>
+                        <h2 class="card-title m-0">@publication.DisplayTitle</h2>
                     </div>
                     </div>
 

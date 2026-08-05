@@ -47,7 +47,10 @@
 
                     <div class="mb-3">
                         <label asp-for="Email" class="form-label mb-2">Email address</label>
-                        <input asp-for="Email" id="signup-email" class="form-control" placeholder="john.doe@aisstudent.ac.nz" />
+                        @* No id of its own. The label above is written with asp-for, which points it at
+                           the id the tag helper generates, so naming this one something else left the
+                           label pointing at nothing and the field with no name a screen reader could read. *@
+                        <input asp-for="Email" class="form-control" placeholder="john.doe@aisstudent.ac.nz" />
                         <span asp-validation-for="Email" class="text-danger"></span>
                         <small class="text-secondary d-block mt-1">Use your @@aisstudent.ac.nz or @@ais.ac.nz address. Your role is assigned from the domain.</small>
                     </div>
@@ -119,7 +122,7 @@
         // Purely a UX affordance. The backend derives the role from the email domain server-side
         // regardless of what's shown/hidden here.
         (function () {
-            var emailInput = document.getElementById('signup-email');
+            var emailInput = document.getElementById('Email');
             var studentFields = document.getElementById('student-fields');
 
             function toggle() {

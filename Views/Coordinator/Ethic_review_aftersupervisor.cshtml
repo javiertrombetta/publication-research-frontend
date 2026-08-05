@@ -72,7 +72,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load them</h3>
+            <h2 class="h3 mb-2">We couldn't load them</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="Coordinator" asp-action="Ethic_review_aftersupervisor" class="btn btn-primary">Retry</a>
         </div>
@@ -82,7 +82,7 @@ else if (Model.Items.Count == 0)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing waiting on you</h3>
+            <h2 class="h3 mb-2">Nothing waiting on you</h2>
             <p class="text-secondary mb-4">Ethics decisions appear here once a supervisor has made theirs.</p>
             <a asp-controller="Coordinator" asp-action="Coordinator_dashboard" class="btn btn-primary">Back to dashboard</a>
         </div>
@@ -140,7 +140,7 @@ else
                 </span>
 
                 <div class="me-auto">
-                    <h3 class="card-title m-0">@item.Container.DisplayTitle</h3>
+                    <h2 class="card-title m-0">@item.Container.DisplayTitle</h2>
                     <div class="text-secondary small">@item.Container.StudentName</div>
                 </div>
                 </div>
@@ -248,11 +248,11 @@ else
                                 <table class="table card-table table-vcenter" data-rpms-sortable-table>
                                     <thead>
                                         <tr>
-                                            <th data-rpms-sort-column="0">Document</th>
-                                            <th data-rpms-sort-column="1">File</th>
-                                            <th data-rpms-sort-column="2">Status</th>
-                                            <th></th>
-                                            <th class="text-end">Ask again</th>
+                                            <th scope="col" data-rpms-sort-column="0">Document</th>
+                                            <th scope="col" data-rpms-sort-column="1">File</th>
+                                            <th scope="col" data-rpms-sort-column="2">Status</th>
+                                            <th scope="col"></th>
+                                            <th scope="col" class="text-end">Ask again</th>
                                         </tr>
                                     </thead>
                                     <tbody>

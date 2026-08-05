@@ -34,7 +34,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load your department</h3>
+            <h2 class="h3 mb-2">We couldn't load your department</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="HeadOfDepartment" asp-action="Head_of_Department_dashboard" class="btn btn-primary">Retry</a>
         </div>
@@ -109,7 +109,7 @@ else
     {
         <div class="card">
             <div class="card-body text-center py-5">
-                <h3 class="mb-2">Nothing in your department yet</h3>
+                <h2 class="h3 mb-2">Nothing in your department yet</h2>
                 <p class="text-secondary m-0">
                     Publications appear here as students in your department start them.
                 </p>
@@ -153,7 +153,7 @@ else
         {
             <div class="card">
                 <div class="card-body text-center py-5">
-                    <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+                    <h2 class="h3 mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h2>
                     <p class="text-secondary mb-4">No publication in your department has that student or title.</p>
                     <a asp-controller="HeadOfDepartment" asp-action="Head_of_Department_dashboard" class="btn btn-primary">
                         Show them all
@@ -184,15 +184,15 @@ else
                         </colgroup>
                         <thead>
                             <tr>
-                                <th><partial name="_SortableHeader" model="byStudent" /></th>
-                                <th><partial name="_SortableHeader" model="byStarted" /></th>
-                                <th><partial name="_SortableHeader" model="byStage" /></th>
-                                <th><partial name="_SortableHeader" model="byStatus" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byStudent" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byStarted" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byStage" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byStatus" /></th>
                                 @* Ordered like the rest of the row, from its own heading. The API
                                    ranks it the way the pipeline runs, student first and nobody's
                                    turn last, so one click gathers everything held up at the same
                                    place. *@
-                                <th><partial name="_SortableHeader" model="byWaiting" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byWaiting" /></th>
                             </tr>
                         </thead>
                         <tbody>

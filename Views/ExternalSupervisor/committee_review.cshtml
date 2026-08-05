@@ -53,7 +53,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load your assignments</h3>
+            <h2 class="h3 mb-2">We couldn't load your assignments</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="ExternalSupervisor" asp-action="committee_review" class="btn btn-primary">Retry</a>
         </div>
@@ -64,7 +64,7 @@ else if (Model.Items.Count == 0 && Model.HasSearch)
     @* A search that found nothing is a different thing from an empty queue. *@
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+            <h2 class="h3 mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h2>
             <p class="text-secondary mb-4">No paper waiting on you has that title or student.</p>
             <a asp-controller="ExternalSupervisor" asp-action="committee_review" class="btn btn-primary">
                 Show them all
@@ -76,7 +76,7 @@ else if (Model.Items.Count == 0)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing assigned to you</h3>
+            <h2 class="h3 mb-2">Nothing assigned to you</h2>
             <p class="text-secondary mb-4">You are not on any evaluation committee at the moment.</p>
             <a asp-controller="ExternalSupervisor" asp-action="External_Supervisor_Dashboard" class="btn btn-primary">
                 Back to dashboard
@@ -132,7 +132,7 @@ else
                 </span>
 
                 <div class="me-auto">
-                    <h3 class="card-title m-0">@item.Title</h3>
+                    <h2 class="card-title m-0">@item.Title</h2>
                     @* Whose paper it is, beside the year. The queue searches and orders by the
                        student and named nobody. *@
                     @if (!string.IsNullOrWhiteSpace(item.Paper?.StudentName) || item.Paper?.PublicationYear is not null)

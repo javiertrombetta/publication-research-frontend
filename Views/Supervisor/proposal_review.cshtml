@@ -57,7 +57,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load the proposals</h3>
+            <h2 class="h3 mb-2">We couldn't load the proposals</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="Supervisor" asp-action="proposal_review" class="btn btn-primary">Retry</a>
         </div>
@@ -68,7 +68,7 @@ else if (Model.Proposals.Count == 0 && Model.HasSearch)
     @* A search that found nothing is a different thing from an empty queue. *@
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+            <h2 class="h3 mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h2>
             <p class="text-secondary mb-4">No proposal sent to you has that title or student.</p>
             <a asp-controller="Supervisor" asp-action="proposal_review" class="btn btn-primary">Show them all</a>
         </div>
@@ -78,7 +78,7 @@ else if (Model.Proposals.Count == 0)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing waiting for you</h3>
+            <h2 class="h3 mb-2">Nothing waiting for you</h2>
             <p class="text-secondary mb-4">Proposals appear here when a coordinator sends them to you.</p>
             <a asp-controller="Supervisor" asp-action="SupervisorDashboard" class="btn btn-primary">Back to dashboard</a>
         </div>
@@ -136,7 +136,7 @@ else
                 </span>
 
                 <div class="me-auto">
-                    <h3 class="card-title m-0">@proposal.Title</h3>
+                    <h2 class="card-title m-0">@proposal.Title</h2>
                     @* Whose work this is. The queue offers a search and an ordering by the student
                        and named nobody: agreeing to supervise a piece of work is agreeing to work
                        with a person. *@

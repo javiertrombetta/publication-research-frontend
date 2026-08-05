@@ -1,7 +1,8 @@
 @model StudentProfileViewModel
 @{ ViewData["Title"] = "My profile"; }
 
-            <main class="page-body m-0 py-4">
+            @* A div, not a main: the layout already opens one, and a page has a single main region. *@
+            <div class="page-body m-0 py-4">
                 <div class="container-xl">
 
                     <!-- Centred responsive layout wrapper -->
@@ -61,7 +62,7 @@
                             <!-- Detailed Information Card Grid -->
                             <div class="card shadow-sm">
                                 <div class="card-header bg-blue text-white">
-                                    <h3 class="card-title fs-2 fw-bold text-white">Academic Profile Details</h3>
+                                    <h2 class="card-title fs-2 fw-bold text-white">Academic Profile Details</h2>
                                 </div>
 
                                 <div class="card-body py-4 px-4">
@@ -144,4 +145,4 @@
                     </div>
 
                 </div>
-            </main>
+            </div>

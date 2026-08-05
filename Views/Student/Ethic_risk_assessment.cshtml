@@ -3,7 +3,8 @@
 @using ResearchPublicationManagementSystem.Common
 @model EthicsDeclarationPageViewModel
 
-            <main class="page-body m-0 py-4">
+            @* A div, not a main: the layout already opens one, and a page has a single main region. *@
+            <div class="page-body m-0 py-4">
                 <div class="container-xl">
 
                     <!-- Centred responsive layout wrapper -->
@@ -29,7 +30,7 @@
                             <!-- Interactive Screening Assessment Container -->
                             <div class="card shadow-sm mb-4">
                                 <div class="card-header bg-light">
-                                    <h3 class="card-title fs-2 fw-bold text-primary">Does the research include:</h3>
+                                    <h2 class="card-title fs-2 fw-bold text-primary">Does the research include:</h2>
                                 </div>
                                 <div class="card-body p-0">
                                     <div class="divide-y">
@@ -76,24 +77,26 @@
                             <!-- The one part of this page that is actually recorded -->
                             <div class="card shadow-sm mb-4">
                                 <div class="card-header bg-light">
-                                    <h3 class="card-title fs-2 fw-bold text-primary">Ethics declaration</h3>
+                                    <h2 class="card-title fs-2 fw-bold text-primary">Ethics declaration</h2>
                                 </div>
                                 <div class="card-body">
                                     <p class="text-secondary">Does your research require ethical approval according to the institutional research ethics policy?</p>
                                     <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column gap-2">
                                         <label class="form-selectgroup-item flex-fill">
-                                            @* No `required` here: the page's own submit handler checks this
+                                            @* An id each. asp-for names all three of them "Response", which is
+                                               the field, not the option: three elements sharing one id.
+                                               No `required` here: the page's own submit handler checks this
                                                together with the 20 questions so both are reported at once.
                                                The server still rejects a missing Response regardless. *@
-                                            <input type="radio" asp-for="Response" value="Yes" class="form-selectgroup-input">
+                                            <input type="radio" asp-for="Response" id="Response-Yes" value="Yes" class="form-selectgroup-input">
                                             <div class="form-selectgroup-label d-flex align-items-center p-2">Yes, my research requires ethics approval</div>
                                         </label>
                                         <label class="form-selectgroup-item flex-fill">
-                                            <input type="radio" asp-for="Response" value="No" class="form-selectgroup-input">
+                                            <input type="radio" asp-for="Response" id="Response-No" value="No" class="form-selectgroup-input">
                                             <div class="form-selectgroup-label d-flex align-items-center p-2">No, ethics approval is not required</div>
                                         </label>
                                         <label class="form-selectgroup-item flex-fill">
-                                            <input type="radio" asp-for="Response" value="Unsure" class="form-selectgroup-input">
+                                            <input type="radio" asp-for="Response" id="Response-Unsure" value="Unsure" class="form-selectgroup-input">
                                             <div class="form-selectgroup-label d-flex align-items-center p-2">I'm not sure, show me guidance</div>
                                         </label>
                                     </div>
@@ -122,7 +125,7 @@
                     </form>
 
                 </div>
-            </main>
+            </div>
 
 
 

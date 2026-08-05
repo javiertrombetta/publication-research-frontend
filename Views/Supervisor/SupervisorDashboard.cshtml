@@ -38,7 +38,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load your publications</h3>
+            <h2 class="h3 mb-2">We couldn't load your publications</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="Supervisor" asp-action="SupervisorDashboard" class="btn btn-primary">Retry</a>
         </div>
@@ -113,7 +113,7 @@ else
     {
         <div class="card">
             <div class="card-body text-center py-5">
-                <h3 class="mb-2">Nothing assigned to you yet</h3>
+                <h2 class="h3 mb-2">Nothing assigned to you yet</h2>
                 <p class="text-secondary m-0">
                     Publications appear here once a coordinator assigns you to one.
                 </p>
@@ -152,7 +152,7 @@ else
         {
             <div class="card">
                 <div class="card-body text-center py-5">
-                    <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+                    <h2 class="h3 mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h2>
                     <p class="text-secondary mb-4">No publication you supervise has that student or title.</p>
                     <a asp-controller="Supervisor" asp-action="SupervisorDashboard" class="btn btn-primary">
                         Show them all
@@ -202,11 +202,11 @@ else
                         </colgroup>
                         <thead>
                             <tr>
-                                <th><partial name="_SortableHeader" model="byStudent" /></th>
-                                <th><partial name="_SortableHeader" model="byStarted" /></th>
-                                <th><partial name="_SortableHeader" model="byStage" /></th>
-                                <th><partial name="_SortableHeader" model="byStatus" /></th>
-                                <th><partial name="_SortableHeader" model="byWaiting" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byStudent" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byStarted" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byStage" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byStatus" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byWaiting" /></th>
                             </tr>
                         </thead>
                         <tbody>

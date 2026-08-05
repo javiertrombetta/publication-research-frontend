@@ -88,7 +88,7 @@
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter">
                         <thead>
-                            <tr><th>When</th><th>What</th><th>Who</th><th>Comments</th></tr>
+                            <tr><th scope="col">When</th><th scope="col">What</th><th scope="col">Who</th><th scope="col">Comments</th></tr>
                         </thead>
                         <tbody>
                             @foreach (var entry in Model.History)
@@ -127,13 +127,13 @@ else
                     <table class="table card-table table-vcenter">
                         <thead>
                             <tr>
-                                <th>Title</th>
-                                <th>Status</th>
-                                <th>Submitted</th>
+                                <th scope="col">Title</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Submitted</th>
                                 @if (!settled)
                                 {
-                                    <th>Why you are changing it</th>
-                                    <th class="w-1"></th>
+                                    <th scope="col">Why you are changing it</th>
+                                    <th scope="col" class="w-1"></th>
                                 }
                             </tr>
                         </thead>
@@ -165,6 +165,7 @@ else
                                                     <input type="hidden" name="proposalId" value="@proposal.Id" />
                                                     <input type="text" name="comments" class="form-control form-control-sm"
                                                            id="assign-proposal-comments-@proposal.Id"
+                                                           aria-label="Why you are assigning @proposal.Title"
                                                            placeholder="Required. Stays on the history." />
                                                 </form>
                                             }
@@ -273,15 +274,15 @@ else
                         <table class="table card-table table-vcenter">
                             <thead>
                                 <tr>
-                                    <th>Document</th>
-                                    <th>File</th>
-                                    <th>Version</th>
-                                    <th>Status</th>
+                                    <th scope="col">Document</th>
+                                    <th scope="col">File</th>
+                                    <th scope="col">Version</th>
+                                    <th scope="col">Status</th>
                                     @if (!settled)
                                     {
-                                        <th>Why you are removing it</th>
+                                        <th scope="col">Why you are removing it</th>
                                     }
-                                    <th class="w-1"></th>
+                                    <th scope="col" class="w-1"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -306,6 +307,7 @@ else
                                                     <input type="hidden" name="documentId" value="@document.Id" />
                                                     <input type="text" name="comments" class="form-control form-control-sm"
                                                            id="remove-doc-@document.Id"
+                                                           aria-label="Why you are removing @document.DocumentType"
                                                            placeholder="Required. Stays on the history." />
                                                 </form>
                                             </td>
@@ -355,10 +357,14 @@ else
                             </select>
                         </div>
                         <div class="col-12 col-md-3">
-                            <input type="file" name="file" class="form-control" required />
+                            @* Named for a screen reader rather than labelled on screen: this row aligns its
+                               controls along one line, and only the first of them carries a visible label. *@
+                            <input type="file" name="file" class="form-control" required
+                                   aria-label="The document to add" />
                         </div>
                         <div class="col-12 col-md-4">
                             <input type="text" name="comments" id="add-doc-comments" class="form-control"
+                                   aria-label="Why you are adding it"
                                    placeholder="Why you are adding it" />
                         </div>
                         <div class="col-auto">
@@ -402,14 +408,14 @@ else
                         <table class="table card-table table-vcenter">
                             <thead>
                                 <tr>
-                                    <th>Version</th>
-                                    <th>File</th>
-                                    <th>Uploaded</th>
+                                    <th scope="col">Version</th>
+                                    <th scope="col">File</th>
+                                    <th scope="col">Uploaded</th>
                                     @if (!settled && Model.PaperVersions.Count > 1)
                                     {
-                                        <th>Why you are removing it</th>
+                                        <th scope="col">Why you are removing it</th>
                                     }
-                                    <th class="w-1"></th>
+                                    <th scope="col" class="w-1"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -433,6 +439,7 @@ else
                                                     <input type="hidden" name="versionId" value="@version.Id" />
                                                     <input type="text" name="comments" class="form-control form-control-sm"
                                                            id="remove-version-@version.Id"
+                                                           aria-label="Why you are removing version @version.VersionNumber"
                                                            placeholder="Required. Stays on the history." />
                                                 </form>
                                             </td>

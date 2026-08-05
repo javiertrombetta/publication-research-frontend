@@ -78,10 +78,10 @@ else
                     <table class="table card-table table-vcenter">
                         <thead>
                             <tr>
-                                <th><partial name="_SortableHeader" model="byTitle" /></th>
-                                <th><partial name="_SortableHeader" model="byStudent" /></th>
-                                <th>Why you are withdrawing it</th>
-                                <th class="w-1"></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byTitle" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byStudent" /></th>
+                                <th scope="col">Why you are withdrawing it</th>
+                                <th scope="col" class="w-1"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -98,6 +98,7 @@ else
                                             <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
                                             <input type="text" name="comments" class="form-control form-control-sm"
                                                    id="withdraw-comments-@publication.Id"
+                                                   aria-label="Why you are withdrawing @publication.DisplayTitle"
                                                    placeholder="@DecisionButton.Hint(withdrawNeedsWhy)" />
                                         </form>
                                     </td>
@@ -148,10 +149,10 @@ else
                     <table class="table card-table table-vcenter">
                         <thead>
                             <tr>
-                                <th><partial name="_SortableHeader" model="byTitle" /></th>
-                                <th><partial name="_SortableHeader" model="byStudent" /></th>
-                                <th>Why you are publishing it</th>
-                                <th class="w-1"></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byTitle" /></th>
+                                <th scope="col"><partial name="_SortableHeader" model="byStudent" /></th>
+                                <th scope="col">Why you are publishing it</th>
+                                <th scope="col" class="w-1"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -168,6 +169,7 @@ else
                                             <input type="hidden" name="desc" value="@Model.Descending.ToString().ToLowerInvariant()" />
                                             <input type="text" name="comments" class="form-control form-control-sm"
                                                    id="publish-comments-@publication.Id"
+                                                   aria-label="Why you are publishing @publication.DisplayTitle"
                                                    placeholder="@DecisionButton.Hint(publishNeedsWhy)" />
                                         </form>
                                     </td>

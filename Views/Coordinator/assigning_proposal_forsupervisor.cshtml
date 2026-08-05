@@ -18,7 +18,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load the proposals</h3>
+            <h2 class="h3 mb-2">We couldn't load the proposals</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="Coordinator" asp-action="assigning_proposal_forsupervisor" class="btn btn-primary">Retry</a>
         </div>
@@ -28,7 +28,7 @@ else if (Model.Proposals.Count == 0 && Model.HasSearch)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+            <h2 class="h3 mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h2>
             <p class="text-secondary mb-4">
                 No proposal waiting to go out has that student, title or abstract.
             </p>
@@ -42,7 +42,7 @@ else if (Model.Proposals.Count == 0)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing waiting to go out</h3>
+            <h2 class="h3 mb-2">Nothing waiting to go out</h2>
             <p class="text-secondary mb-4">
                 Every submitted proposal has already been sent to a supervisor.
             </p>
@@ -58,7 +58,7 @@ else if (Model.Supervisors.Count == 0 && !Model.HasSupervisorSearch)
        had no supervisors and left with no way to undo the search that caused it. *@
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">No supervisors available</h3>
+            <h2 class="h3 mb-2">No supervisors available</h2>
             <p class="text-secondary m-0">
                 There are no enabled supervisor accounts to send these proposals to. An
                 Administrator needs to grant the Supervisor role before you can assign one.
@@ -272,7 +272,7 @@ else
                         var submitted = Model.SubmittedFor(group.Key);
                     }
                     <div class="me-auto">
-                        <h3 class="card-title m-0">@Model.StudentFor(group.Key)</h3>
+                        <h2 class="card-title m-0">@Model.StudentFor(group.Key)</h2>
 
                         @* Who this actually is. The same student heads a group for each
                            publication they have open, so the name alone leaves a coordinator
@@ -399,7 +399,7 @@ else
 
         <div class="card mb-3">
             <div class="card-header d-flex flex-wrap align-items-center gap-2">
-                <h3 class="card-title m-0 me-auto">Send to</h3>
+                <h2 class="card-title m-0 me-auto">Send to</h2>
                 <span class="text-secondary small">
                     <strong data-rpms-count="supervisorIds">0</strong> of @Model.SupervisorsTotal available selected
                 </span>

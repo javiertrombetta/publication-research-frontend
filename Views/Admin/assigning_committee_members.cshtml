@@ -40,7 +40,7 @@
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">We couldn't load them</h3>
+            <h2 class="h3 mb-2">We couldn't load them</h2>
             <p class="text-secondary mb-4">This is a temporary problem reaching the server. Try again in a moment.</p>
             <a asp-controller="Admin" asp-action="assigning_committee_members" class="btn btn-primary">Retry</a>
         </div>
@@ -51,7 +51,7 @@ else if (Model.Items.Count == 0 && Model.HasSearch)
     @* A search that found nothing is a different thing from an empty queue. *@
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h3>
+            <h2 class="h3 mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h2>
             <p class="text-secondary mb-4">No paper waiting for a committee has that title or student.</p>
             <a asp-controller="Admin" asp-action="assigning_committee_members" class="btn btn-primary">
                 Show them all
@@ -63,7 +63,7 @@ else if (Model.Items.Count == 0)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nothing waiting on you</h3>
+            <h2 class="h3 mb-2">Nothing waiting on you</h2>
             <p class="text-secondary mb-4">Every paper under review already has a committee.</p>
             <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-primary">Back to dashboard</a>
         </div>
@@ -73,7 +73,7 @@ else if (Model.Members.Count == 0)
 {
     <div class="card">
         <div class="card-body text-center py-5">
-            <h3 class="mb-2">Nobody can be appointed</h3>
+            <h2 class="h3 mb-2">Nobody can be appointed</h2>
             <p class="text-secondary m-0">
                 There are no enabled accounts other than students. Anyone who works here can sit on a
                 committee, so add or enable a staff account from the user directory first.
@@ -116,7 +116,7 @@ else
                     </svg>
                 </span>
                 <div class="me-auto">
-                    <h3 class="card-title m-0">@item.Paper.Title</h3>
+                    <h2 class="card-title m-0">@item.Paper.Title</h2>
                     <div class="text-secondary small">@item.Paper.StudentName</div>
                 </div>
                 <span class="badge bg-primary-lt">
@@ -140,7 +140,7 @@ else
                        the figures they just saved. Those govern publications opened from now on.
                        This one keeps what it was opened under, so that research under way for
                        months is not rejudged by a rule agreed after it started. *@
-                    <h4 class="mt-3 mb-1">Members</h4>
+                    <h3 class="h4 mt-3 mb-1">Members</h3>
                     <div class="alert alert-info py-2 px-3 mb-3"
                          data-rpms-committee-required-reviewers="@item.RequiredReviewers"
                          data-rpms-committee-required-external="@item.RequiredExternal">
@@ -262,7 +262,7 @@ else
                     </svg>
                 </span>
                 <div class="me-auto">
-                    <h3 class="card-title m-0">@(committee.Paper?.Title ?? "Untitled paper")</h3>
+                    <h2 class="card-title m-0">@(committee.Paper?.Title ?? "Untitled paper")</h2>
                     <div class="text-secondary small">@committee.StudentName</div>
                 </div>
                 <span class="badge bg-primary-lt">
@@ -274,7 +274,7 @@ else
                 <form asp-controller="Admin" asp-action="UpdateCommittee" method="post">
                     <input type="hidden" name="committeeId" value="@committee.Id" />
 
-                    <h4 class="mb-1">Members</h4>
+                    <h3 class="h4 mb-1">Members</h3>
                     <p class="text-secondary small">
                         This is the committee as it should stand once you save: anyone unticked is
                         removed. @committee.Approvals of @committee.MinApprovalsRequired approvals

@@ -1,7 +1,8 @@
 @model CreateProposalsViewModel
 @{ ViewData["Title"] = "Research proposals"; }
 
-            <main class="page-body m-0 py-4">
+            @* A div, not a main: the layout already opens one, and a page has a single main region. *@
+            <div class="page-body m-0 py-4">
                 <div class="container-xl">
 
                     @* Rejected input is announced by the shared toast region in the layout, which
@@ -65,13 +66,13 @@
                                                 <div class="row g-3">
                                                     <input type="hidden" asp-for="Slots[i].ProposalId" />
                                                     <div class="col-12">
-                                                        <label class="form-label text-secondary mb-1 uppercase tracking-wider small fw-bold">
+                                                        <label asp-for="Slots[i].Title" class="form-label text-secondary mb-1 uppercase tracking-wider small fw-bold">
                                                             Proposal Title @(i == 0 ? Html.Raw("<span class=\"text-danger\">*</span>") : null)
                                                         </label>
                                                         <input asp-for="Slots[i].Title" class="form-control form-control-lg" placeholder="Enter a descriptive title" maxlength="500" disabled="@Model.IsLocked" />
                                                     </div>
                                                     <div class="col-12">
-                                                        <label class="form-label text-secondary mb-1 uppercase tracking-wider small fw-bold">Abstract</label>
+                                                        <label asp-for="Slots[i].Abstract" class="form-label text-secondary mb-1 uppercase tracking-wider small fw-bold">Abstract</label>
                                                         <textarea asp-for="Slots[i].Abstract" rows="6" class="form-control" placeholder="Provide a concise summary outlining the core objectives, methodology, and expected outcomes..." style="resize: none;" disabled="@Model.IsLocked"></textarea>
                                                     </div>
                                                     @if (!string.IsNullOrEmpty(Model.Slots[i].Status))
@@ -108,4 +109,4 @@
                     </form>
 
                 </div>
-            </main>
+            </div>
