@@ -66,9 +66,9 @@ dotnet run --launch-profile http -- --Api:BaseUrl=https://your-api-host
 
 ### Signing in to try it
 
-A development or shared testing API comes up with a demonstration dataset already in it: an account
-for every role, and publications parked at every point in the three pipelines where somebody has to
-act. Every account uses the password `DevTest123!`: `student.test@aisstudent.ac.nz`,
+A development or shared testing API comes up with a demonstration dataset already in it: twenty-two
+accounts across two departments and thirty publications, parked at every point in the three
+pipelines where somebody has to act. Every account uses the password `DevTest123!`: `student.test@aisstudent.ac.nz`,
 `supervisor.test@ais.ac.nz`, `coordinator.test@ais.ac.nz`, `hod.test@ais.ac.nz`,
 `reviewer.test@ais.ac.nz`, `external.test@ais.ac.nz`, `admin.test@ais.ac.nz`. The API's README lists
 the rest and says what each one has waiting.
@@ -78,7 +78,9 @@ nothing in it.
 
 ## What is wired up
 
-All six operational roles are connected to the API end to end.
+All six operational roles are connected to the API end to end: Admin, Head of Department,
+Coordinator, Supervisor, Reviewer and external committee member. Students and Staff are the two
+that are never assigned work, so neither is counted among them.
 
 | Area | State |
 | --- | --- |
@@ -89,8 +91,8 @@ All six operational roles are connected to the API end to end.
 | Coordinator: proposal dispatch, supervisor selections, both ethics reviews, paper decision | Connected |
 | Supervisor: proposals, ethics decision and document checks, paper review | Connected |
 | Head of Department: department oversight and ethics review | Connected |
-| Committee members, internal and external: assignments and evaluation | Connected |
-| Admin: dashboard, users, committee assignment, audit log | Connected |
+| Reviewers and external committee members: assignments and evaluation | Connected |
+| Admin: dashboard, users, departments, committee assignment, supervisor groups, audit log | Connected |
 | Admin: system settings and invitations | Connected |
 | Notifications: the top bar's bell, the list, and marking as read | Connected |
 | Profile and profile photo, all roles | Connected |
@@ -116,8 +118,10 @@ A student may run several publications at once, each with its own proposals, eth
 paper. Every pipeline route carries the publication's id and is guarded by both ownership and
 stage, so a URL cannot be edited into someone else's work, or into a stage that has not opened.
 
-1. **Research proposals**: up to three, submitted together. A coordinator sends them to
-   supervisors, a supervisor picks one, and the coordinator assigns them.
+1. **Research proposals**: submitted together, as many as the institution asks for. A coordinator
+   sends them to supervisors, the supervisors say which they would take on, and the coordinator
+   allocates one. A round where nobody is willing goes back, and the coordinator either sends it to
+   different supervisors or asks the student to write new ones.
 2. **Ethics approval**: a screening questionnaire followed by a declaration, then a supervisor
    and a coordinator decide whether documentation is required. Which documents a student is asked
    for is configured by an administrator, and each publication keeps the list it was given.
@@ -140,9 +144,10 @@ and the API's download endpoint requires a signed-in user.
 
 ### Administration
 
-**System settings** covers eight groups, each saved and validated on its own so a rejected mail
-server cannot discard an unrelated edit: committees, ethics documents, deadlines, uploads,
-passwords, access, notifications and institution details.
+**System settings** is twelve tabs, each saved and validated on its own so a rejected mail server
+cannot discard an unrelated edit: committees, ethics documents, the steps of each pipeline, which
+decisions must carry a comment, deadlines, uploads, passwords, access, notifications, where files
+are stored, departments and institution details.
 
 Two of them change what the system asks of people, and both apply to work started afterwards
 only. Committee composition and the ethics document list are recorded on a publication when it
@@ -156,8 +161,10 @@ committee members: they are outside the institution, so no email domain could sa
 ## Project layout
 
 ```
-Controllers/          One per role, plus Auth, Profile, Public, Notifications,
-                      Invitations, SystemSettings and Home
+Controllers/          One per role (Student, Supervisor, Coordinator, HeadOfDepartment,
+                      ExternalSupervisor for both committee roles, Admin), plus Auth,
+                      Profile, Public, Notifications, Invitations, Users, AuditLogs,
+                      SystemSettings, Downloads, Theme, Sidebar and Home
 Models/               View models, grouped by area
 Infrastructure/
   Api/                Typed API clients, DTOs and the shared response envelope
@@ -165,10 +172,15 @@ Infrastructure/
   Options/            Strongly-typed configuration
 Services/             Authentication cookie handling, institution details
 ViewComponents/       The top bar's notification bell
-Common/               Role landing, role names, status display
+Common/               Role landing, role names, status display, paging helpers
 Views/                Razor views, grouped by controller
+  Shared/             The layout, the sortable column heading, the pager, the toast
 wwwroot/              Site CSS and JavaScript, and vendored Tabler and Bootstrap
 ```
+
+`ExternalSupervisor` is named for the role it was written for and now serves both committee roles,
+Reviewer and external. Renaming it would mean renaming its routes, which the API's audit trail and
+the team's bookmarks both point at, so it keeps the name and this paragraph explains it.
 
 ## Conventions
 
@@ -181,14 +193,47 @@ wwwroot/              Site CSS and JavaScript, and vendored Tabler and Bootstrap
   invalid, and needs no markup of its own.
 - **Search, filter and tab state** lives in the query string, so a filtered or tabbed view can be
   linked to and reloaded, and keeps working without JavaScript.
-- **No Bootstrap JavaScript.** Tabler's `tabler.min.js` does not bundle it, so `data-bs-toggle`
-  does nothing here. Tabs are server-rendered links, and confirmations are inline panels toggled
-  by a few lines of plain JavaScript. Anything relying on Bootstrap's modal or tab components
-  fails silently. Reach for the existing patterns instead.
+- **Paging, sorting and searching happen in the API, never in the browser.** Sorting the ten rows a
+  page happens to hold is not sorting the list: the oldest proposal in a department is on the last
+  page, and somebody who asks for oldest first expects to see it. Column headings are links that
+  carry the sort in the query string; `Views/Shared/_SortableHeader.cshtml` draws one and
+  `_Pager.cshtml` draws the controls under it.
+- **Whatever a listing can be ordered by, it shows.** A heading that sorts by a date the rows do not
+  display looks broken, because the order changes and nothing visible explains why.
+- **Bootstrap's JavaScript is there, under another name.** Tabler's `tabler.min.js` bundles it and
+  exposes it as `window.tabler` rather than `window.bootstrap`, so `data-bs-toggle` works for
+  collapse, dropdown, modal and tab, and code that reaches for `bootstrap.Modal` by name does not.
+  Anything more than showing and hiding is plain JavaScript in `wwwroot/js/site.js`, driven by
+  `data-rpms-*` attributes in the markup, so a view says what it wants rather than carrying a
+  script of its own.
+- **Tabs and filters are server-rendered where the state should survive a reload.** System settings
+  puts its tab in the query string for that reason: a rejected mail server should not throw you
+  back to the first tab.
 - **Rules an administrator controls are not restated here.** Password length and complexity,
   upload size and permitted file types all come from the API, so a form that duplicated them
   would go stale the first time they changed, and would reject input the server would have
   accepted.
+
+### Things people can set for themselves
+
+Three preferences belong to the person rather than to the institution, so they are saved against the
+account and follow them to another browser:
+
+- **A light or dark theme**, switched from the user menu.
+- **The order of the sidebar**, rearranged by dragging or from the keyboard, and saved after a
+  pause rather than on every nudge, so moving one item three places does not become three requests
+  racing each other.
+- **Whether they are taking new work on**, which governs what the system offers them next and leaves
+  everything already assigned exactly where it is. That is deliberately not the same as an
+  administrator disabling the account, and it is only shown to the roles that are ever chosen.
+
+### On a phone
+
+Every screen works at 320 pixels. The rule is that the page scrolls down and never sideways: a
+listing wider than the screen scrolls inside its own container rather than dragging the whole layout
+with it. The sidebar becomes a drawer under the top bar, and the column headings that stand over a
+grid of cards are hidden where the cards stop being a grid, since a list of links describing columns
+that are no longer side by side is worse than none.
 
 ## Technology
 
