@@ -58,10 +58,6 @@ else
                     <div class="text-secondary">
                         @(Model.ProposalStageTotal == 1 ? "publication at this stage" : "publications at this stage")
                     </div>
-                    @* Pushed to the foot of the card so the three buttons line up with each other
-                       however much the ethics card has to say above its own. *@
-                    <a asp-controller="HeadOfDepartment" asp-action="all_proposals_fromstudent"
-                       class="btn btn-primary btn-sm mt-3 align-self-start mt-auto">Department proposals</a>
                 </div>
             </div>
         </div>
@@ -105,8 +101,6 @@ else
                     <div class="text-secondary">
                         @(Model.PaperStageTotal == 1 ? "publication at this stage" : "publications at this stage")
                     </div>
-                    <a asp-controller="HeadOfDepartment" asp-action="Department_papers"
-                       class="btn btn-primary btn-sm mt-3 align-self-start mt-auto">Department papers</a>
                 </div>
             </div>
         </div>
@@ -215,7 +209,13 @@ else
                             {
                                 <tr>
                                     <td>@publication.StudentName</td>
-                                    <td>@publication.DisplayTitle</td>
+                                    @* The way in. Every publication in the department opens whole
+                                       from here, whichever stage it has reached. *@
+                                    <td>
+                                        <a asp-controller="HeadOfDepartment" asp-action="Publication"
+                                           asp-route-id="@publication.Id"
+                                           class="text-reset text-decoration-none fw-medium">@publication.DisplayTitle</a>
+                                    </td>
                                     <td>@StageLabel(publication.CurrentPipeline)</td>
                                     <td>
                                         <span class="badge @StatusBadge(publication.DisplayStatus)">

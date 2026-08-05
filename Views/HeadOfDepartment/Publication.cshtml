@@ -1,0 +1,25 @@
+@using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
+@model PublicationDetailViewModel
+@{ ViewData["Title"] = Model.Container.DisplayTitle; }
+
+@* A publication as a whole, to read. Nothing on this screen changes anything: the one move a Head
+   of Department makes in the workflow is commenting on ethics documentation, and that has its own
+   screen, reached from the dashboard when it is their turn. Everything here can be downloaded,
+   because overseeing a department means being able to read what is in it. *@
+
+<div class="mb-4">
+    <a asp-controller="HeadOfDepartment" asp-action="Head_of_Department_dashboard" class="text-secondary">
+        &larr; Dashboard
+    </a>
+    <h1 class="page-title mt-2 mb-1">@Model.Container.DisplayTitle</h1>
+    <div class="text-secondary">
+        @Model.Container.StudentName
+        @if (!string.IsNullOrWhiteSpace(Model.Container.StudentDepartmentName))
+        {
+            <text>&middot; @Model.Container.StudentDepartmentName</text>
+        }
+        &middot; started @Model.Container.CreatedAt.ToLocalTime().ToString("d MMM yyyy")
+    </div>
+</div>
+
+<partial name="_PublicationRecord" model="Model" />

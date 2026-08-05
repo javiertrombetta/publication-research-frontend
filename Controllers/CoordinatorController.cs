@@ -83,6 +83,70 @@ namespace ResearchPublicationManagementSystem.Controllers
             return View(model);
         }
 
+        // ---------- One publication, whole, to read ----------
+
+        /// <summary>
+        /// Everything a publication holds: its proposals, its ethics stage with the documents that
+        /// were uploaded, its paper with every version and what the committee said, and the trail
+        /// of who did what. Every file can be downloaded.
+        ///
+        /// Nothing here decides anything. Each of the coordinator's decisions has a screen of its
+        /// own, where the choice is put beside what it is about; this is for reading a publication
+        /// rather than acting on it, which the dashboard could not do before.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> Publication(Guid id, int historyPage = 1, string? tab = null)
+        {
+            var container = await containersApi.GetByIdAsync(id);
+            if (!container.Success || container.Data is null)
+            {
+                TempData["ErrorMessage"] = container.ErrorMessage ?? "Could not open that publication.";
+                return RedirectToAction(nameof(Coordinator_dashboard));
+            }
+
+            var model = new PublicationDetailViewModel
+            {
+                Container = container.Data,
+                ActiveTab = tab ?? "progress"
+            };
+
+            var proposals = await proposalsApi.GetByContainerAsync(id);
+            model.Proposals = proposals.Data ?? [];
+
+            if (container.Data.CurrentPipeline >= PipelineStage.EthicsApproval)
+            {
+                var ethics = await ethicsApi.GetApprovalAsync(id);
+                if (ethics.Success) model.EthicsApproval = ethics.Data;
+
+                var documents = await ethicsApi.GetDocumentsAsync(id);
+                model.EthicsDocuments = documents.Data ?? [];
+            }
+
+            if (container.Data.CurrentPipeline >= PipelineStage.ResearchPaper)
+            {
+                var paper = await publicationsApi.GetByContainerAsync(id);
+                if (paper.Success) model.Publication = paper.Data;
+
+                if (model.Publication is { } written)
+                {
+                    var versions = await publicationsApi.GetVersionsAsync(written.Id);
+                    model.PaperVersions = versions.Data ?? [];
+
+                    var reviews = await publicationsApi.GetReviewsAsync(written.Id);
+                    model.Reviews = reviews.Data ?? [];
+                }
+            }
+
+            // Best-effort, as on every other screen that shows a trail.
+            var history = await containersApi.GetActivityHistoryAsync(id, historyPage);
+            model.History = history.Data?.Items ?? [];
+            model.HistoryTotal = history.Data?.TotalCount ?? 0;
+            model.HistoryPager = Paging.PagerFor(history.Data, "Coordinator", nameof(Publication),
+                new Dictionary<string, string?> { ["id"] = id.ToString(), ["tab"] = "history" }, "historyPage");
+
+            return View(model);
+        }
+
         // ---------- Pipeline 1: sending proposals out and assigning a supervisor ----------
 
         /// <summary>

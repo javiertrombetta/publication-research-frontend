@@ -17,7 +17,8 @@ namespace ResearchPublicationManagementSystem.Controllers
     public class HeadOfDepartmentController(
         ContainersApiClient containersApi,
         ProposalsApiClient proposalsApi,
-        EthicsApiClient ethicsApi) : Controller
+        EthicsApiClient ethicsApi,
+        PublicationsApiClient publicationsApi) : Controller
     {
         // ---------- Overview ----------
 
@@ -57,48 +58,6 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.EthicsStageTotal = everything.Count(c => c.CurrentPipeline == PipelineStage.EthicsApproval);
             model.PaperStageTotal = everything.Count(c => c.CurrentPipeline == PipelineStage.ResearchPaper);
             model.AwaitingMyReviewTotal = everything.Count(c => c.EthicsAwaitingRole == RoleNames.HeadOfDepartment);
-
-            return View(model);
-        }
-
-        /// <summary>
-        /// The research paper stage across the department, read-only.
-        ///
-        /// Their one decision is the ethics comment, and this is not it. It is oversight: a head of
-        /// department is the authority over the department, so what is happening to its research
-        /// and who is holding each piece up is theirs to see, even where the next move is somebody
-        /// else's to make.
-        /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> Department_papers(
-            int page = 1, string? sort = null, bool desc = false, string? search = null)
-        {
-            var model = new DepartmentPapersViewModel
-            {
-                Sort = sort ?? "started",
-                Descending = desc,
-                Search = search
-            };
-
-            var containers = await containersApi.GetInMyDepartmentAsync(
-                page: page, sort: sort ?? "started", descending: desc, search: search);
-
-            if (!containers.Success)
-            {
-                TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load your department's papers.";
-                model.LoadFailed = true;
-                return View(model);
-            }
-
-            // The paper stage only. Filtered here rather than asked for, because a container with
-            // no paper yet has nothing to show on this screen and the API's paper filter answers a
-            // narrower question: whose turn it is, not whether the stage has been reached.
-            model.Publications = [.. (containers.Data?.Items ?? [])
-                .Where(c => c.CurrentPipeline == PipelineStage.ResearchPaper)];
-
-            model.TotalCount = containers.Data?.TotalCount ?? 0;
-            model.Pager = Paging.PagerFor(containers.Data, "HeadOfDepartment",
-                nameof(Department_papers), model.RouteValues());
 
             return View(model);
         }
@@ -210,47 +169,68 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         // ---------- Department oversight ----------
 
+        // ---------- One publication, whole, to read ----------
+
         /// <summary>
-        /// Every proposal from students in the department. Read-only: the Head of Department is
-        /// not part of the proposal workflow, but does need to see what their department is doing.
+        /// Everything a publication in this department holds: its proposals, its ethics stage with
+        /// the documents that were uploaded, its paper with every version and what the committee
+        /// said, and the trail of who did what. Every file can be downloaded.
+        ///
+        /// Nothing here changes anything. A Head of Department oversees a department, and their one
+        /// move in the workflow is commenting on ethics documentation, which has its own screen.
+        /// This replaced two listings that each showed one stage of the same publications: reading
+        /// one meant knowing in advance which of them to look in.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> all_proposals_fromstudent(
-            int page = 1, string? sort = null, bool desc = false, string? search = null)
+        public async Task<IActionResult> Publication(Guid id, int historyPage = 1, string? tab = null)
         {
-            var model = new DepartmentProposalsViewModel
+            var container = await containersApi.GetByIdAsync(id);
+            if (!container.Success || container.Data is null)
             {
-                Sort = sort ?? "submitted",
-                Descending = desc,
-                Search = search
-            };
-
-            // One paged request for the whole screen. Each proposal carries its author's name and
-            // its publication's id, so there is no second call to find out who wrote what, and the
-            // API decides how many rows come back rather than the size of the department.
-            var proposals = await proposalsApi.GetInMyDepartmentAsync(
-                page, sort: sort ?? "submitted", descending: desc, search: search);
-            if (!proposals.Success)
-            {
-                TempData["ErrorMessage"] = proposals.ErrorMessage ?? "Could not load your department's proposals.";
-                model.LoadFailed = true;
-                return View(model);
+                TempData["ErrorMessage"] = container.ErrorMessage ?? "Could not open that publication.";
+                return RedirectToAction(nameof(Head_of_Department_dashboard));
             }
 
-            // One row per proposal, in the order the API returned them. Grouping them by student
-            // undid the ordering the reader had asked for: a list sorted by title came back sorted
-            // by title within each student and by nothing at all between them.
-            model.Items = [.. (proposals.Data?.Items ?? [])
-                .Select(p => new DepartmentProposalItem
-                {
-                    StudentName = p.StudentName,
-                    Proposal = new ProposalDto(
-                        p.Id, p.PublicationContainerId, p.Title, p.Abstract, p.Status, p.SubmittedAt)
-                })];
+            var model = new PublicationDetailViewModel
+            {
+                Container = container.Data,
+                ActiveTab = tab ?? "progress"
+            };
 
-            model.TotalCount = proposals.Data?.TotalCount ?? 0;
-            model.Pager = Paging.PagerFor(proposals.Data, "HeadOfDepartment", nameof(all_proposals_fromstudent),
-                model.RouteValues());
+            var proposals = await proposalsApi.GetByContainerAsync(id);
+            model.Proposals = proposals.Data ?? [];
+
+            if (container.Data.CurrentPipeline >= PipelineStage.EthicsApproval)
+            {
+                var ethics = await ethicsApi.GetApprovalAsync(id);
+                if (ethics.Success) model.EthicsApproval = ethics.Data;
+
+                var documents = await ethicsApi.GetDocumentsAsync(id);
+                model.EthicsDocuments = documents.Data ?? [];
+            }
+
+            if (container.Data.CurrentPipeline >= PipelineStage.ResearchPaper)
+            {
+                var paper = await publicationsApi.GetByContainerAsync(id);
+                if (paper.Success) model.Publication = paper.Data;
+
+                if (model.Publication is { } written)
+                {
+                    var versions = await publicationsApi.GetVersionsAsync(written.Id);
+                    model.PaperVersions = versions.Data ?? [];
+
+                    var reviews = await publicationsApi.GetReviewsAsync(written.Id);
+                    model.Reviews = reviews.Data ?? [];
+                }
+            }
+
+            // Best-effort, as on every other screen that shows a trail: a publication is still
+            // worth reading when its history cannot be.
+            var history = await containersApi.GetActivityHistoryAsync(id, historyPage);
+            model.History = history.Data?.Items ?? [];
+            model.HistoryTotal = history.Data?.TotalCount ?? 0;
+            model.HistoryPager = Paging.PagerFor(history.Data, "HeadOfDepartment", nameof(Publication),
+                new Dictionary<string, string?> { ["id"] = id.ToString(), ["tab"] = "history" }, "historyPage");
 
             return View(model);
         }

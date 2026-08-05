@@ -76,17 +76,6 @@ namespace ResearchPublicationManagementSystem.Models
     }
 
     /// <summary>
-    /// The research paper stage across the department, read-only. Their decisions are elsewhere;
-    /// this answers what is happening and who is holding it up.
-    /// </summary>
-    public class DepartmentPapersViewModel : DepartmentQueue
-    {
-        protected override string QueueAction => "Department_papers";
-
-        public IReadOnlyList<PublicationContainerDto> Publications { get; set; } = [];
-    }
-
-    /// <summary>
     /// Ethics documentation awaiting the Head of Department's comments.
     ///
     /// The same queue shape as the department's other listings, so it is searched, ordered and
@@ -116,27 +105,4 @@ namespace ResearchPublicationManagementSystem.Models
         public IReadOnlyList<EthicsDocumentDto> Documents { get; set; } = [];
     }
 
-    /// <summary>
-    /// Every proposal from students in the department, for oversight rather than action.
-    ///
-    /// One row per proposal rather than per student. They were grouped, on the reasoning that
-    /// three proposals from one student are one decision; but nobody decides anything here, and a
-    /// listing ordered by title or by status cannot also be grouped by author without the order
-    /// applying inside each group and to nothing else. The student's name is on every row instead,
-    /// which is what the grouping was carrying.
-    /// </summary>
-    public class DepartmentProposalsViewModel : DepartmentQueue
-    {
-        protected override string QueueAction => "all_proposals_fromstudent";
-
-        public List<DepartmentProposalItem> Items { get; set; } = [];
-    }
-
-    public class DepartmentProposalItem
-    {
-        /// <summary>Carried on the proposal itself, so the screen is one request.</summary>
-        public string StudentName { get; set; } = string.Empty;
-
-        public ProposalDto Proposal { get; set; } = null!;
-    }
 }

@@ -50,6 +50,12 @@ namespace ResearchPublicationManagementSystem.Models
         public IReadOnlyList<PublicationVersionDto> PaperVersions { get; set; } = [];
 
         /// <summary>
+        /// What the evaluation committee said, where one has been appointed. Read by the screens
+        /// that show a whole publication to somebody overseeing it rather than working on it.
+        /// </summary>
+        public IReadOnlyList<ReviewDto> Reviews { get; set; } = [];
+
+        /// <summary>
         /// Every ethics document this institution asks for, so an administrator adding one can
         /// say which it is. Only filled in on the screen that offers that.
         /// </summary>

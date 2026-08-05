@@ -219,7 +219,13 @@ else
                             var action = CoordinatorDashboardViewModel.ActionFor(publication);
                             <tr>
                                 <td>@publication.StudentName</td>
-                                <td>@publication.DisplayTitle</td>
+                                @* The way in. The decisions each have their own screen; this is
+                                   for reading what a publication holds. *@
+                                <td>
+                                    <a asp-controller="Coordinator" asp-action="Publication"
+                                       asp-route-id="@publication.Id"
+                                       class="text-reset text-decoration-none fw-medium">@publication.DisplayTitle</a>
+                                </td>
                                 <td>@StageLabel(publication.CurrentPipeline)</td>
                                 <td>
                                     <span class="badge @StatusBadge(publication.DisplayStatus)">
