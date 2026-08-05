@@ -125,7 +125,7 @@ else
     @foreach (var item in Model.Items)
     {
         <div class="card mb-3">
-            <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+            <div class="card-header rpms-collapse-header"
                  data-rpms-header-toggle="#ethics-final-@item.Container.Id"
                  role="button" tabindex="0"
                  aria-expanded="true" aria-controls="ethics-final-@item.Container.Id">
@@ -133,6 +133,8 @@ else
                    took focus and stayed looking pressed after a click, which read as a
                    selected icon sitting in the middle of a row. The header carries the
                    role and the keyboard handling now, so this is only the arrow. *@
+                <div class="row g-2 align-items-center w-100">
+                <div class="col-12 col-md-6 d-flex align-items-center gap-2">
                 <span class="rpms-collapse-icon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
                          viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
@@ -146,6 +148,15 @@ else
                     <h3 class="card-title m-0">@item.Container.DisplayTitle</h3>
                     <div class="text-secondary small">@item.Container.StudentName</div>
                 </div>
+                </div>
+
+                @* The date the listing orders by. Without it the heading above ordered by
+                   something the row never showed, which reads as a fault rather than an order. *@
+                <div class="col-6 col-md-3 text-secondary small">
+                    <span class="text-nowrap" title="The date this publication was opened">@item.Container.CreatedAt.ToLocalTime().ToString("d MMM yyyy")</span>
+                </div>
+
+                <div class="col-6 col-md-3 d-flex flex-wrap align-items-center justify-content-md-end gap-2">
 
                 @* A count of nothing reads as a set that failed to load. On the route where no
                    documentation was asked for, say that instead. *@
@@ -154,6 +165,8 @@ else
                         ? "No documentation needed"
                         : $"{item.Documents.Count} {(item.Documents.Count == 1 ? "document" : "documents")}")
                 </span>
+                </div>
+                </div>
             </div>
 
             <div class="card-body collapse show" id="ethics-final-@item.Container.Id"

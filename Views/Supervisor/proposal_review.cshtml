@@ -108,9 +108,9 @@ else
        quotes, so a call with string arguments cannot be written inside one. *@
     var columns = new List<(string, SortableColumnViewModel)>
     {
-        ("col-12 col-md-4", Model.Column("student", "Student")),
-        ("col-12 col-md-5", Model.Column("title", "Proposal")),
-        ("col-12 col-md-3", Model.Column("submitted", "Date", descendingFirst: true))
+        ("col-12 col-md-4", Model.Column("title", "Proposal")),
+        ("col-6 col-md-3", Model.Column("student", "Student")),
+        ("col-6 col-md-2", Model.Column("submitted", "Date", descendingFirst: true))
     };
 
     <partial name="_QueueColumns" model="columns" />
@@ -118,12 +118,14 @@ else
     @foreach (var proposal in Model.Proposals)
     {
         <div class="card mb-3">
-            <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+            <div class="card-header rpms-collapse-header"
                  data-rpms-header-toggle="#proposal-@proposal.Id"
                  role="button" tabindex="0"
                  aria-expanded="true" aria-controls="proposal-@proposal.Id">
                 @* Part of the header rather than a control of its own, so clicking it does not
                    leave an icon looking selected in the middle of a row. *@
+                <div class="row g-2 align-items-center w-100">
+                <div class="col-12 col-md-4 d-flex align-items-center gap-2">
                 <span class="rpms-collapse-icon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
                          viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
@@ -138,11 +140,31 @@ else
                     @* Whose work this is. The queue offers a search and an ordering by the student
                        and named nobody: agreeing to supervise a piece of work is agreeing to work
                        with a person. *@
-                    @if (!string.IsNullOrWhiteSpace(proposal.StudentName))
+                </div>
+                </div>
+
+                @* Whose work this is, in the column that orders by it. It was small print under
+                   the title, so the Student heading stood over the title instead. *@
+                <div class="col-6 col-md-3 text-secondary small">
+                    <span class="text-nowrap">@(proposal.StudentName ?? "—")</span>
+                </div>
+
+                @* The date the listing orders by. Without it the heading above ordered by
+                   something the row never showed, which reads as a fault rather than an order. *@
+                <div class="col-6 col-md-2 text-secondary small">
+                    @if (proposal.SubmittedAt is { } sentIn)
                     {
-                        <div class="text-secondary small">@proposal.StudentName</div>
+                        <span class="text-nowrap" title="The date this proposal was submitted">
+                            @sentIn.ToLocalTime().ToString("d MMM yyyy")
+                        </span>
+                    }
+                    else
+                    {
+                        <span>&mdash;</span>
                     }
                 </div>
+
+                <div class="col-6 col-md-3 d-flex flex-wrap align-items-center justify-content-md-end gap-2">
 
                 @* The date the coordinator asked for an answer by. Readable with the card shut,
                    because it is what decides which one to read next. *@
@@ -155,6 +177,8 @@ else
                         @(proposal.RespondByHasPassed ? "Was due" : "Due") @by.ToString("d MMM, HH:mm")
                     </span>
                 }
+                </div>
+                </div>
             </div>
 
             <div class="card-body collapse show" id="proposal-@proposal.Id"

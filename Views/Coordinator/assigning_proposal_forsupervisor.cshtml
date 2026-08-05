@@ -179,12 +179,32 @@ else
                         </span>
                     }
                 </span>
+                @* Which students are on screen at all. One button rather than three, because the
+                   three are one choice and only one of them can be true at a time; three buttons
+                   would leave a coordinator working out which of them they had last pressed. The
+                   label says what is being shown, so it always describes the list underneath it
+                   rather than an action that may or may not have happened. *@
+                @if (Model.HasReturned)
+                {
+                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                            data-rpms-show-cycle="student-groups"
+                            data-rpms-show-labels="Show all|Show only the returned|Show all without the returned">
+                        Show all
+                    </button>
+                }
+
+                @* What is ticked. Four buttons rather than a cycle: unlike the view above these are
+                   not four states of one thing but four different jobs, and a coordinator who
+                   wants the returned ticked should not have to press through the others to get
+                   there. *@
                 <button type="button" class="btn btn-sm btn-outline-secondary"
                         data-rpms-check-all="proposalIds">Select all</button>
                 @if (Model.HasReturned)
                 {
                     <button type="button" class="btn btn-sm btn-outline-warning"
                             data-rpms-check-returned="proposalIds">Select the returned</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                            data-rpms-check-not-returned="proposalIds">Select all without the returned</button>
                 }
                 <button type="button" class="btn btn-sm btn-outline-secondary"
                         data-rpms-check-none="proposalIds">Select none</button>
@@ -206,7 +226,7 @@ else
             var columns = new List<(string, SortableColumnViewModel)>
             {
                 ("col-12 col-md-6", Model.Column("student", "Student")),
-                ("col-12 col-md-6", Model.Column("submitted", "Date", descendingFirst: true))
+                ("col-12 col-md-3", Model.Column("submitted", "Date", descendingFirst: true))
             };
         }
 
@@ -221,10 +241,19 @@ else
         @foreach (var group in Model.ByPublication)
         {
             <div class="card mb-3">
-                <div class="card-header d-flex flex-wrap align-items-center gap-2 rpms-collapse-header"
+                @{
+                    var groupCameBack = group.Any(p => p.CameBack);
+                }
+                @* Laid out on the same grid as the heading row above, so the date sits under the
+                   column that orders by it. As a flex row it drifted with the length of each
+                   student's name and the headings stood over nothing in particular. *@
+                <div class="card-header rpms-collapse-header"
                  data-rpms-header-toggle="#student-@group.Key"
+                 data-rpms-returned-group="@groupCameBack.ToString().ToLowerInvariant()"
                  role="button" tabindex="0"
                  aria-expanded="true" aria-controls="student-@group.Key">
+                <div class="row g-2 align-items-center w-100">
+                <div class="col-12 col-md-6 d-flex align-items-center gap-2">
                 @* Part of the header rather than a control of its own. As a button it
                    took focus and stayed looking pressed after a click, which read as a
                    selected icon sitting in the middle of a row. The header carries the
@@ -271,20 +300,28 @@ else
                             </div>
                         }
                     </div>
+                </div>
 
-                    @* The date the round was sent in, which is what the list orders by. Without it
-                       the order was a claim the screen made and did not show, and two rounds from
-                       the same student were told apart by nothing at all. *@
+                @* The date the round was sent in, which is what the list orders by. Without it the
+                   order was a claim the screen made and did not show, and two rounds from the same
+                   student were told apart by nothing at all. In its own cell now, under the column
+                   heading that orders by it. *@
+                <div class="col-6 col-md-3 text-secondary small">
                     @if (submitted is { } sentIn)
                     {
-                        <span class="text-secondary small text-nowrap"
+                        <span class="text-nowrap"
                               title="The date this student submitted these proposals">
                             @sentIn.ToLocalTime().ToString("d MMM yyyy")
                         </span>
                     }
+                    else
+                    {
+                        <span class="text-secondary">&mdash;</span>
+                    }
+                </div>
 
-                    @{ var cameBack = group.Any(p => p.CameBack); }
-                    @if (cameBack)
+                <div class="col-6 col-md-3 d-flex flex-wrap align-items-center justify-content-md-end gap-2">
+                    @if (groupCameBack)
                     {
                         @* One badge for the student, not a tally of proposals. A student is only
                            here a second time when no supervisor was interested in any of their
@@ -300,13 +337,15 @@ else
                         </span>
                     }
 
-                    <span class="text-secondary small">
+                    <span class="text-secondary small text-nowrap">
                         @group.Count() @(group.Count() == 1 ? "proposal" : "proposals")
                     </span>
                     <button type="button" class="btn btn-sm btn-ghost-secondary"
                             data-rpms-check-all="proposalIds" data-rpms-scope="#student-@group.Key">All</button>
                     <button type="button" class="btn btn-sm btn-ghost-secondary"
                             data-rpms-check-none="proposalIds" data-rpms-scope="#student-@group.Key">None</button>
+                </div>
+                </div>
                 </div>
                 <div class="card-body collapse show" id="student-@group.Key" data-rpms-collapsible="student-groups">
                     @foreach (var proposal in group)
@@ -322,7 +361,7 @@ else
                         </label>
                     }
 
-                    @if (cameBack)
+                    @if (groupCameBack)
                     {
                         @* Two ways out of a round that found nobody, and the screen offers both.
                            Sending again is the button at the bottom of the page, with different

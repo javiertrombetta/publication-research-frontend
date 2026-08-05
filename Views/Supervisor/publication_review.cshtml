@@ -99,9 +99,9 @@ else
        quotes, so a call with string arguments cannot be written inside one. *@
     var columns = new List<(string, SortableColumnViewModel)>
     {
-        ("col-12 col-md-4", Model.Column("student", "Student")),
-        ("col-12 col-md-5", Model.Column("title", "Paper")),
-        ("col-12 col-md-3", Model.Column("submitted", "Date", descendingFirst: true))
+        ("col-12 col-md-4", Model.Column("title", "Paper")),
+        ("col-6 col-md-3", Model.Column("student", "Student")),
+        ("col-6 col-md-2", Model.Column("submitted", "Date", descendingFirst: true))
     };
 
     <partial name="_QueueColumns" model="columns" />
@@ -109,10 +109,12 @@ else
     @foreach (var paper in Model.Papers)
     {
         <div class="card mb-3">
-            <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+            <div class="card-header rpms-collapse-header"
                  data-rpms-header-toggle="#paper-@paper.Id"
                  role="button" tabindex="0"
                  aria-expanded="true" aria-controls="paper-@paper.Id">
+                <div class="row g-2 align-items-center w-100">
+                <div class="col-12 col-md-4 d-flex align-items-center gap-2">
                 <span class="rpms-collapse-icon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
                          viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
@@ -126,15 +128,37 @@ else
                     <h3 class="card-title m-0">@paper.Title</h3>
                     @* Whose paper it is. The queue searches and orders by the student and named
                        nobody, so a supervisor was reviewing work without being told whose. *@
-                    @if (!string.IsNullOrWhiteSpace(paper.StudentName))
+                </div>
+                </div>
+
+                @* Whose work this is, in the column that orders by it. It was small print under
+                   the title, so the Student heading stood over the title instead. *@
+                <div class="col-6 col-md-3 text-secondary small">
+                    <span class="text-nowrap">@(paper.StudentName ?? "—")</span>
+                </div>
+
+                @* The date the listing orders by. Without it the heading above ordered by
+                   something the row never showed, which reads as a fault rather than an order. *@
+                <div class="col-6 col-md-2 text-secondary small">
+                    @if (paper.UpdatedAt is { } sentIn)
                     {
-                        <div class="text-secondary small">@paper.StudentName</div>
+                        <span class="text-nowrap" title="When this paper was last submitted or revised">
+                            @sentIn.ToLocalTime().ToString("d MMM yyyy")
+                        </span>
+                    }
+                    else
+                    {
+                        <span>&mdash;</span>
                     }
                 </div>
+
+                <div class="col-6 col-md-3 d-flex flex-wrap align-items-center justify-content-md-end gap-2">
 
                 @* Readable with the card shut: a resubmission is a different read from a first
                    draft, and it is what decides which to open. *@
                 <span class="badge @StatusBadge(paper.Status)">@Humanise(paper.Status)</span>
+                </div>
+                </div>
             </div>
 
             <div class="card-body collapse show" id="paper-@paper.Id"

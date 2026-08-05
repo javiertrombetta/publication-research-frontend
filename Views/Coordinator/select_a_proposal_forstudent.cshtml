@@ -122,9 +122,9 @@ else
        so a call with string arguments cannot be written inside one. *@
     var columns = new List<(string, SortableColumnViewModel)>
     {
-        ("col-12 col-md-4", Model.Column("student", "Student")),
-        ("col-12 col-md-5", Model.Column("title", "Proposal")),
-        ("col-12 col-md-3", Model.Column("submitted", "Date", descendingFirst: true))
+        ("col-12 col-md-5", Model.Column("student", "Student")),
+        ("col-6 col-md-2", Model.Column("title", "Proposal")),
+        ("col-6 col-md-3", Model.Column("due", "Due", descendingFirst: true))
     };
 
     <partial name="_QueueColumns" model="columns" />
@@ -132,7 +132,7 @@ else
     @foreach (var item in Model.Items)
     {
         <div class="card mb-3">
-            <div class="card-header d-flex align-items-center gap-2 rpms-collapse-header"
+            <div class="card-header rpms-collapse-header"
                  data-rpms-header-toggle="#selection-@item.Proposal.Id"
                  role="button" tabindex="0"
                  aria-expanded="true" aria-controls="selection-@item.Proposal.Id">
@@ -140,6 +140,8 @@ else
                    took focus and stayed looking pressed after a click, which read as a
                    selected icon sitting in the middle of a row. The header carries the
                    role and the keyboard handling now, so this is only the arrow. *@
+<div class="row g-2 align-items-center w-100">
+                <div class="col-12 col-md-7 d-flex align-items-center gap-2">
                 <span class="rpms-collapse-icon" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20"
                          viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
@@ -153,8 +155,11 @@ else
                     <h3 class="card-title m-0">@item.Proposal.Title</h3>
                     <div class="text-secondary small">@item.StudentName</div>
                 </div>
+                </div>
 
-                @* Readable with the card shut, because it is what decides whether to open it. *@
+                @* The answer-by date, in the column that orders by it. Readable with the card shut,
+                   because it is what decides whether to open it. *@
+                <div class="col-6 col-md-3 text-secondary small">
                 @if (item.RespondBy is { } by)
                 {
                     <span class="badge @(item.RespondByHasPassed ? "bg-warning-lt" : "bg-secondary-lt")"
@@ -164,9 +169,18 @@ else
                         @(item.RespondByHasPassed ? "Was due" : "Due") @by.ToString("d MMM, HH:mm")
                     </span>
                 }
-                <span class="badge bg-primary-lt">
-                    @item.Willing.Count() willing
-                </span>
+                else
+                {
+                    <span>&mdash;</span>
+                }
+                </div>
+
+                <div class="col-6 col-md-2 d-flex align-items-center justify-content-md-end">
+                    <span class="badge bg-primary-lt text-nowrap">
+                        @item.Willing.Count() willing
+                    </span>
+                </div>
+                </div>
             </div>
 
             <div class="card-body collapse show" id="selection-@item.Proposal.Id"
