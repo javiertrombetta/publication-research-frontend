@@ -108,6 +108,34 @@
                                             <div class="fs-2 fw-medium text-dark">@(Model.DepartmentName ?? "—")</div>
                                         </div>
 
+                                        <div class="col-12 col-sm-6">
+                                            <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">ORCID</div>
+                                            <div class="fs-2 fw-medium text-dark">@(string.IsNullOrWhiteSpace(Model.Orcid) ? "—" : Model.Orcid)</div>
+                                        </div>
+
+                                        @* What this student says they work on. The API has always
+                                           returned these and nothing showed them, so the tags a
+                                           supervisor would match a proposal against were invisible
+                                           even to the student who chose them. *@
+                                        <div class="col-12">
+                                            <div class="text-secondary mb-1 uppercase tracking-wider small fw-bold">Research areas</div>
+                                            @if (Model.ResearchAreas.Count == 0)
+                                            {
+                                                <div class="text-secondary">
+                                                    None chosen yet. An administrator records these with the rest of your details.
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="d-flex flex-wrap gap-2 mt-1">
+                                                    @foreach (var area in Model.ResearchAreas)
+                                                    {
+                                                        <span class="badge bg-primary-lt">@area</span>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+
                                     </div>
                                 </div>
                             </div>
