@@ -350,6 +350,11 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             // Best-effort, as on every other screen that shows a trail: a publication is still
             // worth reading when its history cannot be.
+            // What can be added, for the administrator's own upload. Best-effort: the rest of the
+            // screen reads perfectly well without the means to add a document.
+            var requirements = await settingsApi.GetEthicsDocumentsAsync();
+            model.EthicsRequirements = [.. (requirements.Data ?? []).Where(r => r.IsActive)];
+
             var history = await containersApi.GetActivityHistoryAsync(id, historyPage);
             model.History = history.Data?.Items ?? [];
             model.HistoryTotal = history.Data?.TotalCount ?? 0;
@@ -357,6 +362,93 @@ namespace ResearchPublicationManagementSystem.Controllers
                 new Dictionary<string, string?> { ["id"] = id.ToString(), ["tab"] = "history" }, "historyPage");
 
             return View(model);
+        }
+
+        // ---------- Correcting what a publication holds, and where it stands ----------
+
+        /// <summary>
+        /// Puts a document on a running publication, or takes one off, and does the same for the
+        /// paper's versions. Every one of them costs a reason.
+        ///
+        /// None of them moves the publication. Where it should stand afterwards is the separate
+        /// decision below, so that a file put right and the person who picks it up next are not
+        /// tangled together.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequestSizeLimit(200_000_000)]
+        public async Task<IActionResult> AddEthicsDocument(Guid id, string documentType, IFormFile? file, string? comments)
+        {
+            if (file is null || file.Length == 0)
+            {
+                return Refuse(id, "Choose a file to add.");
+            }
+
+            var result = await ethicsApi.AdminUploadDocumentAsync(id, documentType, file, comments ?? string.Empty);
+            return Done(id, result.Success, result.ErrorMessage,
+                "Document added, unread. Check where the publication now stands below.");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveEthicsDocument(Guid id, Guid documentId, string? comments)
+        {
+            var result = await ethicsApi.AdminRemoveDocumentAsync(id, documentId, comments ?? string.Empty);
+            return Done(id, result.Success, result.ErrorMessage,
+                "Document removed. Check where the publication now stands below.");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequestSizeLimit(200_000_000)]
+        public async Task<IActionResult> AddPaperVersion(Guid id, Guid publicationId, IFormFile? file, string? comments)
+        {
+            if (file is null || file.Length == 0)
+            {
+                return Refuse(id, "Choose a file to add.");
+            }
+
+            var result = await publicationsApi.AdminUploadVersionAsync(publicationId, file, comments ?? string.Empty);
+            return Done(id, result.Success, result.ErrorMessage,
+                "Version added. The paper's status is unchanged; set it below if it should move.");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemovePaperVersion(Guid id, Guid publicationId, Guid versionId, string? comments)
+        {
+            var result = await publicationsApi.AdminRemoveVersionAsync(publicationId, versionId, comments ?? string.Empty);
+            return Done(id, result.Success, result.ErrorMessage,
+                "Version removed. The paper's status is unchanged; set it below if it should move.");
+        }
+
+        /// <summary>
+        /// Sets which step of which stage the publication waits at, which is what actually lets
+        /// people carry on: a document put right is no use while the stage still says the person
+        /// who needed it has had their turn.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MovePublication(
+            Guid id, int stage, string? ethicsStep, string? paperStatus, string? comments)
+        {
+            var result = await containersApi.MoveAsync(id,
+                new MoveContainerRequestDto(stage, comments ?? string.Empty, ethicsStep, paperStatus));
+
+            return Done(id, result.Success, result.ErrorMessage,
+                "Moved. Whoever it now waits on has been told.");
+        }
+
+        private IActionResult Refuse(Guid id, string why)
+        {
+            TempData["ErrorMessage"] = why;
+            return RedirectToAction(nameof(publication), new { id });
+        }
+
+        private IActionResult Done(Guid id, bool success, string? error, string message)
+        {
+            TempData[success ? "SuccessMessage" : "ErrorMessage"] = success ? message : error ?? "That did not work.";
+            return RedirectToAction(nameof(publication), new { id });
         }
 
         [HttpPost]

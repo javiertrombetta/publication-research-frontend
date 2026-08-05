@@ -37,6 +37,23 @@ public class EthicsApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
             [("documentType", documentType)],
             ct);
 
+    /// <summary>
+    /// Admin-only: puts a document on a publication whatever step it has reached, and takes one
+    /// off. Both carry the reason, which the API records on the publication's history.
+    /// </summary>
+    public Task<ApiResult<EthicsDocumentDto>> AdminUploadDocumentAsync(
+        Guid containerId, string documentType, IFormFile file, string comments, CancellationToken ct = default) =>
+        PostMultipartAsync<EthicsDocumentDto>(
+            $"api/containers/{containerId}/ethics/documents/admin",
+            [("file", file)],
+            [("documentType", documentType), ("comments", comments)],
+            ct);
+
+    public Task<ApiResult<object?>> AdminRemoveDocumentAsync(
+        Guid containerId, Guid documentId, string comments, CancellationToken ct = default) =>
+        DeleteJsonAsync<object?>(
+            $"api/containers/{containerId}/ethics/documents/{documentId}", new CommentsRequestDto(comments), ct);
+
     /// <summary>One uploaded ethics document, so a reviewer can read what they are approving.</summary>
 
     public Task<(byte[] Content, string ContentType, string FileName)?> DownloadDocumentAsync(

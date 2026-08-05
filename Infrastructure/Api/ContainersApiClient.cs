@@ -45,6 +45,14 @@ public class ContainersApiClient(HttpClient httpClient) : ApiClientBase(httpClie
     /// Changes who is responsible for a publication already under way. Administrators only, and
     /// always with a reason.
     /// </summary>
+    /// <summary>
+    /// Admin-only: sets which step of which stage a publication waits at, so whoever should act
+    /// next actually sees it.
+    /// </summary>
+    public Task<ApiResult<PublicationContainerDto>> MoveAsync(
+        Guid id, MoveContainerRequestDto request, CancellationToken ct = default) =>
+        PutJsonAsync<PublicationContainerDto>($"api/containers/{id}/position", request, ct);
+
     public Task<ApiResult<PublicationContainerDto>> ReassignAsync(
         Guid id, ReassignContainerRequestDto request, CancellationToken ct = default) =>
         PutJsonAsync<PublicationContainerDto>($"api/containers/{id}/assignments", request, ct);
