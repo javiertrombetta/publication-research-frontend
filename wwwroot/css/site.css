@@ -1980,3 +1980,19 @@ aside {
     background: transparent;
     cursor: default;
 }
+
+/* A status in a table cell stays on one line.
+
+   Badges here are allowed to wrap, so that one long keyword typed by a student cannot push the
+   page sideways on a phone. In a table cell that permission costs more than it buys: with
+   overflow-wrap set to anywhere, the narrowest the content can be is one character, so the column
+   is free to shrink until the word itself breaks. "Approve" came back as "Appro" over "ve" in the
+   committee's decision column.
+
+   Scoped to cells because that is exactly where the two cases divide: every badge in a td here is
+   a status name we wrote, one or two short words, and every badge holding text somebody typed is
+   somewhere else on the page. */
+td > .badge,
+td > * > .badge {
+    white-space: nowrap;
+}
