@@ -20,6 +20,9 @@ namespace ResearchPublicationManagementSystem.Controllers
         CommitteesApiClient committeesApi,
         UsersApiClient usersApi,
         SettingsApiClient settingsApi,
+        DepartmentsApiClient departmentsApi,
+        ProposalsApiClient proposalsApi,
+        EthicsApiClient ethicsApi,
         SupervisorGroupsApiClient groupsApi) : Controller
     {
         // ---------- Coordinators' saved supervisor groups ----------
@@ -273,14 +276,85 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.TotalCount = containers.Data?.TotalCount ?? 0;
             model.Pager = Paging.PagerFor(containers.Data, "Admin", nameof(assignments), model.RouteValues());
 
-            // Everyone holding each role, not only those free this week: this screen fixes a
+            // Everyone holding the role, not only those free this week: this screen fixes a
             // publication that is stuck, and leaving somebody out because they marked themselves
             // busy would hide the very person the work is being moved to.
-            var coordinators = await usersApi.GetAllAsync(role: RoleNames.Coordinator, pageSize: 100);
             var supervisors = await usersApi.GetAllAsync(role: RoleNames.Supervisor, pageSize: 100);
-
-            model.Coordinators = [.. (coordinators.Data?.Items ?? []).OrderBy(u => u.LastName).ThenBy(u => u.FirstName)];
             model.Supervisors = [.. (supervisors.Data?.Items ?? []).OrderBy(u => u.LastName).ThenBy(u => u.FirstName)];
+
+            // Coordinators and heads of department come per department instead, because both posts
+            // are held in one and only somebody in the student's own may take the work on. One
+            // request per department on the page, not per publication.
+            foreach (var departmentId in model.Publications
+                         .Select(p => p.StudentDepartmentId)
+                         .OfType<Guid>()
+                         .Distinct())
+            {
+                var members = await departmentsApi.GetMembersAsync(departmentId);
+                if (members.Data is not null)
+                {
+                    model.ByDepartment[departmentId] = members.Data;
+                }
+            }
+
+            return View(model);
+        }
+
+        /// <summary>
+        /// What a publication actually holds, read only: its proposals, its ethics decision and
+        /// documents, its paper and versions, and everything that has happened to it.
+        ///
+        /// An administrator could move people around a publication without ever seeing what was in
+        /// it, which is deciding in the dark: whether a supervisor should be replaced depends on
+        /// what is sitting unread on their desk. Nothing here can be changed from this screen.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> publication(Guid id, int historyPage = 1, string? tab = null)
+        {
+            var container = await containersApi.GetByIdAsync(id);
+            if (!container.Success || container.Data is null)
+            {
+                TempData["ErrorMessage"] = container.ErrorMessage ?? "Could not open that publication.";
+                return RedirectToAction(nameof(assignments));
+            }
+
+            var model = new PublicationDetailViewModel
+            {
+                Container = container.Data,
+                ActiveTab = tab ?? "progress"
+            };
+
+            var proposals = await proposalsApi.GetByContainerAsync(id);
+            model.Proposals = proposals.Data ?? [];
+
+            if (container.Data.CurrentPipeline >= PipelineStage.EthicsApproval)
+            {
+                var ethics = await ethicsApi.GetApprovalAsync(id);
+                if (ethics.Success) model.EthicsApproval = ethics.Data;
+
+                var documents = await ethicsApi.GetDocumentsAsync(id);
+                model.EthicsDocuments = documents.Data ?? [];
+            }
+
+            if (container.Data.CurrentPipeline >= PipelineStage.ResearchPaper)
+            {
+                var paper = await publicationsApi.GetByContainerAsync(id);
+                if (paper.Success) model.Publication = paper.Data;
+
+                if (model.Publication is { } written)
+                {
+                    var versions = await publicationsApi.GetVersionsAsync(written.Id);
+                    model.PaperVersions = versions.Data ?? [];
+                }
+            }
+
+            // Best-effort, as on every other screen that shows a trail: a publication is still
+            // worth reading when its history cannot be.
+            var history = await containersApi.GetActivityHistoryAsync(id, historyPage);
+            model.History = history.Data?.Items ?? [];
+            model.HistoryTotal = history.Data?.TotalCount ?? 0;
+            model.HistoryPager = Paging.PagerFor(history.Data, "Admin", nameof(publication),
+                new Dictionary<string, string?> { ["id"] = id.ToString(), ["tab"] = "history" }, "historyPage");
 
             return View(model);
         }
@@ -288,7 +362,8 @@ namespace ResearchPublicationManagementSystem.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reassign(
-            Guid id, Guid? coordinatorUserId, Guid? supervisorUserId, string? comments, string? search)
+            Guid id, Guid? coordinatorUserId, Guid? supervisorUserId, Guid? headOfDepartmentUserId,
+            string? comments, string? search)
         {
             if (string.IsNullOrWhiteSpace(comments))
             {
@@ -298,7 +373,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             }
 
             var result = await containersApi.ReassignAsync(id,
-                new ReassignContainerRequestDto(coordinatorUserId, supervisorUserId, comments));
+                new ReassignContainerRequestDto(coordinatorUserId, supervisorUserId, comments, headOfDepartmentUserId));
 
             TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
                 ? "Assignments changed. Whoever now has the work has been told."

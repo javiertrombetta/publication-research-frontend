@@ -55,7 +55,19 @@ public record PublicationContainerDto(
     /// True while the student is being asked to upload an ethics document again rather than for
     /// the first time. The stage says PendingUpload either way.
     /// </summary>
-    bool EthicsDocumentsReturned = false)
+    bool EthicsDocumentsReturned = false,
+    /// <summary>
+    /// The student's department. Every appointment on a publication is scoped to it, so a screen
+    /// that offers a choice of coordinator or head of department has to know which one applies.
+    /// </summary>
+    Guid? StudentDepartmentId = null,
+    string? StudentDepartmentName = null,
+    /// <summary>
+    /// Which head of department the ethics decision was put to. Null before the stage reaches that
+    /// step, and on institutions that do not run it.
+    /// </summary>
+    Guid? EthicsHeadOfDepartmentId = null,
+    string? EthicsHeadOfDepartmentName = null)
 {
     /// <summary>
     /// True once the paper has cleared review, whether or not its author has yet decided to put
@@ -140,4 +152,5 @@ public record ActivityHistoryActorDto(Guid UserId, string Name);
 public record ReassignContainerRequestDto(
     Guid? CoordinatorUserId,
     Guid? SupervisorUserId,
-    string Comments);
+    string Comments,
+    Guid? HeadOfDepartmentUserId = null);

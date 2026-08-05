@@ -92,14 +92,27 @@ else
                     <h3 class="card-title m-0">@publication.DisplayTitle</h3>
                     <div class="text-secondary small">
                         @publication.StudentName
+                        @if (!string.IsNullOrWhiteSpace(publication.StudentDepartmentName))
+                        {
+                            <text>&middot; @publication.StudentDepartmentName</text>
+                        }
                         &middot; Coordinator: @publication.CoordinatorName
                         &middot; Supervisor: @(publication.AssignedSupervisorName ?? "none yet")
+                        @if (!string.IsNullOrWhiteSpace(publication.EthicsHeadOfDepartmentName))
+                        {
+                            <text>&middot; Ethics with: @publication.EthicsHeadOfDepartmentName</text>
+                        }
                     </div>
                 </div>
 
                 @* Whose turn it is, readable with the card shut: it is what decides whether a
                    stuck publication is stuck on the person being replaced. *@
                 <span class="badge bg-primary-lt">@Humanise(publication.DisplayStatus)</span>
+
+                @* Deciding who should carry a publication means knowing what is in it. Outside the
+                   header's toggle, or opening it would collapse the card underneath. *@
+                <a asp-controller="Admin" asp-action="publication" asp-route-id="@publication.Id"
+                   class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation();">Open</a>
             </div>
 
             <div class="card-body collapse" id="assignment-@publication.Id" data-rpms-collapsible="assignment-cards">
@@ -107,17 +120,34 @@ else
                     <input type="hidden" name="id" value="@publication.Id" />
                     <input type="hidden" name="search" value="@Model.Search" />
 
+                    @{
+                        var coordinators = Model.CoordinatorsFor(publication.StudentDepartmentId);
+                        var heads = Model.HeadsFor(publication.StudentDepartmentId);
+                    }
+
                     <div class="row g-3">
                         <div class="col-12 col-md-6">
                             <label class="form-label" for="coordinator-@publication.Id">Coordinator</label>
-                            <select id="coordinator-@publication.Id" name="coordinatorUserId" class="form-select">
-                                @foreach (var person in Model.Coordinators)
-                                {
-                                    <option value="@person.Id" selected="@(person.Id == publication.CoordinatorId)">
-                                        @person.FirstName @person.LastName
-                                    </option>
-                                }
-                            </select>
+                            @if (coordinators.Count == 0)
+                            {
+                                @* Both posts belong to a department, so the choice is that student's
+                                   department and nowhere else. Nobody in it means there is nothing
+                                   to choose between rather than a field that would be refused. *@
+                                <input class="form-control" disabled
+                                       value="@publication.CoordinatorName (no other coordinator in this department)" />
+                            }
+                            else
+                            {
+                                <select id="coordinator-@publication.Id" name="coordinatorUserId" class="form-select">
+                                    @foreach (var person in coordinators)
+                                    {
+                                        <option value="@person.UserId" selected="@(person.UserId == publication.CoordinatorId)">
+                                            @person.Name
+                                        </option>
+                                    }
+                                </select>
+                                <small class="form-hint">Coordinators in @publication.StudentDepartmentName.</small>
+                            }
                         </div>
 
                         <div class="col-12 col-md-6">
@@ -139,6 +169,34 @@ else
                                         </option>
                                     }
                                 </select>
+                            }
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="head-@publication.Id">Ethics review</label>
+                            @if (publication.EthicsHeadOfDepartmentId is null)
+                            {
+                                @* Named when the coordinator hands the ethics decision on, by
+                                   whichever head of the department is carrying the fewest. Before
+                                   that there is nothing to move. *@
+                                <input class="form-control" disabled
+                                       value="Named when the ethics stage reaches the Head of Department" />
+                            }
+                            else if (heads.Count == 0)
+                            {
+                                <input class="form-control" disabled value="@publication.EthicsHeadOfDepartmentName" />
+                            }
+                            else
+                            {
+                                <select id="head-@publication.Id" name="headOfDepartmentUserId" class="form-select">
+                                    @foreach (var person in heads)
+                                    {
+                                        <option value="@person.UserId" selected="@(person.UserId == publication.EthicsHeadOfDepartmentId)">
+                                            @person.Name
+                                        </option>
+                                    }
+                                </select>
+                                <small class="form-hint">Heads of @publication.StudentDepartmentName.</small>
                             }
                         </div>
 

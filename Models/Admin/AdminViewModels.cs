@@ -228,10 +228,31 @@ namespace ResearchPublicationManagementSystem.Models
 
         public string? Search { get; set; }
 
-        /// <summary>Who may take each job. Only people who hold the role are offered.</summary>
-        public IReadOnlyList<UserListItemDto> Coordinators { get; set; } = [];
-
+        /// <summary>
+        /// Who may supervise. Not scoped by department: a supervisor is chosen for what they know
+        /// about the subject, and the institution lets them hold posts in more than one department.
+        /// </summary>
         public IReadOnlyList<UserListItemDto> Supervisors { get; set; } = [];
+
+        /// <summary>
+        /// Who may coordinate and who may take the ethics review, per department.
+        ///
+        /// Both posts are held in a department, and their authority over a publication comes from
+        /// the student being in it, so the choice on each row is that student's department only.
+        /// Fetched per department on the page rather than per row: two departments cover twenty
+        /// publications.
+        /// </summary>
+        public Dictionary<Guid, DepartmentMembersDto> ByDepartment { get; set; } = [];
+
+        public IReadOnlyList<DepartmentPersonDto> CoordinatorsFor(Guid? departmentId) =>
+            departmentId is { } id && ByDepartment.TryGetValue(id, out var members)
+                ? members.Coordinators
+                : [];
+
+        public IReadOnlyList<DepartmentPersonDto> HeadsFor(Guid? departmentId) =>
+            departmentId is { } id && ByDepartment.TryGetValue(id, out var members)
+                ? members.HeadsOfDepartment
+                : [];
 
         public bool LoadFailed { get; set; }
 
