@@ -263,12 +263,14 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
     public record PaperWorkflowSettingsDto(
         bool SupervisorReviews = true,
         bool CommitteeEvaluates = true,
-        bool CoordinatorDecides = true);
+        bool CoordinatorDecides = true,
+        bool EthicsBeforePaper = true);
 
     public record UpdatePaperWorkflowSettingsRequestDto(
         bool SupervisorReviews = true,
         bool CommitteeEvaluates = true,
-        bool CoordinatorDecides = true);
+        bool CoordinatorDecides = true,
+        bool EthicsBeforePaper = true);
 
     /// <summary>Which of the two reads the ethics documents first.</summary>
     public static class EthicsReviewOrder
