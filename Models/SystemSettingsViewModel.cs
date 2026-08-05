@@ -44,7 +44,7 @@ namespace ResearchPublicationManagementSystem.Models
         public DeadlineSettingsDto Deadlines { get; set; } = new(14, 21, 30);
 
         /// <summary>How many research proposals a student submits in one round.</summary>
-        public ProposalSettingsDto Proposals { get; set; } = new(1, 3);
+        public ProposalSettingsDto Proposals { get; set; } = new(1, 3, true);
 
         /// <summary>Which optional steps of the pipeline this institution runs.</summary>
         public EthicsWorkflowSettingsDto EthicsWorkflow { get; set; } = new(true, true, true, true);

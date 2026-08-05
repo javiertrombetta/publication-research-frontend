@@ -196,6 +196,12 @@ namespace ResearchPublicationManagementSystem.Models
     /// <summary>Proposals a supervisor has offered to take on, awaiting the coordinator.</summary>
     public class SupervisorSelectionsViewModel
     {
+        /// <summary>
+        /// Whether supervisors are asked which proposals they will take on before the coordinator
+        /// appoints one. It decides what this screen offers: a choice between the people who
+        /// offered, or a choice between everybody who could.
+        /// </summary>
+        public bool SupervisorsExpressInterest { get; set; } = true;
 
         /// <summary>
         /// Which page of the queue this is. Null where everything fits on one, so the controls
@@ -250,6 +256,12 @@ namespace ResearchPublicationManagementSystem.Models
 
     public class SupervisorSelectionItem
     {
+        /// <summary>
+        /// Everybody who could take this on, for the institutions that do not ask supervisors
+        /// first. Empty where they do: the choice there is between the people who offered.
+        /// </summary>
+        public IReadOnlyList<UserListItemDto> Available { get; set; } = [];
+
         /// <summary>Carried on the proposal itself, so the screen needs no second request to name the author.</summary>
         public string StudentName { get; set; } = string.Empty;
 

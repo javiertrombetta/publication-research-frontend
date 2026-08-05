@@ -20,6 +20,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         EthicsApiClient ethicsApi,
         PublicationsApiClient publicationsApi,
         UsersApiClient usersApi,
+        SettingsApiClient settingsApi,
         SupervisorGroupsApiClient groupsApi) : Controller
     {
         // ---------- Overview ----------
@@ -323,6 +324,14 @@ namespace ResearchPublicationManagementSystem.Controllers
             // Oldest first unless asked otherwise, like the dispatch queue: the student who has
             // been waiting longest for a supervisor belongs at the top, not buried under every
             // offer that has come in since.
+            // What this screen offers depends on whether anybody was asked first.
+            var proposalRules = await settingsApi.GetProposalsAsync();
+            model.SupervisorsExpressInterest = proposalRules.Data?.SupervisorsExpressInterest ?? true;
+
+            var available = model.SupervisorsExpressInterest
+                ? []
+                : (await usersApi.GetSupervisorsAsync()).Data?.Items ?? [];
+
             var proposals = await proposalsApi.GetForCoordinatorAsync(
                 page, awaitingAllocation: true, sort: sort ?? "submitted", descending: desc, search: search);
 
@@ -337,7 +346,8 @@ namespace ResearchPublicationManagementSystem.Controllers
             {
                 StudentName = p.StudentName,
                 Proposal = new ProposalDto(p.Id, p.PublicationContainerId, p.Title, p.Abstract, p.Status, p.SubmittedAt),
-                Invitations = p.Invitations
+                Invitations = p.Invitations,
+                Available = available
             })];
 
             model.TotalCount = proposals.Data?.TotalCount ?? 0;

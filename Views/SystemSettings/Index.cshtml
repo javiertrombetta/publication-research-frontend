@@ -13,7 +13,30 @@
    box posts nothing at all, so without it, clearing a switch would be indistinguishable from
    not touching it. *@
 @functions {
-    string TabClass(string tab) => Model.ActiveTab == tab ? "nav-link active" : "nav-link";
+    /// <summary>
+    /// Settings that decide how the research process runs, in the order somebody looks for them:
+    /// alphabetically.
+    /// </summary>
+    private static readonly (string Value, string Label)[] ProcessTabs =
+    [
+        ("committees", "Committees"),
+        ("decisions", "Comments on decisions"),
+        ("deadlines", "Deadlines"),
+        ("ethics", "Ethics documents"),
+        ("pipeline", "Pipeline steps")
+    ];
+
+    /// <summary>Settings that describe the installation rather than the process.</summary>
+    private static readonly (string Value, string Label)[] SystemTabs =
+    [
+        ("access", "Access"),
+        ("departments", "Departments"),
+        ("storage", "File storage"),
+        ("institution", "Institution"),
+        ("notifications", "Notifications"),
+        ("passwords", "Passwords"),
+        ("uploads", "Uploads")
+    ];
 }
 
 <div class="row justify-content-center">
@@ -40,47 +63,34 @@
         }
         else
         {
-            <ul class="nav nav-tabs mb-4">
-                <li class="nav-item">
-                    <a class="@TabClass("committees")" asp-action="Index" asp-route-tab="committees">Committees</a>
-                </li>
-                <li class="nav-item">
-                    <a class="@TabClass("departments")" asp-action="Index" asp-route-tab="departments">Departments</a>
-                </li>
-                <li class="nav-item">
-                    <a class="@TabClass("ethics")" asp-action="Index" asp-route-tab="ethics">Ethics documents</a>
-                </li>
-                <li class="nav-item">
-                    <a class="@TabClass("deadlines")" asp-action="Index" asp-route-tab="deadlines">Deadlines</a>
-                </li>
-                <li class="nav-item">
-                    <a class="@TabClass("proposals")" asp-action="Index" asp-route-tab="proposals">Proposals</a>
-                </li>
-                <li class="nav-item">
-                    <a class="@TabClass("pipeline")" asp-action="Index" asp-route-tab="pipeline">Pipeline steps</a>
-                </li>
-                <li class="nav-item">
-                    <a class="@TabClass("decisions")" asp-action="Index" asp-route-tab="decisions">Comments on decisions</a>
-                </li>
-                <li class="nav-item">
-                    <a class="@TabClass("uploads")" asp-action="Index" asp-route-tab="uploads">Uploads</a>
-                </li>
-                <li class="nav-item">
-                    <a class="@TabClass("storage")" asp-action="Index" asp-route-tab="storage">File storage</a>
-                </li>
-                <li class="nav-item">
-                    <a class="@TabClass("passwords")" asp-action="Index" asp-route-tab="passwords">Passwords</a>
-                </li>
-                <li class="nav-item">
-                    <a class="@TabClass("access")" asp-action="Index" asp-route-tab="access">Access</a>
-                </li>
-                <li class="nav-item">
-                    <a class="@TabClass("notifications")" asp-action="Index" asp-route-tab="notifications">Notifications</a>
-                </li>
-                <li class="nav-item">
-                    <a class="@TabClass("institution")" asp-action="Index" asp-route-tab="institution">Institution</a>
-                </li>
-            </ul>
+            @* A menu rather than a row of tabs: there are a dozen groups and they wrapped onto
+               three lines, which read as three rows of unrelated things. Split in two so it is
+               clear which settings change how the research process runs and which describe the
+               installation itself, and alphabetical inside each so a name can be found rather
+               than hunted for. *@
+            <form method="get" asp-action="Index" class="row g-2 align-items-end mb-4">
+                <div class="col-12 col-md-6 col-lg-5">
+                    <label class="form-label" for="settings-group">Settings</label>
+                    <select id="settings-group" name="tab" class="form-select" data-rpms-go-on-change>
+                        <optgroup label="The research process">
+                            @foreach (var (value, label) in ProcessTabs)
+                            {
+                                <option value="@value" selected="@(Model.ActiveTab == value)">@label</option>
+                            }
+                        </optgroup>
+                        <optgroup label="This installation">
+                            @foreach (var (value, label) in SystemTabs)
+                            {
+                                <option value="@value" selected="@(Model.ActiveTab == value)">@label</option>
+                            }
+                        </optgroup>
+                    </select>
+                </div>
+                @* Shown only where the menu cannot navigate on its own. *@
+                <div class="col-auto" data-rpms-hide-with-script>
+                    <button type="submit" class="btn btn-outline-secondary">Show</button>
+                </div>
+            </form>
 
             if (Model.ActiveTab == "committees")
             {
@@ -722,48 +732,68 @@
                 </div>
             }
 
-            if (Model.ActiveTab == "proposals")
+            @* The three stages, in the order they run, each with the steps that belong to it. One
+               card per stage rather than one long list: an administrator changing how papers are
+               judged is not thinking about ethics documents at the same time. *@
+            if (Model.ActiveTab == "pipeline")
             {
-                <div class="card">
+                <div class="card mb-3">
                     <div class="card-body">
-                        <h2 class="h3 mb-2">Research proposals</h2>
+                        <h2 class="h3 mb-2">The research proposals stage</h2>
                         <p class="text-secondary">
-                            How many proposals a student submits in one round, and so how many a
-                            supervisor is given to choose between. Both figures apply again when a
-                            coordinator sends a student back to write more: a second round is a
-                            round like the first.
+                            The first stage, and always first: assigning a proposal is what names
+                            the supervisor the two later stages wait on. How many a student writes
+                            in one round, and whether supervisors are asked before a coordinator
+                            appoints one.
                         </p>
 
                         <form asp-action="SaveProposals" method="post" class="row g-3">
                             <div class="col-12 col-sm-4">
-                                <label class="form-label" for="proposals-min">Fewest</label>
+                                <label class="form-label" for="proposals-min">Fewest per round</label>
                                 <input id="proposals-min" name="minimumPerRound" type="number" min="1" max="20"
                                        value="@Model.Proposals.MinimumPerRound" class="form-control" required />
                                 <small class="form-hint">One means a student may send a single proposal.</small>
                             </div>
                             <div class="col-12 col-sm-4">
-                                <label class="form-label" for="proposals-max">Most</label>
+                                <label class="form-label" for="proposals-max">Most per round</label>
                                 <input id="proposals-max" name="maximumPerRound" type="number" min="1" max="20"
                                        value="@Model.Proposals.MaximumPerRound" class="form-control" required />
                                 <small class="form-hint">The student's screen stops offering another beyond this.</small>
                             </div>
+
                             <div class="col-12">
-                                <button type="submit" class="btn btn-primary">Save</button>
+                                <label class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="supervisorsExpressInterest"
+                                           value="true" checked="@Model.Proposals.SupervisorsExpressInterest" />
+                                    <input type="hidden" name="supervisorsExpressInterest" value="false" />
+                                    <span class="form-check-label">Supervisors say which proposals they are willing to take on</span>
+                                </label>
+                                <small class="form-hint">
+                                    On, the coordinator sends a student's proposals out and appoints
+                                    a supervisor from those who offered. Off, Send proposals falls
+                                    silent and the coordinator appoints any available supervisor to
+                                    a proposal directly.
+                                </small>
+                            </div>
+
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary"
+                                        @DecisionButton.Attributes(false, null,
+                                            "Change the research proposals stage? Rounds already open follow it too.")>
+                                    Save
+                                </button>
                             </div>
                         </form>
                     </div>
                 </div>
-            }
 
-            if (Model.ActiveTab == "pipeline")
-            {
-                <div class="card">
+                <div class="card mb-3">
                     <div class="card-body">
-                        <h2 class="h3 mb-2">Pipeline steps</h2>
+                        <h2 class="h3 mb-2">The ethics approval stage</h2>
                         <p class="text-secondary">
-                            Steps some institutions run and others do not. Turning one off takes it
-                            out of the sequence at once, including for ethics approvals already part
-                            way through, so nothing sits waiting on a step that no longer exists.
+                            Turning a step off takes it out of the sequence at once, including for
+                            approvals already part way through, so nothing sits waiting on a step
+                            that no longer exists.
                         </p>
 
                         <form asp-action="SaveEthicsWorkflow" method="post">
@@ -860,11 +890,8 @@
                         </form>
                     </div>
                 </div>
-            }
 
-            if (Model.ActiveTab == "pipeline")
-            {
-                <div class="card mt-3">
+                <div class="card">
                     <div class="card-body">
                         <h2 class="h3 mb-2">The research paper stage</h2>
                         <p class="text-secondary">

@@ -175,21 +175,45 @@ else
                  data-rpms-collapsible="selection-cards">
                 <p class="text-secondary">@item.Proposal.Abstract</p>
 
-                <h4 class="mt-3 mb-2">Willing to supervise</h4>
+                @* Two ways to reach the same appointment. Where supervisors are asked first the
+                   choice is between the people who offered; where they are not, nobody ever
+                   offers, so it is a choice between everybody who could take it on. *@
+                <h4 class="mt-3 mb-2">@(Model.SupervisorsExpressInterest ? "Willing to supervise" : "Appoint a supervisor")</h4>
                 <form asp-controller="Coordinator" asp-action="AssignSupervisor" method="post">
                     <input type="hidden" name="proposalId" value="@item.Proposal.Id" />
 
-                    @foreach (var invitation in item.Willing)
+                    @if (Model.SupervisorsExpressInterest)
                     {
-                        <label class="form-selectgroup-item d-block mb-2">
-                            <input type="radio" name="supervisorId" value="@invitation.SupervisorId"
-                                   class="form-check-input me-2" required />
-                            <strong>@invitation.SupervisorName</strong>
-                            @if (!string.IsNullOrWhiteSpace(invitation.Comments))
+                        @foreach (var invitation in item.Willing)
+                        {
+                            <label class="form-selectgroup-item d-block mb-2">
+                                <input type="radio" name="supervisorId" value="@invitation.SupervisorId"
+                                       class="form-check-input me-2" required />
+                                <strong>@invitation.SupervisorName</strong>
+                                @if (!string.IsNullOrWhiteSpace(invitation.Comments))
+                                {
+                                    <span class="d-block text-secondary small ms-4">&ldquo;@invitation.Comments&rdquo;</span>
+                                }
+                            </label>
+                        }
+                    }
+                    else if (item.Available.Count == 0)
+                    {
+                        <p class="text-secondary">
+                            There are no available supervisors to appoint. An administrator grants
+                            the role, and a supervisor can mark themselves unavailable.
+                        </p>
+                    }
+                    else
+                    {
+                        <select name="supervisorId" class="form-select mb-2" required
+                                aria-label="Supervisor for this proposal">
+                            <option value="">Choose a supervisor</option>
+                            @foreach (var person in item.Available)
                             {
-                                <span class="d-block text-secondary small ms-4">&ldquo;@invitation.Comments&rdquo;</span>
+                                <option value="@person.Id">@person.FullName</option>
                             }
-                        </label>
+                        </select>
                     }
 
                     <div class="mt-3">
