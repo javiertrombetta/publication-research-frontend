@@ -102,9 +102,15 @@ namespace ResearchPublicationManagementSystem.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Dashboard()
+        public async Task<IActionResult> Dashboard(
+            int page = 1, string? sort = null, bool desc = true, string? search = null)
         {
-            var model = new AdminDashboardViewModel();
+            var model = new AdminDashboardViewModel
+            {
+                Sort = sort ?? "activity",
+                Descending = sort is null || desc,
+                Search = search
+            };
 
             var summary = await adminApi.GetSummaryAsync();
             if (!summary.Success || summary.Data is null)
@@ -119,6 +125,27 @@ namespace ResearchPublicationManagementSystem.Controllers
             // The figure alone: this card is a link to the queue, not the queue.
             var awaiting = await FindPapersAwaitingCommitteeAsync(pageSize: 1);
             model.PapersAwaitingCommittee = awaiting.Page?.TotalCount ?? 0;
+
+            // And the institution's publications themselves, a page at a time. The cards above
+            // count them by one property or another; this is the only place an administrator can
+            // look one up without knowing beforehand which screen it would be sitting on. Paged,
+            // searched and ordered by the API, so it holds up against a whole institution rather
+            // than against a demonstration set.
+            var containers = await containersApi.GetAllAsync(
+                page: page, sort: model.Sort, descending: model.Descending, search: search);
+
+            if (containers.Success)
+            {
+                model.Publications = containers.Data?.Items ?? [];
+                model.PublicationsTotal = containers.Data?.TotalCount ?? 0;
+                model.Pager = Paging.PagerFor(containers.Data, "Admin", nameof(Dashboard), model.RouteValues());
+            }
+            else
+            {
+                // The cards are still worth showing: a summary that loaded is not made wrong by a
+                // listing that did not.
+                TempData["ErrorMessage"] = containers.ErrorMessage ?? "Could not load the publications.";
+            }
 
             return View(model);
         }

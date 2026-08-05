@@ -12,6 +12,44 @@ namespace ResearchPublicationManagementSystem.Models
         public int PapersAwaitingCommittee { get; set; }
 
         public bool LoadFailed { get; set; }
+
+        // ---------- Every publication in the institution ----------
+
+        /// <summary>
+        /// The whole system's publications, a page at a time. The cards above count them; this is
+        /// the list itself, which is the only place an administrator can look one up without
+        /// knowing in advance which screen it would be on.
+        /// </summary>
+        public IReadOnlyList<PublicationContainerDto> Publications { get; set; } = [];
+
+        public int PublicationsTotal { get; set; }
+        public PagerViewModel? Pager { get; set; }
+
+        public string? Search { get; set; }
+        public string Sort { get; set; } = "activity";
+        public bool Descending { get; set; } = true;
+
+        public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
+
+        /// <summary>What paging and sorting carry with them, so neither drops the other.</summary>
+        public Dictionary<string, string?> RouteValues() => new()
+        {
+            ["search"] = Search,
+            ["sort"] = Sort,
+            ["desc"] = Descending.ToString().ToLowerInvariant()
+        };
+
+        public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
+        {
+            Controller = "Admin",
+            Action = "Dashboard",
+            Column = column,
+            Label = label,
+            CurrentSort = Sort,
+            CurrentDescending = Descending,
+            DescendingFirst = descendingFirst,
+            RouteValues = HasSearch ? new Dictionary<string, string?> { ["search"] = Search } : []
+        };
     }
 
     /// <summary>Papers under review that still need an evaluation committee.</summary>
