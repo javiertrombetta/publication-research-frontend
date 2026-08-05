@@ -28,14 +28,18 @@ namespace ResearchPublicationManagementSystem.Controllers
             var model = new SupervisorDashboardViewModel
             {
                 // Spelled out rather than left null so the heading in force is the one marked as
-                // active. Oldest first, as on every other queue.
-                Sort = sort ?? "started",
+                // active.
+                // Whose turn it is, first: the whole reason for opening this screen is to find
+                // what is waiting on you, and sorted by date those rows were scattered down a list
+                // that starts with publications nobody is waiting on. Ascending, because the API
+                // ranks this column the way the pipeline runs and puts "nobody" last.
+                Sort = sort ?? "waiting",
                 Descending = desc,
                 Search = search
             };
 
             var supervising = await containersApi.GetSupervisingAsync(
-                page: page, sort: sort ?? "started", descending: desc, search: search);
+                page: page, sort: sort ?? "waiting", descending: desc, search: search);
 
             if (!supervising.Success)
             {
