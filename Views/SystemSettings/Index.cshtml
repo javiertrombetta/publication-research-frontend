@@ -862,6 +862,65 @@
                 </div>
             }
 
+            if (Model.ActiveTab == "pipeline")
+            {
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h2 class="h3 mb-2">The research paper stage</h2>
+                        <p class="text-secondary">
+                            The three readings a submitted paper can go through, in the order they
+                            happen. Whichever is last is the one that accepts the paper, so a stage
+                            with none of them left is refused: a paper would be submitted into
+                            nothing.
+                        </p>
+
+                        <form asp-action="SavePaperWorkflow" method="post">
+                            <label class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="supervisorReviews"
+                                       value="true" checked="@Model.PaperWorkflow.SupervisorReviews" />
+                                <input type="hidden" name="supervisorReviews" value="false" />
+                                <span class="form-check-label">The supervisor reads a submitted paper</span>
+                            </label>
+                            <small class="form-hint mb-3 d-block">
+                                Off, a submitted paper goes straight to whatever follows, and the
+                                supervisor's queue of papers stops offering it.
+                            </small>
+
+                            <label class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="committeeEvaluates"
+                                       value="true" checked="@Model.PaperWorkflow.CommitteeEvaluates" />
+                                <input type="hidden" name="committeeEvaluates" value="false" />
+                                <span class="form-check-label">An evaluation committee judges it</span>
+                            </label>
+                            <small class="form-hint mb-3 d-block">
+                                Off, no committee is appointed and Assign committees stops asking
+                                for one.
+                            </small>
+
+                            <label class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="coordinatorDecides"
+                                       value="true" checked="@Model.PaperWorkflow.CoordinatorDecides" />
+                                <input type="hidden" name="coordinatorDecides" value="false" />
+                                <span class="form-check-label">The coordinator makes the final decision</span>
+                            </label>
+                            <small class="form-hint">
+                                Off, the reading before it accepts the paper: enough committee
+                                approvals, or the supervisor's acceptance where there is no
+                                committee either.
+                            </small>
+
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-primary"
+                                        @DecisionButton.Attributes(false, null,
+                                            "Change the readings a research paper goes through? Papers already under way move with it.")>
+                                    Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+
             if (Model.ActiveTab == "decisions")
             {
                 <div class="card">

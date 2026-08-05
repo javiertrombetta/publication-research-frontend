@@ -37,19 +37,22 @@ namespace ResearchPublicationManagementSystem.Controllers
             var proposals = await settingsApi.GetProposalsAsync();
             var decisions = await settingsApi.GetDecisionCommentsAsync();
             var ethicsWorkflow = await settingsApi.GetEthicsWorkflowAsync();
+            var paperWorkflow = await settingsApi.GetPaperWorkflowAsync();
             var storage = await settingsApi.GetStorageAsync();
 
             // One failure fails the screen: showing three groups and a blank fourth would invite
             // someone to "correct" values that are only blank because they did not load.
             if (!committees.Success || !passwords.Success || !notifications.Success || !ethicsDocuments.Success
                 || !access.Success || !uploads.Success || !institution.Success || !deadlines.Success
-                || !proposals.Success || !decisions.Success || !ethicsWorkflow.Success || !storage.Success)
+                || !proposals.Success || !decisions.Success || !ethicsWorkflow.Success
+                || !paperWorkflow.Success || !storage.Success)
             {
                 TempData["ErrorMessage"] =
                     committees.ErrorMessage ?? passwords.ErrorMessage ?? notifications.ErrorMessage
                     ?? ethicsDocuments.ErrorMessage ?? access.ErrorMessage ?? uploads.ErrorMessage
                     ?? institution.ErrorMessage ?? deadlines.ErrorMessage ?? proposals.ErrorMessage
-                    ?? decisions.ErrorMessage ?? ethicsWorkflow.ErrorMessage ?? storage.ErrorMessage
+                    ?? decisions.ErrorMessage ?? ethicsWorkflow.ErrorMessage
+                    ?? paperWorkflow.ErrorMessage ?? storage.ErrorMessage
                     ?? "Could not load the system settings.";
                 model.LoadFailed = true;
                 return View(model);
@@ -66,6 +69,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.Proposals = proposals.Data!;
             model.DecisionComments = decisions.Data?.Decisions ?? [];
             model.EthicsWorkflow = ethicsWorkflow.Data!;
+            model.PaperWorkflow = paperWorkflow.Data!;
             model.Storage = storage.Data!;
 
             // Who an administrator can leave out of committee work. Only worth fetching on the tab
@@ -442,6 +446,18 @@ namespace ResearchPublicationManagementSystem.Controllers
                     (false, true) => "Saved. A decision that no documentation is needed goes to the Head of Department; approved documents do not.",
                     _ => "Saved. The coordinator now closes the ethics stage without the Head of Department."
                 });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SavePaperWorkflow(
+            bool supervisorReviews, bool committeeEvaluates, bool coordinatorDecides)
+        {
+            var result = await settingsApi.UpdatePaperWorkflowAsync(
+                new UpdatePaperWorkflowSettingsRequestDto(supervisorReviews, committeeEvaluates, coordinatorDecides));
+
+            return Done(result.Success, "pipeline", result.ErrorMessage,
+                "Saved. Whichever reading is last now accepts the paper, including for papers already under way.");
         }
 
         // ---------- Comments on decisions ----------
