@@ -138,6 +138,15 @@ public class SettingsApiClient(HttpClient httpClient) : ApiClientBase(httpClient
         UpdateEthicsWorkflowSettingsRequestDto request, CancellationToken ct = default) =>
         PutJsonAsync<EthicsWorkflowSettingsDto>("api/settings/ethics-workflow", request, ct);
 
+    // ---------- Steps of the research paper stage ----------
+
+    public Task<ApiResult<PaperWorkflowSettingsDto>> GetPaperWorkflowAsync(CancellationToken ct = default) =>
+        GetAsync<PaperWorkflowSettingsDto>("api/settings/paper-workflow", ct);
+
+    public Task<ApiResult<PaperWorkflowSettingsDto>> UpdatePaperWorkflowAsync(
+        UpdatePaperWorkflowSettingsRequestDto request, CancellationToken ct = default) =>
+        PutJsonAsync<PaperWorkflowSettingsDto>("api/settings/paper-workflow", request, ct);
+
     // ---------- Comments on decisions ----------
 
     /// <summary>Readable by anyone signed in: every decision screen has to say what it requires.</summary>

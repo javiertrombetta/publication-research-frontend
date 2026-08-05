@@ -259,6 +259,17 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         bool CoordinatorReviewsDocuments = true,
         string DocumentReviewOrder = EthicsReviewOrder.SupervisorFirst);
 
+    /// <summary>Which of the research paper's three readings this institution runs.</summary>
+    public record PaperWorkflowSettingsDto(
+        bool SupervisorReviews = true,
+        bool CommitteeEvaluates = true,
+        bool CoordinatorDecides = true);
+
+    public record UpdatePaperWorkflowSettingsRequestDto(
+        bool SupervisorReviews = true,
+        bool CommitteeEvaluates = true,
+        bool CoordinatorDecides = true);
+
     /// <summary>Which of the two reads the ethics documents first.</summary>
     public static class EthicsReviewOrder
     {
