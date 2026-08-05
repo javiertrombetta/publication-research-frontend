@@ -56,8 +56,16 @@ namespace ResearchPublicationManagementSystem.Controllers
             // The three cards, each asked only for its size. A page of rows would be thrown away:
             // what the top of this screen says is how much is waiting, and the listing below says
             // which publication it belongs to.
-            var proposals = await proposalsApi.GetInvitedAsync(page: 1, pageSize: 1);
+            // Counted twice on purpose, because they are two different figures and the screen
+            // shows both: how many proposals there are to read, and how many students they come
+            // from. A round is three proposals from one student and one decision, so a card
+            // saying four beside a listing showing two looked like one of them was wrong.
+            var proposals = await proposalsApi.GetInvitedAsync(page: 1, pageSize: 100);
             model.ProposalsToReviewTotal = proposals.Data?.TotalCount ?? 0;
+            model.ProposalPublicationsTotal = (proposals.Data?.Items ?? [])
+                .Select(p => p.PublicationContainerId)
+                .Distinct()
+                .Count();
 
             // The two ethics queues counted separately, because a ruling and a document check are
             // different work even though they arrive together.

@@ -1,10 +1,16 @@
 @model SortableColumnViewModel
 
 @* A heading that is also the control for ordering by it. The arrow only appears on the column
-   actually in use, so the header row does not read as a row of buttons. *@
+   actually in use, so the header row does not read as a row of buttons.
+
+   Ordering is a fresh request, and a fresh request arrives at the top of the document, so the
+   reader who clicked a heading half way down a page was thrown above the heading, the cards and
+   the search and had to come back. The link points at its own listing's head, named after the
+   key this column writes, because a screen with two listings has two of them. *@
 <a class="rpms-sort @(Model.IsActive ? "rpms-sort-active" : "")"
    asp-controller="@Model.Controller" asp-action="@Model.Action"
    asp-all-route-data="Model.RouteValuesForToggle()"
+   asp-fragment="@Model.Anchor"
    aria-sort="@(Model.IsActive ? (Model.CurrentDescending ? "descending" : "ascending") : "none")"
    title="@(Model.IsActive
             ? (Model.CurrentDescending ? $"Sorted by {Model.Label}, highest first. Click to reverse." : $"Sorted by {Model.Label}, lowest first. Click to reverse.")

@@ -75,6 +75,13 @@ namespace ResearchPublicationManagementSystem.Models
         public int ProposalsToReviewTotal { get; set; }
 
         /// <summary>
+        /// How many publications those proposals belong to, which is how many rows the listing
+        /// below shows and how many decisions this actually is. A round is three proposals from
+        /// one student, answered once.
+        /// </summary>
+        public int ProposalPublicationsTotal { get; set; }
+
+        /// <summary>
         /// Ethics waiting on them, both kinds together: the ruling on whether approval is needed at
         /// all, and the check of the documents once it is. One card, because they are one queue,
         /// with the split named underneath because the two read differently.

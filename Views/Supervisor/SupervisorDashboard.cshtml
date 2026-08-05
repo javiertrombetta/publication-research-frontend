@@ -63,6 +63,16 @@ else
                     <div class="text-secondary">
                         @(Model.ProposalsToReviewTotal == 1 ? "proposal to answer" : "proposals to answer")
                     </div>
+                    @* Said plainly, because the listing below counts publications and this counts
+                       proposals: a student sends three in a round and they are one decision. *@
+                    @if (Model.ProposalPublicationsTotal > 0
+                         && Model.ProposalPublicationsTotal != Model.ProposalsToReviewTotal)
+                    {
+                        <div class="text-secondary small">
+                            from @Model.ProposalPublicationsTotal
+                            @(Model.ProposalPublicationsTotal == 1 ? "publication" : "publications")
+                        </div>
+                    }
                     @if (Model.ProposalsToReviewTotal > 0)
                     {
                         <a asp-controller="Supervisor" asp-action="proposal_review"
@@ -209,7 +219,7 @@ else
                             <col style="width: 19%" />
                             <col style="width: 20%" />
                         </colgroup>
-                        <thead>
+                        <thead id="@byStudent.Anchor">
                             <tr>
                                 <th scope="col"><partial name="_SortableHeader" model="byStudent" /></th>
                                 <th scope="col"><partial name="_SortableHeader" model="byStarted" /></th>

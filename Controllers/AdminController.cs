@@ -103,10 +103,14 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         [HttpGet]
         public async Task<IActionResult> Dashboard(
-            int page = 1, string? sort = null, bool desc = true, string? search = null)
+            int page = 1, string? sort = null, bool desc = false, string? search = null)
         {
             var model = new AdminDashboardViewModel
             {
+                // Newest activity first when nobody has asked for anything, and exactly what was
+                // asked for once somebody has. Defaulting the parameter itself to true was the
+                // bug: a heading asking for ascending order says nothing about direction at all,
+                // so every heading came back descending and ascending could not be reached.
                 Sort = sort ?? "activity",
                 Descending = sort is null || desc,
                 Search = search

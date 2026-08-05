@@ -129,7 +129,7 @@
 
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter">
-                        <thead>
+                        <thead id="@byWhen.Anchor">
                             <tr>
                                 @* Ordered by the API, over the whole trail rather than the page in
                                    hand: the oldest entry is on the last page, and sorting ten rows
@@ -179,7 +179,7 @@ else
 
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter">
-                        <thead>
+                        <thead id="@byTitle.Anchor">
                             <tr>
                                 <th scope="col"><partial name="_SortableHeader" model="byTitle" /></th>
                                 <th scope="col"><partial name="_SortableHeader" model="byProposalStatus" /></th>
@@ -259,7 +259,7 @@ else
 
                     <div class="table-responsive">
                         <table class="table card-table table-vcenter">
-                            <thead>
+                            <thead id="@byDocument.Anchor">
                                 <tr>
                                     <th scope="col"><partial name="_SortableHeader" model="byDocument" /></th>
                                     <th scope="col"><partial name="_SortableHeader" model="byDocumentFile" /></th>
@@ -323,7 +323,7 @@ else
 
                     <div class="table-responsive">
                         <table class="table card-table table-vcenter">
-                            <thead>
+                            <thead id="@byVersion.Anchor">
                                 <tr>
                                     <th scope="col"><partial name="_SortableHeader" model="byVersion" /></th>
                                     <th scope="col"><partial name="_SortableHeader" model="byVersionFile" /></th>
@@ -371,7 +371,7 @@ else
 
                 <div class="table-responsive">
                     <table class="table card-table table-vcenter">
-                        <thead>
+                        <thead id="@byReviewer.Anchor">
                             <tr>
                                 <th scope="col"><partial name="_SortableHeader" model="byReviewer" /></th>
                                 <th scope="col"><partial name="_SortableHeader" model="bySeat" /></th>
