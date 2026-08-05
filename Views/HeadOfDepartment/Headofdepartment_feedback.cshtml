@@ -1,3 +1,6 @@
+@* For the EthicsStatus constants, imported here rather than in _ViewImports so the DTO
+   namespace does not shadow anything in the other views. *@
+@using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 @model HeadOfDepartmentEthicsViewModel
 @inject ResearchPublicationManagementSystem.Services.IDecisionComments Decisions
 @{
@@ -11,7 +14,8 @@
 <div class="mb-4">
     <h1 class="page-title mb-1">Ethics reviews</h1>
     <div class="text-secondary">
-        Documentation the coordinator has approved and passed to you. Your comments are recorded
+        Ethics decisions the coordinator has made and passed to you, whether that is documentation
+        they approved or a ruling that none is needed. Your comments are recorded
         on the publication and shown to the coordinator, who makes the final decision.
     </div>
 </div>
@@ -89,7 +93,7 @@ else if (Model.Items.Count == 0)
         <div class="card-body text-center py-5">
             <h3 class="mb-2">Nothing waiting on you</h3>
             <p class="text-secondary mb-4">
-                Ethics documentation appears here once a coordinator has approved it.
+                Ethics decisions appear here once a coordinator has made one and passed it on.
             </p>
             <a asp-controller="HeadOfDepartment" asp-action="Head_of_Department_dashboard" class="btn btn-primary">
                 Back to dashboard
@@ -186,6 +190,15 @@ else
                     <div class="mb-3">
                         <div class="text-secondary small">The coordinator said</div>
                         <p class="m-0">@item.Approval.CoordinatorDecisionComments</p>
+                    </div>
+                }
+
+                @if (item.Approval.Status == EthicsStatus.NotRequired)
+                {
+                    <div class="alert alert-info" role="status">
+                        The supervisor ruled that this research needs no ethics documentation and the
+                        coordinator agreed. Nothing was uploaded, so there is nothing to read: what
+                        you are being asked about is the ruling itself.
                     </div>
                 }
 

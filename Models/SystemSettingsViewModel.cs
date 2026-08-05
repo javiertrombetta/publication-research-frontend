@@ -47,7 +47,7 @@ namespace ResearchPublicationManagementSystem.Models
         public ProposalSettingsDto Proposals { get; set; } = new(1, 3);
 
         /// <summary>Which optional steps of the pipeline this institution runs.</summary>
-        public EthicsWorkflowSettingsDto EthicsWorkflow { get; set; } = new(true);
+        public EthicsWorkflowSettingsDto EthicsWorkflow { get; set; } = new(true, true);
 
         /// <summary>Every decision in the pipeline, and whether this institution asks for a comment on it.</summary>
         public IReadOnlyList<DecisionCommentDto> DecisionComments { get; set; } = [];

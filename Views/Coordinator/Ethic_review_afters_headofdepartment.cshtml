@@ -1,20 +1,25 @@
+@* For the EthicsStatus constants, imported here rather than in _ViewImports so the DTO
+   namespace does not shadow anything in the other views. *@
+@using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 @model CoordinatorEthicsViewModel
 @inject ResearchPublicationManagementSystem.Services.IDecisionComments Decisions
 @inject ResearchPublicationManagementSystem.Services.IPipelineSteps PipelineSteps
 @{
     ViewData["Title"] = "Final ethics decision";
 
-    // The Head of Department step can be switched off, in which case publications reach this
-    // screen straight from the coordinator's own approval and nobody has commented on them.
-    var afterHeadOfDepartment = await PipelineSteps.HeadOfDepartmentReviewsEthicsAsync();
+    // The Head of Department step can be switched off on either route, in which case publications
+    // reach this screen straight from the coordinator's own decision and nobody has commented on
+    // them. Both routes land here, so the heading only names that step where one of them runs it.
+    var afterHeadOfDepartment = await PipelineSteps.HeadOfDepartmentReviewsEthicsAsync()
+        || await PipelineSteps.HeadOfDepartmentReviewsWhenNotRequiredAsync();
 }
 
 <div class="mb-4">
     <h1 class="page-title mb-1">Final ethics decision</h1>
     <div class="text-secondary">
         @(afterHeadOfDepartment
-            ? "The Head of Department has commented. Approving verifies the ethics stage and opens the student's research paper."
-            : "The last word on ethics. Approving verifies the stage and opens the student's research paper.")
+            ? "The Head of Department has commented. Closing the stage opens the student's research paper."
+            : "The last word on ethics. Closing the stage opens the student's research paper.")
     </div>
 </div>
 
@@ -135,8 +140,12 @@ else
                     <div class="text-secondary small">@item.Container.StudentName</div>
                 </div>
 
+                @* A count of nothing reads as a set that failed to load. On the route where no
+                   documentation was asked for, say that instead. *@
                 <span class="badge bg-primary-lt">
-                    @item.Documents.Count @(item.Documents.Count == 1 ? "document" : "documents")
+                    @(item.Documents.Count == 0
+                        ? "No documentation needed"
+                        : $"{item.Documents.Count} {(item.Documents.Count == 1 ? "document" : "documents")}")
                 </span>
             </div>
 
@@ -157,6 +166,20 @@ else
                             }
                         </div>
                         <p class="m-0">@item.Approval.HeadOfDepartmentComments</p>
+                    </div>
+                }
+
+                @* Two routes reach this screen. One carries documents that were read and
+                   approved; the other carries a ruling that none was needed, where there is
+                   nothing to send back and turning it down means asking for documentation after
+                   all. The buttons have to say which. *@
+                @{ var noDocumentation = item.Approval.Status == EthicsStatus.NotRequired; }
+
+                @if (noDocumentation)
+                {
+                    <div class="alert alert-info" role="status">
+                        The supervisor ruled that this research needs no ethics documentation and you
+                        agreed. Nothing was uploaded, so there is nothing to read here.
                     </div>
                 }
 
@@ -224,11 +247,28 @@ else
                         }
                         <button type="submit" name="approve" value="true" class="btn btn-primary"
                                 @DecisionButton.Attributes(finalApproveNeedsWhy, $"final-comments-{item.Container.Id}",
-                                    "Close the ethics stage as approved? It opens the student's research paper.")>Approve the ethics</button>
-                        <button type="submit" name="approve" value="false" class="btn btn-outline-danger"
-                                @DecisionButton.Attributes(finalReturnNeedsWhy, $"final-comments-{item.Container.Id}",
-                                    "Send the ethics documents back to the student?",
-                                    "Say what needs changing. It is all the student is given to work from.")>Send back for revision</button>
+                                    "Close the ethics stage as approved? It opens the student's research paper.")>
+                            @(noDocumentation ? "Close the ethics stage" : "Approve the ethics")
+                        </button>
+
+                        @if (noDocumentation)
+                        {
+                            <button type="submit" name="approve" value="false" class="btn btn-outline-danger"
+                                    @DecisionButton.Attributes(finalReturnNeedsWhy, $"final-comments-{item.Container.Id}",
+                                        "Ask for ethics documentation after all? The student is sent back to upload it and the stage starts again.",
+                                        "Say why documentation is needed after all. It is all the student is given to work from.")>
+                                Require documentation after all
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="submit" name="approve" value="false" class="btn btn-outline-danger"
+                                    @DecisionButton.Attributes(finalReturnNeedsWhy, $"final-comments-{item.Container.Id}",
+                                        "Send the ethics documents back to the student?",
+                                        "Say what needs changing. It is all the student is given to work from.")>
+                                Send back for revision
+                            </button>
+                        }
                     </div>
                 </form>
 
