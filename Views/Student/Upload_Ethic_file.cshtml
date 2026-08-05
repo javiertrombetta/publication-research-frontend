@@ -15,13 +15,8 @@
             <main class="page-body m-0 py-4">
                 <div class="container-xl">
 
-                    @if (!ViewData.ModelState.IsValid)
-                    {
-                        <div class="row justify-content-center">
-                            <div class="col-12 col-md-10 col-lg-8 col-xl-7">
-                            </div>
-                        </div>
-                    }
+                    @* Rejected input is announced by the shared toast region in the layout, which
+                       reads ModelState itself. *@
 
                     <!-- Centred responsive layout wrapper -->
                     <div class="row justify-content-center">
