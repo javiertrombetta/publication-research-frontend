@@ -423,15 +423,20 @@ namespace ResearchPublicationManagementSystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveEthicsWorkflow(bool headOfDepartmentReviews)
+        public async Task<IActionResult> SaveEthicsWorkflow(
+            bool headOfDepartmentReviews, bool headOfDepartmentReviewsWhenNotRequired)
         {
             var result = await settingsApi.UpdateEthicsWorkflowAsync(
-                new UpdateEthicsWorkflowSettingsRequestDto(headOfDepartmentReviews));
+                new UpdateEthicsWorkflowSettingsRequestDto(headOfDepartmentReviews, headOfDepartmentReviewsWhenNotRequired));
 
             return Done(result.Success, "pipeline", result.ErrorMessage,
-                headOfDepartmentReviews
-                    ? "Saved. Approved documents now go to the Head of Department before the coordinator closes the stage."
-                    : "Saved. The coordinator now closes the ethics stage without the Head of Department.");
+                (headOfDepartmentReviews, headOfDepartmentReviewsWhenNotRequired) switch
+                {
+                    (true, true) => "Saved. Every ethics decision goes to the Head of Department before the coordinator closes it.",
+                    (true, false) => "Saved. Approved documents go to the Head of Department; a decision that none is needed does not.",
+                    (false, true) => "Saved. A decision that no documentation is needed goes to the Head of Department; approved documents do not.",
+                    _ => "Saved. The coordinator now closes the ethics stage without the Head of Department."
+                });
         }
 
         // ---------- Comments on decisions ----------

@@ -195,12 +195,9 @@ namespace ResearchPublicationManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitReview(Guid id, string comments)
         {
-            if (string.IsNullOrWhiteSpace(comments))
-            {
-                TempData["ErrorMessage"] = "Add your comments before submitting the review.";
-                return RedirectToAction(nameof(Headofdepartment_feedback));
-            }
-
+            // Whether a comment is required here is the institution's setting, not this screen's
+            // rule. A check of its own refused a review the administrator had made optional, and
+            // the API is the one place that reads the setting.
             var result = await ethicsApi.HeadOfDepartmentReviewAsync(
                 id, new HeadOfDepartmentReviewRequestDto(comments));
 

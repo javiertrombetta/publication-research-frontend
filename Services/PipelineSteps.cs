@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Caching.Memory;
 using ResearchPublicationManagementSystem.Infrastructure.Api;
+using ResearchPublicationManagementSystem.Infrastructure.Api.Dto;
 
 namespace ResearchPublicationManagementSystem.Services;
 
@@ -12,7 +13,11 @@ namespace ResearchPublicationManagementSystem.Services;
 /// </summary>
 public interface IPipelineSteps
 {
+    /// <summary>Whether the Head of Department reads documentation the coordinator has approved.</summary>
     Task<bool> HeadOfDepartmentReviewsEthicsAsync(CancellationToken ct = default);
+
+    /// <summary>The same, where the ruling was that no documentation is needed at all.</summary>
+    Task<bool> HeadOfDepartmentReviewsWhenNotRequiredAsync(CancellationToken ct = default);
 }
 
 /// <inheritdoc cref="IPipelineSteps"/>
@@ -20,9 +25,15 @@ public class PipelineSteps(SettingsApiClient settingsApi, IMemoryCache cache) : 
 {
     private const string CacheKey = "ethics-workflow";
 
-    public async Task<bool> HeadOfDepartmentReviewsEthicsAsync(CancellationToken ct = default)
+    public async Task<bool> HeadOfDepartmentReviewsEthicsAsync(CancellationToken ct = default) =>
+        (await LoadAsync(ct)).HeadOfDepartmentReviews;
+
+    public async Task<bool> HeadOfDepartmentReviewsWhenNotRequiredAsync(CancellationToken ct = default) =>
+        (await LoadAsync(ct)).HeadOfDepartmentReviewsWhenNotRequired;
+
+    private async Task<EthicsWorkflowSettingsDto> LoadAsync(CancellationToken ct)
     {
-        if (cache.TryGetValue(CacheKey, out bool cached))
+        if (cache.TryGetValue(CacheKey, out EthicsWorkflowSettingsDto? cached) && cached is not null)
         {
             return cached;
         }
@@ -34,10 +45,10 @@ public class PipelineSteps(SettingsApiClient settingsApi, IMemoryCache cache) : 
         // still in force hides a decision somebody is waiting to make.
         if (!result.Success || result.Data is null)
         {
-            return true;
+            return new EthicsWorkflowSettingsDto(true, true);
         }
 
-        cache.Set(CacheKey, result.Data.HeadOfDepartmentReviews, TimeSpan.FromMinutes(1));
-        return result.Data.HeadOfDepartmentReviews;
+        cache.Set(CacheKey, result.Data, TimeSpan.FromMinutes(1));
+        return result.Data;
     }
 }

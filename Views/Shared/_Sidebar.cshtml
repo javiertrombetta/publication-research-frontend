@@ -24,8 +24,10 @@
 
     // An administrator can take the Head of Department out of the ethics sequence, in which case
     // the coordinator closes the stage themselves. The screen would only ever be empty then, and an
-    // entry that never has anything on it reads as a queue somebody has fallen behind on.
-    var headOfDepartmentReviewsEthics = await PipelineSteps.HeadOfDepartmentReviewsEthicsAsync();
+    // entry that never has anything on it reads as a queue somebody has fallen behind on. Two
+    // routes reach that step and each has its own switch, so the entry goes only when both are off.
+    var headOfDepartmentReviewsEthics = await PipelineSteps.HeadOfDepartmentReviewsEthicsAsync()
+        || await PipelineSteps.HeadOfDepartmentReviewsWhenNotRequiredAsync();
 
     // Whether this person has a dashboard of their own to land on, as opposed to only a profile.
     var hasDashboard = isAdmin

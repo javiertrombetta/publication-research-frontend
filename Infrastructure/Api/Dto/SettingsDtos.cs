@@ -240,10 +240,14 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 
     public record UpdateProposalSettingsRequestDto(int MinimumPerRound, int MaximumPerRound);
 
-    /// <summary>Which optional steps of the pipeline this institution runs.</summary>
-    public record EthicsWorkflowSettingsDto(bool HeadOfDepartmentReviews);
+    /// <summary>
+    /// Which optional steps of the pipeline this institution runs. Two switches rather than one,
+    /// because ethics reaches its close by two routes and an institution may want the Head of
+    /// Department on one of them and not the other.
+    /// </summary>
+    public record EthicsWorkflowSettingsDto(bool HeadOfDepartmentReviews, bool HeadOfDepartmentReviewsWhenNotRequired);
 
-    public record UpdateEthicsWorkflowSettingsRequestDto(bool HeadOfDepartmentReviews);
+    public record UpdateEthicsWorkflowSettingsRequestDto(bool HeadOfDepartmentReviews, bool HeadOfDepartmentReviewsWhenNotRequired);
 
     /// <summary>One decision in the pipeline, and whether this institution asks for a comment on it.</summary>
     public record DecisionCommentDto(

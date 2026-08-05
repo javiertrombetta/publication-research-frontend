@@ -764,17 +764,39 @@
                         </p>
 
                         <form asp-action="SaveEthicsWorkflow" method="post">
+                            <h3 class="h4 mb-1">The Head of Department in the ethics stage</h3>
+                            <p class="text-secondary mb-3">
+                                Ethics reaches its close by two routes, and they are separate
+                                questions. Reading a set of documents is work an institution may
+                                want done once; agreeing that a piece of research needs no ethics
+                                approval at all is a judgement a head of department may want sight
+                                of precisely because there is nothing to read.
+                            </p>
+
                             <label class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="headOfDepartmentReviews"
                                        value="true" checked="@Model.EthicsWorkflow.HeadOfDepartmentReviews" />
                                 <input type="hidden" name="headOfDepartmentReviews" value="false" />
-                                <span class="form-check-label">The Head of Department reviews ethics approvals</span>
+                                <span class="form-check-label">Reviews ethics documentation the coordinator has approved</span>
                             </label>
-                            <small class="form-hint">
+                            <small class="form-hint mb-3 d-block">
                                 On, the Head of Department reads the documents the coordinator has
                                 approved, comments on them and hands the approval back to the
                                 coordinator, who then closes the stage. Off, the coordinator closes
                                 it themselves as soon as they have approved the documents.
+                            </small>
+
+                            <label class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="headOfDepartmentReviewsWhenNotRequired"
+                                       value="true" checked="@Model.EthicsWorkflow.HeadOfDepartmentReviewsWhenNotRequired" />
+                                <input type="hidden" name="headOfDepartmentReviewsWhenNotRequired" value="false" />
+                                <span class="form-check-label">Reviews a decision that no documentation is needed</span>
+                            </label>
+                            <small class="form-hint">
+                                On, a coordinator who agrees with the supervisor that no ethics
+                                documentation is needed passes that to the Head of Department to
+                                comment on, and closes the stage afterwards. Off, their agreement
+                                closes it there and then.
                             </small>
 
                             <div class="mt-3">
