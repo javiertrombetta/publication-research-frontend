@@ -28,6 +28,18 @@ namespace ResearchPublicationManagementSystem.Models
         public string? Search { get; set; }
         public int TotalCount { get; set; }
 
+        /// <summary>
+        /// How many of everything assigned to this person are still theirs to vote on, counted by
+        /// the API rather than from the page in hand.
+        /// </summary>
+        public int AwaitingTotal { get; set; }
+
+        /// <summary>
+        /// Which of the two screens this is. Both list the same assignments, so the pager, the
+        /// search box and the column headings all have to point back at the one being read.
+        /// </summary>
+        public string Action { get; set; } = "committee_review";
+
         public bool HasSearch => !string.IsNullOrWhiteSpace(Search);
 
         public Dictionary<string, string?> RouteValues()
@@ -45,7 +57,7 @@ namespace ResearchPublicationManagementSystem.Models
         public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
         {
             Controller = "ExternalSupervisor",
-            Action = "committee_review",
+            Action = Action,
             Column = column,
             Label = label,
             CurrentSort = Sort,

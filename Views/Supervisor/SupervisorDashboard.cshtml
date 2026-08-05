@@ -144,11 +144,6 @@ else
                            asp-all-route-data="Model.ClearSearchRoute()"
                            class="btn btn-outline-secondary">Clear</a>
                     </div>
-                    <div class="col-12 col-md-auto ms-md-auto text-secondary small">
-                        <strong>@Model.TotalCount</strong>
-                        @(Model.TotalCount == 1 ? "publication" : "publications"),
-                        @Model.Supervising.Count on this page.
-                    </div>
                 </form>
             </div>
         </div>
@@ -167,6 +162,21 @@ else
         }
         else
         {
+            @* The count in a card of its own between the search and the listing, the way the
+               coordinator's dashboard and the other queues state theirs. The total in bold because
+               that is the figure being read; the page count is context for it rather than a second
+               number of equal weight. Squeezed onto the end of the search row it was neither: too
+               small to read as a figure and too far right to be seen with the list it counts. *@
+            <div class="card mb-3">
+                <div class="card-body py-3">
+                    <span class="text-secondary">
+                        <strong>@Model.TotalCount</strong>
+                        @(Model.TotalCount == 1 ? "publication" : "publications") you supervise,
+                        @Model.Supervising.Count on this page.
+                    </span>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="table-responsive">
                     @{

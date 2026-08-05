@@ -138,28 +138,38 @@ namespace ResearchPublicationManagementSystem.Models
         public Dictionary<string, string?> ClearProgressSearchRoute() =>
             RouteValues().Where(v => v.Key != "progressSearch").ToDictionary(v => v.Key, v => v.Value);
 
-        public SortBarViewModel DecisionSortBar => new()
+        /// <summary><inheritdoc cref="ProgressColumn" path="/summary"/></summary>
+        public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
         {
             Controller = "Coordinator",
             Action = "Evaluation_after_committee",
-            Sort = Sort,
-            Descending = Descending,
+            Column = column,
+            Label = label,
+            CurrentSort = Sort,
+            CurrentDescending = Descending,
+            DescendingFirst = descendingFirst,
             RouteValues = RouteValues().Where(v => v.Key is not ("sort" or "desc"))
-                .ToDictionary(v => v.Key, v => v.Value),
-            Columns = [("started", "Date", true), ("student", "Student", false)]
+                .ToDictionary(v => v.Key, v => v.Value)
         };
 
-        public SortBarViewModel ProgressSortBar => new()
+        /// <summary>
+        /// One sortable heading for the second listing, which is a table rather than a stack of
+        /// cards, so its headings sit in the table's own head. Its own query keys, or ordering one
+        /// of the two listings would reorder the other with it.
+        /// </summary>
+        public SortableColumnViewModel ProgressColumn(string column, string label, bool descendingFirst = false) => new()
         {
             Controller = "Coordinator",
             Action = "Evaluation_after_committee",
-            Sort = ProgressSort,
-            Descending = ProgressDescending,
+            Column = column,
+            Label = label,
+            CurrentSort = ProgressSort,
+            CurrentDescending = ProgressDescending,
+            DescendingFirst = descendingFirst,
             SortKey = "progressSort",
             DescendingKey = "progressDesc",
             RouteValues = RouteValues().Where(v => v.Key is not ("progressSort" or "progressDesc"))
-                .ToDictionary(v => v.Key, v => v.Value),
-            Columns = [("started", "Date", true), ("student", "Student", false)]
+                .ToDictionary(v => v.Key, v => v.Value)
         };
     }
 

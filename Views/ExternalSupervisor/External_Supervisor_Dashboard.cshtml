@@ -7,11 +7,12 @@
 <div class="mb-4">
     <h1 class="page-title mb-1">Committee dashboard</h1>
     <div class="text-secondary">
-        @(Model.AwaitingMe.Count == 0
+        @* Counted across everything assigned to this person, not across the page on screen. *@
+        @(Model.AwaitingTotal == 0
             ? "Nothing is waiting on your decision."
-            : Model.AwaitingMe.Count == 1
+            : Model.AwaitingTotal == 1
                 ? "One paper is waiting on your decision."
-                : $"{Model.AwaitingMe.Count} papers are waiting on your decision.")
+                : $"{Model.AwaitingTotal} papers are waiting on your decision.")
     </div>
 </div>
 
@@ -40,11 +41,11 @@ else
 {
     <div class="row row-cards mb-4">
         <div class="col-12 col-md-6">
-            <div class="card h-100 @(Model.AwaitingMe.Count > 0 ? "border-primary" : "")">
+            <div class="card h-100 @(Model.AwaitingTotal > 0 ? "border-primary" : "")">
                 <div class="card-body">
                     <div class="text-secondary mb-1">Awaiting your decision</div>
-                    <div class="h1 m-0">@Model.AwaitingMe.Count</div>
-                    @if (Model.AwaitingMe.Count > 0)
+                    <div class="h1 m-0">@Model.AwaitingTotal</div>
+                    @if (Model.AwaitingTotal > 0)
                     {
                         <a asp-controller="ExternalSupervisor" asp-action="committee_review"
                            class="btn btn-primary btn-sm mt-3">Review them</a>
@@ -56,21 +57,30 @@ else
             <div class="card h-100">
                 <div class="card-body">
                     <div class="text-secondary mb-1">Already decided</div>
-                    <div class="h1 m-0">@Model.Decided.Count</div>
+                    <div class="h1 m-0">@(Model.TotalCount - Model.AwaitingTotal)</div>
                     <div class="text-secondary">papers you have voted on</div>
                 </div>
             </div>
         </div>
     </div>
 
+    @* Built here rather than inline: a tag helper's model attribute is delimited by double quotes,
+       so a call with string arguments cannot be written inside one. Ordering is applied by the API,
+       so a heading orders everything assigned to this person rather than the rows on this page. *@
+    var byTitle = Model.Column("title", "Paper");
+    var byStudent = Model.Column("student", "Student");
+    var byCommittee = Model.Column("committee", "Committee");
+    var byDecision = Model.Column("decision", "Your decision");
+
     <div class="card">
         <div class="table-responsive">
             <table class="table card-table table-vcenter">
                 <thead>
                     <tr>
-                        <th>Paper</th>
-                        <th>Committee</th>
-                        <th>Your decision</th>
+                        <th><partial name="_SortableHeader" model="byTitle" /></th>
+                        <th><partial name="_SortableHeader" model="byStudent" /></th>
+                        <th><partial name="_SortableHeader" model="byCommittee" /></th>
+                        <th><partial name="_SortableHeader" model="byDecision" /></th>
                         <th></th>
                     </tr>
                 </thead>
@@ -79,6 +89,7 @@ else
                     {
                         <tr>
                             <td>@item.Title</td>
+                            <td class="text-nowrap">@(item.Paper?.StudentName ?? "—")</td>
                             <td>
                                 @* Coloured here, not through the shared mapping: for a committee
                                    "Assigned" means not started, the opposite of what it means for
@@ -110,4 +121,9 @@ else
             </table>
         </div>
     </div>
+
+    @if (Model.Pager is not null)
+    {
+        <partial name="_Pager" model="Model.Pager" />
+    }
 }

@@ -95,6 +95,14 @@ public class ProposalsApiClient(HttpClient httpClient) : ApiClientBase(httpClien
     public Task<ApiResult<object?>> RequestResubmissionAsync(Guid containerId, CommentsRequestDto request, CancellationToken ct = default) =>
         PostJsonAsync<object?>($"api/containers/{containerId}/proposals/request-resubmission", request, ct);
 
+    /// <summary>
+    /// Admin-only: settles the publication on a different one of its proposals, leaving who
+    /// supervises it alone. Refused once the research paper has been accepted.
+    /// </summary>
+    public Task<ApiResult<object?>> ChangeAssignedProposalAsync(
+        Guid proposalId, CommentsRequestDto request, CancellationToken ct = default) =>
+        PostJsonAsync<object?>($"api/proposals/{proposalId}/assigned", request, ct);
+
 
     // ---------- Supervisor ----------
 

@@ -97,20 +97,23 @@ namespace ResearchPublicationManagementSystem.Models
         public Dictionary<string, string?> ClearSearchRoute() =>
             RouteValues().Where(v => v.Key != "search").ToDictionary(v => v.Key, v => v.Value);
 
-        public SortBarViewModel SortBar => new()
+        /// <summary>
+        /// One sortable heading for the row that stands above these groups. The rest of the
+        /// screen's state travels with it and the ordering does not: the heading is what sets the
+        /// ordering, so carrying the current one would fight with the click.
+        /// </summary>
+        public SortableColumnViewModel Column(string column, string label, bool descendingFirst = false) => new()
         {
             Controller = "Coordinator",
             Action = "assigning_proposal_forsupervisor",
-            Sort = Sort,
-            Descending = Descending,
+            Column = column,
+            Label = label,
+            CurrentSort = Sort,
+            CurrentDescending = Descending,
+            DescendingFirst = descendingFirst,
             RouteValues = RouteValues()
                 .Where(v => v.Key != "sort" && v.Key != "desc")
-                .ToDictionary(v => v.Key, v => v.Value),
-            Columns =
-            [
-                ("submitted", "Date", true),
-                ("student", "Student", false)
-            ]
+                .ToDictionary(v => v.Key, v => v.Value)
         };
 
         public bool HasSupervisorSearch => !string.IsNullOrWhiteSpace(SupervisorSearch);
