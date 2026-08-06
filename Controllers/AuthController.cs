@@ -159,6 +159,38 @@ namespace ResearchPublicationManagementSystem.Controllers
             return View(model);
         }
 
+        /// <summary>
+        /// The three addresses the API puts in its emails.
+        ///
+        /// It composes them from Frontend:BaseUrl as /reset-password, /set-password and
+        /// /verify-email, and this site served none of them: the request fell through to the
+        /// catch-all that sends anonymous traffic to the sign-in page, carrying a ReturnUrl that
+        /// could never resolve. Nobody could verify a new address or finish a password reset from
+        /// the link they were sent, and the screen they landed on gave no hint why.
+        ///
+        /// Thin on purpose. The screens exist and take these exact parameters already, so this is
+        /// the address the email promises pointing at the screen that answers it, in the same shape
+        /// /accept-invitation is served in.
+        /// </summary>
+        [HttpGet("/reset-password")]
+        [AllowAnonymous]
+        public IActionResult ResetPasswordFromEmail(string? email = null, string? token = null) =>
+            RedirectToAction(nameof(passwordreset), new { email, token });
+
+        /// <summary>
+        /// An account an administrator opened, whose owner has never had a password. The same
+        /// screen sets it: a token and a new password either way.
+        /// </summary>
+        [HttpGet("/set-password")]
+        [AllowAnonymous]
+        public IActionResult SetPasswordFromEmail(string? email = null, string? token = null) =>
+            RedirectToAction(nameof(passwordreset), new { email, token });
+
+        [HttpGet("/verify-email")]
+        [AllowAnonymous]
+        public IActionResult VerifyEmailFromEmail(Guid userId, string? token = null) =>
+            RedirectToAction(nameof(VerifyEmail), new { userId, token });
+
         // GET: /Auth/passwordreset
         [HttpGet]
         [AllowAnonymous]
