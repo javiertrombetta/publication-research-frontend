@@ -7,230 +7,224 @@
         : Model.PublicationTitle;
 }
 
-<div class="row justify-content-center">
-    <div class="col-12 col-xl-9">
+@* Above the title and named after where it goes, which is how every other screen here does
+   it. It was a button on the right, which read as an action rather than a way out, and on a
+   phone it sat beside the title and pushed the page wider than the screen. *@
+<div class="mb-4">
+    @if (!string.IsNullOrWhiteSpace(Model.BackUrl))
+    {
+        <a href="@Model.BackUrl" class="text-secondary text-decoration-none small">
+            &larr; @Model.BackLabel
+        </a>
+    }
 
-        @* Above the title and named after where it goes, which is how every other screen here does
-           it. It was a button on the right, which read as an action rather than a way out, and on a
-           phone it sat beside the title and pushed the page wider than the screen. *@
-        <div class="mb-4">
+    <h1 class="page-title mt-2 mb-1">Messages</h1>
+    <div class="text-secondary">About @heading.</div>
+</div>
+
+@if (Model.LoadFailed)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h2 class="h3 mb-2">We couldn't open these messages</h2>
+            <p class="text-secondary mb-4">
+                Either this publication is not one you can see, or the server could not be
+                reached. Try again in a moment.
+            </p>
             @if (!string.IsNullOrWhiteSpace(Model.BackUrl))
             {
-                <a href="@Model.BackUrl" class="text-secondary text-decoration-none small">
-                    &larr; @Model.BackLabel
-                </a>
+                <a href="@Model.BackUrl" class="btn btn-primary">@Model.BackLabel</a>
             }
+        </div>
+    </div>
+}
+else if (Model.Counterparts.Count == 0)
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h2 class="h3 mb-2">There is nobody to write to here yet</h2>
+            <p class="text-secondary m-0">
+                A student writes to the supervisor they have been assigned, the coordinator
+                running their publication and the head of their department. Whoever is
+                working on this publication can write to the student. Once somebody is
+                responsible for it, they will be on this list.
+            </p>
+        </div>
+    </div>
+}
+else
+{
+    @if (!Model.Enabled)
+    {
+        <div class="alert alert-warning" role="alert">
+            <h3 class="alert-title">Writing to each other has been switched off</h3>
+            <div class="text-secondary">
+                An administrator has turned this off for the institution. Everything already
+                written is still here to read; nothing new can be sent until it is turned
+                back on.
+            </div>
+        </div>
+    }
 
-            <h1 class="page-title mt-2 mb-1">Messages</h1>
-            <div class="text-secondary">About @heading.</div>
+    <div class="row g-3">
+
+        @* Who this person may write to. On a phone it sits above the conversation rather
+           than beside it, which is what the grid does with two columns at this width. *@
+        <div class="col-12 col-lg-3">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title h4 m-0">People</h2>
+                </div>
+                <div class="list-group list-group-flush">
+                    @foreach (var person in Model.Counterparts)
+                    {
+                        var open = Model.With == person.UserId;
+                        <a class="list-group-item list-group-item-action @(open ? "active" : "")"
+                           asp-action="Publication" asp-route-id="@Model.ContainerId"
+                           asp-route-with="@person.UserId">
+
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <div>
+                                    <div class="@(person.UnreadFromThem > 0 ? "fw-bold" : "")">@person.Name</div>
+                                    <div class="small @(open ? "" : "text-secondary")">@person.Role</div>
+                                </div>
+
+                                @if (person.UnreadFromThem > 0)
+                                {
+                                    <span class="badge bg-primary"
+                                          title="@person.UnreadFromThem unread">@person.UnreadFromThem</span>
+                                }
+                            </div>
+                        </a>
+                    }
+                </div>
+            </div>
         </div>
 
-        @if (Model.LoadFailed)
-        {
-            <div class="card">
-                <div class="card-body text-center py-5">
-                    <h2 class="h3 mb-2">We couldn't open these messages</h2>
-                    <p class="text-secondary mb-4">
-                        Either this publication is not one you can see, or the server could not be
-                        reached. Try again in a moment.
-                    </p>
-                    @if (!string.IsNullOrWhiteSpace(Model.BackUrl))
-                    {
-                        <a href="@Model.BackUrl" class="btn btn-primary">@Model.BackLabel</a>
-                    }
-                </div>
-            </div>
-        }
-        else if (Model.Counterparts.Count == 0)
-        {
-            <div class="card">
-                <div class="card-body text-center py-5">
-                    <h2 class="h3 mb-2">There is nobody to write to here yet</h2>
-                    <p class="text-secondary m-0">
-                        A student writes to the supervisor they have been assigned, the coordinator
-                        running their publication and the head of their department. Whoever is
-                        working on this publication can write to the student. Once somebody is
-                        responsible for it, they will be on this list.
-                    </p>
-                </div>
-            </div>
-        }
-        else
-        {
-            @if (!Model.Enabled)
+        <div class="col-12 col-lg-9">
+
+            @if (Model.With is null)
             {
-                <div class="alert alert-warning" role="alert">
-                    <h3 class="alert-title">Writing to each other has been switched off</h3>
-                    <div class="text-secondary">
-                        An administrator has turned this off for the institution. Everything already
-                        written is still here to read; nothing new can be sent until it is turned
-                        back on.
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <h2 class="h3 mb-2">Choose who to write to</h2>
+                        <p class="text-secondary m-0">
+                            Pick a name to read what has been said and to answer it.
+                        </p>
                     </div>
                 </div>
             }
-
-            <div class="row g-3">
-
-                @* Who this person may write to. On a phone it sits above the conversation rather
-                   than beside it, which is what the grid does with two columns at this width. *@
-                <div class="col-12 col-lg-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h2 class="card-title h4 m-0">People</h2>
-                        </div>
-                        <div class="list-group list-group-flush">
-                            @foreach (var person in Model.Counterparts)
-                            {
-                                var open = Model.With == person.UserId;
-                                <a class="list-group-item list-group-item-action @(open ? "active" : "")"
-                                   asp-action="Publication" asp-route-id="@Model.ContainerId"
-                                   asp-route-with="@person.UserId">
-
-                                    <div class="d-flex align-items-center justify-content-between gap-2">
-                                        <div>
-                                            <div class="@(person.UnreadFromThem > 0 ? "fw-bold" : "")">@person.Name</div>
-                                            <div class="small @(open ? "" : "text-secondary")">@person.Role</div>
-                                        </div>
-
-                                        @if (person.UnreadFromThem > 0)
-                                        {
-                                            <span class="badge bg-primary"
-                                                  title="@person.UnreadFromThem unread">@person.UnreadFromThem</span>
-                                        }
-                                    </div>
-                                </a>
-                            }
-                        </div>
+            else
+            {
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h2 class="card-title h4 m-0">
+                            @(Model.OpenWith?.Name ?? "This conversation")
+                        </h2>
                     </div>
-                </div>
 
-                <div class="col-12 col-lg-8">
+                    <div class="card-body">
+                        @if (Model.Messages.Count == 0)
+                        {
+                            <p class="text-secondary m-0">
+                                Nothing has been said here yet. Whatever you write will reach
+                                them as a notification, and by email if the institution has
+                                that switched on.
+                            </p>
+                        }
+                        else
+                        {
+                            @* Newest at the top, matching the order the API returns and the
+                               order every other listing here reads in. *@
+                            foreach (var message in Model.Messages)
+                            {
+                                <div class="mb-4 pb-3 border-bottom rpms-message @(message.Outgoing ? "rpms-message-mine" : "")">
+                                    <div class="d-flex align-items-baseline justify-content-between gap-3 mb-1">
+                                        <div class="fw-bold">
+                                            @(message.Outgoing ? "You" : message.SenderName)
+                                        </div>
+                                        <div class="text-secondary small text-nowrap">
+                                            @message.SentAt.ToLocalTime().ToString("d MMM yyyy, HH:mm")
+                                        </div>
+                                    </div>
 
-                    @if (Model.With is null)
-                    {
-                        <div class="card">
-                            <div class="card-body text-center py-5">
-                                <h2 class="h3 mb-2">Choose who to write to</h2>
-                                <p class="text-secondary m-0">
-                                    Pick a name to read what has been said and to answer it.
-                                </p>
-                            </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="card mb-3">
-                            <div class="card-header">
-                                <h2 class="card-title h4 m-0">
-                                    @(Model.OpenWith?.Name ?? "This conversation")
-                                </h2>
-                            </div>
+                                    @* The line breaks somebody typed are part of what they
+                                       wrote. Razor encodes the text; only the newlines are
+                                       turned into markup. *@
+                                    <div class="rpms-message-body">@message.Body</div>
 
-                            <div class="card-body">
-                                @if (Model.Messages.Count == 0)
-                                {
-                                    <p class="text-secondary m-0">
-                                        Nothing has been said here yet. Whatever you write will reach
-                                        them as a notification, and by email if the institution has
-                                        that switched on.
-                                    </p>
-                                }
-                                else
-                                {
-                                    @* Newest at the top, matching the order the API returns and the
-                                       order every other listing here reads in. *@
-                                    foreach (var message in Model.Messages)
+                                    @if (message.Attachments.Count > 0)
                                     {
-                                        <div class="mb-4 pb-3 border-bottom rpms-message @(message.Outgoing ? "rpms-message-mine" : "")">
-                                            <div class="d-flex align-items-baseline justify-content-between gap-3 mb-1">
-                                                <div class="fw-bold">
-                                                    @(message.Outgoing ? "You" : message.SenderName)
-                                                </div>
-                                                <div class="text-secondary small text-nowrap">
-                                                    @message.SentAt.ToLocalTime().ToString("d MMM yyyy, HH:mm")
-                                                </div>
-                                            </div>
-
-                                            @* The line breaks somebody typed are part of what they
-                                               wrote. Razor encodes the text; only the newlines are
-                                               turned into markup. *@
-                                            <div class="rpms-message-body">@message.Body</div>
-
-                                            @if (message.Attachments.Count > 0)
+                                        <div class="mt-2">
+                                            @foreach (var attachment in message.Attachments)
                                             {
-                                                <div class="mt-2">
-                                                    @foreach (var attachment in message.Attachments)
-                                                    {
-                                                        <a class="btn btn-sm btn-outline-secondary me-2 mb-1"
-                                                           asp-action="Attachment" asp-route-id="@Model.ContainerId"
-                                                           asp-route-attachmentId="@attachment.Id">
-                                                            @attachment.FileName
-                                                        </a>
-                                                    }
-                                                </div>
-                                            }
-
-                                            @if (message.Outgoing)
-                                            {
-                                                <div class="text-secondary small mt-1">
-                                                    @(message.ReadByRecipient ? "Read" : "Not read yet")
-                                                </div>
+                                                <a class="btn btn-sm btn-outline-secondary me-2 mb-1"
+                                                   asp-action="Attachment" asp-route-id="@Model.ContainerId"
+                                                   asp-route-attachmentId="@attachment.Id">
+                                                    @attachment.FileName
+                                                </a>
                                             }
                                         </div>
                                     }
 
-                                    <partial name="_Pager" model="Model.Pager()" />
-                                }
-                            </div>
-                        </div>
-
-                        @if (Model.Enabled)
-                        {
-                            <div class="card">
-                                <div class="card-body">
-                                    <form asp-action="Send" method="post" enctype="multipart/form-data">
-                                        <input type="hidden" name="id" value="@Model.ContainerId" />
-                                        <input type="hidden" name="recipientUserId" value="@Model.With" />
-
-                                        <div class="mb-3">
-                                            <label for="rpms-message-text" class="form-label">
-                                                Write to @(Model.OpenWith?.Name ?? "them")
-                                            </label>
-                                            <textarea id="rpms-message-text" name="body" class="form-control" rows="4"
-                                                      maxlength="@Model.MaximumLength" required
-                                                      placeholder="What would you like to say?"></textarea>
+                                    @if (message.Outgoing)
+                                    {
+                                        <div class="text-secondary small mt-1">
+                                            @(message.ReadByRecipient ? "Read" : "Not read yet")
                                         </div>
-
-                                        <div class="mb-2">
-                                            <label for="rpms-message-files" class="form-label">
-                                                Attach files <span class="text-secondary">(optional)</span>
-                                            </label>
-                                            <input id="rpms-message-files" type="file" name="files" class="form-control"
-                                                   multiple accept="@Model.AcceptAttribute" />
-                                        </div>
-
-                                        @* Said here rather than left to be found out. A consent form
-                                           attached to a message is a consent form nobody reviewing
-                                           ethics will ever see. *@
-                                        <p class="text-secondary small">
-                                            Up to @Model.MaximumAttachments files, of these types:
-                                            @Model.AllowedExtensions.Replace(",", ", ").
-                                            Attach a screenshot or a photograph of something you are
-                                            asking about. The documents a process asks for are
-                                            uploaded on that process's own screen, where they are
-                                            reviewed; a copy attached here is not part of the record
-                                            and nobody will act on it.
-                                        </p>
-
-                                        <button type="submit" class="btn btn-primary">Send</button>
-                                    </form>
+                                    }
                                 </div>
-                            </div>
-                        }
-                    }
-                </div>
-            </div>
-        }
+                            }
 
+                            <partial name="_Pager" model="Model.Pager()" />
+                        }
+                    </div>
+                </div>
+
+                @if (Model.Enabled)
+                {
+                    <div class="card">
+                        <div class="card-body">
+                            <form asp-action="Send" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="id" value="@Model.ContainerId" />
+                                <input type="hidden" name="recipientUserId" value="@Model.With" />
+
+                                <div class="mb-3">
+                                    <label for="rpms-message-text" class="form-label">
+                                        Write to @(Model.OpenWith?.Name ?? "them")
+                                    </label>
+                                    <textarea id="rpms-message-text" name="body" class="form-control" rows="4"
+                                              maxlength="@Model.MaximumLength" required
+                                              placeholder="What would you like to say?"></textarea>
+                                </div>
+
+                                <div class="mb-2">
+                                    <label for="rpms-message-files" class="form-label">
+                                        Attach files <span class="text-secondary">(optional)</span>
+                                    </label>
+                                    <input id="rpms-message-files" type="file" name="files" class="form-control"
+                                           multiple accept="@Model.AcceptAttribute" />
+                                </div>
+
+                                @* Said here rather than left to be found out. A consent form
+                                   attached to a message is a consent form nobody reviewing
+                                   ethics will ever see. *@
+                                <p class="text-secondary small">
+                                    Up to @Model.MaximumAttachments files, of these types:
+                                    @Model.AllowedExtensions.Replace(",", ", ").
+                                    Attach a screenshot or a photograph of something you are
+                                    asking about. The documents a process asks for are
+                                    uploaded on that process's own screen, where they are
+                                    reviewed; a copy attached here is not part of the record
+                                    and nobody will act on it.
+                                </p>
+
+                                <button type="submit" class="btn btn-primary">Send</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
     </div>
-</div>
+}

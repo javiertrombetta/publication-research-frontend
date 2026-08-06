@@ -1,7 +1,14 @@
 @using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 @model SupervisorDashboardViewModel
+@using ResearchPublicationManagementSystem.Services
+@inject IInstitutionDetails Institution
 @{
     ViewData["Title"] = "Supervisor dashboard";
+
+    // Asked once for the whole listing rather than per row: this is the cached institution
+    // response the footer already reads on every page, but a call inside the loop would still
+    // read oddly to anybody counting what a row costs.
+    var messagingEnabled = (await Institution.GetAsync()).MessagingEnabled;
 
     string StageLabel(int stage) => stage switch
     {
@@ -272,10 +279,14 @@ else
                                             @* The one place a supervisor reaches every student they
                                                are supervising, so it is where writing to one belongs.
                                                Alongside the action rather than replacing it: whose
-                                               turn it is remains the point of this column. *@
-                                            <a asp-controller="Messages" asp-action="Publication"
-                                               asp-route-id="@publication.Id"
-                                               class="btn btn-sm btn-outline-secondary">Messages</a>
+                                               turn it is remains the point of this column. Gone
+                                               where messaging has been switched off. *@
+                                            @if (messagingEnabled)
+                                            {
+                                                <a asp-controller="Messages" asp-action="Publication"
+                                                   asp-route-id="@publication.Id"
+                                                   class="btn btn-sm btn-outline-secondary">Messages</a>
+                                            }
                                         </div>
                                     </td>
                                 </tr>
