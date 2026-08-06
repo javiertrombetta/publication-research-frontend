@@ -22,7 +22,14 @@ namespace ResearchPublicationManagementSystem.Controllers
         Services.IInstitutionDetails institution) : Controller
     {
         [HttpGet]
-        public async Task<IActionResult> Index(string? tab, Guid? departmentId)
+        public async Task<IActionResult> Index(string? tab, Guid? departmentId) =>
+            View(await BuildAsync(tab, departmentId));
+
+        /// <summary>
+        /// The whole screen, read from the API. Separate from the action because a refused save
+        /// shows the screen again rather than redirecting to it, and it has to be the same screen.
+        /// </summary>
+        private async Task<SystemSettingsViewModel> BuildAsync(string? tab, Guid? departmentId)
         {
             var model = new SystemSettingsViewModel { ActiveTab = NormaliseTab(tab) };
 
@@ -56,7 +63,7 @@ namespace ResearchPublicationManagementSystem.Controllers
                     ?? paperWorkflow.ErrorMessage ?? storage.ErrorMessage ?? messaging.ErrorMessage
                     ?? "Could not load the system settings.";
                 model.LoadFailed = true;
-                return View(model);
+                return model;
             }
 
             model.Committees = committees.Data!;
@@ -72,6 +79,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.EthicsWorkflow = ethicsWorkflow.Data!;
             model.PaperWorkflow = paperWorkflow.Data!;
             model.Storage = storage.Data!;
+            model.StorageProviderInForce = storage.Data!.ProviderName;
             model.Messaging = messaging.Data!;
 
             // Who an administrator can leave out of committee work. Only worth fetching on the tab
@@ -116,7 +124,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             // the API knows which those are.
             model.CanOpenRegistration = access.Data!.CanOpenRegistration;
 
-            return View(model);
+            return model;
         }
 
         // ---------- Committees ----------
@@ -135,8 +143,16 @@ namespace ResearchPublicationManagementSystem.Controllers
                     reviewerMembers, externalMembers, minimumApprovals,
                     candidateRoles ?? [], excludedUserIds ?? []));
 
-            return Done(result.Success, "committees", result.ErrorMessage,
-                "Saved. Publications opened from now on will use these figures; those already under way keep theirs.");
+            return await Done(result.Success, "committees", result.ErrorMessage,
+                "Saved. Publications opened from now on will use these figures; those already under way keep theirs.",
+                model => model.Committees = model.Committees with
+                {
+                    ReviewerMembers = reviewerMembers,
+                    ExternalMembers = externalMembers,
+                    MinimumApprovals = minimumApprovals,
+                    CandidateRoles = candidateRoles ?? [],
+                    ExcludedUserIds = excludedUserIds ?? []
+                });
         }
 
         // ---------- Ethics documents ----------
@@ -145,33 +161,49 @@ namespace ResearchPublicationManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddEthicsDocument(string name, string? description, int sortOrder)
         {
+            // What was typed goes back into the form whichever way this is refused, here or by the
+            // API, so a rejected name does not also cost the description underneath it.
+            void KeepWhatWasTyped(SystemSettingsViewModel model)
+            {
+                model.NewEthicsDocumentName = name;
+                model.NewEthicsDocumentDescription = description;
+                model.NewEthicsDocumentSortOrder = sortOrder;
+            }
+
             if (string.IsNullOrWhiteSpace(name))
             {
-                TempData["ErrorMessage"] = "Give the document a name.";
-                return RedirectToAction(nameof(Index), new { tab = "ethics" });
+                return await Done(false, "ethics", "Give the document a name.", string.Empty, KeepWhatWasTyped);
             }
 
             var result = await settingsApi.CreateEthicsDocumentAsync(
                 new SaveEthicsDocumentRequirementRequestDto(name, description, sortOrder));
 
-            return Done(result.Success, "ethics", result.ErrorMessage,
-                "Added. It will be asked of publications whose ethics stage starts from now on.");
+            return await Done(result.Success, "ethics", result.ErrorMessage,
+                "Added. It will be asked of publications whose ethics stage starts from now on.",
+                KeepWhatWasTyped);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateEthicsDocument(Guid id, string name, string? description, int sortOrder)
         {
+            // The row that was edited, still showing the edit. Every other row is left as the API
+            // reported it.
+            void KeepWhatWasTyped(SystemSettingsViewModel model) =>
+                model.EthicsDocuments =
+                [.. model.EthicsDocuments.Select(d => d.Id == id
+                    ? d with { Name = name, Description = description, SortOrder = sortOrder }
+                    : d)];
+
             if (string.IsNullOrWhiteSpace(name))
             {
-                TempData["ErrorMessage"] = "Give the document a name.";
-                return RedirectToAction(nameof(Index), new { tab = "ethics" });
+                return await Done(false, "ethics", "Give the document a name.", string.Empty, KeepWhatWasTyped);
             }
 
             var result = await settingsApi.UpdateEthicsDocumentAsync(
                 id, new SaveEthicsDocumentRequirementRequestDto(name, description, sortOrder));
 
-            return Done(result.Success, "ethics", result.ErrorMessage, "Saved.");
+            return await Done(result.Success, "ethics", result.ErrorMessage, "Saved.", KeepWhatWasTyped);
         }
 
         /// <summary>
@@ -184,7 +216,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         {
             var result = await settingsApi.SetEthicsDocumentActiveAsync(id, isActive);
 
-            return Done(result.Success, "ethics", result.ErrorMessage,
+            return await Done(result.Success, "ethics", result.ErrorMessage,
                 isActive
                     ? "This document will be asked for again."
                     : "This document will no longer be asked for. Publications already asked for it still owe it.");
@@ -208,8 +240,11 @@ namespace ResearchPublicationManagementSystem.Controllers
                 minimumLength, requireDigit, requireUppercase, requireLowercase, requireSymbol,
                 expiryDays, lockoutAttempts, lockoutMinutes));
 
-            return Done(result.Success, "passwords", result.ErrorMessage,
-                "Saved. The new rules apply the next time anyone sets a password.");
+            return await Done(result.Success, "passwords", result.ErrorMessage,
+                "Saved. The new rules apply the next time anyone sets a password.",
+                model => model.Passwords = new PasswordSettingsDto(
+                    minimumLength, requireDigit, requireUppercase, requireLowercase, requireSymbol,
+                    expiryDays, lockoutAttempts, lockoutMinutes));
         }
 
         // ---------- Notifications ----------
@@ -240,10 +275,23 @@ namespace ResearchPublicationManagementSystem.Controllers
             // and watch Contact IT go on offering a mail link for another minute.
             if (result.Success) institution.Invalidate();
 
-            return Done(result.Success, "notifications", result.ErrorMessage,
+            return await Done(result.Success, "notifications", result.ErrorMessage,
                 emailEnabled
                     ? "Saved. Notifications will be emailed as well as shown in the application."
-                    : "Saved. Notifications will appear in the application only.");
+                    : "Saved. Notifications will appear in the application only.",
+                // Everything but the password, which the form never shows and a refusal must not
+                // start showing. HasPassword is left as the API reported it, so the hint below the
+                // empty box still says truthfully whether one is stored.
+                model => model.Notifications = model.Notifications with
+                {
+                    EmailEnabled = emailEnabled,
+                    SmtpHost = smtpHost,
+                    SmtpPort = smtpPort,
+                    SmtpUsername = smtpUsername,
+                    UseSsl = useSsl,
+                    FromAddress = fromAddress,
+                    FromName = fromName
+                });
         }
 
         // ---------- Access ----------
@@ -263,10 +311,19 @@ namespace ResearchPublicationManagementSystem.Controllers
             // it and reasonably conclude the setting had not saved.
             if (result.Success) institution.Invalidate();
 
-            return Done(result.Success, "access", result.ErrorMessage,
+            return await Done(result.Success, "access", result.ErrorMessage,
                 publicCatalogueEnabled
                     ? "Saved. The public catalogue is the site's landing page."
-                    : "Saved. The public catalogue is off; visitors are shown the sign-in page.");
+                    : "Saved. The public catalogue is off; visitors are shown the sign-in page.",
+                model => model.Access = model.Access with
+                {
+                    RegistrationMode = registrationMode,
+                    AzureSsoEnabled = azureSsoEnabled,
+                    InvitationValidDays = invitationValidDays,
+                    AccessTokenMinutes = accessTokenMinutes,
+                    RefreshTokenDays = refreshTokenDays,
+                    PublicCatalogueEnabled = publicCatalogueEnabled
+                });
         }
 
         // ---------- Uploads ----------
@@ -278,8 +335,9 @@ namespace ResearchPublicationManagementSystem.Controllers
             var result = await settingsApi.UpdateUploadsAsync(
                 new UpdateUploadSettingsRequestDto(maxMegabytes, allowedExtensions));
 
-            return Done(result.Success, "uploads", result.ErrorMessage,
-                "Saved. Applies to the next file anyone uploads; files already stored are untouched.");
+            return await Done(result.Success, "uploads", result.ErrorMessage,
+                "Saved. Applies to the next file anyone uploads; files already stored are untouched.",
+                model => model.Uploads = new UploadSettingsDto(maxMegabytes, allowedExtensions));
         }
 
         // ---------- Writing to each other ----------
@@ -309,10 +367,20 @@ namespace ResearchPublicationManagementSystem.Controllers
             // messaging off and watch the tab stay where it was for the next minute.
             if (result.Success) institution.Invalidate();
 
-            return Done(result.Success, "messaging", result.ErrorMessage,
+            return await Done(result.Success, "messaging", result.ErrorMessage,
                 enabled
                     ? "Saved. Applies to the next message anyone writes."
-                    : "Saved. Nobody can write anything new; what has already been written is still there to read.");
+                    : "Saved. Nobody can write anything new; what has already been written is still there to read.",
+                model => model.Messaging = model.Messaging with
+                {
+                    Enabled = enabled,
+                    RecordedInActivityHistory = recordedInActivityHistory,
+                    AllowedExtensions = allowedExtensions,
+                    StudentsMayWrite = studentsMayWrite,
+                    StudentMayWriteToRoles = studentMayWriteToRoles ?? [],
+                    StaffMayWrite = staffMayWrite,
+                    StaffMayWriteToStudentRoles = staffMayWriteToStudentRoles ?? []
+                });
         }
 
         // ---------- Where uploaded files are kept ----------
@@ -334,7 +402,21 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             if (!result.Success)
             {
-                return Done(false, "storage", result.ErrorMessage, string.Empty);
+                // The one tab where a refusal used to cost the most: an administrator setting up
+                // S3 types a bucket, a region and a key, misses one of them, and had the lot
+                // emptied. The two secrets are still not put back, because they are never rendered.
+                return await Done(false, "storage", result.ErrorMessage, string.Empty,
+                    model => model.Storage = model.Storage with
+                    {
+                        Provider = provider,
+                        LocalPath = localPath ?? string.Empty,
+                        S3Bucket = s3Bucket,
+                        S3Region = s3Region,
+                        S3ServiceUrl = s3ServiceUrl,
+                        S3AccessKeyId = s3AccessKeyId,
+                        S3ForcePathStyle = s3ForcePathStyle,
+                        AzureContainer = azureContainer ?? string.Empty
+                    });
             }
 
             // Only if asked. The default is what it has always been: the destination changes and
@@ -350,7 +432,7 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return RedirectToAction(nameof(Index), new { tab = "storage" });
             }
 
-            return Done(true, "storage", null,
+            return await Done(true, "storage", null,
                 "Saved. New uploads go to the new destination; files already stored keep opening from where they are.");
         }
 
@@ -434,7 +516,19 @@ namespace ResearchPublicationManagementSystem.Controllers
             // that, an administrator would tick the box and watch the page below them disagree.
             institution.Invalidate();
 
-            return Done(result.Success, "institution", result.ErrorMessage, "Saved.");
+            return await Done(result.Success, "institution", result.ErrorMessage, "Saved.",
+                model => model.Institution = model.Institution with
+                {
+                    Name = name,
+                    StudentEmailDomain = studentEmailDomain,
+                    StaffEmailDomain = staffEmailDomain,
+                    ItSupportEmail = itSupportEmail,
+                    ResearchEnquiriesEmail = researchEnquiriesEmail,
+                    PrivacyPolicyUrl = privacyPolicyUrl,
+                    WebsiteUrl = websiteUrl,
+                    RowsPerPage = rowsPerPage,
+                    ItSupportShownToVisitors = itSupportShownToVisitors
+                });
         }
 
         // ---------- Deadlines ----------
@@ -449,8 +543,11 @@ namespace ResearchPublicationManagementSystem.Controllers
                 supervisorResponseDays, ethicsReviewDays, committeeReviewDays,
                 supervisorResponseWarningDays, ethicsReviewWarningDays, committeeReviewWarningDays));
 
-            return Done(result.Success, "deadlines", result.ErrorMessage,
-                "Saved. Deadlines mark work as overdue; they never stop it being done late.");
+            return await Done(result.Success, "deadlines", result.ErrorMessage,
+                "Saved. Deadlines mark work as overdue; they never stop it being done late.",
+                model => model.Deadlines = new DeadlineSettingsDto(
+                    supervisorResponseDays, ethicsReviewDays, committeeReviewDays,
+                    supervisorResponseWarningDays, ethicsReviewWarningDays, committeeReviewWarningDays));
         }
 
         // ---------- Research proposals ----------
@@ -463,10 +560,12 @@ namespace ResearchPublicationManagementSystem.Controllers
             var result = await settingsApi.UpdateProposalsAsync(
                 new UpdateProposalSettingsRequestDto(minimumPerRound, maximumPerRound, supervisorsExpressInterest));
 
-            return Done(result.Success, "pipeline", result.ErrorMessage,
+            return await Done(result.Success, "pipeline", result.ErrorMessage,
                 supervisorsExpressInterest
                     ? "Saved. Proposals go out to supervisors before the coordinator appoints one."
-                    : "Saved. The coordinator now appoints a supervisor directly, without sending the proposals out.");
+                    : "Saved. The coordinator now appoints a supervisor directly, without sending the proposals out.",
+                model => model.Proposals = new ProposalSettingsDto(
+                    minimumPerRound, maximumPerRound, supervisorsExpressInterest));
         }
 
         // ---------- Ethics workflow ----------
@@ -484,14 +583,18 @@ namespace ResearchPublicationManagementSystem.Controllers
                     supervisorReviewsDocuments, coordinatorReviewsDocuments,
                     documentReviewOrder ?? EthicsReviewOrder.SupervisorFirst));
 
-            return Done(result.Success, "pipeline", result.ErrorMessage,
+            return await Done(result.Success, "pipeline", result.ErrorMessage,
                 (headOfDepartmentReviews, headOfDepartmentReviewsWhenNotRequired) switch
                 {
                     (true, true) => "Saved. Every ethics decision goes to the Head of Department before the coordinator closes it.",
                     (true, false) => "Saved. Approved documents go to the Head of Department; a decision that none is needed does not.",
                     (false, true) => "Saved. A decision that no documentation is needed goes to the Head of Department; approved documents do not.",
                     _ => "Saved. The coordinator now closes the ethics stage without the Head of Department."
-                });
+                },
+                model => model.EthicsWorkflow = new EthicsWorkflowSettingsDto(
+                    headOfDepartmentReviews, headOfDepartmentReviewsWhenNotRequired,
+                    supervisorReviewsDocuments, coordinatorReviewsDocuments,
+                    documentReviewOrder ?? EthicsReviewOrder.SupervisorFirst));
         }
 
         [HttpPost]
@@ -503,10 +606,12 @@ namespace ResearchPublicationManagementSystem.Controllers
                 new UpdatePaperWorkflowSettingsRequestDto(
                     supervisorReviews, committeeEvaluates, coordinatorDecides, ethicsBeforePaper));
 
-            return Done(result.Success, "pipeline", result.ErrorMessage,
+            return await Done(result.Success, "pipeline", result.ErrorMessage,
                 ethicsBeforePaper
                     ? "Saved. Ethics is cleared before the research paper begins."
-                    : "Saved. The research paper is judged first, and ethics is settled before it can be published.");
+                    : "Saved. The research paper is judged first, and ethics is settled before it can be published.",
+                model => model.PaperWorkflow = new PaperWorkflowSettingsDto(
+                    supervisorReviews, committeeEvaluates, coordinatorDecides, ethicsBeforePaper));
         }
 
         // ---------- Comments on decisions ----------
@@ -520,8 +625,12 @@ namespace ResearchPublicationManagementSystem.Controllers
             var result = await settingsApi.UpdateDecisionCommentsAsync(
                 new UpdateDecisionCommentSettingsRequestDto(required ?? []));
 
-            return Done(result.Success, "decisions", result.ErrorMessage,
-                "Saved. The screens where these decisions are made follow this within a minute.");
+            var ticked = new HashSet<string>(required ?? [], StringComparer.Ordinal);
+
+            return await Done(result.Success, "decisions", result.ErrorMessage,
+                "Saved. The screens where these decisions are made follow this within a minute.",
+                model => model.DecisionComments =
+                    [.. model.DecisionComments.Select(d => d with { CommentRequired = ticked.Contains(d.Key) })]);
         }
 
         // ---------- Departments ----------
@@ -530,32 +639,46 @@ namespace ResearchPublicationManagementSystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddDepartment(string name, string code)
         {
+            void KeepWhatWasTyped(SystemSettingsViewModel model)
+            {
+                model.NewDepartmentName = name;
+                model.NewDepartmentCode = code;
+            }
+
             if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(code))
             {
-                return DepartmentDone(false, null, "Give the department a name and a code.", null);
+                return await DepartmentDone(false, null, "Give the department a name and a code.", null,
+                    KeepWhatWasTyped);
             }
 
             var result = await departmentsApi.CreateAsync(
                 new CreateDepartmentRequestDto(name.Trim(), code.Trim().ToUpperInvariant()));
 
-            return DepartmentDone(result.Success, result.Data?.Id, result.ErrorMessage,
-                "Added. Give it a head of department and its coordinators before students are sent to it.");
+            return await DepartmentDone(result.Success, result.Data?.Id, result.ErrorMessage,
+                "Added. Give it a head of department and its coordinators before students are sent to it.",
+                KeepWhatWasTyped);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RenameDepartment(Guid id, string name, string code)
         {
+            void KeepWhatWasTyped(SystemSettingsViewModel model) =>
+                model.Departments =
+                    [.. model.Departments.Select(d => d.Id == id ? d with { Name = name, Code = code } : d)];
+
             if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(code))
             {
-                return DepartmentDone(false, id, "A department needs a name and a code.", null);
+                return await DepartmentDone(false, id, "A department needs a name and a code.", null,
+                    KeepWhatWasTyped);
             }
 
             var result = await departmentsApi.UpdateAsync(id,
                 new UpdateDepartmentRequestDto(name.Trim(), code.Trim().ToUpperInvariant()));
 
-            return DepartmentDone(result.Success, id, result.ErrorMessage,
-                "Saved. The new name shows everywhere the department is named.");
+            return await DepartmentDone(result.Success, id, result.ErrorMessage,
+                "Saved. The new name shows everywhere the department is named.",
+                KeepWhatWasTyped);
         }
 
         [HttpPost]
@@ -564,7 +687,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         {
             var result = await departmentsApi.RemoveAsync(id);
 
-            return DepartmentDone(result.Success, result.Success ? null : id, result.ErrorMessage,
+            return await DepartmentDone(result.Success, result.Success ? null : id, result.ErrorMessage,
                 "Removed.");
         }
 
@@ -581,31 +704,91 @@ namespace ResearchPublicationManagementSystem.Controllers
             var result = await departmentsApi.SetMembersAsync(id,
                 new SetDepartmentMembersRequestDto(headOfDepartmentUserIds ?? [], coordinatorUserIds ?? []));
 
-            return DepartmentDone(result.Success, id, result.ErrorMessage,
+            // Nothing is put back here on purpose. This form picks names from a list rather than
+            // typing anything, and redrawing it with a membership the API has just refused would
+            // show the department as holding people it does not hold.
+            return await DepartmentDone(result.Success, id, result.ErrorMessage,
                 "Saved. Anybody moved here keeps the role they already had.");
         }
 
         // ---------- Helpers ----------
 
-        /// <summary>Back to the departments tab, still looking at the department worked on.</summary>
-        private IActionResult DepartmentDone(bool success, Guid? departmentId, string? error, string? successMessage)
+        /// <summary>
+        /// Back to the departments tab, still looking at the department worked on. A refusal draws
+        /// the tab again with what was typed, on the same reasoning as <see cref="Done"/>.
+        /// </summary>
+        private async Task<IActionResult> DepartmentDone(
+            bool success, Guid? departmentId, string? error, string? successMessage,
+            Action<SystemSettingsViewModel>? keepWhatWasTyped = null)
         {
-            TempData[success ? "SuccessMessage" : "ErrorMessage"] =
-                success ? successMessage ?? "Saved." : error ?? "Could not save the department.";
+            if (success)
+            {
+                TempData["SuccessMessage"] = successMessage ?? "Saved.";
+                return RedirectToAction(nameof(Index), new { tab = "departments", departmentId });
+            }
 
-            return RedirectToAction(nameof(Index), new { tab = "departments", departmentId });
+            var said = error ?? "Could not save the department.";
+
+            if (keepWhatWasTyped is null)
+            {
+                TempData["ErrorMessage"] = said;
+                return RedirectToAction(nameof(Index), new { tab = "departments", departmentId });
+            }
+
+            var model = await BuildAsync("departments", departmentId);
+            if (!model.LoadFailed) keepWhatWasTyped(model);
+
+            ModelState.Clear();
+            ModelState.AddModelError(string.Empty, said);
+
+            return View(nameof(Index), model);
         }
 
         /// <summary>People in the order a list of names is read in.</summary>
         private static IReadOnlyList<UserListItemDto> Sorted(IReadOnlyList<UserListItemDto>? people) =>
             [.. (people ?? []).OrderBy(u => u.LastName).ThenBy(u => u.FirstName)];
 
-        private IActionResult Done(bool success, string tab, string? error, string successMessage)
+        /// <summary>
+        /// After a save. Success redirects, so a reload does not resubmit; a refusal draws the
+        /// screen again instead, with <paramref name="keepWhatWasTyped"/> putting the submitted
+        /// values back into the form.
+        ///
+        /// It used to redirect either way, which meant a tab of nine boxes emptied itself because
+        /// one of them was out of range. What cannot be put back is a secret: the boxes that hold
+        /// the mail server's password and the storage keys are never rendered with a value, and a
+        /// refusal is not a reason to start.
+        /// </summary>
+        private async Task<IActionResult> Done(
+            bool success, string tab, string? error, string successMessage,
+            Action<SystemSettingsViewModel>? keepWhatWasTyped = null)
         {
-            TempData[success ? "SuccessMessage" : "ErrorMessage"] =
-                success ? successMessage : error ?? "Could not save the setting.";
+            if (success)
+            {
+                TempData["SuccessMessage"] = successMessage;
+                return RedirectToAction(nameof(Index), new { tab });
+            }
 
-            return RedirectToAction(nameof(Index), new { tab });
+            var said = error ?? "Could not save the setting.";
+
+            if (keepWhatWasTyped is null)
+            {
+                TempData["ErrorMessage"] = said;
+                return RedirectToAction(nameof(Index), new { tab });
+            }
+
+            var model = await BuildAsync(tab, null);
+            if (!model.LoadFailed) keepWhatWasTyped(model);
+
+            // The shared toast partial already shows whatever is in ModelState, so the refusal
+            // reads exactly as it did when it arrived through TempData. Cleared first because the
+            // binder leaves its own "The name field is required" beside it, and one problem
+            // stated twice, once in the words of the rule and once in the words of the binder,
+            // reads as two. The forms here render from the model rather than from ModelState, so
+            // nothing is lost by emptying it.
+            ModelState.Clear();
+            ModelState.AddModelError(string.Empty, said);
+
+            return View(nameof(Index), model);
         }
 
         /// <summary>

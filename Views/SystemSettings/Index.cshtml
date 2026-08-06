@@ -276,11 +276,13 @@
                             <div class="col-12 col-md-7">
                                 <label class="form-label" for="new-dept-name">Name</label>
                                 <input id="new-dept-name" name="name" maxlength="200" class="form-control"
+                                       value="@Model.NewDepartmentName"
                                        placeholder="Information Technology" required />
                             </div>
                             <div class="col-6 col-md-3">
                                 <label class="form-label" for="new-dept-code">Code</label>
                                 <input id="new-dept-code" name="code" maxlength="20" class="form-control"
+                                       value="@Model.NewDepartmentCode"
                                        placeholder="IT" required />
                             </div>
                             <div class="col-6 col-md-2 text-end">
@@ -485,17 +487,22 @@
                             <div class="col-12 col-md-5">
                                 <label class="form-label" for="new-name">Name</label>
                                 <input id="new-name" name="name" maxlength="200" class="form-control"
+                                       value="@Model.NewEthicsDocumentName"
                                        placeholder="Participant Information Sheet" required />
                             </div>
                             <div class="col-12 col-md-4">
                                 <label class="form-label" for="new-description">Description</label>
                                 <input id="new-description" name="description" class="form-control"
+                                       value="@Model.NewEthicsDocumentDescription"
                                        placeholder="Shown to the student" />
                             </div>
                             <div class="col-4 col-md-1">
                                 <label class="form-label" for="new-order">Order</label>
+                                @* Where it would go, unless an administrator has just been told why
+                                   the last attempt was refused, in which case it is what they chose. *@
                                 <input id="new-order" name="sortOrder" type="number" min="0"
-                                       value="@(Model.ActiveEthicsDocuments.Count() + 1)" class="form-control" required />
+                                       value="@(Model.NewEthicsDocumentSortOrder ?? Model.ActiveEthicsDocuments.Count() + 1)"
+                                       class="form-control" required />
                             </div>
                             <div class="col-8 col-md-2 text-end">
                                 <button type="submit" class="btn btn-primary w-100">Add</button>
@@ -1259,7 +1266,10 @@
 
                         <div class="alert alert-info d-flex flex-wrap align-items-center gap-2" role="status">
                             <span class="me-auto">
-                                New uploads go to <strong>@Model.Storage.ProviderName</strong>.
+                                @* What is in force, not what the form below is showing. After a
+                                   refused save those are two different things, and this sentence
+                                   is the one an administrator reads to find out which. *@
+                                New uploads go to <strong>@Model.StorageProviderInForce</strong>.
                             </span>
                             @* Its own form so testing never saves anything: an administrator can
                                check what is in force without committing to a change they are still
@@ -1424,7 +1434,7 @@
                                 <span class="me-auto">
                                     <strong>@Model.Storage.FilesElsewhere</strong>
                                     @(Model.Storage.FilesElsewhere == 1 ? "file is" : "files are") still stored
-                                    somewhere other than @Model.Storage.ProviderName.
+                                    somewhere other than @Model.StorageProviderInForce.
                                     @(Model.Storage.FilesElsewhere == 1 ? "It opens" : "They open") perfectly well
                                     from where @(Model.Storage.FilesElsewhere == 1 ? "it is" : "they are").
                                 </span>
