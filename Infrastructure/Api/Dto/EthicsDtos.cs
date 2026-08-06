@@ -110,3 +110,13 @@ public record RequiredEthicsDocumentDto(
     string? Description,
     int SortOrder,
     bool IsSatisfied);
+
+/// <summary>
+/// One publication's whole ethics picture, as the queues ask for a page of them at once. See the
+/// API's own remarks: asking per row made a screen's cost follow the size of the department.
+/// </summary>
+public record ContainerEthicsDto(
+    Guid PublicationContainerId,
+    EthicsApprovalDto Approval,
+    IReadOnlyList<EthicsDocumentDto> Documents);
+
