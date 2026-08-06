@@ -570,7 +570,7 @@ else
     </form>
 
     @section Scripts {
-        <script>
+        <script nonce="@Context.ScriptNonceValue()">
             // The backend rejects an empty selection; say so here rather than after a round trip.
             //
             // By id, not document.querySelector('form'). That returns the FIRST form in the

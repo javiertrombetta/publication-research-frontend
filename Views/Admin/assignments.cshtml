@@ -112,7 +112,7 @@ else
                 @* Deciding who should carry a publication means knowing what is in it. Outside the
                    header's toggle, or opening it would collapse the card underneath. *@
                 <a asp-controller="Admin" asp-action="publication" asp-route-id="@publication.Id"
-                   class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation();">Open</a>
+                   class="btn btn-sm btn-outline-secondary rpms-stop-collapse">Open</a>
             </div>
 
             <div class="card-body collapse" id="assignment-@publication.Id" data-rpms-collapsible="assignment-cards">
@@ -225,3 +225,12 @@ else
         <partial name="_Pager" model="Model.Pager" />
     }
 }
+
+@* These sit inside a collapsible card's own header toggle, so a click on one would open or shut
+   the card underneath. Stopped here rather than in an onclick attribute, which the policy no
+   longer permits. *@
+<script nonce="@Context.ScriptNonceValue()">
+    document.querySelectorAll('.rpms-stop-collapse').forEach(function (link) {
+        link.addEventListener('click', function (event) { event.stopPropagation(); });
+    });
+</script>

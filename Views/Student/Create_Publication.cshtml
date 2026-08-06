@@ -249,11 +249,11 @@ else
                 </div>
             </div>
 
-@* The compiler in the current SDK will not read a <script> that sits inside a Razor code block,
+@* The compiler in the current SDK will not read a <script nonce="@Context.ScriptNonceValue()"> that sits inside a Razor code block,
    so the "only while it is editable" part is said in JavaScript instead: on a read-only draft
    none of these controls are on the page and there is nothing to wire up. *@
 @section Scripts {
-    <script>
+    <script nonce="@Context.ScriptNonceValue()">
         if (document.getElementById('abstractInput')) {
             const MAX_WORDS = 2000;
             const abstractInput = document.getElementById('abstractInput');

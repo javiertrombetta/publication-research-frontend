@@ -220,7 +220,7 @@
 </div>
 
 @section Scripts {
-    <script>
+    <script nonce="@Context.ScriptNonceValue()">
         // Which extra fields a role needs. Kept in step with the API's own rule: the roles that
         // belong to a department cannot be granted without one.
         (function () {
@@ -251,7 +251,7 @@
         })();
     </script>
 
-    <script>
+    <script nonce="@Context.ScriptNonceValue()">
         // Deliberately hand-rolled rather than a Bootstrap modal: Tabler's tabler.min.js does not
         // bundle Bootstrap's JS, so data-bs-toggle does nothing on these pages.
         (function () {

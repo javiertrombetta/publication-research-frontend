@@ -118,7 +118,7 @@
 </div>
 
 @section Scripts {
-    <script>
+    <script nonce="@Context.ScriptNonceValue()">
         // Purely a UX affordance. The backend derives the role from the email domain server-side
         // regardless of what's shown/hidden here.
         (function () {

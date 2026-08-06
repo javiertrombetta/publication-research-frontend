@@ -142,7 +142,7 @@
 </div>
 
 @section Scripts {
-    <script>
+    <script nonce="@Context.ScriptNonceValue()">
         // Copy-to-clipboard for the citations. Falls back to selecting the text where the
         // Clipboard API isn't available (it needs a secure context), so the button is never dead.
         document.querySelectorAll('[data-copy-from]').forEach(function (button) {

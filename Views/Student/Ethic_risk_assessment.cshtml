@@ -68,7 +68,7 @@
                                 </div>
 
                                 <div class="card-footer bg-light border-top py-3 px-4">
-                                    <button type="button" onclick="clearSelections()" class="btn btn-ghost-secondary btn-sm m-0">
+                                    <button type="button" id="rpms-clear-guidance" class="btn btn-ghost-secondary btn-sm m-0">
                                         Clear guidance answers
                                     </button>
                                 </div>
@@ -130,7 +130,7 @@
 
 
 
-    <script>
+    <script nonce="@Context.ScriptNonceValue()">
         (function () {
             var form = document.getElementById('riskAssessmentForm');
             var QUESTION_COUNT = 20;
@@ -190,14 +190,17 @@
                 if (block) block.classList.remove('rpms-question-missing');
             });
 
-            // Called from the "Clear guidance answers" button's onclick. The screening only: the
-            // button says guidance answers, and clearing somebody's declaration along with them
-            // would be doing something it does not say.
-            window.clearSelections = function () {
+            // Wired to the "Clear guidance answers" button here rather than named on the button
+            // itself: the policy no longer permits script written into the markup, so there is
+            // nothing global to call and nothing global to be called by anybody else.
+            //
+            // The screening only: the button says guidance answers, and clearing somebody's
+            // declaration along with them would be doing something it does not say.
+            document.getElementById('rpms-clear-guidance')?.addEventListener('click', function () {
                 Array.prototype.forEach.call(
                     form.querySelectorAll('input[type="radio"][name^="Screening["]'),
                     function (radio) { radio.checked = false; });
                 mark([]);
-            };
+            });
         })();
     </script>

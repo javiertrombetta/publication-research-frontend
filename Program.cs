@@ -10,6 +10,8 @@ using ResearchPublicationManagementSystem.Infrastructure.Options;
 using ResearchPublicationManagementSystem.Services;
 using ResearchPublicationManagementSystem.Infrastructure.Auth;
 
+using ResearchPublicationManagementSystem.Common;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Most PaaS targets (Render included) assign the listen port at runtime via PORT rather than a
@@ -258,19 +260,23 @@ app.UseForwardedHeaders();
 // pipeline and is not there once the application is published.
 //
 // The policy names 'self' and nothing else because the site loads nothing else: Tabler, the
-// stylesheet and the one script are all served from here. Inline script and inline style are
-// allowed because the views use both, and rewriting twenty script blocks around nonces would buy
-// little while there is nowhere for injected markup to come out unescaped. What it does buy is
-// real: no script from another origin, no posting a form of ours to somewhere else, no rewriting
-// what relative URLs mean, and no framing the site inside a page that overlays it with a button
-// that says something different from the one being pressed.
+// stylesheet and the one script are all served from here. Inline script is named by a nonce made
+// fresh for each response, so the browser runs the blocks this site wrote and refuses any other,
+// including one that arrived in the page by accident. Inline style is still allowed: a nonce
+// covers a style block and not a style attribute, and the views set attributes throughout, so
+// removing it would mean rewriting every one of them to buy far less.
+//
+// The rest is what it always was: no script from another origin, no posting a form of ours to
+// somewhere else, no rewriting what relative URLs mean, and no framing the site inside a page that
+// overlays it with a button saying something different from the one being pressed.
 app.Use(async (context, next) =>
 {
     var headers = context.Response.Headers;
+    var nonce = ScriptNonce.Issue(context);
 
     headers["Content-Security-Policy"] =
         "default-src 'self'; " +
-        "script-src 'self' 'unsafe-inline'; " +
+        $"script-src 'self' 'nonce-{nonce}'; " +
         "style-src 'self' 'unsafe-inline'; " +
         "img-src 'self' data:; " +
         "font-src 'self' data:; " +
