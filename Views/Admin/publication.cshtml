@@ -28,17 +28,24 @@
     };
 }
 
-<div class="mb-4">
-    <a asp-controller="Admin" asp-action="@backAction" class="text-secondary">&larr; @backLabel</a>
-    <h1 class="page-title mt-2 mb-1">@Model.Container.DisplayTitle</h1>
-    <div class="text-secondary">
-        @Model.Container.StudentName
-        @if (!string.IsNullOrWhiteSpace(Model.Container.StudentDepartmentName))
-        {
-            <text>&middot; @Model.Container.StudentDepartmentName</text>
-        }
-        &middot; started @Model.Container.CreatedAt.ToLocalTime().ToString("d MMM yyyy")
+<div class="mb-4 d-flex align-items-start justify-content-between gap-3">
+    <div>
+        <a asp-controller="Admin" asp-action="@backAction" class="text-secondary">&larr; @backLabel</a>
+        <h1 class="page-title mt-2 mb-1">@Model.Container.DisplayTitle</h1>
+        <div class="text-secondary">
+            @Model.Container.StudentName
+            @if (!string.IsNullOrWhiteSpace(Model.Container.StudentDepartmentName))
+            {
+                <text>&middot; @Model.Container.StudentDepartmentName</text>
+            }
+            &middot; started @Model.Container.CreatedAt.ToLocalTime().ToString("d MMM yyyy")
+        </div>
     </div>
+
+    @* An administrator can write to the student about their publication, and read what they have
+       been sent. Not what anybody else on it said to them: that is theirs. *@
+    <a asp-controller="Messages" asp-action="Publication" asp-route-id="@Model.Container.Id"
+       class="btn btn-outline-secondary flex-shrink-0">Messages</a>
 </div>
 
 <div class="card mb-3">

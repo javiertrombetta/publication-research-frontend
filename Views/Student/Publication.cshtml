@@ -96,6 +96,12 @@
             }
         </a>
     </li>
+    @* A link, not a tab: the other two switch panels the browser already holds, and this leads to
+       a screen of its own. It sits with them because that is where somebody looks for it. *@
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" asp-controller="Messages" asp-action="Publication"
+           asp-route-id="@Model.Container.Id">Messages</a>
+    </li>
 </ul>
 
 <div class="tab-content">
