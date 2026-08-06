@@ -349,7 +349,7 @@ else
 @if (Model.Items.Count > 0 && Model.Members.Count > 0)
 {
     @section Scripts {
-        <script>
+        <script nonce="@Context.ScriptNonceValue()">
             // The backend rejects an empty committee, a composition that does not match what this
             // publication was opened under, and more approvals than there are members. Said here as
             // the boxes are ticked, so the count is in front of whoever is choosing rather than

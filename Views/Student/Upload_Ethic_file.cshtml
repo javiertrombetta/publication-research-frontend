@@ -245,7 +245,7 @@
   
 
 
-    <script>
+    <script nonce="@Context.ScriptNonceValue()">
         // Safely resets input choices for upload forms
         function clearUploads() {
             const fileInputs = document.querySelectorAll('#ethicsUploadForm input[type="file"]');

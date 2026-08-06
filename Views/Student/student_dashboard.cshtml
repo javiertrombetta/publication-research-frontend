@@ -257,7 +257,7 @@ else
         </div>
 
         @section Scripts {
-            <script>
+            <script nonce="@Context.ScriptNonceValue()">
                 // Point the shared modal's form at whichever publication was clicked.
                 document.getElementById('delete-publication-modal')
                     .addEventListener('show.bs.modal', function (event) {

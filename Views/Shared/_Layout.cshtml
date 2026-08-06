@@ -39,7 +39,7 @@
 
        Inline and unversioned on purpose: an external file would be fetched after this point and
        so could not beat the first paint. *@
-    <script>
+    <script nonce="@Context.ScriptNonceValue()">
         (function () {
             var root = document.documentElement;
 

@@ -20,9 +20,14 @@
             Nothing you were working on has been lost.
         </p>
 
-        <button type="button" class="btn btn-primary" onclick="window.location.reload()">
+        <button type="button" class="btn btn-primary" id="rpms-try-again">
             Try again
         </button>
 
     </div>
 </div>
+
+<script nonce="@Context.ScriptNonceValue()">
+    document.getElementById('rpms-try-again')
+        ?.addEventListener('click', function () { window.location.reload(); });
+</script>
