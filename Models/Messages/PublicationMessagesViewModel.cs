@@ -42,6 +42,9 @@ namespace ResearchPublicationManagementSystem.Models.Messages
         /// <summary>Where to go back to, which differs by role and is worked out by the controller.</summary>
         public string? BackUrl { get; set; }
 
+        /// <summary>What that place is called, since every way back on this site names its destination.</summary>
+        public string BackLabel { get; set; } = string.Empty;
+
         public MessageCounterpartDto? OpenWith =>
             With is { } id ? Counterparts.FirstOrDefault(c => c.UserId == id) : null;
 

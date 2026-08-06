@@ -24,9 +24,10 @@ namespace ResearchPublicationManagementSystem.Controllers
             {
                 ContainerId = id,
                 With = with,
-                Page = page,
-                BackUrl = BackTo(id)
+                Page = page
             };
+
+            (model.BackUrl, model.BackLabel) = BackTo(id);
 
             var context = await messagesApi.GetContextAsync(id);
             if (!context.Success)
@@ -127,37 +128,43 @@ namespace ResearchPublicationManagementSystem.Controllers
         }
 
         /// <summary>
-        /// Where the reader came from. Every role reaches a publication through its own screen, and
-        /// a Back that goes to somebody else's is worse than none.
+        /// Where the reader came from, and what to call it.
+        ///
+        /// Every role reaches a publication through its own screen, and a way back that goes to
+        /// somebody else's is worse than none. The label names the destination rather than saying
+        /// "back", which is what every other screen here does: a reader should know where a link
+        /// lands before they follow it.
         /// </summary>
-        private string? BackTo(Guid containerId)
+        private (string? Url, string Label) BackTo(Guid containerId)
         {
             if (User.IsInRole(RoleNames.Student))
             {
-                return Url.Action("Publication", "Student", new { id = containerId });
+                return (Url.Action("Publication", "Student", new { id = containerId }), "This publication");
             }
 
             if (User.IsInRole(RoleNames.Admin))
             {
-                return Url.Action("publication", "Admin", new { id = containerId });
+                return (Url.Action("publication", "Admin", new { id = containerId }), "This publication");
             }
 
             if (User.IsInRole(RoleNames.Coordinator))
             {
-                return Url.Action("Publication", "Coordinator", new { id = containerId });
+                return (Url.Action("Publication", "Coordinator", new { id = containerId }), "This publication");
             }
 
             if (User.IsInRole(RoleNames.HeadOfDepartment))
             {
-                return Url.Action("Publication", "HeadOfDepartment", new { id = containerId });
+                return (Url.Action("Publication", "HeadOfDepartment", new { id = containerId }), "This publication");
             }
 
+            // The supervisor has no per-publication screen, so their way back is the listing that
+            // brought them here.
             if (User.IsInRole(RoleNames.Supervisor))
             {
-                return Url.Action("SupervisorDashboard", "Supervisor");
+                return (Url.Action("SupervisorDashboard", "Supervisor"), "Dashboard");
             }
 
-            return null;
+            return (null, string.Empty);
         }
     }
 }

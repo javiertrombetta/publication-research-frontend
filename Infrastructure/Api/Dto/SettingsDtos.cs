@@ -130,6 +130,12 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
         bool Enabled,
         bool RecordedInActivityHistory,
         string AllowedExtensions,
+        bool StudentsMayWrite,
+        IReadOnlyList<string> StudentMayWriteToRoles,
+        bool StaffMayWrite,
+        IReadOnlyList<string> StaffMayWriteToStudentRoles,
+        IReadOnlyList<string> SelectableStudentRoles,
+        IReadOnlyList<string> SelectableStaffRoles,
         int MaximumLength,
         int MaximumAttachments);
 
@@ -186,7 +192,13 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
     public record UpdateUploadSettingsRequestDto(int MaxMegabytes, string AllowedExtensions);
 
     public record UpdateMessagingSettingsRequestDto(
-        bool Enabled, bool RecordedInActivityHistory, string AllowedExtensions);
+        bool Enabled,
+        bool RecordedInActivityHistory,
+        string AllowedExtensions,
+        bool StudentsMayWrite,
+        IReadOnlyList<string> StudentMayWriteToRoles,
+        bool StaffMayWrite,
+        IReadOnlyList<string> StaffMayWriteToStudentRoles);
 
     /// <summary>
     /// The institution itself. Read anonymously, because the sign-in page, the footer and the
