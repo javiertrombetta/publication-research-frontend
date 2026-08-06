@@ -36,9 +36,6 @@ public record AuditLogEntryDto(
 /// How many committee members of a given type a publication needs. RoleType matches the
 /// committee member's type (reviewer or external).
 /// </summary>
-public record CommitteeRoleConfigDto(Guid? CommitteeId, string RoleType, int RequiredCount);
-
-public record SetCommitteeRoleConfigRequestDto(string RoleType, int RequiredCount);
 
 // ---------- User management ----------
 
