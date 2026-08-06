@@ -175,8 +175,12 @@
                         {
                             <tr>
                                 <td>@proposal.Title</td>
+                                @* In the reader's own time, like every other date on the site. This
+                                   one was printed as stored, and stored is UTC: a proposal a
+                                   student sent at nine in the morning in Auckland was shown to
+                                   them, and only here, as the day before. *@
                                 <td data-rpms-sort-value="@(proposal.SubmittedAt?.ToString("o") ?? "")">
-                                    @(proposal.SubmittedAt?.ToString("dd MMM yyyy") ?? "—")
+                                    @(proposal.SubmittedAt?.ToLocalTime().ToString("dd MMM yyyy") ?? "—")
                                 </td>
                                 <td><span class="badge @StatusBadge(proposal.Status)">@Humanise(proposal.Status)</span></td>
                             </tr>
