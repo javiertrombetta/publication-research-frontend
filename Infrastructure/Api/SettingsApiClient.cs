@@ -76,6 +76,15 @@ public class SettingsApiClient(HttpClient httpClient) : ApiClientBase(httpClient
         UpdateUploadSettingsRequestDto request, CancellationToken ct = default) =>
         PutJsonAsync<UploadSettingsDto>("api/settings/uploads", request, ct);
 
+    // ---------- Writing to each other ----------
+
+    public Task<ApiResult<MessagingSettingsDto>> GetMessagingAsync(CancellationToken ct = default) =>
+        GetAsync<MessagingSettingsDto>("api/settings/messaging", ct);
+
+    public Task<ApiResult<MessagingSettingsDto>> UpdateMessagingAsync(
+        UpdateMessagingSettingsRequestDto request, CancellationToken ct = default) =>
+        PutJsonAsync<MessagingSettingsDto>("api/settings/messaging", request, ct);
+
     // ---------- Where uploaded files are kept ----------
 
     public Task<ApiResult<StorageSettingsDto>> GetStorageAsync(CancellationToken ct = default) =>

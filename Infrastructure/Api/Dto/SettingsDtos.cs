@@ -125,6 +125,14 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 
     public record UploadSettingsDto(int MaxMegabytes, string AllowedExtensions);
 
+    /// <summary>Whether people may write to each other through a publication, and what happens when they do.</summary>
+    public record MessagingSettingsDto(
+        bool Enabled,
+        bool RecordedInActivityHistory,
+        string AllowedExtensions,
+        int MaximumLength,
+        int MaximumAttachments);
+
     /// <summary>
     /// Where uploaded files are kept. Changing it points new uploads somewhere else and nothing
     /// more: every stored file records the destination that wrote it, so what is already there
@@ -176,6 +184,9 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
     public record StorageMigrationResultDto(int Moved, int Remaining, IReadOnlyList<string> Problems);
 
     public record UpdateUploadSettingsRequestDto(int MaxMegabytes, string AllowedExtensions);
+
+    public record UpdateMessagingSettingsRequestDto(
+        bool Enabled, bool RecordedInActivityHistory, string AllowedExtensions);
 
     /// <summary>
     /// The institution itself. Read anonymously, because the sign-in page, the footer and the

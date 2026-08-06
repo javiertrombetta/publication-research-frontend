@@ -31,6 +31,7 @@
     [
         ("access", "Access"),
         ("departments", "Departments"),
+        ("messaging", "Messages"),
         ("storage", "File storage"),
         ("institution", "Institution"),
         ("notifications", "Notifications"),
@@ -1091,6 +1092,78 @@
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Save upload rules</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            if (Model.ActiveTab == "messaging")
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="h3 mb-2">Writing to each other</h2>
+                        <p class="text-secondary">
+                            A student writes to the supervisor they were assigned, the coordinator
+                            running their publication and the head of their department. Whoever is
+                            working on a publication writes to the student. It happens on the
+                            publication, so what was asked and answered stays with the research
+                            rather than in somebody's mailbox.
+                        </p>
+
+                        <form asp-action="SaveMessaging" method="post" class="row g-3">
+
+                            <div class="col-12">
+                                <label class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="enabled" value="true"
+                                           checked="@Model.Messaging.Enabled" />
+                                    @* Paired with the box, as the other switches on this screen are:
+                                       an unticked checkbox posts nothing at all, and without this the
+                                       binder would see silence rather than false. *@
+                                    <input type="hidden" name="enabled" value="false" />
+                                    <span class="form-check-label">Let people write to each other through a publication</span>
+                                </label>
+                                <small class="form-hint">
+                                    Off hides the screen and refuses new messages. Nothing already
+                                    written is removed: somebody may have been relying on it.
+                                </small>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="recordedInActivityHistory"
+                                           value="true" checked="@Model.Messaging.RecordedInActivityHistory" />
+                                    <input type="hidden" name="recordedInActivityHistory" value="false" />
+                                    <span class="form-check-label">Note these contacts in the publication's activity history</span>
+                                </label>
+                                <small class="form-hint">
+                                    Records that somebody wrote to somebody, and when. Never what was
+                                    said. Off unless you want it: the activity history is read by
+                                    everybody with access to the publication, so this tells a
+                                    coordinator and a head of department that a student wrote to
+                                    their supervisor.
+                                </small>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label" for="messaging-extensions">File types a message may carry</label>
+                                <input id="messaging-extensions" name="allowedExtensions"
+                                       value="@Model.Messaging.AllowedExtensions" class="form-control" required />
+                                <small class="form-hint">
+                                    Separated by commas; the full stops are optional. Its own list,
+                                    not the one under Uploads: a question usually arrives with a
+                                    screenshot, and allowing an image here should not allow one to
+                                    be submitted as a research paper.
+                                </small>
+                            </div>
+
+                            <div class="col-12">
+                                <p class="text-secondary small">
+                                    A message can be up to @Model.Messaging.MaximumLength characters
+                                    and carry @Model.Messaging.MaximumAttachments files. Those two are
+                                    fixed.
+                                </p>
+                                <button type="submit" class="btn btn-primary">Save message rules</button>
                             </div>
                         </form>
                     </div>

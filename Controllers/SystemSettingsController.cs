@@ -32,6 +32,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             var ethicsDocuments = await settingsApi.GetEthicsDocumentsAsync();
             var access = await settingsApi.GetAccessAsync();
             var uploads = await settingsApi.GetUploadsAsync();
+            var messaging = await settingsApi.GetMessagingAsync();
             var institution = await settingsApi.GetInstitutionAsync();
             var deadlines = await settingsApi.GetDeadlinesAsync();
             var proposals = await settingsApi.GetProposalsAsync();
@@ -45,14 +46,14 @@ namespace ResearchPublicationManagementSystem.Controllers
             if (!committees.Success || !passwords.Success || !notifications.Success || !ethicsDocuments.Success
                 || !access.Success || !uploads.Success || !institution.Success || !deadlines.Success
                 || !proposals.Success || !decisions.Success || !ethicsWorkflow.Success
-                || !paperWorkflow.Success || !storage.Success)
+                || !paperWorkflow.Success || !storage.Success || !messaging.Success)
             {
                 TempData["ErrorMessage"] =
                     committees.ErrorMessage ?? passwords.ErrorMessage ?? notifications.ErrorMessage
                     ?? ethicsDocuments.ErrorMessage ?? access.ErrorMessage ?? uploads.ErrorMessage
                     ?? institution.ErrorMessage ?? deadlines.ErrorMessage ?? proposals.ErrorMessage
                     ?? decisions.ErrorMessage ?? ethicsWorkflow.ErrorMessage
-                    ?? paperWorkflow.ErrorMessage ?? storage.ErrorMessage
+                    ?? paperWorkflow.ErrorMessage ?? storage.ErrorMessage ?? messaging.ErrorMessage
                     ?? "Could not load the system settings.";
                 model.LoadFailed = true;
                 return View(model);
@@ -71,6 +72,7 @@ namespace ResearchPublicationManagementSystem.Controllers
             model.EthicsWorkflow = ethicsWorkflow.Data!;
             model.PaperWorkflow = paperWorkflow.Data!;
             model.Storage = storage.Data!;
+            model.Messaging = messaging.Data!;
 
             // Who an administrator can leave out of committee work. Only worth fetching on the tab
             // that shows it, and a failure here is not worth failing the whole screen for: the rest
@@ -272,6 +274,22 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             return Done(result.Success, "uploads", result.ErrorMessage,
                 "Saved. Applies to the next file anyone uploads; files already stored are untouched.");
+        }
+
+        // ---------- Writing to each other ----------
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveMessaging(
+            bool enabled, bool recordedInActivityHistory, string allowedExtensions)
+        {
+            var result = await settingsApi.UpdateMessagingAsync(
+                new UpdateMessagingSettingsRequestDto(enabled, recordedInActivityHistory, allowedExtensions));
+
+            return Done(result.Success, "messaging", result.ErrorMessage,
+                enabled
+                    ? "Saved. Applies to the next message anyone writes."
+                    : "Saved. Nobody can write anything new; what has already been written is still there to read.");
         }
 
         // ---------- Where uploaded files are kept ----------
@@ -573,7 +591,7 @@ namespace ResearchPublicationManagementSystem.Controllers
         /// </summary>
         private static string NormaliseTab(string? tab) => tab switch
         {
-            "ethics" or "passwords" or "notifications" or "access" or "uploads"
+            "ethics" or "passwords" or "notifications" or "access" or "uploads" or "messaging"
                 or "institution" or "deadlines" or "proposals" or "pipeline" or "decisions"
                 or "storage" or "departments" => tab,
             _ => "committees"
