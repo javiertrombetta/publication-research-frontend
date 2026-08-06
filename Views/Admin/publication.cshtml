@@ -581,7 +581,26 @@ else
 
     @* The decision that actually unsticks people. Separate from everything above, because a
        document put right is no use while the stage still says whoever needed it has had their
-       turn. *@
+       turn.
+
+       Withdrawn once the paper has been accepted, like every other control on this screen. A
+       publication whose paper has been judged is a record of that judgement, and moving it back to
+       an earlier step would leave the record saying something the decision does not. *@
+    @if (settled)
+    {
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h3 mb-2">Where this publication stands</h2>
+                <p class="text-secondary m-0">
+                    This paper has been @(Model.Publication!.Status == "Published" ? "published" : "accepted"),
+                    so where the publication stands is settled and is no longer something to change
+                    from here. What it holds is the record of what was judged.
+                </p>
+            </div>
+        </div>
+    }
+    else
+    {
     <div class="card">
         <div class="card-body">
             <h2 class="h3 mb-2">Where this publication stands</h2>
@@ -646,4 +665,5 @@ else
             </form>
         </div>
     </div>
+    }
 }
