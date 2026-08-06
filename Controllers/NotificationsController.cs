@@ -108,6 +108,11 @@ namespace ResearchPublicationManagementSystem.Controllers
                 // goes to whatever that role's own view of it is.
                 "PublicationContainer" => ContainerDestinationFor(id),
                 "Committee" => Url.Action("committee_review", "ExternalSupervisor"),
+
+                // Somebody wrote to this person. The id is the publication's rather than the
+                // message's, because the screen is per publication: there is no screen showing one
+                // message, and a conversation is the smallest thing worth opening.
+                "ContainerMessages" => Url.Action("Publication", "Messages", new { id }),
                 _ => null
             };
         }

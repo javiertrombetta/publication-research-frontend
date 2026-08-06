@@ -248,25 +248,35 @@ else
                                             : "Nothing yet")
                                     </td>
                                     <td>
-                                        @if (action is null)
-                                        {
-                                            <span class="text-secondary">—</span>
-                                        }
-                                        else if (action.Value.Action == "Review_Ethic_assessmentchecklist")
-                                        {
-                                            @* Straight to the publication clicked. *@
-                                            <a asp-controller="Supervisor" asp-action="@action.Value.Action"
+                                        <div class="d-flex flex-wrap gap-1">
+                                            @if (action is null)
+                                            {
+                                                <span class="text-secondary">—</span>
+                                            }
+                                            else if (action.Value.Action == "Review_Ethic_assessmentchecklist")
+                                            {
+                                                @* Straight to the publication clicked. *@
+                                                <a asp-controller="Supervisor" asp-action="@action.Value.Action"
+                                                   asp-route-id="@publication.Id"
+                                                   class="btn btn-sm btn-primary">@action.Value.Label</a>
+                                            }
+                                            else
+                                            {
+                                                @* The paper queue has no per-publication screen, so it
+                                                   arrives already searching for this row. *@
+                                                <a asp-controller="Supervisor" asp-action="@action.Value.Action"
+                                                   asp-route-search="@publication.StudentName"
+                                                   class="btn btn-sm btn-primary">@action.Value.Label</a>
+                                            }
+
+                                            @* The one place a supervisor reaches every student they
+                                               are supervising, so it is where writing to one belongs.
+                                               Alongside the action rather than replacing it: whose
+                                               turn it is remains the point of this column. *@
+                                            <a asp-controller="Messages" asp-action="Publication"
                                                asp-route-id="@publication.Id"
-                                               class="btn btn-sm btn-primary">@action.Value.Label</a>
-                                        }
-                                        else
-                                        {
-                                            @* The paper queue has no per-publication screen, so it
-                                               arrives already searching for this row. *@
-                                            <a asp-controller="Supervisor" asp-action="@action.Value.Action"
-                                               asp-route-search="@publication.StudentName"
-                                               class="btn btn-sm btn-primary">@action.Value.Label</a>
-                                        }
+                                               class="btn btn-sm btn-outline-secondary">Messages</a>
+                                        </div>
                                     </td>
                                 </tr>
                             }

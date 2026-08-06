@@ -2045,3 +2045,28 @@ td > * > .badge {
        rather than a ceiling, which is what it should be. */
     height: 3.25rem;
 }
+
+/* Messages on a publication.
+
+   The line breaks somebody typed are part of what they wrote: a paragraph pasted into the box
+   arrived as one run-on line without this. pre-wrap keeps the breaks and still wraps long lines,
+   and break-word stops a pasted URL pushing the card wider than the column. */
+.rpms-message-body {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+}
+
+/* One's own messages sit against a faint tint, so a conversation can be followed by shape rather
+   than by reading every name. Tabler's own surface variable, so it follows the theme. */
+.rpms-message-mine .rpms-message-body {
+    background: var(--tblr-bg-surface-tertiary, rgba(128, 128, 128, .08));
+    border-radius: var(--tblr-border-radius);
+    padding: .5rem .75rem;
+}
+
+/* The last message in a conversation has nothing under it to be separated from. */
+.rpms-message:last-of-type {
+    border-bottom: 0 !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}

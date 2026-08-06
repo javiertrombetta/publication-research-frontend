@@ -170,6 +170,7 @@ builder.Services.AddHttpClient<SettingsApiClient>(ConfigureApiClient).AddHttpMes
 // nothing is refreshed.
 builder.Services.AddHttpClient<InvitationsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
 builder.Services.AddHttpClient<NotificationsApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
+builder.Services.AddHttpClient<ContainerMessagesApiClient>(ConfigureApiClient).AddHttpMessageHandler<BearerTokenHandler>().AddHttpMessageHandler<ApiAvailabilityHandler>();
 
 // The published catalogue is anonymous end to end, so no bearer handler: a visitor who has never
 // signed in has no token to attach, and requiring one would make the catalogue non-public.
