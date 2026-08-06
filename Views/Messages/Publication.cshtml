@@ -10,19 +10,19 @@
 <div class="row justify-content-center">
     <div class="col-12 col-xl-9">
 
-        @* Wraps, because "Back to the publication" and a publication's title do not fit beside each
-           other on a phone: without it the row was eight pixels wider than the screen and the whole
-           page slid sideways. *@
-        <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
-            <div>
-                <h1 class="page-title mb-1">Messages</h1>
-                <div class="text-secondary">About @heading.</div>
-            </div>
-
+        @* Above the title and named after where it goes, which is how every other screen here does
+           it. It was a button on the right, which read as an action rather than a way out, and on a
+           phone it sat beside the title and pushed the page wider than the screen. *@
+        <div class="mb-4">
             @if (!string.IsNullOrWhiteSpace(Model.BackUrl))
             {
-                <a href="@Model.BackUrl" class="btn btn-outline-secondary">Back to the publication</a>
+                <a href="@Model.BackUrl" class="text-secondary text-decoration-none small">
+                    &larr; @Model.BackLabel
+                </a>
             }
+
+            <h1 class="page-title mt-2 mb-1">Messages</h1>
+            <div class="text-secondary">About @heading.</div>
         </div>
 
         @if (Model.LoadFailed)
@@ -36,7 +36,7 @@
                     </p>
                     @if (!string.IsNullOrWhiteSpace(Model.BackUrl))
                     {
-                        <a href="@Model.BackUrl" class="btn btn-primary">Back to the publication</a>
+                        <a href="@Model.BackUrl" class="btn btn-primary">@Model.BackLabel</a>
                     }
                 </div>
             </div>

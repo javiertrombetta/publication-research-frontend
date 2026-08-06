@@ -1145,6 +1145,80 @@
                                 </small>
                             </div>
 
+                            <hr class="my-1" />
+
+                            @* Who may write to whom. Two directions, each with its own switch and
+                               its own list, because an institution that wants staff to be able to
+                               reach a student does not thereby want every student writing to a
+                               committee that is judging their paper. *@
+                            <div class="col-12 col-lg-6">
+                                <label class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="studentsMayWrite"
+                                           value="true" checked="@Model.Messaging.StudentsMayWrite" />
+                                    <input type="hidden" name="studentsMayWrite" value="false" />
+                                    <span class="form-check-label fw-bold">A student may write</span>
+                                </label>
+                                <small class="form-hint mb-2 d-block">
+                                    Off, a student can neither start a conversation nor answer one.
+                                </small>
+
+                                @foreach (var role in Model.Messaging.SelectableStudentRoles)
+                                {
+                                    <label class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="studentMayWriteToRoles"
+                                               value="@role"
+                                               checked="@Model.Messaging.StudentMayWriteToRoles.Contains(role)" />
+                                        <span class="form-check-label">@DisplayText.Humanise(role)</span>
+                                    </label>
+                                }
+
+                                <small class="form-hint">
+                                    Whichever of these hold a post on the student's own publication:
+                                    the supervisor assigned to it, the coordinator running it, the
+                                    head of their department, and the committee appointed to judge
+                                    the paper. Nothing ticked means nobody. Administrators are not
+                                    on this list because no administrator is attached to a
+                                    publication, so it would mean all of them at once.
+                                </small>
+                            </div>
+
+                            <div class="col-12 col-lg-6">
+                                <label class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" name="staffMayWrite"
+                                           value="true" checked="@Model.Messaging.StaffMayWrite" />
+                                    <input type="hidden" name="staffMayWrite" value="false" />
+                                    <span class="form-check-label fw-bold">Staff may write to a student</span>
+                                </label>
+                                <small class="form-hint mb-2 d-block">
+                                    Off, nobody working on a publication can write to the student.
+                                </small>
+
+                                @foreach (var role in Model.Messaging.SelectableStaffRoles)
+                                {
+                                    <label class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="staffMayWriteToStudentRoles"
+                                               value="@role"
+                                               checked="@Model.Messaging.StaffMayWriteToStudentRoles.Contains(role)" />
+                                        <span class="form-check-label">@DisplayText.Humanise(role)</span>
+                                    </label>
+                                }
+
+                                <small class="form-hint">
+                                    Only counts where they are actually on the publication. Nothing
+                                    ticked means nobody.
+                                </small>
+                            </div>
+
+                            <div class="col-12">
+                                <p class="text-secondary small m-0">
+                                    Narrowing a list stops new conversations; it does not silence one
+                                    already under way, so nobody is left holding a message they
+                                    cannot answer. Switching a direction off does silence it.
+                                </p>
+                            </div>
+
+                            <hr class="my-1" />
+
                             <div class="col-12">
                                 <label class="form-label" for="messaging-extensions">File types a message may carry</label>
                                 <input id="messaging-extensions" name="allowedExtensions"

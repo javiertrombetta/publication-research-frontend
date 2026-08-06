@@ -281,10 +281,22 @@ namespace ResearchPublicationManagementSystem.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SaveMessaging(
-            bool enabled, bool recordedInActivityHistory, string allowedExtensions)
+            bool enabled,
+            bool recordedInActivityHistory,
+            string allowedExtensions,
+            bool studentsMayWrite,
+            List<string>? studentMayWriteToRoles,
+            bool staffMayWrite,
+            List<string>? staffMayWriteToStudentRoles)
         {
+            // Empty rather than null when nothing is ticked: the API tells "nobody was chosen"
+            // apart from "this has never been configured", and a form always answers the question
+            // it asked.
             var result = await settingsApi.UpdateMessagingAsync(
-                new UpdateMessagingSettingsRequestDto(enabled, recordedInActivityHistory, allowedExtensions));
+                new UpdateMessagingSettingsRequestDto(
+                    enabled, recordedInActivityHistory, allowedExtensions,
+                    studentsMayWrite, studentMayWriteToRoles ?? [],
+                    staffMayWrite, staffMayWriteToStudentRoles ?? []));
 
             return Done(result.Success, "messaging", result.ErrorMessage,
                 enabled
