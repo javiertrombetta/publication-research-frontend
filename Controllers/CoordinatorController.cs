@@ -641,18 +641,21 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return View(model);
             }
 
-            foreach (var container in ready.Data?.Items ?? [])
-            {
-                var paper = await publicationsApi.GetByContainerAsync(container.Id);
-                if (paper.Data is null) continue;
+            // One request for the page, as on the ethics queues: this asked for the paper and then
+            // for its reviews once per row.
+            var waiting = ready.Data?.Items ?? [];
+            var papers = await publicationsApi.GetPapersForAsync(waiting.Select(c => c.Id));
+            var byContainer = (papers.Data ?? []).ToDictionary(p => p.PublicationContainerId);
 
-                var reviews = await publicationsApi.GetReviewsAsync(paper.Data.Id);
+            foreach (var container in waiting)
+            {
+                if (!byContainer.TryGetValue(container.Id, out var theirs)) continue;
 
                 model.ReadyForDecision.Add(new CoordinatorPaperItem
                 {
                     Container = container,
-                    Paper = paper.Data,
-                    Reviews = reviews.Data ?? []
+                    Paper = theirs.Paper,
+                    Reviews = theirs.Reviews
                 });
             }
 
@@ -789,24 +792,27 @@ namespace ResearchPublicationManagementSystem.Controllers
 
             // Only the rows on this page are filled in, so the cost follows the page rather than
             // the department.
+            // One request for the whole page rather than two per row. Asked per row, this screen
+            // cost two requests and roughly six database queries for every publication on it,
+            // which is invisible on a small department and grows with a large one.
+            var ethics = await ethicsApi.GetEthicsForAsync(candidates.Select(c => c.Id));
+            var byContainer = (ethics.Data ?? []).ToDictionary(e => e.PublicationContainerId);
+
             foreach (var container in candidates)
             {
-                var approval = await ethicsApi.GetApprovalAsync(container.Id);
-                if (approval.Data is null) continue;
-
-                var documents = await ethicsApi.GetDocumentsAsync(container.Id);
+                if (!byContainer.TryGetValue(container.Id, out var theirs)) continue;
 
                 // Only what the supervisor accepted. Reading a set is the supervisor's job, and
                 // they have done it: the versions they sent back are already answered, and listing
                 // them here asks this reader to work out which of five rows are the live three.
-                var accepted = (documents.Data ?? [])
+                var accepted = theirs.Documents
                     .Where(d => d.Status == EthicsDocumentStatus.Accepted)
                     .ToList();
 
                 model.Items.Add(new CoordinatorEthicsItem
                 {
                     Container = container,
-                    Approval = approval.Data,
+                    Approval = theirs.Approval,
                     Documents = accepted
                 });
             }

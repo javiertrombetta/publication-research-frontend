@@ -125,24 +125,27 @@ namespace ResearchPublicationManagementSystem.Controllers
             }
 
             // Only the rows on this page are filled in: each costs two further requests.
+            // One request for the whole page rather than two per row. Asked per row, this screen
+            // cost two requests and roughly six database queries for every publication on it,
+            // which is invisible on a small department and grows with a large one.
+            var ethics = await ethicsApi.GetEthicsForAsync(candidates.Select(c => c.Id));
+            var byContainer = (ethics.Data ?? []).ToDictionary(e => e.PublicationContainerId);
+
             foreach (var container in candidates)
             {
-                var approval = await ethicsApi.GetApprovalAsync(container.Id);
-                if (approval.Data is null) continue;
-
-                var documents = await ethicsApi.GetDocumentsAsync(container.Id);
+                if (!byContainer.TryGetValue(container.Id, out var theirs)) continue;
 
                 // Only what the supervisor accepted. Reading a set is the supervisor's job, and
                 // they have done it: the versions they sent back are already answered, and listing
                 // them here asks this reader to work out which of five rows are the live three.
-                var accepted = (documents.Data ?? [])
+                var accepted = theirs.Documents
                     .Where(d => d.Status == EthicsDocumentStatus.Accepted)
                     .ToList();
 
                 model.Items.Add(new HeadOfDepartmentEthicsItem
                 {
                     Container = container,
-                    Approval = approval.Data,
+                    Approval = theirs.Approval,
                     Documents = accepted
                 });
             }

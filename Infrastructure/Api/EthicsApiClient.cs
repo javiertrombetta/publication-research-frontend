@@ -63,6 +63,24 @@ public class EthicsApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
         GetFileAsync($"api/containers/{containerId}/ethics/documents/{documentId}/download", ct);
 
 
+    /// <summary>
+    /// The ethics of a whole page of publications in one request, approvals and documents
+    /// together. The queues used to ask per row, which cost a screen two requests a row and grew
+    /// with the department.
+    /// </summary>
+    public Task<ApiResult<IReadOnlyList<ContainerEthicsDto>>> GetEthicsForAsync(
+        IEnumerable<Guid> containerIds, CancellationToken ct = default)
+    {
+        var query = string.Join("&", containerIds.Distinct().Select(id => $"ids={id}"));
+
+        // Nothing asked for is nothing to ask about. Sent as an empty query the API would answer
+        // with an empty list anyway, but a request that cannot say anything is a request not worth
+        // making.
+        return string.IsNullOrEmpty(query)
+            ? Task.FromResult(ApiResult<IReadOnlyList<ContainerEthicsDto>>.Ok([]))
+            : GetAsync<IReadOnlyList<ContainerEthicsDto>>($"api/containers/ethics?{query}", ct);
+    }
+
     public Task<ApiResult<IReadOnlyList<EthicsDocumentDto>>> GetDocumentsAsync(
         Guid containerId, string? sort = null, bool descending = false, CancellationToken ct = default) =>
         GetAsync<IReadOnlyList<EthicsDocumentDto>>($"api/containers/{containerId}/ethics/documents{Sort(sort, descending)}", ct);

@@ -15,6 +15,20 @@ public class PublicationsApiClient(HttpClient httpClient) : ApiClientBase(httpCl
     public Task<ApiResult<PublicationDto>> GetByIdAsync(Guid publicationId, CancellationToken ct = default) =>
         GetAsync<PublicationDto>($"api/publications/{publicationId}", ct);
 
+    /// <summary>
+    /// The papers of a whole page of publications in one request, each with what its committee
+    /// said. Same reason as the ethics equivalent.
+    /// </summary>
+    public Task<ApiResult<IReadOnlyList<ContainerPaperDto>>> GetPapersForAsync(
+        IEnumerable<Guid> containerIds, CancellationToken ct = default)
+    {
+        var query = string.Join("&", containerIds.Distinct().Select(id => $"ids={id}"));
+
+        return string.IsNullOrEmpty(query)
+            ? Task.FromResult(ApiResult<IReadOnlyList<ContainerPaperDto>>.Ok([]))
+            : GetAsync<IReadOnlyList<ContainerPaperDto>>($"api/containers/publications?{query}", ct);
+    }
+
     public Task<ApiResult<PublicationDto>> GetByContainerAsync(Guid containerId, CancellationToken ct = default) =>
         GetAsync<PublicationDto>($"api/containers/{containerId}/publications", ct);
 

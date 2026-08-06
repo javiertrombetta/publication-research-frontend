@@ -81,3 +81,10 @@ public record AwaitingCommitteeDto(
     string StudentName,
     int? RequiredReviewerMembers,
     int? RequiredExternalCommitteeMembers);
+
+/// <summary>One publication's paper and what its committee said, for a page of them at once.</summary>
+public record ContainerPaperDto(
+    Guid PublicationContainerId,
+    PublicationDto Paper,
+    IReadOnlyList<ReviewDto> Reviews);
+
