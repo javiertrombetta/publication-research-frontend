@@ -38,4 +38,16 @@ public class ContainerMessagesApiClient(HttpClient httpClient) : ApiClientBase(h
     public Task<(byte[] Content, string ContentType, string FileName)?> DownloadAttachmentAsync(
         Guid containerId, Guid attachmentId, CancellationToken ct = default) =>
         GetFileAsync($"api/containers/{containerId}/messages/attachments/{attachmentId}", ct);
+
+    // ---------- What an administrator has decided about this publication ----------
+
+    public Task<ApiResult<ContainerMessagingRulesDto>> GetRulesAsync(Guid containerId, CancellationToken ct = default) =>
+        GetAsync<ContainerMessagingRulesDto>($"api/containers/{containerId}/messages/rules", ct);
+
+    public Task<ApiResult<ContainerMessagingRuleDto>> SetRuleAsync(
+        Guid containerId, SetContainerMessagingRuleRequestDto request, CancellationToken ct = default) =>
+        PutJsonAsync<ContainerMessagingRuleDto>($"api/containers/{containerId}/messages/rules", request, ct);
+
+    public Task<ApiResult<object?>> RemoveRuleAsync(Guid containerId, Guid ruleId, CancellationToken ct = default) =>
+        DeleteAsync<object?>($"api/containers/{containerId}/messages/rules/{ruleId}", ct);
 }
