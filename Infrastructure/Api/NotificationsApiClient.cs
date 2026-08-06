@@ -7,9 +7,28 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api;
 /// </summary>
 public class NotificationsApiClient(HttpClient httpClient) : ApiClientBase(httpClient)
 {
-    public Task<ApiResult<IReadOnlyList<NotificationDto>>> GetAsync(bool unreadOnly = false, CancellationToken ct = default) =>
-        GetAsync<IReadOnlyList<NotificationDto>>(
-            unreadOnly ? "api/notifications?unreadOnly=true" : "api/notifications", ct);
+    /// <summary>
+    /// One page of them, newest first, optionally only the unread ones and optionally narrowed by
+    /// a search. Page size is left to the API, which fills in whatever the institution configured.
+    /// </summary>
+    public Task<ApiResult<PagedResultDto<NotificationDto>>> GetAsync(
+        bool unreadOnly = false, string? search = null, int page = 1, CancellationToken ct = default)
+    {
+        var query = new List<string>();
+        if (unreadOnly) query.Add("unreadOnly=true");
+        if (!string.IsNullOrWhiteSpace(search)) query.Add("search=" + Uri.EscapeDataString(search.Trim()));
+        if (page > 1) query.Add("page=" + page);
+
+        var url = "api/notifications" + (query.Count > 0 ? "?" + string.Join("&", query) : string.Empty);
+        return GetAsync<PagedResultDto<NotificationDto>>(url, ct);
+    }
+
+    /// <summary>
+    /// One of them, by id, for opening it. Its own request rather than hunting through a page:
+    /// the notification being opened is as likely to be on page four as page one.
+    /// </summary>
+    public Task<ApiResult<NotificationDto>> GetOneAsync(Guid id, CancellationToken ct = default) =>
+        GetAsync<NotificationDto>($"api/notifications/{id}", ct);
 
     /// <summary>
     /// Just the count, for the top bar. Its own endpoint rather than measuring a full listing:

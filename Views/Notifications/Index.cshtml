@@ -6,7 +6,7 @@
 <div class="row justify-content-center">
     <div class="col-12 col-lg-8">
 
-        <div class="d-flex align-items-start justify-content-between mb-4">
+        <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
             <div>
                 <h1 class="page-title mb-1">Notifications</h1>
                 <div class="text-secondary">
@@ -41,6 +41,9 @@
         }
         else
         {
+            @* Changing tab starts again at page one and drops whatever was searched for. The two
+               tabs are two different questions, and carrying one's search into the other showed a
+               reader an empty list and no clue why. *@
             <ul class="nav nav-tabs mb-4">
                 <li class="nav-item">
                     <a class="nav-link @(Model.UnreadOnly ? "" : "active")"
@@ -52,17 +55,64 @@
                 </li>
             </ul>
 
+            @* One box per tab, since each tab keeps its own. Applied by the API across everything
+               this person has, not to the page already on screen: the notification somebody is
+               looking for is usually the old one, and that is never the page they are on. *@
+            <div class="card mb-3">
+                <div class="card-body py-3">
+                    <form method="get" asp-action="Index" class="row g-2 align-items-center">
+
+                        @* Keeps the tab. Without it, searching from Unread answered about everything. *@
+                        @if (Model.UnreadOnly)
+                        {
+                            <input type="hidden" name="unreadOnly" value="true" />
+                        }
+
+                        <div class="col-12 col-md">
+                            <input type="search" name="search" value="@Model.Search" class="form-control"
+                                   placeholder="@(Model.UnreadOnly ? "Search your unread notifications" : "Search your notifications")"
+                                   aria-label="Search notifications" />
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </div>
+                        @if (Model.IsSearching)
+                        {
+                            <div class="col-auto">
+                                <a asp-action="Index" asp-all-route-data="Model.ClearSearchRoute()"
+                                   class="btn btn-outline-secondary">Clear</a>
+                            </div>
+                        }
+                    </form>
+                </div>
+            </div>
+
             if (Model.Notifications.Count == 0)
             {
                 <div class="card">
                     <div class="card-body text-center py-5">
-                        <h2 class="h3 mb-2">
-                            @(Model.UnreadOnly ? "You have read everything" : "Nothing yet")
-                        </h2>
-                        <p class="text-secondary m-0">
-                            You will be told here whenever something needs you, or when a decision
-                            is made about your work.
-                        </p>
+                        @if (Model.IsSearching)
+                        {
+                            <h2 class="h3 mb-2">Nothing matches &ldquo;@Model.Search&rdquo;</h2>
+                            <p class="text-secondary mb-4">
+                                @(Model.UnreadOnly
+                                    ? "No unread notification says that. It may be one you have already read."
+                                    : "No notification of yours says that.")
+                            </p>
+                            <a asp-action="Index" asp-all-route-data="Model.ClearSearchRoute()" class="btn btn-primary">
+                                Show them all
+                            </a>
+                        }
+                        else
+                        {
+                            <h2 class="h3 mb-2">
+                                @(Model.UnreadOnly ? "You have read everything" : "Nothing yet")
+                            </h2>
+                            <p class="text-secondary m-0">
+                                You will be told here whenever something needs you, or when a decision
+                                is made about your work.
+                            </p>
+                        }
                     </div>
                 </div>
             }
@@ -94,6 +144,8 @@
                         }
                     </div>
                 </div>
+
+                <partial name="_Pager" model="Model.Pager()" />
             }
         }
 
