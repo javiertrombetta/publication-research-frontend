@@ -1,0 +1,111 @@
+@model ResearchPublicationManagementSystem.Models.Messages.ContactItViewModel
+@{
+    ViewData["Title"] = "Contact IT";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-7">
+
+        <div class="mb-4">
+            <h1 class="page-title mb-1">Contact IT</h1>
+            <div class="text-secondary">
+                For problems with the site itself: something that will not load, a file that will
+                not upload, a screen that says the wrong thing.
+            </div>
+        </div>
+
+        @if (Model.LoadFailed)
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <h2 class="h3 mb-2">We couldn't reach the server</h2>
+                    <p class="text-secondary m-0">
+                        Which may well be the problem you were writing about. Try again in a moment.
+                    </p>
+                </div>
+            </div>
+        }
+        else if (Model.EmailAddress is null)
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <h2 class="h3 mb-2">No IT support address has been set up</h2>
+                    <p class="text-secondary m-0">
+                        There is nowhere for this to go yet. An administrator can add an address
+                        under System settings, on the Institution tab.
+                    </p>
+                </div>
+            </div>
+        }
+        else if (!Model.ThroughTheSite)
+        {
+            @* No mail server, so nothing here could be delivered. Said plainly rather than shown as
+               a form that accepts a message and quietly loses it. *@
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <h2 class="h3 mb-2">Write to the IT desk directly</h2>
+                    <p class="text-secondary mb-4">
+                        This site has no mail server configured, so it cannot send the message for
+                        you. Your own email will reach them.
+                    </p>
+                    <a href="mailto:@Model.EmailAddress" class="btn btn-primary">@Model.EmailAddress</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="ContactIt" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+
+                        <div class="mb-3">
+                            <label for="support-subject" class="form-label">What is it about?</label>
+                            <input id="support-subject" name="subject" class="form-control" maxlength="150"
+                                   placeholder="A short line, so they can tell at a glance" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="support-body" class="form-label">What is happening?</label>
+                            <textarea id="support-body" name="body" class="form-control" rows="6"
+                                      maxlength="@Model.MaximumLength" required
+                                      placeholder="What you were doing, what you expected, and what happened instead."></textarea>
+                        </div>
+
+                        <div class="mb-2">
+                            <label for="support-files" class="form-label">
+                                Attach files <span class="text-secondary">(optional)</span>
+                            </label>
+                            <input id="support-files" type="file" name="files" class="form-control" multiple />
+                        </div>
+
+                        <p class="text-secondary small">
+                            Up to @Model.MaximumAttachments files, each no larger than
+                            @Model.MaximumAttachmentMegabytes MB. A screenshot of what you are
+                            seeing is usually the most useful thing you can send.
+                            The desk will reply to your email address.
+                        </p>
+
+                        @* The one thing worth saying out loud on this screen. IT support is not part
+                           of the workflow: nothing sent here reaches a supervisor, a coordinator or
+                           an ethics reviewer, and nothing here becomes part of a publication. *@
+                        <div class="alert alert-info" role="alert">
+                            This goes to the people who look after the site, not to anybody working
+                            on your research. To ask your supervisor, your coordinator or the head of
+                            your department something, use Messages on the publication itself, and
+                            upload the documents a process asks for on that process's own screen.
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Send to IT</button>
+
+                        @if (!string.IsNullOrWhiteSpace(Model.ReturnUrl))
+                        {
+                            <a href="@Model.ReturnUrl" class="btn btn-link">Cancel</a>
+                        }
+                    </form>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>

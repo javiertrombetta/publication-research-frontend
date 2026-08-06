@@ -226,7 +226,14 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
     /// same reason as the rest: the pages that have to decide it are the ones nobody has signed
     /// in on.
     /// </summary>
-    bool ItSupportShownToVisitors = false);
+    bool ItSupportShownToVisitors = false,
+    /// <summary>
+    /// Whether the IT desk can be written to from inside the site: there is an address to send to
+    /// and a mail server to send through. Read-only, and derived from two other settings rather
+    /// than being one itself. It rides here because the footer is on every page and already reads
+    /// this response, so colouring one link costs nothing extra.
+    /// </summary>
+    bool ItSupportReachableThroughTheSite = false);
 
     public record UpdateInstitutionSettingsRequestDto(
         string Name,
