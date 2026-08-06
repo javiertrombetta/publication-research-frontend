@@ -17,11 +17,11 @@ namespace ResearchPublicationManagementSystem.Controllers
     public class NotificationsController(NotificationsApiClient notificationsApi) : Controller
     {
         [HttpGet]
-        public async Task<IActionResult> Index(bool unreadOnly = false)
+        public async Task<IActionResult> Index(bool unreadOnly = false, string? search = null, int page = 1)
         {
-            var model = new NotificationsViewModel { UnreadOnly = unreadOnly };
+            var model = new NotificationsViewModel { UnreadOnly = unreadOnly, Search = search, Page = page };
 
-            var result = await notificationsApi.GetAsync(unreadOnly);
+            var result = await notificationsApi.GetAsync(unreadOnly, search, page);
             if (!result.Success)
             {
                 TempData["ErrorMessage"] = result.ErrorMessage ?? "Could not load your notifications.";
@@ -29,7 +29,17 @@ namespace ResearchPublicationManagementSystem.Controllers
                 return View(model);
             }
 
-            model.Notifications = result.Data ?? [];
+            var listing = result.Data;
+            model.Notifications = listing?.Items ?? [];
+            model.Page = listing?.Page ?? 1;
+            model.TotalPages = listing?.TotalPages ?? 1;
+            model.MatchingCount = listing?.TotalCount ?? 0;
+
+            // Asked separately because a page cannot answer it. Counting the unread ones on screen
+            // gave "3 unread" to somebody with sixty, and none at all to anybody reading page two.
+            var unread = await notificationsApi.GetUnreadCountAsync();
+            model.UnreadCount = unread.Success ? unread.Data : 0;
+
             return View(model);
         }
 
@@ -44,8 +54,12 @@ namespace ResearchPublicationManagementSystem.Controllers
             // The old form trusted query parameters for the destination, which meant the link could
             // be pointed anywhere the person fancied. Harmless, since every target enforces its own
             // access, but the record is the only honest source.
-            var notifications = await notificationsApi.GetAsync();
-            var notification = notifications.Data?.FirstOrDefault(n => n.Id == id);
+            //
+            // Fetched by id rather than looked for in a listing. That worked while the listing was
+            // everything a person had; now that it is one page, opening anything below the tenth
+            // would have quietly landed back here.
+            var found = await notificationsApi.GetOneAsync(id);
+            var notification = found.Data;
 
             if (notification is null)
             {
