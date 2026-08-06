@@ -42,6 +42,13 @@ namespace ResearchPublicationManagementSystem.Models
         /// <summary>What testing the destination said, when the administrator has just asked.</summary>
         public StorageCheckResultDto? StorageCheck { get; set; }
 
+        /// <summary>
+        /// The destination actually in force, named for a reader. Held apart from
+        /// <see cref="Storage"/> because a refused save leaves the form showing what was typed,
+        /// and the sentence saying where uploads go has to keep saying where they really go.
+        /// </summary>
+        public string StorageProviderInForce { get; set; } = string.Empty;
+
         public InstitutionSettingsDto Institution { get; set; } =
             new("Auckland Institute of Studies", "@aisstudent.ac.nz", "@ais.ac.nz", null, null, null, null);
 
@@ -92,6 +99,21 @@ namespace ResearchPublicationManagementSystem.Models
         /// development environment, so offering the choice would only produce a rejection.
         /// </summary>
         public bool CanOpenRegistration { get; set; }
+
+        /// <summary>
+        /// What was typed into the "add a document" form when adding it was refused. Blank the rest
+        /// of the time, which is what an empty form should show.
+        /// </summary>
+        public string? NewEthicsDocumentName { get; set; }
+
+        public string? NewEthicsDocumentDescription { get; set; }
+
+        public int? NewEthicsDocumentSortOrder { get; set; }
+
+        /// <summary>The same, for the form that adds a department.</summary>
+        public string? NewDepartmentName { get; set; }
+
+        public string? NewDepartmentCode { get; set; }
 
         public IEnumerable<EthicsDocumentRequirementDto> ActiveEthicsDocuments =>
             EthicsDocuments.Where(d => d.IsActive).OrderBy(d => d.SortOrder).ThenBy(d => d.Name);
