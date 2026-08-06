@@ -32,6 +32,9 @@ namespace ResearchPublicationManagementSystem.Models
 
         public UploadSettingsDto Uploads { get; set; } = new(50, ".pdf,.doc,.docx,.zip");
 
+        public MessagingSettingsDto Messaging { get; set; } =
+            new(true, false, ".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.webp,.heic", 4000, 5);
+
         public StorageSettingsDto Storage { get; set; } =
             new("local", "App_Data/uploads", null, null, null, null, false, false, "uploads", false, 0);
 
