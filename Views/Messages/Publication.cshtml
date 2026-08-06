@@ -62,7 +62,10 @@ else
     @if (!Model.Enabled)
     {
         <div class="alert alert-warning" role="alert">
-            <h3 class="alert-title">Writing to each other has been switched off</h3>
+            @* h2, not the h3 Tabler's alert examples use: this sits directly under the page's h1,
+               and a level skipped is a screen reader offered a jump that goes nowhere. The class
+               is what it looks like; the level is what it is. *@
+            <h2 class="alert-title h4">Writing to each other has been switched off</h2>
             <div class="text-secondary">
                 An administrator has turned this off for the institution. Everything already
                 written is still here to read; nothing new can be sent until it is turned
