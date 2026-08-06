@@ -750,11 +750,77 @@ else
         <div class="card">
             <div class="card-body">
                 <h2 class="h3 mb-2">Where this publication stands</h2>
-                <p class="text-secondary m-0">
+                <p class="text-secondary">
                     This paper has been @(Model.Publication!.Status == "Published" ? "published" : "accepted"),
-                    so where the publication stands is settled and is no longer something to change
-                    from here. What it holds is the record of what was judged.
+                    so where the publication stands is settled: what it holds is the record of what
+                    was judged, and it is not somewhere to carry on from.
                 </p>
+                <p class="text-secondary">
+                    A decision recorded in error can still be corrected, because there is nowhere
+                    else to correct it. That is not an ordinary move and is not written down as one:
+                    the reason below goes onto the publication's history as a correction, and
+                    whoever the publication then waits on is told.
+                </p>
+
+                @* The same three fields as an ordinary move, plus the acknowledgement the API
+                   requires. Without it the API refuses, so this cannot happen by a stray click or
+                   by replaying an ordinary move. *@
+                <form asp-action="MovePublication" method="post" class="row g-3">
+                    <input type="hidden" name="id" value="@Model.Container.Id" />
+                    <input type="hidden" name="correctingSettledDecision" value="true" />
+
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="correct-stage">Stage</label>
+                        <select id="correct-stage" name="stage" class="form-select">
+                            <option value="1" selected="@(Model.Container.CurrentPipeline == PipelineStage.ResearchProposals)">Research proposals</option>
+                            <option value="2" selected="@(Model.Container.CurrentPipeline == PipelineStage.EthicsApproval)">Ethics approval</option>
+                            <option value="3" selected="@(Model.Container.CurrentPipeline == PipelineStage.ResearchPaper)">Research paper</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="correct-paper">Paper status</label>
+                        <select id="correct-paper" name="paperStatus" class="form-select">
+                            <option value="">Leave as it is</option>
+                            <option value="Draft">Draft, with the student</option>
+                            <option value="UnderReview">Under review</option>
+                            <option value="RevisionsRequested">Sent back for revision</option>
+                            <option value="Resubmitted">Resubmitted</option>
+                        </select>
+                        <small class="form-hint">
+                            Accepted is not offered: it is where the paper already is. Publishing
+                            stays the author's.
+                        </small>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="correct-ethics">Ethics step</label>
+                        <select id="correct-ethics" name="ethicsStep" class="form-select">
+                            <option value="">Leave as it is</option>
+                            <option value="@EthicsSteps.SupervisorDecision">Supervisor: rule whether documentation is needed</option>
+                            <option value="@EthicsSteps.CoordinatorConfirmation">Coordinator: confirm none is needed</option>
+                            <option value="@EthicsSteps.StudentUpload">Student: upload the documents</option>
+                            <option value="@EthicsSteps.SupervisorDocumentReview">Supervisor: read the documents</option>
+                            <option value="@EthicsSteps.CoordinatorDocumentReview">Coordinator: approve the documents</option>
+                            <option value="@EthicsSteps.HeadOfDepartmentReview">Head of Department: comment</option>
+                            <option value="@EthicsSteps.CoordinatorFinalDecision">Coordinator: close the stage</option>
+                        </select>
+                        <small class="form-hint">Only applied on the ethics stage.</small>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label" for="correct-comments">Why this is being corrected</label>
+                        <input type="text" id="correct-comments" name="comments" class="form-control"
+                               placeholder="Required. Say what was recorded in error. It stays on the publication&#x27;s history." />
+                    </div>
+
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-outline-danger"
+                                @DecisionButton.Attributes(true, "correct-comments",
+                                    "Correct this decision? The paper has already been judged. This is recorded as a correction, with your reason, and whoever it then waits on is told.",
+                                    "Say what was recorded in error.")>Correct this decision</button>
+                    </div>
+                </form>
             </div>
         </div>
     }

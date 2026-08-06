@@ -167,7 +167,13 @@ public record MoveContainerRequestDto(
     int Stage,
     string Comments,
     string? EthicsStep = null,
-    string? PaperStatus = null);
+    string? PaperStatus = null,
+    /// <summary>
+    /// Set only to correct a paper that was accepted or published in error. Without it the API
+    /// refuses to move a publication whose paper has been judged, so a correction cannot happen by
+    /// replaying an ordinary move.
+    /// </summary>
+    bool CorrectingSettledDecision = false);
 
 public record ReassignContainerRequestDto(
     Guid? CoordinatorUserId,
