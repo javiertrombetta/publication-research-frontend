@@ -94,7 +94,9 @@ that are never assigned work, so neither is counted among them.
 | Reviewers and external committee members: assignments and evaluation | Connected |
 | Admin: dashboard, users, departments, committee assignment, supervisor groups, audit log | Connected |
 | Admin: system settings and invitations | Connected |
-| Notifications: the top bar's bell, the list, and marking as read | Connected |
+| Notifications: the top bar's bell, both paged and searchable listings, marking as read | Connected |
+| Messages on a publication, with attachments, for every role that reaches one | Connected |
+| Contact IT, through the site where a mail server is configured | Connected |
 | Profile and profile photo, all roles | Connected |
 
 Nothing is left as a laid-out screen with sample data in it. Every controller here reaches the API,
@@ -133,6 +135,37 @@ stage, so a URL cannot be edited into someone else's work, or into a stage that 
 Each publication carries an activity history: every action taken on it, by whom, in what
 capacity, and the comment that justified it.
 
+### Writing to each other about a publication
+
+Every publication has a **Messages** screen, reached from the student's own view of it, from the
+shared record a coordinator and a head of department read, from the administrator's screen and from
+the supervisor's listing. The people this person may write to are on the left, the conversation on
+the right, and a box underneath to answer in. Files can be attached, and the note under the picker
+says what they are for: a screenshot of what went wrong belongs there, and the documents a process
+asks for belong on that process's own screen, where somebody reviews them.
+
+It opens on whoever is waiting, or failing that on the conversation last had, and offers a chooser
+only when neither exists. Opening a conversation is what reading it means, so its messages are
+marked and the badge beside the name clears at the same time.
+
+Who may write to whom is set by an administrator, in two directions and by role, and the tab is not
+offered at all where messaging has been switched off. An administrator can also override all of it
+on a single publication, from a **Who may write** tab on that publication: for the whole of it, for
+a role on it, or for one named person, with a reason that is kept. Both ends of a conversation have
+to be permitted, and the screen says so, because that is the one thing about these rules that
+surprises people.
+
+### Contact IT
+
+The footer's **Contact IT** opens a form on the site where the institution has both a support
+address and a mail server: a message, up to three files, and a reply that reaches the person who
+wrote. Where there is no mail server it is the mail link it has always been, and says why rather
+than showing a form that would take a message and lose it. Somebody without an account is offered
+the address rather than the form.
+
+The screen says what it is not for: nothing sent there reaches a supervisor, a coordinator or an
+ethics reviewer, and it points at Messages on the publication for that.
+
 ### The public catalogue
 
 The catalogue is the site's front door and needs no account. It lists published papers with
@@ -144,10 +177,10 @@ and the API's download endpoint requires a signed-in user.
 
 ### Administration
 
-**System settings** is twelve tabs, each saved and validated on its own so a rejected mail server
+**System settings** is thirteen tabs, each saved and validated on its own so a rejected mail server
 cannot discard an unrelated edit: committees, ethics documents, the steps of each pipeline, which
-decisions must carry a comment, deadlines, uploads, passwords, access, notifications, where files
-are stored, departments and institution details.
+decisions must carry a comment, deadlines, uploads, messages, passwords, access, notifications,
+where files are stored, departments and institution details.
 
 Two of them change what the system asks of people, and both apply to work started afterwards
 only. Committee composition and the ethics document list are recorded on a publication when it
@@ -163,8 +196,8 @@ committee members: they are outside the institution, so no email domain could sa
 ```
 Controllers/          One per role (Student, Supervisor, Coordinator, HeadOfDepartment,
                       ExternalSupervisor for both committee roles, Admin), plus Auth,
-                      Profile, Public, Notifications, Invitations, Users, AuditLogs,
-                      SystemSettings, Downloads, Theme, Sidebar and Home
+                      Profile, Public, Notifications, Messages, Support, Invitations,
+                      Users, AuditLogs, SystemSettings, Downloads, Theme, Sidebar and Home
 Models/               View models, grouped by area
 Infrastructure/
   Api/                Typed API clients, DTOs and the shared response envelope
@@ -209,23 +242,35 @@ the team's bookmarks both point at, so it keeps the name and this paragraph expl
 - **Tabs and filters are server-rendered where the state should survive a reload.** System settings
   puts its tab in the query string for that reason: a rejected mail server should not throw you
   back to the first tab.
-- **Read the page without seeing it.** Five rules, checked against the rendered HTML of 156 pages
-  across every role rather than against the views: one `<main>` per page and a skip link ahead of
-  it, so a keyboard is not made to walk the sidebar again on each screen; one `<h1>` and no level
-  skipped, since the heading levels are how a screen reader offers to jump about; every header
-  cell says `scope`; and every field carries a name, whether from a `<label>` that points at it,
-  from sitting inside one, or from `aria-label` where the design gives a row of controls a single
-  visible label. Section titles are written `<h2 class="h3">`: the level is what it is, the size is
-  what it looks like. A placeholder is not a label.
+- **Read the page without seeing it.** Five rules, checked against the rendered HTML rather than
+  against the views: one `<main>` per page and a skip link ahead of it, so a keyboard is not made
+  to walk the sidebar again on each screen; one `<h1>` and no level skipped, since the heading
+  levels are how a screen reader offers to jump about; every header cell says `scope`; and every
+  field carries a name, whether from a `<label>` that points at it, from sitting inside one, or
+  from `aria-label` where the design gives a row of controls a single visible label. Section
+  titles are written `<h2 class="h3">`: the level is what it is, the size is what it looks like. A
+  placeholder is not a label.
+
+  Ninety-nine pages pass all five: every screen each of the eight accounts can open, the
+  per-publication screens, the messages screen, Contact IT, and the five a visitor sees. The last
+  sweep found four pages whose top heading was an `<h2>`, so a screen reader was offered a document
+  with no title and a jump into the middle of it: three on the sign-in layout, and the alert on the
+  messages screen that sat straight under the page's own heading. Worth re-running after adding a
+  screen, since that is exactly how those four appeared.
 - **The site names its own restrictions to the browser.** A content security policy, `nosniff`,
   `X-Frame-Options: DENY` and `Referrer-Policy: no-referrer` are set for every response in every
   environment, not left to whatever a host adds: the `SAMEORIGIN` header visible while developing
   comes from the development pipeline and is gone once the application is published. The policy
   names `'self'` and nothing else because the site loads nothing else, everything down to Tabler
-  being served from here. Inline script and style are permitted, since the views use both. What
-  the policy is really buying is that no script may be fetched from another origin, no form of
-  ours may be posted somewhere else, and no page anywhere may put this site in a frame under a
-  layer of its own.
+  being served from here. Inline script is allowed by a nonce rather than by `'unsafe-inline'`: a
+  fresh unguessable value per response, written into the header and onto each of the site's own
+  script blocks, so the browser runs those and refuses any other script that finds its way into a
+  page. Inline style is still permitted, because a nonce covers a style block and not a style
+  attribute, and the views set style attributes throughout; injected CSS can do far less than
+  injected script, so that is the trade taken rather than rewriting every attribute. What the
+  policy buys beyond that is that no script may be fetched from another origin, no form of ours
+  may be posted somewhere else, and no page anywhere may put this site in a frame under a layer of
+  its own.
 - **Rules an administrator controls are not restated here.** Password length and complexity,
   upload size and permitted file types all come from the API, so a form that duplicated them
   would go stale the first time they changed, and would reject input the server would have

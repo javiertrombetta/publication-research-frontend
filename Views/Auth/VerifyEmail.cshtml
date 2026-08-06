@@ -9,7 +9,7 @@
 
     <div class="card card-md">
         <div class="card-body text-center">
-            <h2 class="h2 mb-3">@(success ? "Email verified" : "Verification failed")</h2>
+            <h1 class="h2 mb-3">@(success ? "Email verified" : "Verification failed")</h1>
             <div class="alert @(success ? "alert-success" : "alert-danger")">@message</div>
             <a asp-controller="Auth" asp-action="home" class="btn btn-primary">Go to sign in</a>
         </div>
