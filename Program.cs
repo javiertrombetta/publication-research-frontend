@@ -176,7 +176,17 @@ builder.Services.AddHttpClient<CatalogueApiClient>(ConfigureApiClient).AddHttpMe
 // ---------- MVC ----------
 // The sidebar records where somebody put a menu item with a fetch rather than a form, so the
 // token has to be allowed to travel in a header. The default is form fields only.
-builder.Services.AddAntiforgery(options => options.HeaderName = "RequestVerificationToken");
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "RequestVerificationToken";
+
+    // The sign-in cookie beside it says all three of these; this one said two. Its default carries
+    // no secure flag at all, so on a deployment reached over HTTPS the browser was still willing to
+    // send it over plain HTTP, which is the one place it can be read off the wire. SameAsRequest
+    // rather than Always, so a developer's machine on http://localhost keeps working: Always there
+    // would stop the cookie being set and every form on the site would start failing its check.
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+});
 
 builder.Services.AddControllersWithViews(options =>
 {
