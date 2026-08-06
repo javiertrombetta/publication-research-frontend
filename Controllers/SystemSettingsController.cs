@@ -234,6 +234,12 @@ namespace ResearchPublicationManagementSystem.Controllers
             var result = await settingsApi.UpdateNotificationsAsync(new UpdateNotificationSettingsRequestDto(
                 emailEnabled, smtpHost, smtpPort, smtpUsername, password, useSsl, fromAddress, fromName));
 
+            // Whether the IT desk can be written to from inside the site turns on there being a
+            // mail server, which is what has just changed. The footer reads that from the cached
+            // institution response, so without dropping it an administrator would configure SMTP
+            // and watch Contact IT go on offering a mail link for another minute.
+            if (result.Success) institution.Invalidate();
+
             return Done(result.Success, "notifications", result.ErrorMessage,
                 emailEnabled
                     ? "Saved. Notifications will be emailed as well as shown in the application."
@@ -297,6 +303,11 @@ namespace ResearchPublicationManagementSystem.Controllers
                     enabled, recordedInActivityHistory, allowedExtensions,
                     studentsMayWrite, studentMayWriteToRoles ?? [],
                     staffMayWrite, staffMayWriteToStudentRoles ?? []));
+
+            // Every publication screen reads this to decide whether to offer the Messages tab, and
+            // it is cached for a minute. Without dropping that, an administrator would switch
+            // messaging off and watch the tab stay where it was for the next minute.
+            if (result.Success) institution.Invalidate();
 
             return Done(result.Success, "messaging", result.ErrorMessage,
                 enabled

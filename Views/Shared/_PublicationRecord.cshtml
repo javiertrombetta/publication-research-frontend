@@ -1,6 +1,8 @@
 @using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 @using System.Security.Claims
 @model PublicationDetailViewModel
+@using ResearchPublicationManagementSystem.Services
+@inject IInstitutionDetails Institution
 @{
     string TabClass(string tab) => Model.ActiveTab == tab ? "nav-link active" : "nav-link";
 
@@ -78,11 +80,17 @@
            asp-route-tab="history">Activity history</a>
     </li>
     @* Its own screen rather than a third tab, and named on the controller because the other two
-       point at whichever one is rendering this. Never active here: it leads somewhere else. *@
-    <li class="nav-item">
-        <a class="nav-link" asp-controller="Messages" asp-action="Publication"
-           asp-route-id="@Model.Container.Id">Messages</a>
-    </li>
+       point at whichever one is rendering this. Never active here: it leads somewhere else.
+
+       Not offered at all where an administrator has switched messaging off: a tab leading to a
+       screen that says the feature is off is a tab nobody should have been shown. *@
+    @if ((await Institution.GetAsync()).MessagingEnabled)
+    {
+        <li class="nav-item">
+            <a class="nav-link" asp-controller="Messages" asp-action="Publication"
+               asp-route-id="@Model.Container.Id">Messages</a>
+        </li>
+    }
 </ul>
 
 @if (Model.ActiveTab == "history")

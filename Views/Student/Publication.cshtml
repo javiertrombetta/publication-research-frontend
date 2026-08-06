@@ -2,6 +2,8 @@
 @* For the EthicsStatus constants, imported here rather than in _ViewImports so the DTO
    namespace doesn't shadow anything in the other ~90 views. *@
 @using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
+@using ResearchPublicationManagementSystem.Services
+@inject IInstitutionDetails Institution
 @{
     ViewData["Title"] = Model.DisplayTitle;
     var container = Model.Container;
@@ -97,11 +99,15 @@
         </a>
     </li>
     @* A link, not a tab: the other two switch panels the browser already holds, and this leads to
-       a screen of its own. It sits with them because that is where somebody looks for it. *@
-    <li class="nav-item" role="presentation">
-        <a class="nav-link" asp-controller="Messages" asp-action="Publication"
-           asp-route-id="@Model.Container.Id">Messages</a>
-    </li>
+       a screen of its own. It sits with them because that is where somebody looks for it. Gone
+       entirely where an administrator has switched messaging off. *@
+    @if ((await Institution.GetAsync()).MessagingEnabled)
+    {
+        <li class="nav-item" role="presentation">
+            <a class="nav-link" asp-controller="Messages" asp-action="Publication"
+               asp-route-id="@Model.Container.Id">Messages</a>
+        </li>
+    }
 </ul>
 
 <div class="tab-content">

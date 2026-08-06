@@ -245,7 +245,14 @@ namespace ResearchPublicationManagementSystem.Infrastructure.Api.Dto
     /// than being one itself. It rides here because the footer is on every page and already reads
     /// this response, so colouring one link costs nothing extra.
     /// </summary>
-    bool ItSupportReachableThroughTheSite = false);
+    bool ItSupportReachableThroughTheSite = false,
+    /// <summary>
+    /// Whether people may write to each other through a publication. Read-only here, set under the
+    /// messaging settings, and carried on this response for the same reason as the two above: every
+    /// publication screen has to decide whether to offer the Messages tab, and this is already
+    /// fetched and cached on every page.
+    /// </summary>
+    bool MessagingEnabled = true);
 
     public record UpdateInstitutionSettingsRequestDto(
         string Name,

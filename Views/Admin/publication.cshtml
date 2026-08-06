@@ -1,5 +1,7 @@
 @using ResearchPublicationManagementSystem.Infrastructure.Api.Dto
 @model PublicationDetailViewModel
+@using ResearchPublicationManagementSystem.Services
+@inject IInstitutionDetails Institution
 @{
     ViewData["Title"] = Model.Container.DisplayTitle;
 
@@ -43,9 +45,13 @@
     </div>
 
     @* An administrator can write to the student about their publication, and read what they have
-       been sent. Not what anybody else on it said to them: that is theirs. *@
-    <a asp-controller="Messages" asp-action="Publication" asp-route-id="@Model.Container.Id"
-       class="btn btn-outline-secondary flex-shrink-0">Messages</a>
+       been sent. Not what anybody else on it said to them: that is theirs. Gone entirely where
+       messaging has been switched off. *@
+    @if ((await Institution.GetAsync()).MessagingEnabled)
+    {
+        <a asp-controller="Messages" asp-action="Publication" asp-route-id="@Model.Container.Id"
+           class="btn btn-outline-secondary flex-shrink-0">Messages</a>
+    }
 </div>
 
 <div class="card mb-3">
