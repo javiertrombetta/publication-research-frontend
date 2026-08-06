@@ -28,13 +28,21 @@ namespace ResearchPublicationManagementSystem.Controllers
         {
             var model = new HeadOfDepartmentDashboardViewModel
             {
-                Sort = sort ?? "started",
+                // Whose turn it is, first, as on the coordinator's. Opened by date, the ethics
+                // reviews this head has to write were scattered down a list that began with
+                // publications nobody was waiting on, and the one thing they came to this screen
+                // for was the hardest thing on it to find. Ascending, because the API ranks this
+                // column the way the pipeline runs and puts "nobody" last.
+                //
+                // Spelled out rather than left null so the heading in force is the one marked as
+                // active.
+                Sort = sort ?? "waiting",
                 Descending = desc,
                 Search = search
             };
 
             var containers = await containersApi.GetInMyDepartmentAsync(
-                page: page, sort: sort ?? "started", descending: desc, search: search);
+                page: page, sort: sort ?? "waiting", descending: desc, search: search);
 
             if (!containers.Success)
             {
