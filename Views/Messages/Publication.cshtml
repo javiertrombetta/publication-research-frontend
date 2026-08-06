@@ -40,14 +40,19 @@
 }
 else if (Model.Counterparts.Count == 0)
 {
+    @* An empty list has three causes and the screen cannot tell them apart: nobody is
+       responsible for this publication yet, the institution's settings do not put this person
+       and any other in touch, or an administrator has stopped messages on this publication.
+       It used to name only the first, which read as an explanation and was wrong in the other
+       two cases. Naming all three is honest without saying which, and the last of them is not
+       this reader's business anyway. *@
     <div class="card">
         <div class="card-body text-center py-5">
-            <h2 class="h3 mb-2">There is nobody to write to here yet</h2>
+            <h2 class="h3 mb-2">There is nobody to write to here</h2>
             <p class="text-secondary m-0">
-                A student writes to the supervisor they have been assigned, the coordinator
-                running their publication and the head of their department. Whoever is
-                working on this publication can write to the student. Once somebody is
-                responsible for it, they will be on this list.
+                Either nobody has been made responsible for this publication yet, or writing to
+                each other on it is not open to you. Your coordinator, or an administrator, can
+                say which.
             </p>
         </div>
     </div>
