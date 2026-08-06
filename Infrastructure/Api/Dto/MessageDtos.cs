@@ -36,3 +36,28 @@ public record SupportContactOptionsDto(
     int MaximumLength,
     int MaximumAttachments,
     int MaximumAttachmentMegabytes);
+
+/// <summary>One administrator's decision about messaging on one publication.</summary>
+public record ContainerMessagingRuleDto(
+    Guid Id,
+    string? TargetRole,
+    Guid? TargetUserId,
+    string TargetDescription,
+    bool Allowed,
+    string Reason,
+    string SetByName,
+    DateTime SetAt);
+
+/// <summary>Somebody with a part in this publication, for choosing who a rule is about.</summary>
+public record ContainerParticipantDto(Guid UserId, string Name, string Role);
+
+/// <summary>The rules on one publication, the people they could be about, and the roles.</summary>
+public record ContainerMessagingRulesDto(
+    bool InstitutionAllowsMessaging,
+    IReadOnlyList<ContainerMessagingRuleDto> Rules,
+    IReadOnlyList<ContainerParticipantDto> Participants,
+    IReadOnlyList<string> SelectableRoles);
+
+/// <summary>A rule being set. Name at most one target.</summary>
+public record SetContainerMessagingRuleRequestDto(
+    string? TargetRole, Guid? TargetUserId, bool Allowed, string Reason);

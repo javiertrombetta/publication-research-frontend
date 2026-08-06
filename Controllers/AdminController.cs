@@ -23,7 +23,8 @@ namespace ResearchPublicationManagementSystem.Controllers
         DepartmentsApiClient departmentsApi,
         ProposalsApiClient proposalsApi,
         EthicsApiClient ethicsApi,
-        SupervisorGroupsApiClient groupsApi) : Controller
+        SupervisorGroupsApiClient groupsApi,
+        ContainerMessagesApiClient containerMessagesApi) : Controller
     {
         // ---------- Coordinators' saved supervisor groups ----------
 
@@ -475,6 +476,11 @@ namespace ResearchPublicationManagementSystem.Controllers
             var requirements = await settingsApi.GetEthicsDocumentsAsync();
             model.EthicsRequirements = [.. (requirements.Data ?? []).Where(r => r.IsActive)];
 
+            // Best-effort like the rest of this screen: a publication is still worth reading when
+            // the rules on it cannot be fetched.
+            var messagingRules = await containerMessagesApi.GetRulesAsync(id);
+            if (messagingRules.Success) model.MessagingRules = messagingRules.Data;
+
             var history = await containersApi.GetActivityHistoryAsync(
                 id, historyPage, search: historySearch, sort: historySort, descending: historyDesc);
             model.History = history.Data?.Items ?? [];
@@ -495,6 +501,56 @@ namespace ResearchPublicationManagementSystem.Controllers
                 "historyPage");
 
             return View(model);
+        }
+
+        // ---------- Who may write on this publication ----------
+
+        /// <summary>
+        /// Stops, or allows, messages on this publication for the whole publication, for a role on
+        /// it, or for one named person.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SetMessagingRule(
+            Guid id, string? target, bool allowed, string reason, string? from)
+        {
+            // One field on the form rather than two, because a rule is about one thing. "role:Name"
+            // or "user:<id>" or empty for the whole publication: two fields would let somebody
+            // submit both and the API would refuse it, which is a worse way to learn the rule.
+            string? role = null;
+            Guid? userId = null;
+
+            if (target is { Length: > 0 } && target.StartsWith("role:", StringComparison.Ordinal))
+            {
+                role = target["role:".Length..];
+            }
+            else if (target is { Length: > 0 } && target.StartsWith("user:", StringComparison.Ordinal)
+                     && Guid.TryParse(target["user:".Length..], out var parsed))
+            {
+                userId = parsed;
+            }
+
+            var result = await containerMessagesApi.SetRuleAsync(
+                id, new SetContainerMessagingRuleRequestDto(role, userId, allowed, reason));
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? (allowed ? "Saved. They can write here again." : "Saved. They cannot write here.")
+                : result.ErrorMessage ?? "Could not save that rule.";
+
+            return RedirectToAction(nameof(publication), new { id, from, tab = "messaging" });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveMessagingRule(Guid id, Guid ruleId, string? from)
+        {
+            var result = await containerMessagesApi.RemoveRuleAsync(id, ruleId);
+
+            TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
+                ? "Removed. This publication follows the institution's settings again."
+                : result.ErrorMessage ?? "Could not remove that rule.";
+
+            return RedirectToAction(nameof(publication), new { id, from, tab = "messaging" });
         }
 
         // ---------- What is in the public catalogue ----------

@@ -9,6 +9,14 @@ namespace ResearchPublicationManagementSystem.Models
 
         public IReadOnlyList<ProposalDto> Proposals { get; set; } = [];
 
+        /// <summary>
+        /// What an administrator has decided about messaging on this publication, over whatever the
+        /// institution has decided in general. Only ever filled in on the administrator's screen:
+        /// the API refuses it to everybody else, because who may speak to whom is not a control to
+        /// hand to the people it governs.
+        /// </summary>
+        public ContainerMessagingRulesDto? MessagingRules { get; set; }
+
         public EthicsApprovalDto? EthicsApproval { get; set; }
 
         public PublicationDto? Publication { get; set; }

@@ -91,9 +91,155 @@
         <a class="@TabClass("history")" asp-action="publication" asp-route-id="@Model.Container.Id"
            asp-route-tab="history" asp-route-from="@Model.CameFrom">Activity history</a>
     </li>
+    <li class="nav-item">
+        <a class="@TabClass("messaging")" asp-action="publication" asp-route-id="@Model.Container.Id"
+           asp-route-tab="messaging" asp-route-from="@Model.CameFrom">
+            Who may write
+            @if (Model.MessagingRules is { Rules.Count: > 0 } rules)
+            {
+                <span class="badge bg-secondary-lt ms-1">@rules.Rules.Count</span>
+            }
+        </a>
+    </li>
 </ul>
 
-@if (Model.ActiveTab == "history")
+@if (Model.ActiveTab == "messaging")
+{
+    <div class="card">
+        <div class="card-body">
+            <h2 class="h3 mb-2">Who may write on this publication</h2>
+            <p class="text-secondary">
+                The institution's own settings decide this everywhere. A rule here overrides them
+                on this publication alone, for when one needs different handling: a supervision
+                that has gone wrong, a complaint being looked into, somebody who has asked not to
+                be contacted.
+            </p>
+
+            @if (Model.MessagingRules is null)
+            {
+                <p class="text-secondary m-0">
+                    These could not be loaded. The rest of this publication is unaffected; try
+                    again in a moment.
+                </p>
+            }
+            else
+            {
+                var messaging = Model.MessagingRules;
+
+                @if (!messaging.InstitutionAllowsMessaging)
+                {
+                    <div class="alert alert-warning" role="alert">
+                        <h3 class="alert-title">Messaging is switched off for the whole institution</h3>
+                        <div class="text-secondary">
+                            Nothing set here changes that while it stays off. Turn it back on under
+                            System settings, on the Messages tab.
+                        </div>
+                    </div>
+                }
+
+                <div class="alert alert-info" role="alert">
+                    A rule works both ways: somebody it stops neither writes nor is written to here,
+                    and a conversation they were already in closes. So a conversation needs both
+                    ends allowed. Stopping the whole publication and then allowing the coordinator
+                    does nothing on its own, because the student is stopped too.
+                </div>
+
+                @if (messaging.Rules.Count == 0)
+                {
+                    <p class="text-secondary">
+                        No rule here. This publication follows the institution's settings.
+                    </p>
+                }
+                else
+                {
+                    <div class="table-responsive mb-3">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Who</th>
+                                    <th scope="col">May write</th>
+                                    <th scope="col">Why</th>
+                                    <th scope="col">Set by</th>
+                                    <th scope="col"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var rule in messaging.Rules)
+                                {
+                                    <tr>
+                                        <td>@rule.TargetDescription</td>
+                                        <td>
+                                            <span class="badge @(rule.Allowed ? "bg-success-lt" : "bg-danger-lt")">
+                                                @(rule.Allowed ? "Yes" : "No")
+                                            </span>
+                                        </td>
+                                        <td>@rule.Reason</td>
+                                        <td class="text-secondary">
+                                            @rule.SetByName,
+                                            @rule.SetAt.ToLocalTime().ToString("d MMM yyyy")
+                                        </td>
+                                        <td class="text-end">
+                                            <form asp-action="RemoveMessagingRule" method="post" class="m-0">
+                                                <input type="hidden" name="id" value="@Model.Container.Id" />
+                                                <input type="hidden" name="ruleId" value="@rule.Id" />
+                                                <input type="hidden" name="from" value="@Model.CameFrom" />
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary">Remove</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                <h3 class="h4 mb-2">Add a rule</h3>
+                <form asp-action="SetMessagingRule" method="post" class="row g-2 align-items-end">
+                    <input type="hidden" name="id" value="@Model.Container.Id" />
+                    <input type="hidden" name="from" value="@Model.CameFrom" />
+
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="messaging-target">Who it is about</label>
+                        <select id="messaging-target" name="target" class="form-select">
+                            <option value="">Everybody on this publication</option>
+                            <optgroup label="Everybody holding a role here">
+                                @foreach (var role in messaging.SelectableRoles)
+                                {
+                                    <option value="role:@role">@DisplayText.Humanise(role)</option>
+                                }
+                            </optgroup>
+                            <optgroup label="One person">
+                                @foreach (var person in messaging.Participants)
+                                {
+                                    <option value="user:@person.UserId">@person.Name (@person.Role)</option>
+                                }
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-2">
+                        <label class="form-label" for="messaging-allowed">May write</label>
+                        <select id="messaging-allowed" name="allowed" class="form-select">
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="messaging-reason">Why</label>
+                        <input id="messaging-reason" name="reason" class="form-control" maxlength="500" required
+                               placeholder="Another administrator will read this" />
+                    </div>
+
+                    <div class="col-12 col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Save</button>
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+}
+else if (Model.ActiveTab == "history")
 {
     <div class="card">
         <div class="card-body">
