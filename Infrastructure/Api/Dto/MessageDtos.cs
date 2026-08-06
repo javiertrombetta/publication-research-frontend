@@ -26,3 +26,13 @@ public record ContainerMessagingDto(
     string AllowedExtensions,
     int MaximumLength,
     int MaximumAttachments);
+
+/// <summary>
+/// Whether the IT desk can be written to from inside the site, and its address for when it cannot.
+/// </summary>
+public record SupportContactOptionsDto(
+    bool ThroughTheSite,
+    string? EmailAddress,
+    int MaximumLength,
+    int MaximumAttachments,
+    int MaximumAttachmentMegabytes);

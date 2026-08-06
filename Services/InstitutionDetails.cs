@@ -9,15 +9,32 @@ namespace ResearchPublicationManagementSystem.Services;
 public class InstitutionDetails(
     SettingsApiClient settingsApi,
     IMemoryCache cache,
+    IHttpContextAccessor httpContextAccessor,
     IOptions<InstitutionOptions> fallbackOptions) : IInstitutionDetails
 {
-    private const string CacheKey = "institution-details";
+    private const string CacheKeyPrefix = "institution-details";
 
     private readonly InstitutionOptions _fallback = fallbackOptions.Value;
 
+    /// <summary>
+    /// Two cached copies, one for visitors and one for people with an account.
+    ///
+    /// The API does not answer this identically to both: it withholds the IT desk's address from
+    /// anyone who has not signed in, unless the institution has said to publish it. With one shared
+    /// key, whoever asked first decided what everybody saw for the next minute, so a visitor's
+    /// request could leave a signed-in student looking at "Contact IT" as dead grey text, and the
+    /// next minute the other way round. Keyed by the only thing the two answers differ on.
+    /// </summary>
+    private string CacheKey =>
+        httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated == true
+            ? CacheKeyPrefix + ":signed-in"
+            : CacheKeyPrefix + ":visitor";
+
     public async Task<InstitutionSettingsDto> GetAsync(CancellationToken ct = default)
     {
-        if (cache.TryGetValue(CacheKey, out InstitutionSettingsDto? cached) && cached is not null)
+        var key = CacheKey;
+
+        if (cache.TryGetValue(key, out InstitutionSettingsDto? cached) && cached is not null)
         {
             return cached;
         }
@@ -39,9 +56,14 @@ public class InstitutionDetails(
 
         // Short: an administrator correcting an address should see it take effect within a minute
         // rather than after a restart, and this is read on every page.
-        cache.Set(CacheKey, details, TimeSpan.FromMinutes(1));
+        cache.Set(key, details, TimeSpan.FromMinutes(1));
         return details;
     }
 
-    public void Invalidate() => cache.Remove(CacheKey);
+    /// <summary>Both copies, since a setting an administrator changed applies to both audiences.</summary>
+    public void Invalidate()
+    {
+        cache.Remove(CacheKeyPrefix + ":signed-in");
+        cache.Remove(CacheKeyPrefix + ":visitor");
+    }
 }

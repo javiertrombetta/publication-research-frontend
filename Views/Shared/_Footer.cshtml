@@ -28,6 +28,19 @@
                         Contact IT
                     </span>
                 }
+                else if (User.Identity?.IsAuthenticated == true && institution.ItSupportReachableThroughTheSite)
+                {
+                    @* A form on the site, where a screenshot can be attached and the desk can reply
+                       to the person who wrote. Only with a mail server configured, because without
+                       one the form would take a message and lose it, and only to somebody signed
+                       in: a form open to the world that emails files to a fixed address is a relay
+                       for whoever finds it. A visitor gets the mailto: below, as they always have. *@
+                    <a asp-controller="Support" asp-action="ContactIt"
+                       asp-route-returnUrl="@Context.Request.Path.Value"
+                       class="text-secondary text-decoration-none">
+                        Contact IT
+                    </a>
+                }
                 else
                 {
                     <a href="mailto:@itSupportEmail" class="text-secondary text-decoration-none">
