@@ -1658,6 +1658,23 @@
                                 </small>
                             </div>
 
+                            @* Rows per page belongs to this group and the API validates it with the
+                               rest, so leaving it off the form meant the whole tab posted a zero
+                               and was refused: "Rows per page has to be between 5 and 100", about a
+                               field nobody had been shown. It is the institution's own choice and
+                               governs every listing on the site, so it belongs here rather than
+                               being carried invisibly. *@
+                            <div class="col-12 col-sm-6">
+                                <label class="form-label" for="rows-per-page">Rows per page</label>
+                                <input id="rows-per-page" name="rowsPerPage" type="number" min="5" max="100"
+                                       value="@Model.Institution.RowsPerPage" class="form-control" required />
+                                <small class="form-hint">
+                                    How many rows every listing shows before it pages, between 5 and
+                                    100. One figure for the whole site, so a reader who has learned
+                                    what a page holds here does not relearn it on the next screen.
+                                </small>
+                            </div>
+
                             @* Checkbox plus a hidden false of the same name: an unchecked box posts
                                nothing at all, so without it clearing the switch would look exactly
                                like not touching it. Same pattern as the switches on the other
