@@ -732,13 +732,17 @@ namespace ResearchPublicationManagementSystem.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MovePublication(
-            Guid id, int stage, string? ethicsStep, string? paperStatus, string? comments)
+            Guid id, int stage, string? ethicsStep, string? paperStatus, string? comments,
+            bool correctingSettledDecision = false)
         {
             var result = await containersApi.MoveAsync(id,
-                new MoveContainerRequestDto(stage, comments ?? string.Empty, ethicsStep, paperStatus));
+                new MoveContainerRequestDto(stage, comments ?? string.Empty, ethicsStep, paperStatus,
+                    correctingSettledDecision));
 
             return Done(id, result.Success, result.ErrorMessage,
-                "Moved. Whoever it now waits on has been told.");
+                correctingSettledDecision
+                    ? "Corrected. The reason is on the publication's history, and whoever it now waits on has been told."
+                    : "Moved. Whoever it now waits on has been told.");
         }
 
         private IActionResult Refuse(Guid id, string why)
